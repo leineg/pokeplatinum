@@ -141,6 +141,8 @@ static const SysTaskFunc sEncounterEffectTaskFuncs[] = {
     EncounterEffect_EliteFourLucian,
     EncounterEffect_ChampionCynthia,
 
+    EncounterEffect_Rival,
+
     EncounterEffect_Mythical,
     EncounterEffect_Legendary,
 

@@ -11,6 +11,7 @@ pl_winframe_pal_pngs= files(
     'message_box_08.png',
     'message_box_09.png',
     'message_box_10.png',
+    'message_box_11.png',
     'message_box_12.png',
     'message_box_13.png',
     'message_box_14.png',
@@ -25,10 +26,9 @@ pl_winframe_pal_pngs= files(
 # own or have a special PAL file.
 pl_winframe_sopc_v101_pngs = pl_winframe_pal_pngs
 pl_winframe_sopc_v101_pngs += files(
-    'standard_field.png',       # no distinct palette
+    'standard_field.png',       # no distinct palette 
     'scroll_cursor.png',        # no distinct palette
     'wait_dial.png',            # no distinct palette
-    'message_box_11.png',       # has a special PAL file
 )
 
 pl_winframe_v101_clobber_pngs = files('pokemon_preview.png')
@@ -39,7 +39,6 @@ pl_winframe_pals = pl_winframe_pal_pngs
 pl_winframe_pals += files(
     'standard_underground.pal', # is a distinct palette
     'pokemon_preview.png',      # has no SOPC section
-    'message_box_11.pal',       # has multiple palettes, unlike the other message boxes
 )
 
 pl_winframe_ncgrs_sopc_v101 = ncgr_gen.process(pl_winframe_sopc_v101_pngs,

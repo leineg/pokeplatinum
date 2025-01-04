@@ -26,6 +26,8 @@
 #include "gx_layers.h"
 #include "heap.h"
 #include "message.h"
+#include "savedata.h"
+#include "savedata_misc.h"
 #include "save_player.h"
 #include "screen_fade.h"
 #include "screen_scroll_manager.h"
@@ -3623,6 +3625,311 @@ void EncounterEffect_ChampionCynthia(SysTask *task, void *param)
 {
     EncounterEffect *encEffect = param;
     BOOL done = EncounterEffect_EliteFourChampion(encEffect, HEAP_ID_FIELD1, &sEliteFourChampionEncounterParams[4]);
+
+    if (done == TRUE) {
+        EncounterEffect_Finish(encEffect, task);
+    }
+}
+
+typedef struct RivalEncounterParam {
+    fx32 endX;
+    u32 trainerID;
+    u16 trainerClass;
+    u16 unk_0A;
+    // The rest are NARC indices
+    u8 unk_0C;
+    u8 unk_0D;
+    u8 unk_0E;
+    u8 unk_0F;
+    u8 unk_10;
+    u8 unk_11;
+    u8 unk_12;
+    u8 padding;
+} RivalEncounterParam;
+
+#define RIVAL(NAME) (TRAINER_CLASS_RIVAL - TRAINER_CLASS_RIVAL)
+
+static const RivalEncounterParam sRivalEncounterParam[1] = {
+    {
+        .endX = 214 * FX32_ONE,
+        .trainerID = 851,
+        .trainerClass = TRAINER_CLASS_RIVAL,
+        .unk_0A = 1,
+        .unk_0C = 155,
+        .unk_0D = 156,
+        .unk_0E = 157,
+        .unk_0F = 158,
+        .unk_10 = 159,
+        .unk_11 = 160,
+        .unk_12 = 161,
+        .padding = 0,
+    },
+};
+
+static Strbuf *EncounterEffect_GetRivalName(u32 trainerClass, u32 heapID)
+{
+    StringTemplate *template;
+    MessageLoader *messageLoader;
+    Strbuf *result;
+    Strbuf *message;
+    const MiscSaveBlock *miscSave;
+    const u16 *rivalName;
+
+    miscSave = SaveData_MiscSaveBlockConst(SaveData_Ptr());
+    rivalName = MiscSaveBlock_RivalName(miscSave);
+
+    messageLoader = MessageLoader_Init(1, 26, 359, heapID);
+    template = StringTemplate_Default(heapID);
+    result = Strbuf_Init(128, heapID);
+    message = Strbuf_Init(128, heapID);
+
+    Strbuf_CopyChars(message, rivalName);
+    StringTemplate_SetTrainerName(template, 0, trainerClass);
+    StringTemplate_Format(template, result, message);
+
+    MessageLoader_Free(messageLoader);
+    StringTemplate_Free(template);
+    Strbuf_Free(message);
+    return result;
+}
+
+static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId heapID, const RivalEncounterParam *param)
+{
+    UnkStruct_ov5_021E52A8 *v0 = encEffect->param;
+    BOOL v1;
+    const VecFx32 *v2;
+    VecFx32 v3;
+    VecFx32 v4;
+    int v5;
+    int v6;
+    Strbuf *v7;
+
+    switch (encEffect->state) {
+    case 0:
+        encEffect->param = Heap_AllocFromHeap(heapID, sizeof(UnkStruct_ov5_021E52A8));
+        memset(encEffect->param, 0, sizeof(UnkStruct_ov5_021E52A8));
+        v0 = encEffect->param;
+
+        Graphics_LoadPaletteFromOpenNARC(encEffect->narc, 11, 0, 2 * 0x20, 0x20, heapID);
+
+        GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG2, 1);
+        Window_Add(encEffect->fieldSystem->bgConfig, &v0->unk_2E0, 2, 0, 10, 16, 2, 2, 1);
+        Window_FillTilemap(&v0->unk_2E0, 0);
+        v7 = EncounterEffect_GetRivalName(param->trainerID, heapID);
+        Text_AddPrinterWithParamsAndColor(&v0->unk_2E0, FONT_SYSTEM, v7, 0, 0, TEXT_SPEED_INSTANT, TEXT_COLOR(1, 2, 0), NULL);
+        Strbuf_Free(v7);
+
+        ov5_021DE47C(&v0->unk_44, 8, 3);
+
+        ov5_021DE4CC(
+            encEffect->narc, &v0->unk_44, &v0->unk_1E4[0], 155, 1, 156, 157, 158, 600000);
+
+        ov5_021DE4CC(
+            encEffect->narc, &v0->unk_44, &v0->unk_1E4[1], 51, 1, 52, 53, 54, 600000 + 1);
+
+        v0->unk_24C = ov5_021DE62C(
+            &v0->unk_44, &v0->unk_1E4[0], (272 * FX32_ONE), (66 * FX32_ONE), 0, 0);
+        CellActor_SetDrawFlag(v0->unk_24C, 0);
+        ov5_021E5128(&v0->unk_250, &v0->unk_44, &v0->unk_1E4[1], (FX32_CONST(72)), (FX32_CONST(74)), heapID);
+
+        ov5_021DE5D0(v0->unk_24C, heapID, param->trainerClass, 14, (GX_RGB(0, 0, 0)));
+
+        v0->unk_40 = ov5_021DECEC();
+
+        encEffect->state++;
+        break;
+
+    case 1:
+
+        EncounterEffect_Flash(1, 16, 16, &encEffect->effectComplete, 1);
+        encEffect->state++;
+        break;
+
+    case 2:
+        if (encEffect->effectComplete) {
+            encEffect->state++;
+        }
+
+        break;
+
+    case 3:
+
+        ov5_021DE3D0(
+            encEffect->narc, param->unk_12, param->unk_11, param->unk_10, 0, 1, encEffect->fieldSystem->bgConfig, 3);
+        v0->unk_2F0 = 1;
+
+        ov5_021DED20(encEffect, v0->unk_40, 6, 8, 16, (GX_WND_PLANEMASK_BG0 | GX_WND_PLANEMASK_BG1 | GX_WND_PLANEMASK_BG2 | GX_WND_PLANEMASK_BG3 | GX_WND_PLANEMASK_OBJ), (GX_WND_PLANEMASK_BG0 | GX_WND_PLANEMASK_BG1 | GX_WND_PLANEMASK_BG2 | GX_WND_PLANEMASK_OBJ));
+
+        GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG3, 1);
+
+        encEffect->state++;
+        break;
+
+    case 4:
+
+        if (EncounterEffect_GetHBlankFlag(encEffect)) {
+            encEffect->state++;
+
+            ov5_021DED04(v0->unk_40);
+
+            v0->unk_2F8 = 10;
+        }
+
+        break;
+
+    case 5:
+
+        v0->unk_2F8--;
+
+        if (v0->unk_2F8 >= 0) {
+            break;
+        }
+
+        GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
+
+        v1 = ov5_021E51B4(&v0->unk_250);
+
+        if (v1 == 1) {
+            encEffect->state++;
+        }
+
+        break;
+
+    case 6:
+
+        QuadraticInterpolationTaskFX32_Init(&v0->unk_00, (272 * FX32_ONE), param->endX, (-64 * FX32_ONE), 4);
+        CellActor_SetDrawFlag(v0->unk_24C, 1);
+        CellActor_SetExplicitPriority(v0->unk_24C, 0);
+
+        v3 = VecFx32_FromXYZ(
+            v0->unk_00.currentValue, (66 * FX32_ONE), 0);
+        CellActor_SetPosition(v0->unk_24C, &v3);
+
+        encEffect->state++;
+        break;
+
+    case 7:
+
+        v1 = QuadraticInterpolationTaskFX32_Update(&v0->unk_00);
+        v3 = VecFx32_FromXYZ(
+            v0->unk_00.currentValue, (66 * FX32_ONE), 0);
+        CellActor_SetPosition(v0->unk_24C, &v3);
+
+        if (v1 == 1) {
+            encEffect->state++;
+        }
+
+        break;
+
+    case 8:
+        LinearInterpolationTaskS32_Init(&v0->unk_18, 0, 16, 3);
+        v0->unk_2F8 = 10;
+        encEffect->state++;
+        break;
+
+    case 9:
+        v0->unk_2F8--;
+
+        if (v0->unk_2F8 >= 0) {
+            break;
+        }
+
+        v1 = LinearInterpolationTaskS32_Update(&v0->unk_18);
+        ov5_021DEF8C(&v0->unk_18.currentValue);
+
+        if (v1 == 1) {
+            ov5_021DE5D0(v0->unk_24C, heapID, param->trainerClass, 0, (GX_RGB(0, 0, 0)));
+
+            sub_0200AB4C(-14, GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BD, 1);
+
+            Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 2, 0, -((v0->unk_00.currentValue >> FX32_SHIFT) + -92));
+            GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG2, 1);
+            Bg_SetPriority(2, 0);
+            encEffect->state++;
+        }
+
+        break;
+
+    case 10:
+        LinearInterpolationTaskS32_Init(&v0->unk_18, 16, 0, 3);
+        encEffect->state++;
+        break;
+
+    case 11:
+        v1 = LinearInterpolationTaskS32_Update(&v0->unk_18);
+        ov5_021DEF8C(&v0->unk_18.currentValue);
+
+        if (v1 == 1) {
+            encEffect->state++;
+            v0->unk_2F8 = 26;
+        }
+
+        break;
+
+    case 12:
+        v0->unk_2F8--;
+
+        if (v0->unk_2F8 < 0) {
+            encEffect->state++;
+        }
+
+        break;
+
+    case 13:
+
+        StartScreenTransition(3, 0, 0, 0x7fff, 15, 1, 4);
+        encEffect->state++;
+        break;
+
+    case 14:
+
+        if (IsScreenTransitionDone()) {
+            encEffect->state++;
+        }
+
+        break;
+
+    case 15:
+        sub_0200F344(1, 0x7fff);
+
+        if (encEffect->done != NULL) {
+            *(encEffect->done) = 1;
+        }
+
+        CellActor_Delete(v0->unk_24C);
+        ov5_021E519C(&v0->unk_250);
+        ov5_021DE5A4(&v0->unk_44, &v0->unk_1E4[0]);
+        ov5_021DE5A4(&v0->unk_44, &v0->unk_1E4[1]);
+        ov5_021DE4AC(&v0->unk_44);
+
+        Window_Remove(&v0->unk_2E0);
+
+        GX_SetVisibleWnd(GX_WNDMASK_NONE);
+
+        sub_0200AB4C(0, GX_BLEND_PLANEMASK_NONE, 1);
+
+        Bg_SetOffset(encEffect->fieldSystem->bgConfig, 2, 0, 0);
+
+        return 1;
+    }
+
+    if (v0->unk_2F0 == 1) {
+        Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 3, 0, v0->unk_2F4);
+
+        v0->unk_2F4 = (v0->unk_2F4 + 30) % 512;
+    }
+
+    if (encEffect->state != 15) {
+        CellActorCollection_Update(v0->unk_44.unk_00);
+    }
+
+    return 0;
+}
+
+void EncounterEffect_Rival(SysTask *task, void *param)
+{
+    EncounterEffect *encEffect = param;
+    BOOL done = EncounterEffect_RivalBool(encEffect, HEAP_ID_FIELD, &sRivalEncounterParam[0]);
 
     if (done == TRUE) {
         EncounterEffect_Finish(encEffect, task);

@@ -5,7 +5,7 @@
 // clang-format off
 static const u8 sTileBehaviorFlags[] = {
     [TILE_BEHAVIOR_NONE]                       =  TILE_BEHAVIOR_FLAG_NONE,
-    [TILE_BEHAVIOR_UNUSED_x01]                 =  TILE_BEHAVIOR_FLAG_NONE,
+    [TILE_BEHAVIOR_GRASS]                      =  TILE_BEHAVIOR_FLAG_ENCOUNTER,
     [TILE_BEHAVIOR_TALL_GRASS]                 =  TILE_BEHAVIOR_FLAG_ENCOUNTER,
     [TILE_BEHAVIOR_VERY_TALL_GRASS]            =  TILE_BEHAVIOR_FLAG_ENCOUNTER,
     [TILE_BEHAVIOR_UNUSED_x04]                 =  TILE_BEHAVIOR_FLAG_NONE,
@@ -262,6 +262,11 @@ static const u8 sTileBehaviorFlags[] = {
     [TILE_BEHAVIOR_MAX]                        =  TILE_BEHAVIOR_FLAG_NONE,
 };
 // clang-format on
+
+BOOL TileBehavior_IsGrass(u8 behavior)
+{
+    return behavior == TILE_BEHAVIOR_GRASS;
+}
 
 BOOL TileBehavior_IsTallGrass(u8 behavior)
 {

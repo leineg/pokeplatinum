@@ -302,6 +302,10 @@ static void PlayerAvatar_PlayWalkSE(PlayerAvatar *playerAvatar)
                 Sound_PlayEffect(SEQ_SE_DP_KUSA);
             }
         }
+
+        if (TileBehavior_IsMud(v2) == 1) {
+            Sound_PlayEffect (2133);
+        }
     }
 }
 
