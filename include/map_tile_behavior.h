@@ -1,6 +1,7 @@
 #ifndef POKEPLATINUM_TILE_BEHAVIOR_H
 #define POKEPLATINUM_TILE_BEHAVIOR_H
 
+BOOL TileBehavior_IsGrass(u8 behavior);
 BOOL TileBehavior_IsTallGrass(u8 behavior);
 BOOL TileBehavior_IsVeryTallGrass(u8 behavior);
 BOOL TileBehavior_IsTable(u8 behavior);

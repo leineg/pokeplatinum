@@ -80,12 +80,12 @@ BOOL ov5_021D433C(FieldSystem *fieldSystem, UnkStruct_ov5_021D432C *param1)
         UnkStruct_02055130 v3;
         int v4;
         int v5[] = {
-            66,
-            67,
-            68,
-            69,
+            166,
+            167,
+            168,
+            169,
             246,
-            70,
+            170,
             427,
             456,
             260,
@@ -99,7 +99,7 @@ BOOL ov5_021D433C(FieldSystem *fieldSystem, UnkStruct_ov5_021D432C *param1)
             484,
             128,
             527,
-            75
+            175
         };
 
         param1->unk_20 = 0;

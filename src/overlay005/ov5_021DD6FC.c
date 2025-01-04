@@ -109,7 +109,7 @@ static void ov5_021DD7A0(UnkStruct_ov5_021DD9C8 *param0, const int param1)
         v2 = (((v1 * 8) + (4 * 2)) - param1) / 2;
     }
 
-    param0->unk_30 = (8 - 4) + v2;
+    param0->unk_30 = (8 - 4) + v2 + 30;
 
     {
         int v9, v10;
@@ -118,7 +118,7 @@ static void ov5_021DD7A0(UnkStruct_ov5_021DD9C8 *param0, const int param1)
         Window_FillTilemap(&param0->unk_20, 0);
 
         for (v9 = 0; v9 < 85; v9++) {
-            Window_BlitBitmapRect(&param0->unk_20, param0->unk_34->pRawData, v9 * 8, 0, 8, 8, (v9 % 17) * 8, (v9 / 17) * 8, 8, 8);
+            Window_BlitBitmapRect(&param0->unk_20, param0->unk_34->pRawData, v9 * 8, 8, 8, 8, (v9 % 17) * 8, (v9 / 17) * 8, 8, 8);
         }
 
         Window_CopyToVRAM(&param0->unk_20);
@@ -211,7 +211,7 @@ static void ov5_021DD954(UnkStruct_ov5_021DD9C8 *param0, const Strbuf *param1)
     u32 v0;
 
     v0 = TEXT_COLOR(3, 2, 0);
-    Text_AddPrinterWithParamsAndColor(&param0->unk_20, FONT_SYSTEM, param1, param0->unk_30, (8 * 2), TEXT_SPEED_INSTANT, v0, NULL);
+    Text_AddPrinterWithParamsAndColor(&param0->unk_20, FONT_SYSTEM, param1, param0->unk_30, (4 * 2), TEXT_SPEED_INSTANT, v0, NULL);
 }
 
 static void ov5_021DD980(UnkStruct_ov5_021DD9C8 *param0)

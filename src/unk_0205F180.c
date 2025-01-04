@@ -300,6 +300,10 @@ static void PlayerAvatar_PlayWalkSE(PlayerAvatar *playerAvatar)
                 Sound_PlayEffect(1619);
             }
         }
+
+        if (TileBehavior_IsMud(v2) == 1) {
+            Sound_PlayEffect (2133);
+        }
     }
 }
 
