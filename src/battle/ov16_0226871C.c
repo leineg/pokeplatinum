@@ -378,10 +378,10 @@ __attribute__((aligned(4))) static const u16 Unk_ov16_02270264[] = {
 };
 
 __attribute__((aligned(4))) static const u16 Unk_ov16_022702B4[][2] = {
-    { 0x20, 0x3E },
-    { 0xA0, 0x3E },
-    { 0x20, 0x7E },
-    { 0xA0, 0x7E }
+    { 0x20, 0x3D },
+    { 0xA0, 0x3C },
+    { 0x20, 0x7C },
+    { 0xA0, 0x7B }
 };
 
 __attribute__((aligned(4))) static const u16 Unk_ov16_02270284[][2] = {
@@ -403,7 +403,7 @@ __attribute__((aligned(4))) static const u16 Unk_ov16_02270328[][2] = {
     { 0xC4, 0x20 },
     { 0xC4, 0x74 },
     { 0x3C, 0x20 },
-    { 0x80, 0xB2 }
+    { 0x80, 0xAF }
 };
 
 __attribute__((aligned(4))) static const u16 Unk_ov16_02270304[][2] = {
@@ -1777,10 +1777,10 @@ static void ov16_02269668(UnkStruct_ov16_02268A14 *param0, int param1, int param
         param0->unk_66F = 0;
     }
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v0, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 84, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v1, FONT_SUBSCREEN, TEXT_COLOR(4, 5, 6), 2, 20023, 40, 170, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[2], v2, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 2, 20023, 216, 170, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[3], v3, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 178, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v0, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 83, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v1, FONT_SUBSCREEN, TEXT_COLOR(4, 5, 6), 2, 20023, 40, 169, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[2], v2, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 2, 20023, 216, 168, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[3], v3, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 176, 1, NULL);
 
     Strbuf_Free(v0);
     Strbuf_Free(v1);
@@ -1891,25 +1891,56 @@ static void ov16_022699AC(UnkStruct_ov16_02268A14 *param0, int param1, int param
     ov16_0226AF0C(param0);
 
     {
-        ov16_0226A98C(param0, &param0->unk_4CC[0], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 64, 46, 1, &v3->unk_28[0]);
-        ov16_0226A98C(param0, &param0->unk_4CC[1], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 192, 46, 1, &v3->unk_28[1]);
-        ov16_0226A98C(param0, &param0->unk_4CC[2], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 64, 110, 1, &v3->unk_28[2]);
-        ov16_0226A98C(param0, &param0->unk_4CC[3], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 192, 110, 1, &v3->unk_28[3]);
+        ov16_0226A98C(param0, &param0->unk_4CC[0], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 64, 45, 1, &v3->unk_28[0]);
+        ov16_0226A98C(param0, &param0->unk_4CC[1], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 192, 44, 1, &v3->unk_28[1]);
+        ov16_0226A98C(param0, &param0->unk_4CC[2], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 64, 108, 1, &v3->unk_28[2]);
+        ov16_0226A98C(param0, &param0->unk_4CC[3], NULL, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 3, 20023, 192, 107, 1, &v3->unk_28[3]);
     }
 
     {
         for (i = 0; i < LEARNED_MOVES_MAX; i++) {
             v4 = ov16_0226B924(v0->unk_08[i], v0->unk_0C[i]);
-            ov16_0226A98C(param0, &param0->unk_4CC[9 + i], NULL, FONT_SYSTEM, v4, 4, 20023, Unk_ov16_022702D4[i][0], Unk_ov16_022702D4[i][1], 0, &v3->unk_78[i]);
-            ov16_0226A98C(param0, &param0->unk_4CC[5 + i], NULL, FONT_SYSTEM, v4, 4, 20023, Unk_ov16_02270284[i][0], Unk_ov16_02270284[i][1], 0, &v3->unk_C8[i]);
+            int x_pos1, y_pos1, x_pos2, y_pos2;
+            switch(i) {
+                case 0:
+                    v4 = TEXT_COLOR(1, 2, 3);
+                    x_pos1 = 76;
+                    y_pos1 = 61;
+                    x_pos2 = 59;
+                    y_pos2 = 61;
+                    break;
+                case 1:
+                    v4 = TEXT_COLOR(1, 2, 3);
+                    x_pos1 = 204;
+                    y_pos1 = 60;
+                    x_pos2 = 187;
+                    y_pos2 = 60;
+                    break;
+                case 2:
+                    v4 = TEXT_COLOR(1, 2, 3);
+                    x_pos1 = 76;
+                    y_pos1 = 124;
+                    x_pos2 = 59;
+                    y_pos2 = 124;
+                    break;
+                case 3:
+                    v4 = TEXT_COLOR(1, 2, 3);
+                    x_pos1 = 204;
+                    y_pos1 = 123;
+                    x_pos2 = 187;
+                    y_pos2 = 123;
+                    break;
+            }
+            ov16_0226A98C(param0, &param0->unk_4CC[9 + i], NULL, FONT_SYSTEM, v4, 4, 20023, x_pos1, y_pos1, 0, &v3->unk_78[i]);
+            ov16_0226A98C(param0, &param0->unk_4CC[5 + i], NULL, FONT_SYSTEM, v4, 4, 20023, x_pos2, y_pos2, 0, &v3->unk_C8[i]);
         }
-    }
-
+    }        
+ 
     {
         Strbuf *v5;
 
         v5 = MessageLoader_GetNewStrbuf(v2, 929);
-        ov16_0226A98C(param0, &param0->unk_4CC[4], v5, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 178, 1, NULL);
+        ov16_0226A98C(param0, &param0->unk_4CC[4], v5, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 175, 1, NULL);
         Strbuf_Free(v5);
     }
 
@@ -1967,8 +1998,8 @@ static void ov16_02269C7C(UnkStruct_ov16_02268A14 *param0, int param1, int param
     v1 = MessageLoader_GetNewStrbuf(v0, 940);
     v2 = MessageLoader_GetNewStrbuf(v0, 941);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v1, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 68, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v2, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 140, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v1, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v2, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
@@ -1983,8 +2014,8 @@ static void ov16_02269D14(UnkStruct_ov16_02268A14 *param0, int param1, int param
     v1 = MessageLoader_GetNewStrbuf(v0, 1181);
     v2 = MessageLoader_GetNewStrbuf(v0, 1182);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v1, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 68, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v2, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 140, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v1, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v2, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
@@ -2009,8 +2040,8 @@ static void ov16_02269DB0(UnkStruct_ov16_02268A14 *param0, int param1, int param
     StringTemplate_Format(v5, v3, v1);
     StringTemplate_Format(v5, v4, v2);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 68, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 140, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
@@ -2050,7 +2081,7 @@ static void ov16_02269E94(UnkStruct_ov16_02268A14 *param0, int param1, int param
         Bg_ScheduleTilemapTransfer(v5, 5);
     }
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v1, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 178, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v1, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 171, 1, NULL);
     Strbuf_Free(v1);
 }
 
@@ -2073,8 +2104,8 @@ static void ov16_02269F68(UnkStruct_ov16_02268A14 *param0, int param1, int param
     StringTemplate_Format(v5, v3, v1);
     StringTemplate_Format(v5, v4, v2);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 68, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 140, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
@@ -2101,8 +2132,8 @@ static void ov16_0226A04C(UnkStruct_ov16_02268A14 *param0, int param1, int param
     StringTemplate_Format(v5, v3, v1);
     StringTemplate_Format(v5, v4, v2);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 68, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 140, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
@@ -2931,7 +2962,7 @@ static void ov16_0226B028(UnkStruct_ov16_02268A14 *param0)
 }
 
 static void ov16_0226B06C(UnkStruct_ov16_02268A14 *param0, int param1, int param2)
-{
+{    
     ov11_0221F81C(BattleSystem_PaletteSys(param0->unk_00), param1, 5, 1, 8 + param2);
 }
 
@@ -3388,6 +3419,7 @@ static void ov16_0226B4E0(SysTask *param0, void *param1)
         v0->unk_67C.unk_02++;
 
         if (v0->unk_67C.unk_02 > 0) {
+        ov16_0226B31C(v0, v0->unk_67C.unk_04_val3.unk_00, v0->unk_67C.unk_04_val3.unk_04, v0->unk_67C.unk_04_val3.unk_0C, 0);
             ov16_0226B1C4(v0, 1, 1);
             ov16_0226B2F0(v0);
             return;

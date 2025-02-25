@@ -1,5 +1,4 @@
 #include "battle/battle_controller.h"
-
 #include "nitro/types.h"
 #include <nitro.h>
 #include <string.h>
