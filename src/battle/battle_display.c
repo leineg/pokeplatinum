@@ -3012,7 +3012,6 @@ static void ov16_022604C8(SysTask *param0, void *param1)
                 break;
             }
 
-            ov16_02269218(v2);
             v0->unk_0A = 8;
         }
         break;
@@ -3172,7 +3171,7 @@ static void ov16_02260C00(SysTask *param0, void *param1)
             BattleMessage_Print(v0->battleSys, v6, &v7, 0);
         }
 
-        ov16_02269218(v2);
+        ov16_022691BC(v2);
 
         {
             UnkStruct_ov16_02260C00 v8;
@@ -3211,6 +3210,7 @@ static void ov16_02260C00(SysTask *param0, void *param1)
                     ov16_022675AC(v0->unk_04);
                     ov16_022647D8(battlerData);
                 }
+                ov16_02269218(v2);
             }
 
             ov16_02265790(v0->battleSys, v0->unk_1D, v0->unk_08);

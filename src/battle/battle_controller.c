@@ -1,5 +1,5 @@
-#include "constants/battle/battle_controller.h"
 
+#include "constants/battle/battle_controller.h"
 #include <nitro.h>
 #include <string.h>
 
