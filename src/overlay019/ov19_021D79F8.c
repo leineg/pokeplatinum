@@ -17,12 +17,12 @@
 #include "overlay019/struct_ov19_021DCD18.h"
 
 #include "bg_window.h"
-#include "cell_actor.h"
 #include "font.h"
 #include "graphics.h"
 #include "heap.h"
 #include "pokemon.h"
 #include "pokemon_icon.h"
+#include "sprite.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
@@ -104,7 +104,7 @@ static const u16 Unk_ov19_021E0138[] = {
     10,
 };
 
-BOOL ov19_021D79F8(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021D61B0 *param1, const UnkStruct_ov19_021D4DF0 *param2, BgConfig *param3, CellActorCollection *param4)
+BOOL ov19_021D79F8(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021D61B0 *param1, const UnkStruct_ov19_021D4DF0 *param2, BgConfig *param3, SpriteList *param4)
 {
     param0->unk_00 = param2->unk_40.unk_00;
     param0->unk_01 = 11;
@@ -392,7 +392,7 @@ static void ov19_021D803C(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021DCD
 
     for (v2 = 0; v2 < 5; v2++) {
         if (param1->unk_00 == NULL) {
-            v1 = sub_02079C9C(v0, param0->unk_30, v3);
+            v1 = GetBoxedPokemonFrom(v0, param0->unk_30, v3);
 
             if (BoxPokemon_GetValue(v1, MON_DATA_SPECIES_EXISTS, NULL)) {
                 ov19_021DA548(param0->unk_58F0, v1, param0->unk_5814[v3], param0->unk_57D8[v3], param0->unk_CD8[v3], param2, 40 + 24 * v2, 2, ov19_021D85B4(v3), v4, param1);
@@ -413,7 +413,7 @@ static void ov19_021D8114(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021DCD
 
     for (v0 = 0; v0 < 5; v0++) {
         if (param1->unk_00 != NULL) {
-            CellActor_Delete(param1->unk_00);
+            Sprite_Delete(param1->unk_00);
             param1->unk_00 = NULL;
         }
 
@@ -430,7 +430,7 @@ static void ov19_021D813C(UnkStruct_ov19_021D8318 *param0, u32 param1)
     v0 = ov19_021D5E90(param0->unk_58F8);
 
     for (v2 = 0; v2 < (5 * 6); v2++) {
-        v1 = sub_02079C9C(v0, param1, v2);
+        v1 = GetBoxedPokemonFrom(v0, param1, v2);
         v3 = BoxPokemon_GetValue(v1, MON_DATA_SPECIES, NULL);
 
         if (v3) {
@@ -597,7 +597,7 @@ void ov19_021D84E0(UnkStruct_ov19_021D8318 *param0)
     v1 = sub_0207999C(param0->unk_58F8->unk_00);
 
     for (v0 = 0; v0 < (5 * 6); v0++) {
-        v2 = sub_02079C9C(param0->unk_58F8->unk_00, v1, v0);
+        v2 = GetBoxedPokemonFrom(param0->unk_58F8->unk_00, v1, v0);
 
         if (BoxPokemon_GetValue(v2, MON_DATA_SPECIES_EXISTS, NULL)) {
             if (param0->unk_A8[param0->unk_02][v0].unk_00 == NULL) {
@@ -662,7 +662,7 @@ static void ov19_021D85C4(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021DA3
 
     for (v3 = 0; v3 < 5; v3++) {
         for (v2 = 0; v2 < 6; v2++) {
-            v0 = sub_02079C9C(param1->unk_40->unk_00, param2, v4);
+            v0 = GetBoxedPokemonFrom(param1->unk_40->unk_00, param2, v4);
             v1 = BoxPokemon_GetValue((BoxPokemon *)v0, MON_DATA_SPECIES, NULL);
 
             if (v1 != 0) {
@@ -684,9 +684,9 @@ static void ov19_021D865C(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021DCD
     for (v2 = 0; v2 < 5; v2++) {
         for (v1 = 0; v1 < 6; v1++) {
             if (param1->unk_00 != NULL) {
-                v0 = *(CellActor_GetPosition(param1->unk_00));
+                v0 = *(Sprite_GetPosition(param1->unk_00));
                 v0.x = param0->unk_68[param2][v1];
-                CellActor_SetPosition(param1->unk_00, &v0);
+                Sprite_SetPosition(param1->unk_00, &v0);
             }
 
             param1++;
@@ -702,9 +702,9 @@ static void ov19_021D86B4(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021DCD
     for (v2 = 0; v2 < 5; v2++) {
         for (v1 = 0; v1 < 6; v1++) {
             if (param1->unk_00 != NULL) {
-                v0 = *(CellActor_GetPosition(param1->unk_00));
+                v0 = *(Sprite_GetPosition(param1->unk_00));
                 v0.x = param0->unk_38[param2][v1];
-                CellActor_SetPosition(param1->unk_00, &v0);
+                Sprite_SetPosition(param1->unk_00, &v0);
             }
 
             param1++;
@@ -726,7 +726,7 @@ static void ov19_021D870C(UnkStruct_ov19_021D8318 *param0, UnkStruct_ov19_021DCD
             v0.x = (112 + param0->unk_585C + v1 * 24) * FX32_ONE;
 
             if (param1->unk_00 != NULL) {
-                CellActor_SetPosition(param1->unk_00, &v0);
+                Sprite_SetPosition(param1->unk_00, &v0);
             }
 
             param1++;

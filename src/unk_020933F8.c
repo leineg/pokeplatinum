@@ -3,9 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "consts/game_records.h"
-#include "consts/map.h"
-#include "consts/pokemon.h"
+#include "generated/game_records.h"
+#include "generated/trainer_score_events.h"
 
 #include "struct_decls/pokedexdata_decl.h"
 #include "struct_decls/struct_0202440C_decl.h"
@@ -28,6 +27,7 @@
 #include "savedata/save_table.h"
 
 #include "assert.h"
+#include "brightness_controller.h"
 #include "communication_information.h"
 #include "communication_system.h"
 #include "field_task.h"
@@ -37,6 +37,7 @@
 #include "journal.h"
 #include "math.h"
 #include "party.h"
+#include "pokedex.h"
 #include "pokemon.h"
 #include "ribbon.h"
 #include "rtc.h"
@@ -48,8 +49,6 @@
 #include "system_flags.h"
 #include "trainer_info.h"
 #include "unk_02005474.h"
-#include "unk_0200A9DC.h"
-#include "unk_0202631C.h"
 #include "unk_020298BC.h"
 #include "unk_0202CC64.h"
 #include "unk_0202F108.h"
@@ -439,7 +438,7 @@ UnkStruct_02095C48 *sub_02093800(const UnkStruct_02093800 *param0)
     }
 
     for (v2 = 0; v2 < 4; v2++) {
-        v0->unk_14C[v2] = AllocateAndInitializeChatotCryData(20);
+        v0->unk_14C[v2] = ChatotCry_New(20);
     }
 
     CopyChatotCryData(v0->unk_14C[0], param0->unk_20);
@@ -1507,7 +1506,7 @@ static void sub_02094B30(SysTask *param0, void *param1)
     UnkStruct_02095C48 *v0 = param1;
     UnkStruct_02094A58 *v1 = v0->unk_19A0;
 
-    if (sub_0200AC1C(1) == 0) {
+    if (BrightnessController_IsTransitionComplete(BRIGHTNESS_MAIN_SCREEN) == FALSE) {
         return;
     }
 
@@ -1516,7 +1515,7 @@ static void sub_02094B30(SysTask *param0, void *param1)
         v1->unk_08++;
 
         if (v1->unk_08 > v1->unk_04[v1->unk_0A]) {
-            sub_0200AAE0(6, 0, 4, (GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BG1 | GX_BLEND_PLANEMASK_BG2 | GX_BLEND_PLANEMASK_BG3 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), 1);
+            BrightnessController_StartTransition(6, 0, 4, (GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BG1 | GX_BLEND_PLANEMASK_BG2 | GX_BLEND_PLANEMASK_BG3 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), BRIGHTNESS_MAIN_SCREEN);
             Sound_PlayEffect(1528);
             v1->unk_0A++;
             v1->unk_08 = 0;
@@ -1623,10 +1622,10 @@ void sub_02094C44(UnkStruct_02095C48 *param0, SaveData *param1, u32 param2, Jour
         }
 
         int i;
-        PokedexData *v7 = SaveData_Pokedex(param0->unk_1970);
+        Pokedex *pokedex = SaveData_GetPokedex(param0->unk_1970);
 
         for (i = param0->unk_00.unk_117; i < 4; i++) {
-            sub_020272A4(v7, param0->unk_00.unk_00[i]);
+            Pokedex_Encounter(pokedex, param0->unk_00.unk_00[i]);
         }
     } else {
         sub_0202F134(param0->unk_1970, param0->unk_00.unk_10F, param0->unk_00.unk_118[param0->unk_00.unk_113].unk_08);

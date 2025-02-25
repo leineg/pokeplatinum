@@ -1,11 +1,12 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/hearthome_city_gym_entrance_room.h"
 
     .data
 
     ScriptEntry _000E
     ScriptEntry _0078
     ScriptEntry _00B6
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000E:
     PlayFanfare SEQ_SE_CONFIRM
@@ -14,9 +15,9 @@ _000E:
     CheckBadgeAcquired BADGE_ID_RELIC, 0x800C
     GoToIfEq 0x800C, 1, _006A
     Message 1
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _004C
-    GoToIfEq 0x800C, 1, _0057
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _004C
+    GoToIfEq 0x800C, MENU_NO, _0057
     End
 
 _004C:

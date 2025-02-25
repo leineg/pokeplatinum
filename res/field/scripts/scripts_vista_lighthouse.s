@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/vista_lighthouse.h"
 
     .data
 
@@ -6,7 +7,7 @@
     ScriptEntry _0025
     ScriptEntry _0038
     ScriptEntry _004C
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0012:
     PlayFanfare SEQ_SE_CONFIRM
@@ -47,7 +48,7 @@ _004C:
     Message 2
     CloseMessage
     WaitTime 15, 0x800C
-    ScrCmd_1BD 0x800C
+    GetPlayerDir 0x800C
     GoToIfEq 0x800C, 0, _0092
     GoToIfEq 0x800C, 2, _00AA
     GoToIfEq 0x800C, 3, _00C2
@@ -55,13 +56,13 @@ _004C:
 
 _0092:
     ApplyMovement 2, _0104
-    ApplyMovement 0xFF, _013C
+    ApplyMovement LOCALID_PLAYER, _013C
     WaitMovement
     GoTo _00D2
 
 _00AA:
     ApplyMovement 2, _0118
-    ApplyMovement 0xFF, _0148
+    ApplyMovement LOCALID_PLAYER, _0148
     WaitMovement
     GoTo _00D2
 
@@ -79,7 +80,7 @@ _00D2:
     ScrCmd_16C 77
     ScrCmd_169 77
     ScrCmd_16A 77
-    ScrCmd_065 2
+    RemoveObject 2
     SetFlag 0x162
     ReleaseAll
     End

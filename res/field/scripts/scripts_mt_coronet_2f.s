@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/mt_coronet_2f.h"
 
     .data
 
@@ -6,7 +7,7 @@
     ScriptEntry _0036
     ScriptEntry _01A0
     ScriptEntry _0023
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0012:
     PlayFanfare SEQ_SE_CONFIRM
@@ -31,11 +32,11 @@ _0036:
     LockAll
     GetPlayerMapPos 0x8004, 0x8005
     SetVar 0x40A9, 2
-    ScrCmd_186 5, 20, 25
+    SetObjectEventPos 5, 20, 25
     ScrCmd_188 5, 16
     ScrCmd_189 5, 2
     ClearFlag 0x29F
-    ScrCmd_064 5
+    AddObject 5
     ApplyMovement 5, _0148
     WaitMovement
     CallCommonScript 0x807
@@ -80,19 +81,19 @@ _0100:
 
 _0109:
     ApplyMovement 5, _015C
-    ApplyMovement 0xFF, _0194
+    ApplyMovement LOCALID_PLAYER, _0194
     WaitMovement
     Return
 
 _011D:
     ApplyMovement 5, _016C
-    ApplyMovement 0xFF, _0194
+    ApplyMovement LOCALID_PLAYER, _0194
     WaitMovement
     Return
 
 _0131:
     ApplyMovement 5, _0174
-    ApplyMovement 0xFF, _0194
+    ApplyMovement LOCALID_PLAYER, _0194
     WaitMovement
     Return
 

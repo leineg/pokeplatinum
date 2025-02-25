@@ -2,20 +2,18 @@
 #include <string.h>
 
 #include "struct_decls/struct_02028430_decl.h"
-#include "struct_decls/struct_party_decl.h"
 #include "struct_defs/struct_0202818C.h"
 #include "struct_defs/struct_0206A844.h"
 #include "struct_defs/struct_02097728.h"
 #include "struct_defs/struct_02098C44.h"
 
 #include "field/field_system.h"
-#include "overlay005/ov5_021D37AC.h"
+#include "overlay005/map_prop_animation.h"
 #include "overlay005/ov5_021D431C.h"
 #include "overlay006/ov6_02247078.h"
 
 #include "bag.h"
 #include "bg_window.h"
-#include "core_sys.h"
 #include "field_system.h"
 #include "field_task.h"
 #include "font.h"
@@ -36,6 +34,7 @@
 #include "string_template.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
+#include "system.h"
 #include "text.h"
 #include "unk_02005474.h"
 #include "unk_0200F174.h"
@@ -254,13 +253,13 @@ static void sub_02072390(SysTask *param0, void *param1)
         sub_0206A870(v0->unk_1A4);
     }
 
-    if (gCoreSys.pressedKeys & PAD_BUTTON_B) {
+    if (gSystem.pressedKeys & PAD_BUTTON_B) {
         sub_02072EA4(v0, sub_02072518, sub_02072364);
         Sound_PlayEffect(1500);
         return;
     }
 
-    if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+    if (gSystem.pressedKeys & PAD_BUTTON_A) {
         Sound_PlayEffect(1500);
 
         switch (v1) {
@@ -310,13 +309,13 @@ static void sub_02072470(SysTask *param0, void *param1)
 
     v1 = ListMenu_ProcessInput(v0->unk_160);
 
-    if (gCoreSys.pressedKeys & PAD_BUTTON_B) {
+    if (gSystem.pressedKeys & PAD_BUTTON_B) {
         sub_02072EA4(v0, sub_02072534, sub_02072370);
         Sound_PlayEffect(1500);
         return;
     }
 
-    if (gCoreSys.pressedKeys & PAD_BUTTON_A) {
+    if (gSystem.pressedKeys & PAD_BUTTON_A) {
         Sound_PlayEffect(1500);
 
         switch (v1) {
@@ -488,7 +487,7 @@ static void sub_020726B4(SysTask *param0, void *param1)
         }
         break;
     case 2:
-        if (!(gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
+        if (!(gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
             return;
         }
 
@@ -568,7 +567,7 @@ static void sub_020727F8(SysTask *param0, void *param1)
         }
         break;
     case 2:
-        if (!(gCoreSys.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
+        if (!(gSystem.pressedKeys & (PAD_BUTTON_A | PAD_BUTTON_B))) {
             return;
         }
 
@@ -703,7 +702,7 @@ static void sub_020729B4(UnkStruct_02072334 *param0)
 
     param0->unk_140.window = &(param0->unk_174);
     param0->unk_140.choices = param0->unk_164;
-    param0->unk_140.tmp = (void *)param0;
+    param0->unk_140.parent = (void *)param0;
     param0->unk_140.count = v1;
     param0->unk_140.yOffset = 6;
     param0->unk_140.cursorCallback = sub_02072C0C;
@@ -800,7 +799,7 @@ static void sub_02072C98(UnkStruct_02072334 *param0, u8 param1, u8 param2)
 
     param0->unk_140.window = &(param0->unk_174);
     param0->unk_140.choices = param0->unk_164;
-    param0->unk_140.tmp = (void *)param0;
+    param0->unk_140.parent = (void *)param0;
     param0->unk_140.count = v1;
     param0->unk_140.maxDisplay = 4;
     param0->unk_140.pagerMode = PAGER_MODE_NONE;
@@ -1175,7 +1174,7 @@ static int sub_02073480(UnkStruct_02072334 *param0)
         param0->unk_12++;
         break;
     case 2:
-        if (!ov5_021D42F0(param0->fieldSystem->unk_54, 90)) {
+        if (!MapPropOneShotAnimationManager_IsAnimationLoopFinished(param0->fieldSystem->mapPropOneShotAnimMan, 90)) {
             break;
         }
 

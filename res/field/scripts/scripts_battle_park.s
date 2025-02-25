@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/battle_park.h"
 
     .data
 
@@ -14,7 +15,7 @@
     ScriptEntry _0374
     ScriptEntry _0387
     ScriptEntry _039A
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0032:
     LockAll
@@ -24,10 +25,10 @@ _0032:
     CallIfEq 0x8004, 25, _01CC
     CallIfEq 0x8004, 26, _01DE
     ClearFlag 0x276
-    ScrCmd_064 11
+    AddObject 11
     ScrCmd_062 11
     ApplyMovement 11, _02C8
-    ApplyMovement 0xFF, _0290
+    ApplyMovement LOCALID_PLAYER, _0290
     WaitMovement
     PlayFanfare SEQ_SE_DP_WALL_HIT2
     BufferPlayerName 1
@@ -50,12 +51,12 @@ _0032:
     CallIfEq 0x8004, 24, _0204
     CallIfEq 0x8004, 25, _0218
     CallIfEq 0x8004, 26, _022C
-    ScrCmd_065 11
+    RemoveObject 11
     ClearFlag 0x277
-    ScrCmd_064 12
+    AddObject 12
     ScrCmd_062 12
     ApplyMovement 12, _02C8
-    ApplyMovement 0xFF, _0290
+    ApplyMovement LOCALID_PLAYER, _0290
     WaitMovement
     PlayFanfare SEQ_SE_DP_WALL_HIT2
     BufferRivalName 0
@@ -71,7 +72,7 @@ _0032:
     CallIfEq 0x8004, 24, _0254
     CallIfEq 0x8004, 25, _0268
     CallIfEq 0x8004, 26, _027C
-    ScrCmd_065 12
+    RemoveObject 12
     SetVar 0x410E, 1
     ReleaseAll
     End
@@ -85,70 +86,70 @@ _01A3:
     Return
 
 _01A8:
-    ScrCmd_186 11, 23, 41
-    ScrCmd_186 12, 23, 40
+    SetObjectEventPos 11, 23, 41
+    SetObjectEventPos 12, 23, 40
     Return
 
 _01BA:
-    ScrCmd_186 11, 24, 41
-    ScrCmd_186 12, 24, 40
+    SetObjectEventPos 11, 24, 41
+    SetObjectEventPos 12, 24, 40
     Return
 
 _01CC:
-    ScrCmd_186 11, 25, 41
-    ScrCmd_186 12, 25, 40
+    SetObjectEventPos 11, 25, 41
+    SetObjectEventPos 12, 25, 40
     Return
 
 _01DE:
-    ScrCmd_186 11, 26, 41
-    ScrCmd_186 12, 26, 40
+    SetObjectEventPos 11, 26, 41
+    SetObjectEventPos 12, 26, 40
     Return
 
 _01F0:
     ApplyMovement 11, _02F0
-    ApplyMovement 0xFF, _02A8
+    ApplyMovement LOCALID_PLAYER, _02A8
     WaitMovement
     Return
 
 _0204:
     ApplyMovement 11, _02F0
-    ApplyMovement 0xFF, _02A8
+    ApplyMovement LOCALID_PLAYER, _02A8
     WaitMovement
     Return
 
 _0218:
     ApplyMovement 11, _02FC
-    ApplyMovement 0xFF, _02B8
+    ApplyMovement LOCALID_PLAYER, _02B8
     WaitMovement
     Return
 
 _022C:
     ApplyMovement 11, _02FC
-    ApplyMovement 0xFF, _02B8
+    ApplyMovement LOCALID_PLAYER, _02B8
     WaitMovement
     Return
 
 _0240:
     ApplyMovement 12, _02F0
-    ApplyMovement 0xFF, _02A8
+    ApplyMovement LOCALID_PLAYER, _02A8
     WaitMovement
     Return
 
 _0254:
     ApplyMovement 12, _02F0
-    ApplyMovement 0xFF, _02A8
+    ApplyMovement LOCALID_PLAYER, _02A8
     WaitMovement
     Return
 
 _0268:
     ApplyMovement 12, _02FC
-    ApplyMovement 0xFF, _02B8
+    ApplyMovement LOCALID_PLAYER, _02B8
     WaitMovement
     Return
 
 _027C:
     ApplyMovement 12, _02FC
-    ApplyMovement 0xFF, _02B8
+    ApplyMovement LOCALID_PLAYER, _02B8
     WaitMovement
     Return
 

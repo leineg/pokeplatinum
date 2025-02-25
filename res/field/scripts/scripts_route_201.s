@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/route_201.h"
 
     .data
 
@@ -18,12 +19,12 @@
     ScriptEntry _08E8
     ScriptEntry _0EA1
     ScriptEntry _0EB4
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0042:
     GetPlayerGender 0x4000
-    GoToIfEq 0x4000, 0, _0062
-    GoToIfEq 0x4000, 1, _006A
+    GoToIfEq 0x4000, GENDER_MALE, _0062
+    GoToIfEq 0x4000, GENDER_FEMALE, _006A
     End
 
 _0062:
@@ -54,7 +55,7 @@ _00BF:
     Message 1
     CloseMessage
     ApplyMovement 2, _06A8
-    ApplyMovement 0xFF, _0810
+    ApplyMovement LOCALID_PLAYER, _0810
     WaitMovement
     GoTo _016F
     End
@@ -66,7 +67,7 @@ _00EB:
     Message 1
     CloseMessage
     ApplyMovement 2, _06C0
-    ApplyMovement 0xFF, _0824
+    ApplyMovement LOCALID_PLAYER, _0824
     WaitMovement
     GoTo _016F
     End
@@ -78,7 +79,7 @@ _0117:
     Message 1
     CloseMessage
     ApplyMovement 2, _06D8
-    ApplyMovement 0xFF, _0838
+    ApplyMovement LOCALID_PLAYER, _0838
     WaitMovement
     GoTo _016F
     End
@@ -90,7 +91,7 @@ _0143:
     Message 1
     CloseMessage
     ApplyMovement 2, _06F0
-    ApplyMovement 0xFF, _084C
+    ApplyMovement LOCALID_PLAYER, _084C
     WaitMovement
     GoTo _016F
     End
@@ -100,27 +101,27 @@ _016F:
     Message 2
     CloseMessage
     ApplyMovement 2, _0708
-    ApplyMovement 0xFF, _0860
+    ApplyMovement LOCALID_PLAYER, _0860
     WaitMovement
     Message 3
     CloseMessage
     ApplyMovement 2, _071C
-    ApplyMovement 0xFF, _086C
+    ApplyMovement LOCALID_PLAYER, _086C
     WaitMovement
     Message 4
     CloseMessage
     WaitTime 15, 0x800C
     ApplyMovement 2, _0728
-    ApplyMovement 0xFF, _0878
+    ApplyMovement LOCALID_PLAYER, _0878
     WaitMovement
     Message 5
     CloseMessage
-    ApplyMovement 0xFF, _0730
+    ApplyMovement LOCALID_PLAYER, _0730
     ApplyMovement 2, _0730
     WaitMovement
     PlayMusic SEQ_OPENING2
     ClearFlag 0x178
-    ScrCmd_064 5
+    AddObject 5
     ScrCmd_062 5
     ApplyMovement 5, _07C0
     WaitMovement
@@ -143,9 +144,9 @@ _016F:
     ApplyMovement 5, _07D0
     WaitMovement
     Message 11
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _0298
-    GoToIfEq 0x800C, 1, _0259
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _0298
+    GoToIfEq 0x800C, MENU_NO, _0259
     End
 
 _0259:
@@ -157,9 +158,9 @@ _0259:
     ApplyMovement 2, _0758
     WaitMovement
     Message 13
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _0298
-    GoToIfEq 0x800C, 1, _0259
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _0298
+    GoToIfEq 0x800C, MENU_NO, _0259
     End
 
 _0298:
@@ -178,13 +179,13 @@ _02B3:
     Message 16
     ApplyMovement 2, _0770
     WaitMovement
-    ApplyMovement 0xFF, _088C
+    ApplyMovement LOCALID_PLAYER, _088C
     WaitMovement
     BufferPlayerName 1
     Message 17
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _030B
-    GoToIfEq 0x800C, 1, _02FD
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _030B
+    GoToIfEq 0x800C, MENU_NO, _02FD
     End
 
 _02FD:
@@ -196,7 +197,7 @@ _02FD:
 _030B:
     Message 19
     ApplyMovement 2, _0768
-    ApplyMovement 0xFF, _0894
+    ApplyMovement LOCALID_PLAYER, _0894
     WaitMovement
     BufferRivalName 0
     Message 20
@@ -206,13 +207,13 @@ _030B:
     WaitMovement
     WaitTime 25, 0x800C
     ClearFlag 0x179
-    ScrCmd_064 6
+    AddObject 6
     ScrCmd_062 6
     CallCommonScript 0x7F8
     ApplyMovement 6, _08C8
     WaitMovement
     GetPlayerGender 0x800C
-    GoToIfEq 0x800C, 0, _036E
+    GoToIfEq 0x800C, GENDER_MALE, _036E
     GoTo _03A6
     End
 
@@ -222,7 +223,7 @@ _036E:
     ApplyMovement 5, _07E8
     WaitMovement
     ClearFlag 0x17D
-    ScrCmd_064 12
+    AddObject 12
     WaitTime 15, 0x800C
     Message 23
     Message 26
@@ -238,7 +239,7 @@ _03A6:
     ApplyMovement 5, _07E8
     WaitMovement
     ClearFlag 0x17D
-    ScrCmd_064 12
+    AddObject 12
     WaitTime 15, 0x800C
     Message 25
     Message 27
@@ -276,32 +277,32 @@ _042E:
     FadeScreen 6, 1, 0, 0
     WaitFadeScreen
     SetFlag 0x17D
-    ScrCmd_065 12
-    ScrCmd_0B4
-    ScrCmd_0B5
-    ScrCmd_0A1
+    RemoveObject 12
+    StartChooseStarterScene
+    SaveChosenStarter
+    ReturnToField
     FadeScreen 6, 1, 1, 0
     WaitFadeScreen
-    ScrCmd_0DE 0x8000
-    ScrCmd_096 0x8000, 5, 0, 0x800C
+    GetPlayerStarterSpecies 0x8000
+    GivePokemon 0x8000, 5, ITEM_NONE, 0x800C
     ApplyMovement 5, _07F8
     ApplyMovement 2, _0760
-    ApplyMovement 0xFF, _0884
+    ApplyMovement LOCALID_PLAYER, _0884
     WaitMovement
     BufferRivalName 0
-    ScrCmd_0DC 2
+    BufferRivalStarterSpeciesName 2
     Message 36
     Message 37
     Message 38
     CloseMessage
     ApplyMovement 5, _0800
     ApplyMovement 2, _0788
-    ApplyMovement 0xFF, _089C
+    ApplyMovement LOCALID_PLAYER, _089C
     WaitMovement
     SetFlag 0x178
-    ScrCmd_065 5
+    RemoveObject 5
     GetPlayerGender 0x800C
-    GoToIfEq 0x800C, 0, _04CA
+    GoToIfEq 0x800C, GENDER_MALE, _04CA
     GoTo _04EE
     End
 
@@ -309,7 +310,7 @@ _04CA:
     Message 39
     CloseMessage
     ApplyMovement 6, _08D8
-    ApplyMovement 0xFF, _08A8
+    ApplyMovement LOCALID_PLAYER, _08A8
     WaitMovement
     Message 40
     CloseMessage
@@ -320,7 +321,7 @@ _04EE:
     Message 41
     CloseMessage
     ApplyMovement 6, _08D8
-    ApplyMovement 0xFF, _08A8
+    ApplyMovement LOCALID_PLAYER, _08A8
     WaitMovement
     Message 42
     CloseMessage
@@ -328,17 +329,17 @@ _04EE:
     End
 
 _0512:
-    ApplyMovement 0xFF, _08B0
+    ApplyMovement LOCALID_PLAYER, _08B0
     ApplyMovement 6, _08E0
     WaitMovement
     SetFlag 0x179
-    ScrCmd_065 6
+    RemoveObject 6
     BufferRivalName 0
     Message 43
     CloseMessage
     WaitTime 40, 0x800C
     ApplyMovement 2, _07A8
-    ApplyMovement 0xFF, _08BC
+    ApplyMovement LOCALID_PLAYER, _08BC
     WaitMovement
     GoTo _0554
     End
@@ -346,9 +347,9 @@ _0512:
 _0554:
     BufferPlayerName 1
     Message 44
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _057A
-    GoToIfEq 0x800C, 1, _0656
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _057A
+    GoToIfEq 0x800C, MENU_NO, _0656
     End
 
 _057A:
@@ -357,27 +358,27 @@ _057A:
     Message 47
     CloseMessage
     ScrCmd_06D 2, 15
-    ScrCmd_0DE 0x800C
-    GoToIfEq 0x800C, 0x183, _05BB
-    GoToIfEq 0x800C, 0x186, _05C5
-    GoTo _05B1
+    GetPlayerStarterSpecies 0x800C
+    GoToIfEq 0x800C, SPECIES_TURTWIG, Route201_StartFirstBattleTurtwig
+    GoToIfEq 0x800C, SPECIES_CHIMCHAR, Route201_StartFirstBattleChimchar
+    GoTo Route201_StartFirstBattlePiplup
     End
 
-_05B1:
-    StartFirstBattle 0x352
+Route201_StartFirstBattlePiplup:
+    StartFirstBattle TRAINER_RIVAL_ROUTE_201_PIPLUP
     GoTo _05CF
 
-_05BB:
-    StartFirstBattle 0x353
+Route201_StartFirstBattleTurtwig:
+    StartFirstBattle TRAINER_RIVAL_ROUTE_201_TURTWIG
     GoTo _05CF
 
-_05C5:
-    StartFirstBattle 0x354
+Route201_StartFirstBattleChimchar:
+    StartFirstBattle TRAINER_RIVAL_ROUTE_201_CHIMCHAR
     GoTo _05CF
 
 _05CF:
     CheckWonBattle 0x800C
-    GoToIfEq 0x800C, 0, _05F5
+    GoToIfEq 0x800C, FALSE, _05F5
     ScrCmd_062 2
     BufferRivalName 0
     BufferPlayerName 1
@@ -386,7 +387,7 @@ _05CF:
     End
 
 _05F5:
-    ScrCmd_0A1
+    ReturnToField
     ScrCmd_062 2
     FadeScreen 6, 3, 1, 0
     WaitFadeScreen
@@ -746,28 +747,28 @@ _08E0:
 
 _08E8:
     LockAll
-    ScrCmd_1BD 0x800C
+    GetPlayerDir 0x800C
     GoToIfEq 0x800C, 3, _0903
     GoTo _0935
     End
 
 _0903:
-    ApplyMovement 0xFF, _09D0
+    ApplyMovement LOCALID_PLAYER, _09D0
     ApplyMovement 2, _09B0
     WaitMovement
     Call _0967
-    ApplyMovement 0xFF, _09C0
+    ApplyMovement LOCALID_PLAYER, _09C0
     ApplyMovement 2, _0998
     WaitMovement
     GoTo _097C
     End
 
 _0935:
-    ApplyMovement 0xFF, _09D8
+    ApplyMovement LOCALID_PLAYER, _09D8
     ApplyMovement 2, _09B8
     WaitMovement
     Call _0967
-    ApplyMovement 0xFF, _09C8
+    ApplyMovement LOCALID_PLAYER, _09C8
     ApplyMovement 2, _09A4
     WaitMovement
     GoTo _097C
@@ -837,7 +838,7 @@ _09D8:
 
 _09E0:
     LockAll
-    ApplyMovement 0xFF, _0A84
+    ApplyMovement LOCALID_PLAYER, _0A84
     ApplyMovement 2, _0A74
     WaitMovement
     BufferRivalName 0
@@ -854,7 +855,7 @@ _09E0:
 _0A3B:
     ClearHasPartner
     ScrCmd_06D 2, 15
-    ApplyMovement 0xFF, _0A7C
+    ApplyMovement LOCALID_PLAYER, _0A7C
     ApplyMovement 2, _0A68
     WaitMovement
     GoTo _0A5B
@@ -892,19 +893,19 @@ _0A8C:
     BufferRivalName 0
     Message 35
     CloseMessage
-    ScrCmd_1BD 0x800C
+    GetPlayerDir 0x800C
     GoToIfEq 0x800C, 3, _0AB9
     GoTo _0ACB
     End
 
 _0AB9:
-    ApplyMovement 0xFF, _0AEC
+    ApplyMovement LOCALID_PLAYER, _0AEC
     WaitMovement
     GoTo _0ADD
     End
 
 _0ACB:
-    ApplyMovement 0xFF, _0AF4
+    ApplyMovement LOCALID_PLAYER, _0AF4
     WaitMovement
     GoTo _0ADD
     End
@@ -1003,7 +1004,7 @@ _0B89:
     GoTo _0BF5
 
 _0BBB:
-    ApplyMovement 0xFF, _0DDC
+    ApplyMovement LOCALID_PLAYER, _0DDC
     ApplyMovement 254, _0DCC
     ApplyMovement 5, _0D48
     WaitMovement
@@ -1017,8 +1018,8 @@ _0BBB:
 
 _0BF5:
     BufferCounterpartName 0
-    ScrCmd_0DB 1
-    ScrCmd_0DC 2
+    BufferPlayerStarterSpeciesName 1
+    BufferRivalStarterSpeciesName 2
     ApplyMovement 5, _0D70
     WaitMovement
     GoToIfEq 0x8005, 0x355, _0C3E
@@ -1047,7 +1048,7 @@ _0C6E:
 
 _0C86:
     GetPlayerGender 0x800C
-    GoToIfEq 0x800C, 0, _0C9D
+    GoToIfEq 0x800C, GENDER_MALE, _0C9D
     GoTo _0CA3
 
 _0C9D:
@@ -1070,8 +1071,8 @@ _0CE1:
     GoTo _0CF1
 
 _0CF1:
-    ScrCmd_065 6
-    ScrCmd_065 5
+    RemoveObject 6
+    RemoveObject 5
     SetVar 0x4086, 3
     ScrCmd_06C 254, 0
     ClearHasPartner

@@ -1,4 +1,5 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/veilstone_city_galactic_warehouse.h"
 
     .data
 
@@ -7,14 +8,14 @@
     ScriptEntry _0184
     ScriptEntry _0016
     ScriptEntry _0197
-    .short 0xFD13
+    ScriptEntryEnd
 
 _0016:
     CallIfLt 0x411F, 2, _0025
     End
 
 _0025:
-    ScrCmd_186 4, 8, 10
+    SetObjectEventPos 4, 8, 10
     ScrCmd_188 4, 14
     ScrCmd_189 4, 0
     Return
@@ -33,9 +34,9 @@ _003B:
 
 _0063:
     Message 8
-    ScrCmd_03E 0x800C
-    GoToIfEq 0x800C, 0, _0086
-    GoToIfEq 0x800C, 1, _00C2
+    ShowYesNoMenu 0x800C
+    GoToIfEq 0x800C, MENU_YES, _0086
+    GoToIfEq 0x800C, MENU_NO, _00C2
     End
 
 _0086:
@@ -49,8 +50,8 @@ _0086:
     ApplyMovement 2, _00C8
     ApplyMovement 3, _00D0
     WaitMovement
-    ScrCmd_065 2
-    ScrCmd_065 3
+    RemoveObject 2
+    RemoveObject 3
     CloseMessage
     ReleaseAll
     End
@@ -76,13 +77,13 @@ _00D8:
     WaitMovement
     Message 0
     CloseMessage
-    ApplyMovement 0xFF, _0168
+    ApplyMovement LOCALID_PLAYER, _0168
     ApplyMovement 4, _0134
     WaitMovement
     BufferPlayerName 0
     Message 1
     CloseMessage
-    ApplyMovement 0xFF, _0174
+    ApplyMovement LOCALID_PLAYER, _0174
     ApplyMovement 4, _015C
     WaitMovement
     SetVar 0x407C, 1
@@ -142,11 +143,11 @@ _0184:
 
 _0197:
     LockAll
-    ScrCmd_186 4, 8, 11
+    SetObjectEventPos 4, 8, 11
     ScrCmd_188 4, 14
     ScrCmd_189 4, 0
     ClearFlag 0x20D
-    ScrCmd_064 4
+    AddObject 4
     GetPlayerMapPos 0x8004, 0x8005
     CallIfEq 0x8004, 8, _025A
     CallIfEq 0x8004, 9, _026E
@@ -162,15 +163,15 @@ _0197:
     ApplyMovement 2, _00C8
     ApplyMovement 3, _00D0
     WaitMovement
-    ScrCmd_065 2
-    ScrCmd_065 3
+    RemoveObject 2
+    RemoveObject 3
     CallIfEq 0x8004, 8, _0282
     CallIfEq 0x8004, 9, _028E
     Message 6
     CloseMessage
     CallIfEq 0x8004, 8, _029A
     CallIfEq 0x8004, 9, _02AE
-    ScrCmd_065 4
+    RemoveObject 4
     SetFlag 0x28A
     SetVar 0x411F, 4
     ReleaseAll
@@ -178,13 +179,13 @@ _0197:
 
 _025A:
     ApplyMovement 4, _02E8
-    ApplyMovement 0xFF, _02C4
+    ApplyMovement LOCALID_PLAYER, _02C4
     WaitMovement
     Return
 
 _026E:
     ApplyMovement 4, _02FC
-    ApplyMovement 0xFF, _02D0
+    ApplyMovement LOCALID_PLAYER, _02D0
     WaitMovement
     Return
 
@@ -200,13 +201,13 @@ _028E:
 
 _029A:
     ApplyMovement 4, _0320
-    ApplyMovement 0xFF, _02DC
+    ApplyMovement LOCALID_PLAYER, _02DC
     WaitMovement
     Return
 
 _02AE:
     ApplyMovement 4, _0338
-    ApplyMovement 0xFF, _02DC
+    ApplyMovement LOCALID_PLAYER, _02DC
     WaitMovement
     Return
 

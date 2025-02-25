@@ -1,19 +1,20 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/pokemon_league_champion_room.h"
 
     .data
 
     ScriptEntry _000A
     ScriptEntry _000E
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000A:
     ScrCmd_25B
     End
 
 _000E:
-    ApplyMovement 0xFF, _012C
+    ApplyMovement LOCALID_PLAYER, _012C
     WaitMovement
-    ScrCmd_0EA trainer_champion_cynthia
+    ScrCmd_0EA TRAINER_CHAMPION_CYNTHIA
     CallIfUnset 0x964, _00EB
     CallIfSet 0x964, _00F0
     CloseMessage
@@ -21,7 +22,7 @@ _000E:
     CallIfUnset 214, _00F5
     CallIfSet 214, _00FD
     CheckWonBattle 0x800C
-    GoToIfEq 0x800C, 0, _0121
+    GoToIfEq 0x800C, FALSE, _0121
     Message 1
     SetFlag 180
     CallIfUnset 214, _0105
@@ -30,7 +31,7 @@ _000E:
     CloseMessage
     ApplyMovement 0, _0144
     WaitMovement
-    ApplyMovement 0xFF, _0134
+    ApplyMovement LOCALID_PLAYER, _0134
     WaitMovement
     ApplyMovement 0, _0150
     WaitMovement
@@ -39,7 +40,7 @@ _000E:
     WaitTime 30, 0x800C
     SetFlag 0x23A
     SetFlag 0x23B
-    ApplyMovement 0xFF, _013C
+    ApplyMovement LOCALID_PLAYER, _013C
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
     FadeScreen 6, 1, 0, 0
@@ -59,24 +60,24 @@ _00F0:
     Return
 
 _00F5:
-    StartTrainerBattle trainer_champion_cynthia
+    StartTrainerBattle TRAINER_CHAMPION_CYNTHIA
     Return
 
 _00FD:
-    StartTrainerBattle trainer_champion_cynthia_rematch
+    StartTrainerBattle TRAINER_CHAMPION_CYNTHIA_REMATCH
     Return
 
 _0105:
-    CreateJournalEvent LOCATION_EVENT_BEAT_CHAMPION, trainer_champion_cynthia, 0, 0, 0
+    CreateJournalEvent LOCATION_EVENT_BEAT_CHAMPION, TRAINER_CHAMPION_CYNTHIA, 0, 0, 0
     Return
 
 _0113:
-    CreateJournalEvent LOCATION_EVENT_BEAT_CHAMPION, trainer_champion_cynthia_rematch, 0, 0, 0
+    CreateJournalEvent LOCATION_EVENT_BEAT_CHAMPION, TRAINER_CHAMPION_CYNTHIA_REMATCH, 0, 0, 0
     Return
 
 _0121:
     ClearFlag 0x98B
-    ScrCmd_0EB
+    BlackOutFromBattle
     ReleaseAll
     End
 

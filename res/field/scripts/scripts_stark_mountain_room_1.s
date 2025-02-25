@@ -1,10 +1,11 @@
 #include "macros/scrcmd.inc"
+#include "res/text/bank/stark_mountain_room_1.h"
 
     .data
 
     ScriptEntry _000A
     ScriptEntry _0014
-    .short 0xFD13
+    ScriptEntryEnd
 
 _000A:
     SetFlag 0x9D2
@@ -19,9 +20,9 @@ _0014:
     CloseMessage
     ApplyMovement 0, _0160
     WaitMovement
-    StartTrainerBattle trainer_commander_mars_stark_mountain
+    StartTrainerBattle TRAINER_COMMANDER_MARS_STARK_MOUNTAIN
     CheckWonBattle 0x800C
-    GoToIfEq 0x800C, 0, _0150
+    GoToIfEq 0x800C, FALSE, _0150
     Message 1
     CloseMessage
     ApplyMovement 0, _0168
@@ -32,9 +33,9 @@ _0014:
     CloseMessage
     ApplyMovement 4, _01CC
     WaitMovement
-    StartTrainerBattle trainer_commander_jupiter_stark_mountain
+    StartTrainerBattle TRAINER_COMMANDER_JUPITER_STARK_MOUNTAIN
     CheckWonBattle 0x800C
-    GoToIfEq 0x800C, 0, _0150
+    GoToIfEq 0x800C, FALSE, _0150
     Message 3
     CloseMessage
     WaitTime 15, 0x800C
@@ -51,7 +52,7 @@ _0014:
     Message 6
     CloseMessage
     ApplyMovement 0, _0190
-    ApplyMovement 0xFF, _01A4
+    ApplyMovement LOCALID_PLAYER, _01A4
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
     WaitFanfare SEQ_SE_DP_KAIDAN2
@@ -64,7 +65,7 @@ _0014:
     PlayFanfare SEQ_SE_DP_KAIDAN2
     WaitFanfare SEQ_SE_DP_KAIDAN2
     ApplyMovement 14, _0200
-    ApplyMovement 0xFF, _01B4
+    ApplyMovement LOCALID_PLAYER, _01B4
     WaitMovement
     Message 8
     Message 9
@@ -73,17 +74,17 @@ _0014:
     ApplyMovement 15, _0210
     ApplyMovement 16, _021C
     WaitMovement
-    ScrCmd_065 14
-    ScrCmd_065 0
-    ScrCmd_065 4
-    ScrCmd_065 15
-    ScrCmd_065 16
+    RemoveObject 14
+    RemoveObject 0
+    RemoveObject 4
+    RemoveObject 15
+    RemoveObject 16
     SetVar 0x40AD, 1
     ReleaseAll
     End
 
 _0150:
-    ScrCmd_0EB
+    BlackOutFromBattle
     ReleaseAll
     End
 
