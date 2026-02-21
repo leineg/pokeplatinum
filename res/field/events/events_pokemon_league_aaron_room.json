@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 134,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_AARON",
+            "graphics_id": "OBJ_EVENT_GFX_AARON",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 1,
             "initial_dir": 1,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 209,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 642,
+            "id": "LOCALID_ENTRANCE_DOOR",
+            "graphics_id": "OBJ_EVENT_GFX_ELITE_FOUR_ROOM_DOOR",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_POKEMON_LEAGUE_AARON_ROOM_ENTRANCE_DOOR",
             "script": 2037,
             "initial_dir": 0,
             "data": [],
@@ -30,10 +32,11 @@
             "y": 0
         },
         {
-            "graphics_id": 209,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 646,
+            "id": "LOCALID_EXIT_DOOR",
+            "graphics_id": "OBJ_EVENT_GFX_ELITE_FOUR_ROOM_DOOR",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_POKEMON_LEAGUE_AARON_ROOM_EXIT_DOOR",
             "script": 2037,
             "initial_dir": 0,
             "data": [],
@@ -48,13 +51,13 @@
         {
             "x": 8,
             "z": 2,
-            "dest_header_id": 178,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE_ELEVATOR_TO_BERTHA_ROOM",
             "dest_warp_id": 1
         },
         {
             "x": 8,
             "z": 11,
-            "dest_header_id": 176,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE_ELEVATOR_TO_AARON_ROOM",
             "dest_warp_id": 0
         }
     ],

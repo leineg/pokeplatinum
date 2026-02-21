@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/oreburgh_gate_1f.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0014
@@ -9,15 +8,15 @@
     ScriptEntryEnd
 
 _000E:
-    SetFlag 0x9CF
+    SetFlag FLAG_FIRST_ARRIVAL_OREBURGH_GATE
     End
 
 _0014:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_COAL, 0x800C
-    GoToIfEq 0x800C, 0, _003A
+    CheckBadgeAcquired BADGE_ID_COAL, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _003A
     Message 2
     WaitABXPadPress
     CloseMessage
@@ -25,11 +24,11 @@ _0014:
     End
 
 _003A:
-    GoToIfSet 147, _0064
+    GoToIfSet FLAG_UNK_0x0093, _0064
     Message 0
-    SetVar 0x8004, 0x1A9
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
+    SetVar VAR_0x8004, ITEM_HM06
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
     Call _006F
     GoTo _0064
 
@@ -41,8 +40,8 @@ _0064:
     End
 
 _006F:
-    SetFlag 147
-    SetVar 0x4093, 2
+    SetFlag FLAG_UNK_0x0093
+    SetVar VAR_UNK_0x4093, 2
     Return
 
 _007B:
@@ -51,9 +50,9 @@ _007B:
     ApplyMovement LOCALID_PLAYER, _00B4
     WaitMovement
     Message 0
-    SetVar 0x8004, 0x1A9
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
+    SetVar VAR_0x8004, ITEM_HM06
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
     Call _006F
     Message 1
     WaitABXPadPress
@@ -63,13 +62,13 @@ _007B:
 
     .balign 4, 0
 _00B4:
-    MoveAction_063
-    MoveAction_032
+    Delay8
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _00C0:
-    MoveAction_033
-    MoveAction_075
-    MoveAction_013
+    WalkOnSpotNormalSouth
+    EmoteExclamationMark
+    WalkNormalSouth
     EndMovement

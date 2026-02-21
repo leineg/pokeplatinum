@@ -17,8 +17,21 @@
                 "MOVE_HORN_DRILL",
                 "MOVE_FLAIL"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I wasn’t lucky the other day.\n",
+                "Things will be different today.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "I guessed wrong too often.\n"
         }
     ]
 }

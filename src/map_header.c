@@ -31,7 +31,7 @@ const u16 MapHeader_GetMapMatrixID(u32 headerID)
     headerID = MapHeader_IDBoundsCheck(headerID);
     u16 mapMatrixID = sMapHeaders[headerID].mapMatrixID;
 
-    if (mapMatrixID == 22 && gGameVersion == PEARL) {
+    if (mapMatrixID == 22 && gGameVersion == VERSION_PEARL) {
         mapMatrixID = 23;
     }
 
@@ -110,7 +110,7 @@ u32 MapHeader_GetCameraType(u32 headerID)
     return sMapHeaders[headerID].cameraType;
 }
 
-u32 MapHeader_GetBattleBG(u32 headerID)
+enum BattleBackground MapHeader_GetBattleBG(u32 headerID)
 {
     headerID = MapHeader_IDBoundsCheck(headerID);
     return sMapHeaders[headerID].battleBG;
@@ -174,7 +174,7 @@ BOOL MapHeader_IsOutdoors(u32 headerID)
     return (MapHeader_GetMapType(headerID) == 1) || (MapHeader_GetMapType(headerID) == 2);
 }
 
-BOOL sub_0203A2C8(u32 headerID)
+BOOL MapHeader_IsPokemonCenter2(u32 headerID)
 {
     if (MapHeader_IsPokemonCenter(headerID)) {
         return TRUE;

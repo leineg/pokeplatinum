@@ -61,9 +61,7 @@ static const u16 Unk_ov104_022418B0[] = {
 
 UnkStruct_ov104_0223DA28 *ov104_0223D9E4(BgConfig *param0, PaletteData *param1)
 {
-    UnkStruct_ov104_0223DA28 *v0;
-
-    v0 = Heap_AllocFromHeap(94, sizeof(UnkStruct_ov104_0223DA28));
+    UnkStruct_ov104_0223DA28 *v0 = Heap_Alloc(HEAP_ID_94, sizeof(UnkStruct_ov104_0223DA28));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov104_0223DA28));
 
     v0->unk_00 = ov104_0223DA40(param0);
@@ -78,7 +76,7 @@ void ov104_0223DA28(UnkStruct_ov104_0223DA28 *param0)
 {
     ov104_0223DB34(param0->unk_00);
     ov104_0223DC04(param0->unk_04);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static UnkStruct_ov104_0223DB34 *ov104_0223DA40(BgConfig *param0)
@@ -87,7 +85,7 @@ static UnkStruct_ov104_0223DB34 *ov104_0223DA40(BgConfig *param0)
 
     GF_ASSERT(2 == NELEMS(Unk_ov104_022418B0));
 
-    v0 = Heap_AllocFromHeap(94, sizeof(UnkStruct_ov104_0223DB34));
+    v0 = Heap_Alloc(HEAP_ID_94, sizeof(UnkStruct_ov104_0223DB34));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov104_0223DB34));
     v0->unk_04 = param0;
 
@@ -97,12 +95,12 @@ static UnkStruct_ov104_0223DB34 *ov104_0223DA40(BgConfig *param0)
         NNSG2dScreenData *v3;
         int v4;
 
-        v1 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__FRONTIER_GRAPHIC__FRONTIER_BG, 94);
+        v1 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__FRONTIER_GRAPHIC__FRONTIER_BG, HEAP_ID_94);
 
         for (v4 = 0; v4 < 2; v4++) {
-            v2 = Graphics_GetScrnDataFromOpenNARC(v1, Unk_ov104_022418B0[v4], 1, &v3, 94);
+            v2 = Graphics_GetScrnDataFromOpenNARC(v1, Unk_ov104_022418B0[v4], 1, &v3, HEAP_ID_94);
             MI_CpuCopy32(v3->rawData, v0->unk_08[v4], 0x1000);
-            Heap_FreeToHeap(v2);
+            Heap_Free(v2);
         }
 
         NARC_dtor(v1);
@@ -113,17 +111,17 @@ static UnkStruct_ov104_0223DB34 *ov104_0223DA40(BgConfig *param0)
         void *v6;
         NNSG2dCharacterData *v7;
 
-        v5 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__FRONTIER_GRAPHIC__FRONTIER_BG, 94);
+        v5 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__FRONTIER_GRAPHIC__FRONTIER_BG, HEAP_ID_94);
 
-        v6 = Graphics_GetCharDataFromOpenNARC(v5, 14, 1, &v7, 94);
+        v6 = Graphics_GetCharDataFromOpenNARC(v5, 14, 1, &v7, HEAP_ID_94);
         MI_CpuCopy32(v7->pRawData, v0->unk_2008[0], v7->szByte);
 
-        Heap_FreeToHeap(v6);
+        Heap_Free(v6);
 
-        v6 = Graphics_GetCharDataFromOpenNARC(v5, 15, 1, &v7, 94);
+        v6 = Graphics_GetCharDataFromOpenNARC(v5, 15, 1, &v7, HEAP_ID_94);
         MI_CpuCopy32(v7->pRawData, v0->unk_2008[1], v7->szByte);
 
-        Heap_FreeToHeap(v6);
+        Heap_Free(v6);
         NARC_dtor(v5);
     }
 
@@ -135,7 +133,7 @@ static UnkStruct_ov104_0223DB34 *ov104_0223DA40(BgConfig *param0)
 static void ov104_0223DB34(UnkStruct_ov104_0223DB34 *param0)
 {
     SysTask_Done(param0->unk_00);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static void ov104_0223DB48(SysTask *param0, void *param1)
@@ -162,9 +160,7 @@ static void ov104_0223DB48(SysTask *param0, void *param1)
 
 static UnkStruct_ov104_0223DC04 *ov104_0223DBB8(PaletteData *param0)
 {
-    UnkStruct_ov104_0223DC04 *v0;
-
-    v0 = Heap_AllocFromHeap(94, sizeof(UnkStruct_ov104_0223DC04));
+    UnkStruct_ov104_0223DC04 *v0 = Heap_Alloc(HEAP_ID_94, sizeof(UnkStruct_ov104_0223DC04));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov104_0223DC04));
 
     v0->unk_04 = param0;
@@ -185,7 +181,7 @@ static UnkStruct_ov104_0223DC04 *ov104_0223DBB8(PaletteData *param0)
 static void ov104_0223DC04(UnkStruct_ov104_0223DC04 *param0)
 {
     SysTask_Done(param0->unk_00);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static void ov104_0223DC18(SysTask *param0, void *param1)

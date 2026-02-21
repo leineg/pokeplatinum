@@ -1,11 +1,11 @@
 #ifndef POKEPLATINUM_UNK_0209BA80_H
 #define POKEPLATINUM_UNK_0209BA80_H
 
-#include "struct_defs/struct_0204AFC4.h"
+#include "struct_defs/battle_tower.h"
 #include "struct_defs/struct_0209BBA4.h"
 
 void sub_0209BA80(void *param0);
-BOOL sub_0209BB08(UnkStruct_0204AFC4 *param0);
+BOOL sub_0209BB08(BattleTower *battleTower);
 BOOL sub_0209BBA4(UnkStruct_0209BBA4 *param0);
 BOOL sub_0209BC1C(UnkStruct_0209BBA4 *param0, u16 param1);
 BOOL sub_0209BC64(UnkStruct_0209BBA4 *param0, u16 param1, u16 param2);

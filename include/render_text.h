@@ -3,7 +3,7 @@
 
 #include "bg_window.h"
 #include "charcode.h"
-#include "strbuf.h"
+#include "string_gf.h"
 
 #define COLOR_CACHE_OFFSET                100
 #define COLOR_CACHE_RANGE                 7
@@ -19,7 +19,7 @@ typedef struct TextGlyph {
 
 union StringToPrint {
     const charcode_t *raw;
-    const Strbuf *strbuf;
+    const String *string;
 };
 
 typedef struct TextPrinterTemplate {
@@ -76,6 +76,11 @@ enum RenderResult {
     RENDER_REPEAT, // Run render function again, if e.g. a control code is encountered.
     RENDER_UPDATE,
 };
+
+// The NO_WAIT flag is dependent on ENABLED, so it does not have a unique constant for bitflag 2.
+#define AUTO_SCROLL_DISABLED 0
+#define AUTO_SCROLL_ENABLED  (1 << 0)
+#define AUTO_SCROLL_NO_WAIT  ((1 << 1) | AUTO_SCROLL_ENABLED)
 
 enum RenderResult RenderText(TextPrinter *printer);
 void TextPrinter_SetScrollArrowBaseTile(u16 tile);

@@ -6,7 +6,7 @@
             "x": 1,
             "z": 4,
             "y": 0,
-            "player_facing_dir": 2
+            "player_facing_dir": "BG_EVENT_DIR_WEST"
         },
         {
             "script": 2051,
@@ -14,15 +14,16 @@
             "x": 4,
             "z": 2,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 13,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "ROUTE_212_HOUSE_BEAUTY_0",
+            "graphics_id": "OBJ_EVENT_GFX_BEAUTY",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 3,
             "data": [],
@@ -33,10 +34,11 @@
             "y": 0
         },
         {
-            "graphics_id": 20,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "ROUTE_212_HOUSE_HIKER_1",
+            "graphics_id": "OBJ_EVENT_GFX_HIKER",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 5,
             "initial_dir": 2,
             "data": [],
@@ -47,10 +49,11 @@
             "y": 0
         },
         {
-            "graphics_id": 2,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "ROUTE_212_HOUSE_TWIN_2",
+            "graphics_id": "OBJ_EVENT_GFX_TWIN",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -65,7 +68,7 @@
         {
             "x": 4,
             "z": 8,
-            "dest_header_id": 371,
+            "dest_header_id": "MAP_HEADER_ROUTE_212_SOUTH",
             "dest_warp_id": 0
         }
     ],

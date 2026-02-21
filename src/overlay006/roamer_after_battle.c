@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "constants/battle.h"
+#include "constants/roamer_states.h"
 
 #include "struct_defs/special_encounter.h"
 
@@ -18,7 +19,7 @@
 #include "system_vars.h"
 #include "vars_flags.h"
 
-static void MoveRoamersOffMap(SpecialEncounter *param0, const int param1);
+static void MoveRoamersOffMap(SpecialEncounter *param0, const int currentMap);
 static Roamer *GetBattledRoamer(SpecialEncounter *speEnc, const int species);
 
 void RoamerAfterBattle_UpdateRoamers(FieldSystem *fieldSystem, FieldBattleDTO *battleParams)
@@ -28,25 +29,22 @@ void RoamerAfterBattle_UpdateRoamers(FieldSystem *fieldSystem, FieldBattleDTO *b
     int wildSpecies;
     SpecialEncounter *specialEncounter;
     Roamer *roamer;
-    Party *enemyParty;
-    Pokemon *enemyMon;
-
-    enemyParty = battleParams->parties[1];
-    enemyMon = Party_GetPokemonBySlotIndex(enemyParty, 0);
+    Party *enemyParty = battleParams->parties[1];
+    Pokemon *enemyMon = Party_GetPokemonBySlotIndex(enemyParty, 0);
     specialEncounter = SaveData_GetSpecialEncounters(fieldSystem->saveData);
     wildSpecies = Pokemon_GetValue(enemyMon, MON_DATA_SPECIES, NULL);
     roamer = GetBattledRoamer(specialEncounter, wildSpecies);
 
     if (roamer != NULL) {
-        roamerHP = (u16)(Pokemon_GetValue(enemyMon, MON_DATA_CURRENT_HP, NULL));
-        roamerStatus = (u8)(Pokemon_GetValue(enemyMon, MON_DATA_STATUS_CONDITION, NULL));
+        roamerHP = (u16)(Pokemon_GetValue(enemyMon, MON_DATA_HP, NULL));
+        roamerStatus = (u8)(Pokemon_GetValue(enemyMon, MON_DATA_STATUS, NULL));
 
-        if ((battleParams->resultMask == BATTLE_RESULT_WIN) && (roamerHP == 0)) {
+        if (battleParams->resultMask == BATTLE_RESULT_WIN && roamerHP == 0) {
             SpecialEncounter_ZeroRoamerData(&roamer);
-            SystemVars_SetRoamingSpeciesState(SaveData_GetVarsFlags(fieldSystem->saveData), wildSpecies, 2);
+            SystemVars_SetRoamingSpeciesState(SaveData_GetVarsFlags(fieldSystem->saveData), wildSpecies, ROAMER_STATE_DEFEATED);
         } else if (battleParams->resultMask == BATTLE_RESULT_CAPTURED_MON) {
             SpecialEncounter_ZeroRoamerData(&roamer);
-            SystemVars_SetRoamingSpeciesState(SaveData_GetVarsFlags(fieldSystem->saveData), wildSpecies, 1);
+            SystemVars_SetRoamingSpeciesState(SaveData_GetVarsFlags(fieldSystem->saveData), wildSpecies, ROAMER_STATE_CAPTURED);
         } else {
             Roamer_SetData(roamer, ROAMER_DATA_CURRENT_HP, roamerHP);
             Roamer_SetData(roamer, ROAMER_DATA_STATUS, roamerStatus);

@@ -13,7 +13,7 @@
             "level": 41,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,7 +22,7 @@
             "level": 41,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -31,7 +31,7 @@
             "level": 41,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -40,8 +40,26 @@
             "level": 41,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I don’t want to ever battle with\n",
+                "people who don’t treat Pokémon nice!\r",
+                "But I know you treat yours kindly.\n",
+                "I’ll battle you anytime!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Giggle...\n",
+                "They’re raised with a lot of care!\n"
+            ]
         }
     ]
 }

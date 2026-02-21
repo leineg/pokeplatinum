@@ -4,12 +4,9 @@
 #include <nitro/fx/fx.h>
 #include <nnsys.h>
 
-#include "struct_decls/struct_02027F8C_decl.h"
 #include "struct_decls/struct_0202B370_decl.h"
 #include "struct_decls/struct_02095E80_decl.h"
-#include "struct_defs/archived_sprite.h"
 #include "struct_defs/chatot_cry.h"
-#include "struct_defs/struct_02027F8C.h"
 #include "struct_defs/struct_02095E80_sub1.h"
 
 #include "applications/pokemon_summary_screen/main.h"
@@ -22,23 +19,24 @@
 #include "menu.h"
 #include "message.h"
 #include "overlay_manager.h"
+#include "pal_pad.h"
 #include "party.h"
 #include "savedata.h"
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_util.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_list.h"
 #include "string_template.h"
 #include "sys_task_manager.h"
 
 struct UnkStruct_02095E80_t {
     FieldSystem *fieldSystem;
-    SaveData *unk_04;
+    SaveData *saveData;
     UnkStruct_ov88_0223C370 *unk_08;
     PokemonSummary unk_0C;
     int unk_3C;
-    OverlayManager *unk_40;
+    ApplicationManager *appMan;
     int unk_44;
     int unk_48;
     int unk_4C;
@@ -66,9 +64,9 @@ struct UnkStruct_02095E80_t {
     StringTemplate *unk_17C;
     StringTemplate *unk_180;
     MessageLoader *unk_184;
-    Strbuf *unk_188;
-    Strbuf *unk_18C;
-    Strbuf *unk_190;
+    String *unk_188;
+    String *unk_18C;
+    String *unk_190;
     SpriteList *unk_194;
     G2dRenderer unk_198;
     SpriteResourceCollection *unk_324[4];
@@ -102,15 +100,15 @@ struct UnkStruct_02095E80_t {
     void *unk_7E8[12];
     NNSG2dCharacterData *unk_818[12];
     u8 unk_848[2][3200];
-    ArchivedSprite unk_2148[2];
+    PokemonSpriteTemplate unk_2148[2];
     int unk_2168;
     u8 unk_216C[256];
     int (*unk_226C)(UnkStruct_02095E80 *);
     Party *unk_2270;
     Party *unk_2274;
     ChatotCry *unk_2278;
-    UnkStruct_02027F8C *unk_227C;
-    UnkStruct_02027F8C unk_2280;
+    PalPad *unk_227C;
+    PalPad unk_2280;
     int unk_2308;
     int unk_230C;
     int unk_2310;
@@ -128,7 +126,7 @@ struct UnkStruct_02095E80_t {
     StringList *unk_36D4;
     ListMenu *unk_36D8;
     Window unk_36DC;
-    UnkStruct_0202B370 *unk_36EC;
+    WiFiList *unk_36EC;
     int unk_36F0;
     int unk_36F4;
     int unk_36F8;

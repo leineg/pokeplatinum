@@ -22,7 +22,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_SCREECH"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -36,7 +36,7 @@
                 "MOVE_BITE",
                 "MOVE_SUPERSONIC"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -50,8 +50,21 @@
                 "MOVE_ASTONISH",
                 "MOVE_FAINT_ATTACK"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_LAST_BATTLER",
+            "en_US": "You’ve forced my hand this time!\n"
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Impressive.\n",
+                "Your prowess is notable.\n"
+            ]
         }
     ]
 }

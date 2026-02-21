@@ -3,11 +3,10 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_02014014_decl.h"
-#include "struct_defs/archived_sprite.h"
+#include "constants/heap.h"
+#include "constants/narc.h"
+
 #include "struct_defs/sprite_animation_frame.h"
-#include "struct_defs/struct_0207C690.h"
-#include "struct_defs/struct_02099F80.h"
 
 #include "overlay119/struct_ov119_021D0FD0.h"
 #include "overlay119/struct_ov119_021D14DC.h"
@@ -18,37 +17,37 @@
 #include "bg_window.h"
 #include "camera.h"
 #include "font.h"
+#include "g3d_pipeline.h"
 #include "graphics.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "menu.h"
 #include "message.h"
 #include "palette.h"
+#include "particle_system.h"
 #include "pokemon.h"
+#include "pokemon_sprite.h"
 #include "render_window.h"
+#include "screen_fade.h"
 #include "spl.h"
 #include "sprite.h"
 #include "sprite_system.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_list.h"
 #include "string_template.h"
 #include "text.h"
-#include "unk_0200762C.h"
-#include "unk_0200F174.h"
-#include "unk_02014000.h"
 #include "unk_0202419C.h"
-#include "unk_02024220.h"
 #include "vram_transfer.h"
 
 void ov119_021D0D80(void);
 void ov119_021D0DA8(void);
-GenericPointerData *ov119_021D0DD4(void);
+G3DPipelineBuffers *ov119_021D0DD4(void);
 void ov119_021D0DF4(void);
 void ov119_021D0E78(void);
 static u32 ov119_021D13B4(u32 param0, BOOL param1);
 static u32 ov119_021D13D0(u32 param0, BOOL param1);
-static UnkStruct_02014014 *ov119_021D13EC(int param0);
-static UnkStruct_02014014 *ov119_021D1434(int param0, int param1, int param2);
+static ParticleSystem *ov119_021D13EC(enum HeapID heapID);
+static ParticleSystem *ov119_021D1434(enum HeapID heapID, int param1, int param2);
 static void ov119_021D1474(SPLEmitter *param0);
 
 void ov119_021D0D80(void)
@@ -66,12 +65,9 @@ void ov119_021D0DA8(void)
     G2S_SetBlendAlpha(GX_BLEND_PLANEMASK_NONE, GX_BLEND_PLANEMASK_BG1 | GX_BLEND_PLANEMASK_BG2 | GX_BLEND_PLANEMASK_BG3, 7, 8);
 }
 
-GenericPointerData *ov119_021D0DD4(void)
+G3DPipelineBuffers *ov119_021D0DD4(void)
 {
-    GenericPointerData *v0;
-
-    v0 = sub_02024220(71, 0, 2, 0, 2, ov119_021D0DF4);
-    return v0;
+    return G3DPipeline_Init(HEAP_ID_71, TEXTURE_VRAM_SIZE_256K, PALETTE_VRAM_SIZE_32K, ov119_021D0DF4);
 }
 
 void ov119_021D0DF4(void)
@@ -104,7 +100,7 @@ void ov119_021D0E78(void)
     v2 = NNS_GfdGetTexKeyAddr(v0);
     v3 = NNS_GfdGetPlttKeyAddr(v1);
 
-    sub_02014000();
+    ParticleSystem_ZeroAll();
 }
 
 void ov119_021D0EB8(BgConfig *param0)
@@ -112,7 +108,7 @@ void ov119_021D0EB8(BgConfig *param0)
     GXLayers_DisableEngineALayers();
 
     {
-        UnkStruct_02099F80 v0 = {
+        GXBanks v0 = {
             GX_VRAM_BG_128_A,
             GX_VRAM_BGEXTPLTT_NONE,
             GX_VRAM_SUB_BG_32_H,
@@ -147,58 +143,55 @@ void ov119_021D0EB8(BgConfig *param0)
     {
         BgTemplate v2[] = {
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x0000,
-                GX_BG_CHARBASE_0x04000,
-                GX_BG_EXTPLTT_01,
-                0,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x0000,
+                .charBase = GX_BG_CHARBASE_0x04000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 0,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x2000,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x1000,
-                GX_BG_CHARBASE_0x0c000,
-                GX_BG_EXTPLTT_01,
-                1,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x2000,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x1000,
+                .charBase = GX_BG_CHARBASE_0x0c000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 1,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x1000,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x3000,
-                GX_BG_CHARBASE_0x10000,
-                GX_BG_EXTPLTT_01,
-                2,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x1000,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x3000,
+                .charBase = GX_BG_CHARBASE_0x10000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 2,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
         };
 
-        Bg_InitFromTemplate(param0, 1, &v2[0], 0);
-        Bg_InitFromTemplate(param0, 2, &v2[1], 0);
-        Bg_InitFromTemplate(param0, 3, &v2[2], 0);
-        Bg_ClearTilemap(param0, 1);
-        Bg_ClearTilemap(param0, 2);
-        Bg_ClearTilemap(param0, 3);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_1, &v2[0], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_2, &v2[1], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_3, &v2[2], 0);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_1);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_2);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_3);
 
         G2_SetBG0Priority(1);
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG0, 1);
@@ -210,24 +203,23 @@ void ov119_021D0EB8(BgConfig *param0)
     {
         BgTemplate v3[] = {
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x6800,
-                GX_BG_CHARBASE_0x00000,
-                GX_BG_EXTPLTT_01,
-                0,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x6800,
+                .charBase = GX_BG_CHARBASE_0x00000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 0,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
         };
 
-        Bg_InitFromTemplate(param0, 4, &v3[0], 0);
-        Bg_ClearTilemap(param0, 4);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_0, &v3[0], 0);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_0);
     }
 }
 
@@ -235,7 +227,7 @@ void ov119_021D0FD0(void *param0)
 {
     UnkStruct_ov119_021D0FD0 *v0 = (UnkStruct_ov119_021D0FD0 *)param0;
 
-    sub_02008A94(v0->unk_04.unk_38);
+    PokemonSpriteManager_UpdateCharAndPltt(v0->unk_04.unk_38);
     VramTransfer_Process();
     SpriteSystem_TransferOam();
     PaletteData_CommitFadedBuffers(v0->unk_04.unk_04);
@@ -249,36 +241,36 @@ void ov119_021D1004(void)
     int v0;
     const MtxFx43 *v1;
 
-    sub_020241B4();
+    G3_ResetG3X();
 
-    v0 = sub_0201469C();
+    v0 = ParticleSystem_DrawAll();
 
     if (v0 > 0) {
-        sub_020241B4();
+        G3_ResetG3X();
         NNS_G2dSetupSoftwareSpriteCamera();
     }
 
-    sub_020146C0();
+    ParticleSystem_UpdateAll();
     G3_RequestSwapBuffers(GX_SORTMODE_MANUAL, GX_BUFFERMODE_Z);
 }
 
 void ov119_021D1028(void)
 {
-    StartScreenTransition(0, 1, 1, 0x0, 6, 1, 71);
+    StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_71);
 }
 
 void ov119_021D1048(void)
 {
-    StartScreenTransition(0, 0, 0, 0x0, 6, 1, 71);
+    StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, HEAP_ID_71);
 }
 
 void ov119_021D1068(BgConfig *param0, PaletteData *param1, int param2)
 {
     int v0 = 71;
 
-    LoadMessageBoxGraphics(param0, 1, 20, 15, param2, v0);
+    LoadMessageBoxGraphics(param0, BG_LAYER_MAIN_1, 20, 15, param2, v0);
     PaletteData_LoadBufferFromFileStart(param1, 38, GetMessageBoxPaletteNARCMember(param2), v0, 0, 0x20, 12 * 16);
-    LoadStandardWindowGraphics(param0, 1, (20 + (18 + 12)), 13, 0, v0);
+    LoadStandardWindowGraphics(param0, BG_LAYER_MAIN_1, 20 + (18 + 12), 13, 0, v0);
     PaletteData_LoadBufferFromFileStart(param1, 38, GetStandardWindowPaletteNARCMember(), v0, 0, 0x20, 13 * 16);
     PaletteData_LoadBufferFromFileStart(param1, 14, 7, v0, 0, 0x20, 14 * 16);
 }
@@ -295,18 +287,18 @@ void ov119_021D10F0(BgConfig *param0, Window *param1, int param2, int param3, in
 int ov119_021D1158(Window *param0, int param1, Pokemon *param2, int param3)
 {
     int v0;
-    Strbuf *v1;
-    Strbuf *v2;
+    String *v1;
+    String *v2;
     StringTemplate *v3;
     BoxPokemon *v4;
     MessageLoader *v5;
 
     Window_FillTilemap(param0, 15);
 
-    v5 = MessageLoader_Init(0, 26, 357, 71);
-    v3 = StringTemplate_Default(71);
-    v1 = MessageLoader_GetNewStrbuf(v5, param1);
-    v2 = Strbuf_Init(255, 71);
+    v5 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_EGG_HATCH, HEAP_ID_71);
+    v3 = StringTemplate_Default(HEAP_ID_71);
+    v1 = MessageLoader_GetNewString(v5, param1);
+    v2 = String_Init(255, HEAP_ID_71);
     v4 = Pokemon_GetBoxPokemon(param2);
 
     StringTemplate_SetSpeciesName(v3, 0, v4);
@@ -315,8 +307,8 @@ int ov119_021D1158(Window *param0, int param1, Pokemon *param2, int param3)
     v0 = Text_AddPrinterWithParams(param0, FONT_MESSAGE, v2, 0, 0, param3, NULL);
 
     MessageLoader_Free(v5);
-    Strbuf_Free(v2);
-    Strbuf_Free(v1);
+    String_Free(v2);
+    String_Free(v1);
     StringTemplate_Free(v3);
 
     return v0;
@@ -329,17 +321,17 @@ void ov119_021D11E4(UnkStruct_ov119_021D0FD0 *param0, BgConfig *param1, Window *
     Window_Init(param2);
     Window_Add(param1, param2, param3, param4, param5, param6, param7, param9, param8);
 
-    param0->unk_04.unk_44 = StringList_New(2, 71);
+    param0->unk_04.unk_44 = StringList_New(2, HEAP_ID_71);
 
     {
         int v1;
-        Strbuf *v2;
-        MessageLoader *v3 = MessageLoader_Init(0, 26, 357, 71);
+        String *v2;
+        MessageLoader *v3 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_EGG_HATCH, HEAP_ID_71);
 
         for (v1 = 0; v1 < 2; v1++) {
-            v2 = MessageLoader_GetNewStrbuf(v3, 2 + v1);
-            StringList_AddFromStrbuf(param0->unk_04.unk_44, v2, v1);
-            Strbuf_Free(v2);
+            v2 = MessageLoader_GetNewString(v3, 2 + v1);
+            StringList_AddFromString(param0->unk_04.unk_44, v2, v1);
+            String_Free(v2);
         }
 
         MessageLoader_Free(v3);
@@ -354,7 +346,7 @@ void ov119_021D11E4(UnkStruct_ov119_021D0FD0 *param0, BgConfig *param1, Window *
     v0.suppressCursor = FALSE;
     v0.loopAround = TRUE;
 
-    Window_DrawStandardFrame(param2, 1, (20 + (18 + 12)), 13);
+    Window_DrawStandardFrame(param2, 1, 20 + (18 + 12), 13);
     param0->unk_04.unk_48 = Menu_NewAndCopyToVRAM(&v0, 8, 0, 0, 71, PAD_BUTTON_B);
 }
 
@@ -375,30 +367,16 @@ void ov119_021D12F8(Window *param0)
 
 void ov119_021D1308(BgConfig *param0, PaletteData *param1)
 {
-    int v0 = 118;
-    int v1 = 0;
-    int v2 = 1;
-    int v3 = 8;
-    int v4 = 3;
-    int v5 = 71;
-
-    Graphics_LoadTilesToBgLayer(v0, v1, param0, v4, 0, 0, 1, v5);
-    Graphics_LoadTilemapToBgLayer(v0, v2, param0, v4, 0, 0, 1, v5);
-    PaletteData_LoadBufferFromFileStart(param1, v0, v3, v5, 0, 0x20 * 2, 0);
+    Graphics_LoadTilesToBgLayer(NARC_INDEX_DEMO__EGG__DATA__EGG_DATA, 0, param0, 3, 0, 0, 1, HEAP_ID_71);
+    Graphics_LoadTilemapToBgLayer(NARC_INDEX_DEMO__EGG__DATA__EGG_DATA, 1, param0, 3, 0, 0, 1, HEAP_ID_71);
+    PaletteData_LoadBufferFromFileStart(param1, NARC_INDEX_DEMO__EGG__DATA__EGG_DATA, 8, HEAP_ID_71, 0, 0x20 * 2, 0);
 }
 
 void ov119_021D135C(BgConfig *param0, PaletteData *param1)
 {
-    int v0 = 12;
-    int v1 = 10;
-    int v2 = 11;
-    int v3 = 12;
-    int v4 = 4;
-    int v5 = 71;
-
-    Graphics_LoadTilesToBgLayer(v0, v1, param0, v4, 0, 0, 1, v5);
-    Graphics_LoadTilemapToBgLayer(v0, v2, param0, v4, 0, 0, 1, v5);
-    PaletteData_LoadBufferFromFileStart(param1, v0, v3, v5, 1, 0x20 * 1, 0);
+    Graphics_LoadTilesToBgLayer(NARC_INDEX_GRAPHIC__POKETCH, 10, param0, 4, 0, 0, 1, HEAP_ID_71);
+    Graphics_LoadTilemapToBgLayer(NARC_INDEX_GRAPHIC__POKETCH, 11, param0, 4, 0, 0, 1, HEAP_ID_71);
+    PaletteData_LoadBufferFromFileStart(param1, NARC_INDEX_GRAPHIC__POKETCH, 12, HEAP_ID_71, 1, 0x20 * 1, 0);
 }
 
 static u32 ov119_021D13B4(u32 param0, BOOL param1)
@@ -407,7 +385,7 @@ static u32 ov119_021D13B4(u32 param0, BOOL param1)
     u32 v1;
 
     v0 = NNS_GfdAllocTexVram(param0, param1, 0);
-    sub_020145B4(v0);
+    ParticleSystem_RegisterTextureKey(v0);
 
     v1 = NNS_GfdGetTexKeyAddr(v0);
     return v1;
@@ -419,49 +397,44 @@ static u32 ov119_021D13D0(u32 param0, BOOL param1)
     u32 v1;
 
     v0 = NNS_GfdAllocPlttVram(param0, param1, 0);
-    sub_020145F4(v0);
+    ParticleSystem_RegisterPaletteKey(v0);
 
     v1 = NNS_GfdGetPlttKeyAddr(v0);
     return v1;
 }
 
-static UnkStruct_02014014 *ov119_021D13EC(int param0)
+static ParticleSystem *ov119_021D13EC(enum HeapID heapID)
 {
-    UnkStruct_02014014 *v0;
+    ParticleSystem *v0;
     void *v1;
     Camera *camera;
 
-    v1 = Heap_AllocFromHeap(param0, 0x4800);
-    v0 = sub_02014014(ov119_021D13B4, ov119_021D13D0, v1, 0x4800, 1, param0);
-    camera = sub_02014784(v0);
+    v1 = Heap_Alloc(heapID, 0x4800);
+    v0 = ParticleSystem_New(ov119_021D13B4, ov119_021D13D0, v1, 0x4800, 1, heapID);
+    camera = ParticleSystem_GetCamera(v0);
 
     if (camera != NULL) {
-        Camera_SetClipping((FX32_ONE), (FX32_ONE * 900), camera);
+        Camera_SetClipping(FX32_ONE, FX32_ONE * 900, camera);
     }
 
     return v0;
 }
 
-static UnkStruct_02014014 *ov119_021D1434(int param0, int param1, int param2)
+static ParticleSystem *ov119_021D1434(enum HeapID heapID, int param1, int param2)
 {
-    UnkStruct_02014014 *v0;
-    void *v1;
+    ParticleSystem *v0 = ov119_021D13EC(heapID);
+    void *v1 = ParticleSystem_LoadResourceFromNARC(param1, param2, heapID);
 
-    v0 = ov119_021D13EC(param0);
-    v1 = sub_020144C4(param1, param2, param0);
-
-    sub_020144CC(v0, v1, (1 << 1) | (1 << 3), 1);
+    ParticleSystem_SetResource(v0, v1, (1 << 1) | (1 << 3), 1);
 
     return v0;
 }
 
-void ov119_021D145C(UnkStruct_02014014 *param0)
+void ov119_021D145C(ParticleSystem *param0)
 {
-    void *v0;
-
-    v0 = sub_02014730(param0);
-    sub_0201411C(param0);
-    Heap_FreeToHeap(v0);
+    void *v0 = ParticleSystem_GetHeapStart(param0);
+    ParticleSystem_Free(param0);
+    Heap_Free(v0);
 }
 
 static void ov119_021D1474(SPLEmitter *param0)
@@ -477,16 +450,14 @@ UnkStruct_ov119_021D14DC *ov119_021D14AC(UnkStruct_ov119_021D1930 *param0)
     int v1;
     int v2;
     int v3;
-    UnkStruct_ov119_021D14DC *v4;
-
-    v4 = Heap_AllocFromHeap(param0->unk_00, sizeof(UnkStruct_ov119_021D14DC));
+    UnkStruct_ov119_021D14DC *v4 = Heap_Alloc(param0->heapID, sizeof(UnkStruct_ov119_021D14DC));
 
     GF_ASSERT(v4 != NULL);
 
     v4->unk_00 = *param0;
-    v4->unk_0C = ov119_021D1434(v4->unk_00.unk_00, 119, v4->unk_00.unk_04);
+    v4->unk_0C = ov119_021D1434(v4->unk_00.heapID, 119, v4->unk_00.unk_04);
 
-    sub_02014788(v4->unk_0C, 1);
+    ParticleSystem_SetCameraProjection(v4->unk_0C, 1);
 
     return v4;
 }
@@ -499,15 +470,15 @@ void ov119_021D14DC(UnkStruct_ov119_021D14DC *param0, int param1)
     int v3;
     UnkStruct_ov119_021D14DC *v4 = param0;
 
-    sub_020146F4(v4->unk_0C, param1, ov119_021D1474, v4);
-    sub_02014788(v4->unk_0C, 1);
+    ParticleSystem_CreateEmitterWithCallback(v4->unk_0C, param1, ov119_021D1474, v4);
+    ParticleSystem_SetCameraProjection(v4->unk_0C, 1);
 }
 
 BOOL ov119_021D14F8(UnkStruct_ov119_021D14DC *param0)
 {
     UnkStruct_ov119_021D14DC *v0 = param0;
 
-    if (sub_02014710(v0->unk_0C) == 0) {
+    if (ParticleSystem_GetActiveEmitterCount(v0->unk_0C) == 0) {
         return 0;
     }
 
@@ -516,7 +487,7 @@ BOOL ov119_021D14F8(UnkStruct_ov119_021D14DC *param0)
 
 void ov119_021D150C(UnkStruct_ov119_021D14DC *param0)
 {
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov119_021D1514(UnkStruct_ov119_021D0FD0 *param0)
@@ -617,9 +588,7 @@ static const f32 Unk_ov119_021D260C[][10] = {
 
 BOOL ov119_021D16C0(UnkStruct_ov119_021D0FD0 *param0, int param1)
 {
-    UnkStruct_ov119_021D16C0 *v0;
-
-    v0 = &param0->unk_80;
+    UnkStruct_ov119_021D16C0 *v0 = &param0->unk_80;
 
     switch (v0->unk_00) {
     case 0:
@@ -748,8 +717,8 @@ void ov119_021D1844(UnkStruct_ov119_021D17B8 *param0)
 
 void ov119_021D1858(UnkStruct_ov119_021D0FD0 *param0)
 {
-    ArchivedSprite v0;
-    SpriteAnimationFrame v1[10];
+    PokemonSpriteTemplate v0;
+    SpriteAnimFrame v1[10];
     Pokemon *v2;
     int v3;
     int v4;
@@ -764,10 +733,10 @@ void ov119_021D1858(UnkStruct_ov119_021D0FD0 *param0)
         Pokemon_SetValue(v2, MON_DATA_IS_EGG, &v5);
     }
 
-    Pokemon_BuildArchivedSprite(&v0, v2, 2);
-    PokeSprite_LoadAnimationFrames(param0->unk_04.unk_3C, &v1[0], v3, 1);
+    Pokemon_BuildSpriteTemplate(&v0, v2, 2);
+    PokemonSprite_LoadAnimFrames(param0->unk_04.unk_3C, &v1[0], v3, 1);
 
-    param0->unk_70 = sub_02007C34(param0->unk_04.unk_38, &v0, 128, 96 + v4, 0, 0, &v1[0], NULL);
+    param0->unk_70 = PokemonSpriteManager_CreateSprite(param0->unk_04.unk_38, &v0, 128, 96 + v4, 0, 0, &v1[0], NULL);
 }
 
 void ov119_021D18C0(UnkStruct_ov119_021D0FD0 *param0)
@@ -778,16 +747,16 @@ void ov119_021D18C0(UnkStruct_ov119_021D0FD0 *param0)
     v0 = Pokemon_GetValue(param0->unk_00->unk_0C.unk_00, MON_DATA_SPECIES, NULL);
     v1 = Pokemon_GetNature(param0->unk_00->unk_0C.unk_00);
 
-    sub_02007B98(param0->unk_70, 1);
-    PokeSprite_LoadAnimation(param0->unk_04.unk_3C, param0->unk_04.unk_54, param0->unk_70, v0, 2, 0, 0);
+    PokemonSprite_InitAnim(param0->unk_70, 1);
+    PokemonSprite_LoadAnim(param0->unk_04.unk_3C, param0->unk_04.unk_54, param0->unk_70, v0, 2, 0, 0);
 }
 
 void ov119_021D1900(UnkStruct_ov119_021D0FD0 *param0)
 {
-    sub_02007DC8(param0->unk_70);
+    PokemonSprite_Delete(param0->unk_70);
 }
 
 void ov119_021D190C(UnkStruct_ov119_021D0FD0 *param0, int param1)
 {
-    sub_02007DEC(param0->unk_70, 6, param1);
+    PokemonSprite_SetAttribute(param0->unk_70, MON_SPRITE_HIDE, param1);
 }

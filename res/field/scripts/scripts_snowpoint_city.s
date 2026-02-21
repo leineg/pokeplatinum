@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/snowpoint_city.h"
 
-    .data
 
     ScriptEntry _0032
     ScriptEntry _00B4
@@ -18,11 +17,11 @@
     ScriptEntryEnd
 
 _0032:
-    GoToIfGe 0x407F, 1, _0041
+    GoToIfGe VAR_UNK_0x407F, 1, _0041
     End
 
 _0041:
-    SetFlag 0x1F3
+    SetFlag FLAG_UNK_0x01F3
     End
 
 _0047:
@@ -31,8 +30,8 @@ _0047:
     WaitMovement
     Message 0
     CloseMessage
-    ScrCmd_22D 2, 0x800C
-    GoToIfEq 0x800C, 1, _0088
+    GetNationalDexEnabled VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _0088
     GoTo _0072
     End
 
@@ -44,30 +43,30 @@ _0072:
     End
 
 _0088:
-    GoToIfUnset 0x964, _0072
+    GoToIfUnset FLAG_GAME_COMPLETED, _0072
     GoTo _0111
 
     .balign 4, 0
 _009C:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _00A4:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _00AC:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
 _00B4:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_22D 2, 0x800C
-    GoToIfEq 0x800C, 1, _00DF
+    GetNationalDexEnabled VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _00DF
     GoTo _00D4
 
 _00D4:
@@ -78,8 +77,8 @@ _00D4:
     End
 
 _00DF:
-    GoToIfUnset 0x964, _00D4
-    GoToIfEq 0x407F, 0, _0102
+    GoToIfUnset FLAG_GAME_COMPLETED, _00D4
+    GoToIfEq VAR_UNK_0x407F, 0, _0102
     Message 2
     WaitABXPadPress
     CloseMessage
@@ -99,8 +98,8 @@ _0111:
     End
 
 _011B:
-    WaitTime 30, 0x800C
-    ClearFlag 0x1F3
+    WaitTime 30, VAR_RESULT
+    ClearFlag FLAG_UNK_0x01F3
     AddObject 7
     ApplyMovement 7, _016C
     WaitMovement
@@ -109,7 +108,7 @@ _011B:
     ApplyMovement LOCALID_PLAYER, _0164
     ApplyMovement 6, _015C
     WaitMovement
-    SetVar 0x407F, 1
+    SetVar VAR_UNK_0x407F, 1
     Message 4
     WaitABXPadPress
     CloseMessage
@@ -117,17 +116,17 @@ _011B:
 
     .balign 4, 0
 _015C:
-    MoveAction_001
+    FaceSouth
     EndMovement
 
     .balign 4, 0
 _0164:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _016C:
-    MoveAction_012 7
+    WalkNormalNorth 7
     EndMovement
 
 _0174:
@@ -174,7 +173,7 @@ _01C0:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfGe 0x407F, 1, _01E0
+    GoToIfGe VAR_UNK_0x407F, 1, _01E0
     Message 7
     WaitABXPadPress
     CloseMessage
@@ -199,30 +198,22 @@ _01EB:
     End
 
 _01FE:
-    ScrCmd_036 18, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 18
     End
 
 _0215:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 19, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 19
     End
 
 _022A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfUnset 0x964, _0260
+    GoToIfUnset FLAG_GAME_COMPLETED, _0260
     Message 10
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0276
-    GoToIfEq 0x800C, MENU_NO, _026B
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0276
+    GoToIfEq VAR_RESULT, MENU_NO, _026B
     End
 
 _0260:
@@ -240,19 +231,19 @@ _026B:
     End
 
 _0276:
-    CallIfUnset 0x157, _02A0
+    CallIfUnset FLAG_UNK_0x0157, _02A0
     Message 11
     CloseMessage
     Call _035C
     Call _0376
-    ScrCmd_23D 2, 3, 188, 0x26F, 0x1B2
+    TakeShipFromSnowpoint DIR_EAST, MAP_HEADER_FIGHT_AREA, 623, 434
     ReleaseAll
     End
 
 _02A0:
-    ClearFlag 0x256
+    ClearFlag FLAG_UNK_0x0256
     AddObject 10
-    ScrCmd_062 10
+    LockObject 10
     CloseMessage
     ApplyMovement 10, _0320
     WaitMovement
@@ -262,7 +253,7 @@ _02A0:
     CloseMessage
     ApplyMovement 10, _0334
     WaitMovement
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     Message 16
     CloseMessage
     ApplyMovement 10, _033C
@@ -274,45 +265,45 @@ _02A0:
     RemoveObject 10
     ApplyMovement LOCALID_PLAYER, _0318
     WaitMovement
-    SetFlag 0x157
+    SetFlag FLAG_UNK_0x0157
     Return
 
     .balign 4, 0
 _030C:
-    MoveAction_075
-    MoveAction_032
+    EmoteExclamationMark
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0318:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0320:
-    MoveAction_014 4
-    MoveAction_013 2
-    MoveAction_014 6
-    MoveAction_013 2
+    WalkNormalWest 4
+    WalkNormalSouth 2
+    WalkNormalWest 6
+    WalkNormalSouth 2
     EndMovement
 
     .balign 4, 0
 _0334:
-    MoveAction_015
+    WalkNormalEast
     EndMovement
 
     .balign 4, 0
 _033C:
-    MoveAction_014
-    MoveAction_033
+    WalkNormalWest
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0348:
-    MoveAction_012 2
-    MoveAction_015 3
-    MoveAction_012 2
-    MoveAction_015 7
+    WalkNormalNorth 2
+    WalkNormalEast 3
+    WalkNormalNorth 2
+    WalkNormalEast 7
     EndMovement
 
 _035C:
@@ -333,17 +324,17 @@ _0376:
 
     .balign 4, 0
 _0390:
-    MoveAction_001
-    MoveAction_064
+    FaceSouth
+    Delay15
     EndMovement
 
     .balign 4, 0
 _039C:
-    MoveAction_069
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _03A4:
-    MoveAction_013
-    MoveAction_064
+    WalkNormalSouth
+    Delay15
     EndMovement

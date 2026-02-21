@@ -17,7 +17,7 @@
                 "MOVE_WING_ATTACK",
                 "MOVE_SUPERSONIC"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
         },
         {
@@ -30,7 +30,7 @@
                 "MOVE_MUD_BOMB",
                 "MOVE_RAIN_DANCE"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
         },
         {
@@ -43,8 +43,32 @@
                 "MOVE_CONFUSION",
                 "MOVE_WATER_PULSE"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Like the raging sea, I crash down\n",
+                "and wash away everything before me!\r",
+                "That’s just how I roll!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "That wave didn’t even wash\n",
+                "my hands...\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "I’m now becalmed like a waveless\n",
+                "sea...\n"
+            ]
         }
     ]
 }

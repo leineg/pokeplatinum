@@ -5,7 +5,6 @@
 
 #include "struct_decls/struct_02020C44_decl.h"
 #include "struct_decls/struct_020216E0_decl.h"
-#include "struct_defs/struct_0201CFEC.h"
 #include "struct_defs/struct_020217F4.h"
 #include "struct_defs/struct_02024184.h"
 
@@ -20,11 +19,11 @@
 
 #include "easy3d.h"
 #include "easy3d_object.h"
+#include "gfx_box_test.h"
 #include "graphics.h"
 #include "heap.h"
 #include "narc.h"
 #include "resource_collection.h"
-#include "unk_0201CED8.h"
 #include "unk_02020AEC.h"
 #include "unk_0202414C.h"
 
@@ -71,7 +70,7 @@ typedef struct UnkStruct_ov66_02234548_t {
 static const UnkStruct_ov66_02258B38 *ov66_022348B0(u32 param0);
 static u32 ov66_022348D8(BOOL param0, u32 param1);
 static fx32 ov66_022348E4(u16 param0, u16 param1, u32 param2);
-static void ov66_022348FC(UnkStruct_ov66_02234958 *param0, NARC *param1, u32 param2, u32 param3);
+static void ov66_022348FC(UnkStruct_ov66_02234958 *param0, NARC *param1, u32 param2, enum HeapID heapID);
 static void ov66_02234958(UnkStruct_ov66_02234958 *param0);
 static void ov66_02234960(UnkStruct_ov66_02234958 *param0, u32 param1);
 static u32 ov66_0223496C(const UnkStruct_ov66_02234958 *param0);
@@ -142,17 +141,15 @@ static const UnkStruct_ov66_02258B38 Unk_ov66_02258B38[20] = {
     { 0xEA, 0x18D, 0x0 }
 };
 
-UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, u32 param2, u32 param3)
+UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, enum HeapID heapID, u32 heapID2)
 {
-    UnkStruct_ov66_02234548 *v0;
-
-    v0 = Heap_AllocFromHeap(param2, sizeof(UnkStruct_ov66_02234548));
+    UnkStruct_ov66_02234548 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov66_02234548));
     memset(v0, 0, sizeof(UnkStruct_ov66_02234548));
 
     {
         int v1;
 
-        v0->unk_10 = Heap_AllocFromHeap(param2, sizeof(UnkStruct_ov66_02234798) * param0);
+        v0->unk_10 = Heap_Alloc(heapID, sizeof(UnkStruct_ov66_02234798) * param0);
         v0->unk_14 = param0;
 
         for (v1 = 0; v1 < v0->unk_14; v1++) {
@@ -160,17 +157,17 @@ UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, u32 param2, u32 p
         }
     }
 
-    v0->unk_00 = ResourceCollection_New(1, param2);
-    v0->unk_04 = ResourceCollection_New(2, param2);
-    v0->unk_08 = TextureResourceManager_New(20, param2);
+    v0->unk_00 = ResourceCollection_New(1, heapID);
+    v0->unk_04 = ResourceCollection_New(2, heapID);
+    v0->unk_08 = TextureResourceManager_New(20, heapID);
 
     {
         UnkStruct_ov5_021EDDAC v2;
 
-        sub_02020B90(1, param2);
+        sub_02020B90(1, heapID);
 
         v2.unk_00 = param0;
-        v2.unk_04 = param2;
+        v2.heapID = heapID;
         v0->unk_0C = sub_02020C44(&v2);
     }
 
@@ -180,11 +177,11 @@ UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, u32 param2, u32 p
         void *v5;
         int v6;
 
-        v3 = NARC_ctor(NARC_INDEX_DATA__MMODEL__MMODEL, param2);
-        v4 = NARC_ctor(NARC_INDEX_GRAPHIC__WIFI_LOBBY_OTHER, param2);
+        v3 = NARC_ctor(NARC_INDEX_DATA__MMODEL__MMODEL, heapID);
+        v4 = NARC_ctor(NARC_INDEX_GRAPHIC__WIFI_LOBBY_OTHER, heapID);
 
         {
-            v5 = LoadMemberFromOpenNARC(v4, 127, 0, param3, 0);
+            v5 = LoadMemberFromOpenNARC(v4, 127, 0, heapID2, 0);
             ResourceCollection_Add(v0->unk_00, v5, 127);
             ov66_02231668(v5);
 
@@ -200,7 +197,7 @@ UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, u32 param2, u32 p
 
         {
             for (v6 = 0; v6 < 2; v6++) {
-                v5 = LoadMemberFromOpenNARC(v3, Unk_ov66_02258B28[v6], 0, param3, 0);
+                v5 = LoadMemberFromOpenNARC(v3, Unk_ov66_02258B28[v6], 0, heapID2, 0);
                 ResourceCollection_Add(v0->unk_04, v5, Unk_ov66_02258B28[v6]);
             }
         }
@@ -227,8 +224,8 @@ UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, u32 param2, u32 p
                     v11 = 0;
                 }
 
-                v5 = LoadMemberFromOpenNARC(v3, Unk_ov66_02258B38[v6].unk_02_0, 0, param3, 0);
-                v9 = TextureResourceManager_AddTexture(v0->unk_08, v5, Unk_ov66_02258B38[v6].unk_02_0, v11, param3);
+                v5 = LoadMemberFromOpenNARC(v3, Unk_ov66_02258B38[v6].unk_02_0, 0, heapID2, 0);
+                v9 = TextureResourceManager_AddTexture(v0->unk_08, v5, Unk_ov66_02258B38[v6].unk_02_0, v11, heapID2);
 
                 if (v11 == 1) {
                     TextureResource_AllocVRam(v9);
@@ -238,7 +235,7 @@ UnkStruct_ov66_02234548 *ov66_022343A8(u32 param0, u32 param1, u32 param2, u32 p
             }
         }
 
-        ov66_022348FC(&v0->unk_18, v4, 128, param3);
+        ov66_022348FC(&v0->unk_18, v4, 128, heapID2);
 
         NARC_dtor(v3);
         NARC_dtor(v4);
@@ -263,8 +260,8 @@ void ov66_02234548(UnkStruct_ov66_02234548 *param0)
     TextureResourceManager_Delete(param0->unk_08);
     ResourceCollection_Delete(param0->unk_00);
     ResourceCollection_Delete(param0->unk_04);
-    Heap_FreeToHeap(param0->unk_10);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0->unk_10);
+    Heap_Free(param0);
 }
 
 void ov66_02234590(UnkStruct_ov66_02234548 *param0)
@@ -305,9 +302,7 @@ void ov66_02234610(UnkStruct_ov66_02234548 *param0, u32 param1)
 
 UnkStruct_ov66_02234798 *ov66_0223461C(UnkStruct_ov66_02234548 *param0, const UnkStruct_ov63_0222BEC0 *param1)
 {
-    UnkStruct_ov66_02234798 *v0;
-
-    v0 = ov66_02234980(param0);
+    UnkStruct_ov66_02234798 *v0 = ov66_02234980(param0);
     v0->unk_04 = param1;
 
     {
@@ -430,17 +425,13 @@ void ov66_022347F8(UnkStruct_ov66_02234798 *param0, const VecFx32 *param1)
 
 void ov66_0223481C(const UnkStruct_ov66_02234798 *param0, VecFx32 *param1)
 {
-    const VecFx32 *v0;
-
-    v0 = sub_020212C0(param0->unk_08);
+    const VecFx32 *v0 = sub_020212C0(param0->unk_08);
     *param1 = *v0;
 }
 
 void ov66_02234834(UnkStruct_ov66_02234798 *param0, int param1)
 {
-    u32 v0;
-
-    v0 = ov66_022348D8(1, param1);
+    u32 v0 = ov66_022348D8(1, param1);
 
     sub_02021344(param0->unk_08, v0);
     sub_020213A4(param0->unk_08, 0);
@@ -510,11 +501,11 @@ static fx32 ov66_022348E4(u16 param0, u16 param1, u32 param2)
     return v0;
 }
 
-static void ov66_022348FC(UnkStruct_ov66_02234958 *param0, NARC *param1, u32 param2, u32 param3)
+static void ov66_022348FC(UnkStruct_ov66_02234958 *param0, NARC *param1, u32 param2, enum HeapID heapID)
 {
     void *v0;
 
-    ov70_0225C730(&v0, param1, param2, param3);
+    ov70_0225C730(&v0, param1, param2, heapID);
 
     param0->unk_00.data = v0;
     param0->unk_00.set = NNS_G3dGetMdlSet(param0->unk_00.data);
@@ -664,9 +655,7 @@ static void ov66_02234B10(UnkStruct_ov66_02234798 *param0)
 {
     u32 v0;
     u32 v1;
-    u16 v2;
-
-    v2 = ov63_0222BF90(param0->unk_04, 8);
+    u16 v2 = ov63_0222BF90(param0->unk_04, 8);
 
     if (v2 < 4) {
         sub_020213A4(param0->unk_08, 4 * FX32_ONE);
@@ -814,19 +803,17 @@ static void ov66_02234D3C(UnkStruct_ov66_02234798 *param0)
 {
     if ((param0->unk_00_4 == 0) && (param0->unk_00_6 == 1)) {
         sub_02021320(param0->unk_08, 1);
-        Easy3DObject_SetVisibility(&param0->unk_0C, 1);
+        Easy3DObject_SetVisible(&param0->unk_0C, 1);
     } else {
         sub_02021320(param0->unk_08, 0);
-        Easy3DObject_SetVisibility(&param0->unk_0C, 0);
+        Easy3DObject_SetVisible(&param0->unk_0C, 0);
     }
 }
 
 static void ov66_02234D78(UnkStruct_020216E0 *param0, void *param1)
 {
     UnkStruct_ov66_02234798 *v0 = param1;
-    NNSG3dResMdl *v1;
-
-    v1 = sub_02021430(param0);
+    NNSG3dResMdl *v1 = sub_02021430(param0);
     NNS_G3dMdlSetMdlLightEnableFlagAll(v1, v0->unk_8C);
 }
 
@@ -836,19 +823,19 @@ static BOOL ov66_02234D8C(UnkStruct_020216E0 *param0)
     VecFx32 v1;
     NNSG3dResMdlInfo *v2;
     NNSG3dResMdl *v3;
-    UnkStruct_0201CFEC v4;
+    GFXTestBox v4;
     MtxFx33 v5;
 
     v3 = sub_020213F4(param0);
     v2 = NNS_G3dGetMdlInfo(v3);
     v1 = *sub_020212C0(param0);
 
-    v4.unk_00 = v2->boxW;
-    v4.unk_02 = v2->boxH;
-    v4.unk_04 = v2->boxH;
-    v4.unk_08 = v2->boxPosScale >> FX32_SHIFT;
-    v4.unk_0C = v2->boxPosScale >> FX32_SHIFT;
-    v4.unk_10 = v2->boxPosScale >> FX32_SHIFT;
+    v4.width = v2->boxW;
+    v4.height = v2->boxH;
+    v4.depth = v2->boxH;
+    v4.xScale = v2->boxPosScale >> FX32_SHIFT;
+    v4.yScale = v2->boxPosScale >> FX32_SHIFT;
+    v4.zScale = v2->boxPosScale >> FX32_SHIFT;
 
     v1.x += FX_Mul(v2->boxX, v2->boxPosScale);
     v1.y += FX_Mul(v2->boxY, v2->boxPosScale);
@@ -859,7 +846,7 @@ static BOOL ov66_02234D8C(UnkStruct_020216E0 *param0)
     NNS_G3dGlbSetBaseRot(&v5);
     NNS_G3dGlbSetBaseScale(sub_020212EC(param0));
 
-    v0 = sub_0201CF7C(&v1, &v4);
+    v0 = GFXBoxTest_IsBoxAtPositionInView(&v1, &v4);
 
     if (v0 == 0) {
         return 0;

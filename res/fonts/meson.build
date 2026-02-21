@@ -88,7 +88,7 @@ pl_font_ignore = files('pl_font.ignore')
 pl_font_narc = custom_target('pl_font.narc',
     output: [
         'pl_font.narc',
-        'pl_font.naix',
+        'pl_font.naix.h',
     ],
     input: [
         font_nfgrs,
@@ -109,5 +109,15 @@ pl_font_narc = custom_target('pl_font.narc',
     ],
 )
 
+arrow_cursor_embed = custom_target('arrow_cursor.4bpp.h',
+    output: [
+        'arrow_cursor.4bpp',
+        'arrow_cursor.4bpp.h',
+    ],
+    input: files('arrow_cursor.png'),
+    command: [ nitrogfx_exe, '@INPUT@', '@OUTPUT0@', '-embed', 'sArrowCursorBitmap' ],
+)
+
 nitrofs_files += pl_font_narc
 naix_headers += pl_font_narc[1]
+embed_headers += arrow_cursor_embed[1]

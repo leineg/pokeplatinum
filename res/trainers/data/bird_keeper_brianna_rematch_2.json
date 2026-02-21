@@ -18,7 +18,7 @@
                 "MOVE_AIR_SLASH",
                 "MOVE_STEEL_WING"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -32,7 +32,7 @@
                 "MOVE_ROOST",
                 "MOVE_AIR_SLASH"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -46,8 +46,21 @@
                 "MOVE_ROOST",
                 "MOVE_AIR_SLASH"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Are you finally getting the attractive\n",
+                "qualities of bird Pokémon?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Wow. I admit to being surprised.\n"
         }
     ]
 }

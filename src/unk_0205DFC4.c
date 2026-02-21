@@ -6,19 +6,21 @@
 #include "struct_decls/struct_02061AB4_decl.h"
 
 #include "field/field_system.h"
-#include "overlay004/ov4_021D0D80.h"
+#include "nintendo_wfc/main.h"
 
 #include "communication_information.h"
 #include "communication_system.h"
 #include "field_task.h"
 #include "heap.h"
 #include "map_object.h"
-#include "math.h"
+#include "math_util.h"
 #include "party.h"
 #include "pokemon.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "trainer_info.h"
+
+#include "res/text/bank/pokedex_ratings.h"
 
 typedef struct {
     MapObject *unk_00;
@@ -37,10 +39,8 @@ typedef struct {
     u8 unk_09;
 } UnkStruct_0205E3AC;
 
-u16 sub_0205DFC4(u32 param0);
-u16 sub_0205E060(u16 param0);
-u16 sub_0205E078(u16 param0, u16 param1);
-u16 sub_0205E0E4(u16 param0, u16 param1);
+u16 Pokedex_GetRatingMessageID_Local(u16 pokemonSeen, u16 reachedEternaCity);
+u16 Pokedex_GetRatingMessageID_National(u16 pokemonCaught, u16 playerGender);
 int sub_0205E430(u8 param0, u8 param1);
 int sub_0205E45C(u8 param0, u8 param1);
 int sub_0205E488(u8 param0, u8 param1);
@@ -58,232 +58,228 @@ int sub_0205E658(u8 param0);
 int sub_0205E680(u8 param0);
 int sub_0205E6A8(u32 param0);
 u8 sub_0205E6B8(void);
-u8 sub_0205E6D8(SaveData *param0);
+u8 sub_0205E6D8(SaveData *saveData);
 int sub_0205E700(u8 param0);
 int sub_0205E728(u8 param0);
 int sub_0205E750(u8 param0);
 int sub_0205E790(u8 param0);
 
-u16 sub_0205DFC4(u32 param0)
+u16 GetNumberDigitCount(u32 number)
 {
-    if (param0 / 10 == 0) {
+    if (number / 10 == 0) {
         return 1;
-    } else if (param0 / 100 == 0) {
+    } else if (number / 100 == 0) {
         return 2;
-    } else if (param0 / 1000 == 0) {
+    } else if (number / 1000 == 0) {
         return 3;
-    } else if (param0 / 10000 == 0) {
+    } else if (number / 10000 == 0) {
         return 4;
-    } else if (param0 / 100000 == 0) {
+    } else if (number / 100000 == 0) {
         return 5;
-    } else if (param0 / 1000000 == 0) {
+    } else if (number / 1000000 == 0) {
         return 6;
-    } else if (param0 / 10000000 == 0) {
+    } else if (number / 10000000 == 0) {
         return 7;
-    } else if (param0 / 100000000 == 0) {
+    } else if (number / 100000000 == 0) {
         return 8;
     }
 
     return 1;
 }
 
-u16 sub_0205E060(u16 param0)
+u16 Item_IsTMHM(u16 item)
 {
-    if ((param0 >= 328) && (param0 <= 427)) {
-        return 1;
+    if (item >= ITEM_TM01 && item <= ITEM_HM08) {
+        return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
-u16 sub_0205E078(u16 param0, u16 param1)
+u16 Pokedex_GetRatingMessageID_Local(u16 pokemonSeen, u16 reachedEternaCity)
 {
-    if (param0 <= 15) {
-        return 6;
+    if (pokemonSeen <= 15) {
+        return PokedexRatings_Text_RowanPokemonSeenUpTo15;
     }
 
-    if (param0 <= 30) {
-        return 7;
+    if (pokemonSeen <= 30) {
+        return PokedexRatings_Text_RowanPokemonSeenOver15;
     }
 
-    if (param0 <= 45) {
-        return 8;
+    if (pokemonSeen <= 45) {
+        return PokedexRatings_Text_RowanPokemonSeenOver30;
     }
 
-    if (param0 <= 60) {
-        return 9;
+    if (pokemonSeen <= 60) {
+        return PokedexRatings_Text_RowanPokemonSeenOver45;
     }
 
-    if (param0 <= 80) {
-        return 10;
+    if (pokemonSeen <= 80) {
+        return PokedexRatings_Text_RowanPokemonSeenOver60;
     }
 
-    if (param0 <= 100) {
-        return 11;
+    if (pokemonSeen <= 100) {
+        return PokedexRatings_Text_RowanPokemonSeenOver80;
     }
 
-    if (param0 <= 120) {
-        return 12;
+    if (pokemonSeen <= 120) {
+        return PokedexRatings_Text_RowanPokemonSeenOver100;
     }
 
-    if (param0 <= 140) {
-        return 13;
+    if (pokemonSeen <= 140) {
+        return PokedexRatings_Text_RowanPokemonSeenOver120;
     }
 
-    if (param0 <= 160) {
-        return 14;
+    if (pokemonSeen <= 160) {
+        return PokedexRatings_Text_RowanPokemonSeenOver140;
     }
 
-    if (param0 <= 180) {
-        return 15;
+    if (pokemonSeen <= 180) {
+        return PokedexRatings_Text_RowanPokemonSeenOver160;
     }
 
-    if (param0 <= 200) {
-        return 16;
+    if (pokemonSeen <= 200) {
+        return PokedexRatings_Text_RowanPokemonSeenOver180;
     }
 
-    if (param0 <= 209) {
-        return 17;
+    if (pokemonSeen <= 209) {
+        return PokedexRatings_Text_RowanPokemonSeenOver200;
     }
 
-    if (param1) {
-        return 4;
+    if (reachedEternaCity) {
+        return PokedexRatings_Text_RowanCompleteLocalDex;
     } else {
-        return 5;
+        return PokedexRatings_Text_RowanCompleteLocalDex_TooEarly;
     }
 }
 
-u16 sub_0205E0E4(u16 param0, u16 param1)
+u16 Pokedex_GetRatingMessageID_National(u16 pokemonCaught, u16 playerGender)
 {
-    if (param0 <= 39) {
-        return 22;
+    if (pokemonCaught <= 39) {
+        return PokedexRatings_Text_OakPokemonCaughtUnder40;
     }
 
-    if (param0 <= 59) {
-        return 23;
+    if (pokemonCaught <= 59) {
+        return PokedexRatings_Text_OakPokemonCaught40;
     }
 
-    if (param0 <= 89) {
-        return 24;
+    if (pokemonCaught <= 89) {
+        return PokedexRatings_Text_OakPokemonCaught60;
     }
 
-    if (param0 <= 119) {
-        return 25;
+    if (pokemonCaught <= 119) {
+        return PokedexRatings_Text_OakPokemonCaught90;
     }
 
-    if (param0 <= 149) {
-        return 26;
+    if (pokemonCaught <= 149) {
+        return PokedexRatings_Text_OakPokemonCaught120;
     }
 
-    if (param0 <= 189) {
-        return 27;
+    if (pokemonCaught <= 189) {
+        return PokedexRatings_Text_OakPokemonCaught150;
     }
 
-    if (param0 <= 229) {
-        return 28;
+    if (pokemonCaught <= 229) {
+        return PokedexRatings_Text_OakPokemonCaught190;
     }
 
-    if (param0 <= 269) {
-        return 29;
+    if (pokemonCaught <= 269) {
+        return PokedexRatings_Text_OakPokemonCaught230;
     }
 
-    if (param0 <= 309) {
-        return 30;
+    if (pokemonCaught <= 309) {
+        return PokedexRatings_Text_OakPokemonCaught270;
     }
 
-    if (param0 <= 349) {
-        return 31;
+    if (pokemonCaught <= 349) {
+        return PokedexRatings_Text_OakPokemonCaught310;
     }
 
-    if (param0 <= 379) {
-        return 32;
+    if (pokemonCaught <= 379) {
+        return PokedexRatings_Text_OakPokemonCaught350;
     }
 
-    if (param0 <= 409) {
-        return 33;
+    if (pokemonCaught <= 409) {
+        return PokedexRatings_Text_OakPokemonCaught380;
     }
 
-    if (param0 <= 429) {
-        if (param1) {
-            return 35;
+    if (pokemonCaught <= 429) {
+        if (playerGender) {
+            return PokedexRatings_Text_OakPokemonCaught410_Female;
         } else {
-            return 34;
+            return PokedexRatings_Text_OakPokemonCaught410_Male;
         }
     }
 
-    if (param0 <= 449) {
-        return 36;
+    if (pokemonCaught <= 449) {
+        return PokedexRatings_Text_OakPokemonCaught430;
     }
 
-    if (param0 <= 459) {
-        return 37;
+    if (pokemonCaught <= 459) {
+        return PokedexRatings_Text_OakPokemonCaught450;
     }
 
-    if (param0 <= 469) {
-        return 38;
+    if (pokemonCaught <= 469) {
+        return PokedexRatings_Text_OakPokemonCaught460;
     }
 
-    if (param0 <= 475) {
-        return 39;
+    if (pokemonCaught <= 475) {
+        return PokedexRatings_Text_OakPokemonCaught470;
     }
 
-    if (param0 <= 481) {
-        return 40;
+    if (pokemonCaught <= 481) {
+        return PokedexRatings_Text_OakPokemonCaught476;
     }
 
-    if (param1) {
-        return 42;
+    if (playerGender) {
+        return PokedexRatings_Text_OakCompleteNationalDex_Female;
     } else {
-        return 41;
+        return PokedexRatings_Text_OakCompleteNationalDex_Male;
     }
 }
 
-u16 sub_0205E1B4(SaveData *param0)
+u16 SaveData_GetFirstNonEggInParty(SaveData *saveData)
 {
-    Pokemon *v0;
-    u16 v1, v2;
+    u16 i, partyCount = Party_GetCurrentCount(SaveData_GetParty(saveData));
 
-    v2 = Party_GetCurrentCount(Party_GetFromSavedata(param0));
+    for (i = 0; i < partyCount; i++) {
+        Pokemon *mon = Party_GetPokemonBySlotIndex(SaveData_GetParty(saveData), i);
 
-    for (v1 = 0; v1 < v2; v1++) {
-        v0 = Party_GetPokemonBySlotIndex(Party_GetFromSavedata(param0), v1);
-
-        if (Pokemon_GetValue(v0, MON_DATA_IS_EGG, NULL) == 0) {
-            return v1;
+        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE) {
+            return i;
         }
     }
 
     return 0;
 }
 
-BOOL HasAllLegendaryTitansInParty(SaveData *param0)
+BOOL HasAllLegendaryTitansInParty(SaveData *saveData)
 {
-    int v0, v1, v2, v3 = 0;
-    Party *v4;
-    static const u16 v5[] = { 377, 378, 379 };
-    u16 v6[6];
+    int i, j, titansInParty = 0;
+    static const u16 titans[] = { SPECIES_REGIROCK, SPECIES_REGICE, SPECIES_REGISTEEL };
+    u16 partySpecies[MAX_PARTY_SIZE];
 
-    v4 = Party_GetFromSavedata(param0);
-    v2 = Party_GetCurrentCount(v4);
+    Party *party = SaveData_GetParty(saveData);
+    int partyCount = Party_GetCurrentCount(party);
 
-    for (v0 = 0; v0 < v2; v0++) {
-        v6[v0] = Pokemon_GetValue(Party_GetPokemonBySlotIndex(v4, v0), MON_DATA_SPECIES, NULL);
+    for (i = 0; i < partyCount; i++) {
+        partySpecies[i] = Pokemon_GetValue(Party_GetPokemonBySlotIndex(party, i), MON_DATA_SPECIES, NULL);
     }
 
-    for (v0 = 0; v0 < 3; v0++) {
-        for (v1 = 0; v1 < v2; v1++) {
-            if (v6[v1] == v5[v0]) {
-                ++v3;
+    for (i = 0; i < 3; i++) {
+        for (j = 0; j < partyCount; j++) {
+            if (partySpecies[j] == titans[i]) {
+                ++titansInParty;
                 break;
             }
         }
     }
 
-    if (v3 == 3) {
-        return 1;
+    if (titansInParty == 3) {
+        return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
 static BOOL sub_0205E268(FieldTask *param0)
@@ -298,7 +294,7 @@ static BOOL sub_0205E268(FieldTask *param0)
     v0.z = FX_Mul(CalcSineDegrees(v2->unk_0E), v2->unk_08);
     v0.y = 0;
 
-    sub_020630AC(v2->unk_00, &v0);
+    MapObject_SetSpritePosOffset(v2->unk_00, &v0);
 
     v2->unk_0E += v2->unk_10;
 
@@ -309,8 +305,8 @@ static BOOL sub_0205E268(FieldTask *param0)
 
     if (v2->unk_0C == 0) {
         v0.x = v0.y = v0.z = 0;
-        sub_020630AC(v2->unk_00, &v0);
-        Heap_FreeToHeap(v2);
+        MapObject_SetSpritePosOffset(v2->unk_00, &v0);
+        Heap_Free(v2);
         return 1;
     }
 
@@ -320,7 +316,7 @@ static BOOL sub_0205E268(FieldTask *param0)
 void sub_0205E318(FieldTask *param0, MapObject *param1, u16 param2, u16 param3, u16 param4, u16 param5)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_0205E268 *v1 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_0205E268));
+    UnkStruct_0205E268 *v1 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_0205E268));
 
     MI_CpuClear8(v1, sizeof(UnkStruct_0205E268));
 
@@ -345,7 +341,7 @@ static BOOL sub_0205E3AC(FieldTask *param0)
         v1->unk_08 = 0;
 
         if (v1->unk_04-- == 0) {
-            Heap_FreeToHeap(v1);
+            Heap_Free(v1);
             return 1;
         }
     }
@@ -356,7 +352,7 @@ static BOOL sub_0205E3AC(FieldTask *param0)
 void sub_0205E3F4(FieldTask *param0, MapObject *param1, u16 param2, u16 param3)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_0205E3AC *v1 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_0205E3AC));
+    UnkStruct_0205E3AC *v1 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_0205E3AC));
 
     MI_CpuClear8(v1, sizeof(UnkStruct_0205E3AC));
 
@@ -707,22 +703,20 @@ int sub_0205E6A8(u32 param0)
         return 0xff;
     }
 
-    return ov4_021D2388();
+    return NintendoWFC_GetHostFriendIdx();
 }
 
 u8 sub_0205E6B8(void)
 {
-    TrainerInfo *v0;
-
-    v0 = CommInfo_TrainerInfo(CommSys_CurNetId() ^ 1);
+    TrainerInfo *v0 = CommInfo_TrainerInfo(CommSys_CurNetId() ^ 1);
     GF_ASSERT(v0 != NULL);
 
     return TrainerInfo_GameCode(v0);
 }
 
-u8 sub_0205E6D8(SaveData *param0)
+u8 sub_0205E6D8(SaveData *saveData)
 {
-    if (TrainerInfo_GameCode(SaveData_GetTrainerInfo(param0)) == 0) {
+    if (TrainerInfo_GameCode(SaveData_GetTrainerInfo(saveData)) == 0) {
         return 1;
     }
 

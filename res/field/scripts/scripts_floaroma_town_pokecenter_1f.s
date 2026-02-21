@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/floaroma_town_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _001E
@@ -10,8 +9,7 @@
     ScriptEntryEnd
 
 _0012:
-    SetVar 0x8007, 2
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 2
     End
 
 _001E:
@@ -38,7 +36,7 @@ _0044:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfGe 0x40CF, 2, _0064
+    GoToIfGe VAR_UNK_0x40CF, 2, _0064
     Message 2
     WaitABXPadPress
     CloseMessage
@@ -52,4 +50,4 @@ _0064:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

@@ -23,7 +23,7 @@
                 "MOVE_WILL_O_WISP",
                 "MOVE_THUNDER_FANG"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -37,7 +37,7 @@
                 "MOVE_HEAT_WAVE",
                 "MOVE_PSYCHIC"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -51,7 +51,7 @@
                 "MOVE_TOXIC",
                 "MOVE_CONFUSE_RAY"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -65,7 +65,7 @@
                 "MOVE_ICE_FANG",
                 "MOVE_EARTHQUAKE"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -79,8 +79,37 @@
                 "MOVE_FAKE_OUT",
                 "MOVE_X_SCISSOR"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_LAST_BATTLER",
+            "en_US": [
+                "I admit that you have pushed me\n",
+                "to this extreme.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_LAST_BATTLER_HALF_HP",
+            "en_US": [
+                "This... This cannot be!\n",
+                "It’s not possible that I lose!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "I won’t accept this!\n",
+                "This can’t be!\r",
+                "Not after all the sacrifices we’ve made\n",
+                "to get this far!\r",
+                "What of my new world?!\n",
+                "Of my new galaxy?!\r",
+                "Was this all a dream to be swept away\n",
+                "by your reality?!\n"
+            ]
         }
     ]
 }

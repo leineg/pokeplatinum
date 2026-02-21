@@ -19,7 +19,7 @@
                 "MOVE_GIGA_DRAIN",
                 "MOVE_LEECH_SEED"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -33,7 +33,7 @@
                 "MOVE_CALM_MIND",
                 "MOVE_DOUBLE_TEAM"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -47,8 +47,36 @@
                 "MOVE_ROLLOUT",
                 "MOVE_DEFENSE_CURL"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I’m taking the Veilstone Gym\n",
+                "challenge. But first...\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "...My confidence is crushed.\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "I think about Pokémon all day long.\n",
+                "I was confident, you know.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Oh, it’s you again!\r",
+                "I’ve regained my confidence.\n",
+                "Let’s have another battle!\r"
+            ]
         }
     ]
 }

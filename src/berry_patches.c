@@ -31,7 +31,7 @@ void BerryPatches_Clear(BerryPatch *patches)
     }
 }
 
-void BerryPatches_Init(BerryPatch *patches, enum HeapId heapID, const u16 *initPatches, int initSize)
+void BerryPatches_Init(BerryPatch *patches, enum HeapID heapID, const u16 *initPatches, int initSize)
 {
     BerryGrowthData *growthData = BerryGrowthData_Init(heapID);
 
@@ -46,15 +46,15 @@ void BerryPatches_Init(BerryPatch *patches, enum HeapId heapID, const u16 *initP
         patches[i].yieldRating = 3;
     }
 
-    Heap_FreeToHeap(growthData);
+    Heap_Free(growthData);
 }
 
-BerryGrowthData *BerryGrowthData_Init(enum HeapId heapID)
+BerryGrowthData *BerryGrowthData_Init(enum HeapID heapID)
 {
     BerryGrowthData *growthData;
     BerryData *berryData;
     NARC *narc = BerryData_NARC_ctor(heapID);
-    growthData = Heap_AllocFromHeap(heapID, sizeof(BerryGrowthData) * NUM_BERRIES);
+    growthData = Heap_Alloc(heapID, sizeof(BerryGrowthData) * NUM_BERRIES);
 
     for (int i = 0; i < NUM_BERRIES; i++) {
         berryData = BerryData_LoadFromOpenNARC(narc, i, heapID);
@@ -63,7 +63,7 @@ BerryGrowthData *BerryGrowthData_Init(enum HeapId heapID)
         growthData[i].moistureDrainRate = BerryData_GetAttribute(berryData, BERRYATTR_MOISTURE_DRAIN_RATE);
         growthData[i].yieldCategory = BerryData_GetAttribute(berryData, BERRYATTR_YIELD_CATEGORY);
 
-        Heap_FreeToHeap(berryData);
+        Heap_Free(berryData);
     }
 
     BerryData_NARC_dtor(narc);
@@ -80,7 +80,7 @@ static void ZeroBerryPatch(BerryPatch *berryPatch)
     berryPatch->yield = 0;
     berryPatch->moistureRating = 0;
     berryPatch->yieldRating = 0;
-    berryPatch->mulchType = 0;
+    berryPatch->mulchType = MULCH_TYPE_NONE;
     berryPatch->isGrowing = FALSE;
 }
 

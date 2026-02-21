@@ -1,3 +1,4 @@
+subdir('common_anims')
 subdir('effects')
 subdir('moves')
 subdir('subscripts')
@@ -9,7 +10,7 @@ waza_seq_target_name = 'waza_seq.narc'
 
 sub_seq_basename = 'sub_seq'
 sub_seq_narc_name = sub_seq_basename + '.narc'
-sub_seq_naix_name = sub_seq_basename + '.naix'
+sub_seq_naix_name = sub_seq_basename + '.naix.h'
 
 be_seq_private_dir = relative_build_dir / be_seq_target_name + '.p'
 sub_seq_private_dir = relative_build_dir / sub_seq_narc_name + '.p'

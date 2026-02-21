@@ -9,7 +9,6 @@
 #include "struct_decls/font_oam.h"
 #include "struct_decls/struct_02012744_decl.h"
 #include "struct_defs/struct_020127E8.h"
-#include "struct_defs/struct_0207C690.h"
 #include "struct_defs/struct_02095C48.h"
 
 #include "overlay017/ov17_02252A70.h"
@@ -21,23 +20,23 @@
 #include "brightness_controller.h"
 #include "char_transfer.h"
 #include "font.h"
+#include "g3d_pipeline.h"
 #include "game_overlay.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "message.h"
 #include "palette.h"
 #include "pokemon.h"
+#include "sound_playback.h"
 #include "sprite_system.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
-#include "unk_02005474.h"
 #include "unk_02012744.h"
-#include "unk_02024220.h"
 
 FS_EXTERN_OVERLAY(overlay11);
-FS_EXTERN_OVERLAY(overlay12);
+FS_EXTERN_OVERLAY(battle_anim);
 FS_EXTERN_OVERLAY(overlay22);
 
 static void ov17_0223F6E8(SysTask *param0, void *param1);
@@ -74,16 +73,13 @@ static const struct {
 static void NitroStaticInit(void)
 {
     Overlay_LoadByID(FS_OVERLAY_ID(overlay11), 2);
-    Overlay_LoadByID(FS_OVERLAY_ID(overlay12), 2);
+    Overlay_LoadByID(FS_OVERLAY_ID(battle_anim), 2);
     Overlay_LoadByID(FS_OVERLAY_ID(overlay22), 2);
 }
 
-GenericPointerData *ov17_0223F140(int param0)
+G3DPipelineBuffers *ov17_0223F140(enum HeapID heapID)
 {
-    GenericPointerData *v0;
-
-    v0 = sub_02024220(param0, 0, 2, 0, 2, ov17_0223F15C);
-    return v0;
+    return G3DPipeline_Init(heapID, TEXTURE_VRAM_SIZE_256K, PALETTE_VRAM_SIZE_32K, ov17_0223F15C);
 }
 
 static void ov17_0223F15C(void)
@@ -101,12 +97,12 @@ static void ov17_0223F15C(void)
     G3_ViewPort(0, 0, 255, 191);
 }
 
-void ov17_0223F1E0(GenericPointerData *param0)
+void ov17_0223F1E0(G3DPipelineBuffers *param0)
 {
-    sub_020242C4(param0);
+    G3DPipelineBuffers_Free(param0);
 }
 
-void ov17_0223F1E8(int param0, BgConfig *param1, SpriteManager *param2, UnkStruct_02012744 *param3, UnkStruct_ov17_0223F2E4 *param4, const Strbuf *param5, enum Font param6, TextColor param7, int param8, int param9, int param10, int param11, int param12, int param13, int param14)
+void ov17_0223F1E8(enum HeapID heapID, BgConfig *param1, SpriteManager *param2, UnkStruct_02012744 *param3, UnkStruct_ov17_0223F2E4 *param4, const String *param5, enum Font param6, TextColor param7, int param8, int param9, int param10, int param11, int param12, int param13, int param14)
 {
     UnkStruct_020127E8 v0;
     Window v1;
@@ -117,7 +113,7 @@ void ov17_0223F1E8(int param0, BgConfig *param1, SpriteManager *param2, UnkStruc
     int v7 = 0;
 
     {
-        v5 = Font_CalcStrbufWidth(param6, param5, v7);
+        v5 = Font_CalcStringWidth(param6, param5, v7);
         v6 = v5 / 8;
 
         if (FX_ModS32(v5, 8) != 0) {
@@ -131,7 +127,7 @@ void ov17_0223F1E8(int param0, BgConfig *param1, SpriteManager *param2, UnkStruc
         Text_AddPrinterWithParamsColorAndSpacing(&v1, param6, param5, 0, 0, TEXT_SPEED_NO_TRANSFER, param7, v7, 0, NULL);
     }
 
-    v3 = sub_02012898(&v1, NNS_G2D_VRAM_TYPE_2DMAIN, param0);
+    v3 = sub_02012898(&v1, NNS_G2D_VRAM_TYPE_2DMAIN, heapID);
     CharTransfer_AllocRange(v3, 1, NNS_G2D_VRAM_TYPE_2DMAIN, &v2);
 
     if (param12 == 1) {
@@ -151,7 +147,7 @@ void ov17_0223F1E8(int param0, BgConfig *param1, SpriteManager *param2, UnkStruc
     v0.unk_20 = param13;
     v0.unk_24 = param14;
     v0.unk_28 = NNS_G2D_VRAM_TYPE_2DMAIN;
-    v0.unk_2C = param0;
+    v0.heapID = heapID;
 
     v4 = sub_020127E8(&v0);
 
@@ -159,7 +155,7 @@ void ov17_0223F1E8(int param0, BgConfig *param1, SpriteManager *param2, UnkStruc
         sub_02012A90(v4, param8);
     }
 
-    sub_020128C4(v4, param10, param11);
+    FontOAM_SetXY(v4, param10, param11);
     Window_Remove(&v1);
 
     param4->unk_00 = v4;
@@ -180,16 +176,13 @@ void ov17_0223F2F8(UnkStruct_ov17_0223F2E4 *param0, int param1, int param2, int 
     }
 
     param2 += 0 - 8;
-    sub_020128C4(param0->unk_00, param1, param2);
+    FontOAM_SetXY(param0->unk_00, param1, param2);
 }
 
-Strbuf *ov17_0223F310(u32 param0, u32 param1)
+String *ov17_0223F310(u32 param0, enum HeapID heapID)
 {
-    MessageLoader *v0;
-    Strbuf *v1;
-
-    v0 = MessageLoader_Init(1, 26, 207, param1);
-    v1 = MessageLoader_GetNewStrbuf(v0, param0);
+    MessageLoader *v0 = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_CONTEST_JUDGE_NAMES, heapID);
+    String *v1 = MessageLoader_GetNewString(v0, param0);
 
     MessageLoader_Free(v0);
     return v1;
@@ -206,7 +199,7 @@ void ov17_0223F334(UnkStruct_02095C48 *param0, int param1)
         param0->unk_00.unk_118[v1].unk_02 = ov17_02252A70(param0->unk_00.unk_E8[v1], v0);
     }
 
-    Heap_FreeToHeap(v0);
+    Heap_Free(v0);
 }
 
 void ov17_0223F374(UnkStruct_02095C48 *param0)
@@ -219,7 +212,7 @@ void ov17_0223F374(UnkStruct_02095C48 *param0)
         v5 = Pokemon_GetValue(param0->unk_00.unk_00[v0], MON_DATA_HELD_ITEM, NULL);
         v6 = 100;
 
-        switch (param0->unk_00.unk_10F) {
+        switch (param0->unk_00.contestType) {
         case 0:
             v1 = Pokemon_GetValue(param0->unk_00.unk_00[v0], MON_DATA_COOL, NULL);
             v2 = Pokemon_GetValue(param0->unk_00.unk_00[v0], MON_DATA_TOUGH, NULL);
@@ -398,11 +391,9 @@ static void ov17_0223F6E8(SysTask *param0, void *param1)
     }
 }
 
-UnkStruct_ov17_0223F744 *ov17_0223F70C(int param0, PaletteData *param1, const u16 *param2, int param3, int param4, u32 param5)
+UnkStruct_ov17_0223F744 *ov17_0223F70C(enum HeapID heapID, PaletteData *param1, const u16 *param2, int param3, int param4, u32 param5)
 {
-    UnkStruct_ov17_0223F744 *v0;
-
-    v0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov17_0223F744));
+    UnkStruct_ov17_0223F744 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov17_0223F744));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_0223F744));
 
     v0->unk_04 = param1;
@@ -419,7 +410,7 @@ void ov17_0223F744(UnkStruct_ov17_0223F744 *param0)
     GF_ASSERT(param0->unk_00 != NULL);
 
     SysTask_Done(param0->unk_00);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 BOOL ov17_0223F760(void)
@@ -443,7 +434,7 @@ static void ov17_0223F774(SysTask *param0, void *param1)
 
     if (v0->unk_08 > v0->unk_0C[v0->unk_11]) {
         BrightnessController_StartTransition(6, 0, 4, (GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BG1 | GX_BLEND_PLANEMASK_BG2 | GX_BLEND_PLANEMASK_BG3 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), BRIGHTNESS_MAIN_SCREEN);
-        Sound_PlayEffect(1528);
+        Sound_PlayEffect(SEQ_SE_DP_CON_014);
 
         v0->unk_08 = 0;
         v0->unk_11++;

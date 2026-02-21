@@ -1,93 +1,91 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/hearthome_city_gym_entrance_room.h"
+#include "res/field/events/events_hearthome_city_gym_entrance_room.h"
 
-    .data
 
-    ScriptEntry _000E
-    ScriptEntry _0078
-    ScriptEntry _00B6
+    ScriptEntry EternaGym_GymGuide
+    ScriptEntry HearthomeGym_GymStatue
+    ScriptEntry HearthomeGym_GymGuide_InitialVisit
     ScriptEntryEnd
 
-_000E:
+EternaGym_GymGuide:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_RELIC, 0x800C
-    GoToIfEq 0x800C, 1, _006A
-    Message 1
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _004C
-    GoToIfEq 0x800C, MENU_NO, _0057
+    GoToIfBadgeAcquired BADGE_ID_RELIC, EternaGym_GymGuideAfterBadge
+    Message HearthomeGym_Text_GymGuideHearLongSpielAgain
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, EternaGym_GymGuideExplanation
+    GoToIfEq VAR_RESULT, MENU_NO, EternaGym_GymGuideEncouragement
     End
 
-_004C:
-    Message 2
-    GoTo _0062
+EternaGym_GymGuideExplanation:
+    Message HearthomeGym_Text_GymGuideExplanation
+    GoTo EternaGym_GymGuideEnd
     End
 
-_0057:
-    Message 3
-    GoTo _0062
+EternaGym_GymGuideEncouragement:
+    Message HearthomeGym_Text_GymGuideGoGetEm
+    GoTo EternaGym_GymGuideEnd
     End
 
-_0062:
+EternaGym_GymGuideEnd:
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_006A:
+EternaGym_GymGuideAfterBadge:
     BufferPlayerName 0
-    Message 4
-    GoTo _0062
+    Message HearthomeGym_Text_GymGuideAfterBadge
+    GoTo EternaGym_GymGuideEnd
     End
 
-_0078:
+HearthomeGym_GymStatue:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    CheckBadgeAcquired BADGE_ID_RELIC, 0x800C
-    GoToIfEq 0x800C, 1, _00A2
+    GoToIfBadgeAcquired BADGE_ID_RELIC, HearthomeGym_GymStatueAfterBadge
     BufferRivalName 0
     BufferRivalName 1
-    Message 5
+    Message HearthomeGym_Text_GymStatueBeforeBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00A2:
+HearthomeGym_GymStatueAfterBadge:
     BufferRivalName 0
     BufferPlayerName 1
     BufferRivalName 2
-    Message 6
+    Message HearthomeGym_Text_GymStatueAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00B6:
+HearthomeGym_GymGuide_InitialVisit:
     LockAll
-    ApplyMovement 0, _00DC
+    ApplyMovement HEARTHOME_CITY_GYM_ENTRANCE_ROOM_GYM_GUIDE, HearthomeGym_GymGuideMoveToPlayer
     WaitMovement
-    Message 0
+    Message HearthomeGym_Text_GymGuideInitialVisit
     CloseMessage
-    ApplyMovement 0, _00F0
+    ApplyMovement HEARTHOME_CITY_GYM_ENTRANCE_ROOM_GYM_GUIDE, HearthomeGym_GymGuideReturnToPosition
     WaitMovement
-    SetVar 0x40D1, 1
+    SetVar VAR_HAS_ENTERED_HEARTHOME_GYM_BEFORE, TRUE
     ReleaseAll
     End
 
     .balign 4, 0
-_00DC:
-    MoveAction_075
-    MoveAction_063
-    MoveAction_014
-    MoveAction_013
+HearthomeGym_GymGuideMoveToPlayer:
+    EmoteExclamationMark
+    Delay8
+    WalkNormalWest
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
-_00F0:
-    MoveAction_012
-    MoveAction_015
-    MoveAction_033
+HearthomeGym_GymGuideReturnToPosition:
+    WalkNormalNorth
+    WalkNormalEast
+    WalkOnSpotNormalSouth
     EndMovement

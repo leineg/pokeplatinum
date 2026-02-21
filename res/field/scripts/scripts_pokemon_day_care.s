@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pokemon_day_care.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0021
@@ -9,22 +8,22 @@
     ScriptEntryEnd
 
 _000E:
-    CallIfSet 254, _001B
+    CallIfSet FLAG_UNK_0x00FE, _001B
     End
 
 _001B:
-    ClearFlag 0x1D1
+    ClearFlag FLAG_HIDE_DAY_CARE_GYM_GUIDE
     Return
 
 _0021:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckPoketchAppRegistered POKETCH_APPID_DAYCARECHECKER, 0x800C
-    GoToIfEq 0x800C, 1, _0051
+    CheckPoketchAppRegistered POKETCH_APPID_DAYCARECHECKER, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _0051
     Message 0
-    SetVar 0x8004, 8
-    CallCommonScript 0x7D9
+    SetVar VAR_0x8004, POKETCH_APPID_DAYCARECHECKER
+    Common_GivePoketchApp
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -46,6 +45,4 @@ _005C:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

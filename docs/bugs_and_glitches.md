@@ -19,8 +19,21 @@ this is some code
   - [Acid Rain](#acid-rain)
   - [Fire Fang Always Bypasses Wonder Guard](#fire-fang-always-bypasses-wonder-guard)
   - [Post-KO Switch-In AI Scoring Overflow](#post-ko-switch-in-ai-scoring-overflow)
+  - [Using a non-Rage Move After Rage Clears Every Volatile Status Except Rage](#using-a-non-rage-move-after-rage-clears-every-volatile-status-except-rage)
+- [Battle Animations](#battle-animations)
+  - [Using Facade Moves the Attacker's Sprite One Pixel Up](#using-facade-moves-the-attackers-sprite-one-pixel-up)
+  - [Using DynamicPunch Moves the Target's Sprite One Pixel Left](#using-dynamicpunch-moves-the-targets-sprite-one-pixel-left)
+  - [Using Helping Hand Moves the Target's Sprite One Pixel Left](#using-helping-hand-moves-the-targets-sprite-one-pixel-left)
+  - [Using Strength Moves the Attacker's Sprite Two Pixels Right](#using-strength-moves-the-attackers-sprite-two-pixels-right)
+  - [Using Spit Up Moves the Attacker's Sprite Two Pixels Right](#using-spit-up-moves-the-attackers-sprite-two-pixels-right)
 - [Wild Encounters](#wild-encounters)
   - [Fishing Encounters ignore Sticky Hold and Suction Cups](#fishing-encounters-ignore-sticky-hold-and-suction-cups)
+- [Items](#items)
+  - [Defog HM Uses Water Palette](#defog-hm-uses-water-palette)
+- [Title Screen](#title-screen)
+  - [Giratina Hover Range](#giratina-hover-range)
+- [3D Rendering](#3d-rendering)
+  - [Invalid VRAM Manager Type in G3DPipeline_InitEx](#invalid-vram-manager-type-in-g3dpipeline_initex)
 
 ## Battle Engine
 
@@ -138,6 +151,113 @@ as having a score equivalent to 65 rather than 320.
 +    u32 score, maxScore;
 ```
 
+### Using a non-Rage Move After Rage Clears Every Volatile Status Except Rage
+
+**Fix:** Edit the routine `BattleController_CheckPreMoveActions` in [`src/battle/battle_controller_player.c`](https://github.com/pret/pokeplatinum/blob/e7c9da4c9ff9e9c70c82fd03714cf9a9674d71cc/src/battle/battle_controller_player.c#L845):
+
+```diff
+-    battleCtx->battleMons[battler].statusVolatile &= VOLATILE_CONDITION_RAGE;
++    battleCtx->battleMons[battler].statusVolatile &= ~VOLATILE_CONDITION_RAGE;
+```
+
+## Battle Animations
+
+### Using Facade Moves the Attacker's Sprite One Pixel Up
+
+Due to the delays between scale commands being too short, they overlap with
+each other, resulting in the sprite permanently moving upward.
+
+**Fix:** Increase the `Delay` values in [`res/battle/moves/facade/anim.s`](https://github.com/pret/pokeplatinum/blob/main/res/battle/moves/facade/anim.s)
+
+```diff
+-    Delay 8
++    Delay 10
+```
+
+Also update the sound effect timings to sync with the new delays:
+
+```diff
+-    PlayLoopedSoundEffectL SEQ_SE_DP_W207, 8, 6
++    PlayLoopedSoundEffectL SEQ_SE_DP_W207, 10, 6
+```
+
+### Using DynamicPunch Moves the Target's Sprite One Pixel Left
+
+Due to the delays between shake commands being too short, they overlap with
+each other, resulting in the sprite permanently moving left.
+
+**Fix:** Increase the `Delay` value in [`res/battle/moves/dynamic_punch/anim.s`](https://github.com/pret/pokeplatinum/blob/e7c9da4c9ff9e9c70c82fd03714cf9a9674d71cc/res/battle/moves/dynamic_punch/anim.s#L18)
+
+```diff
+-    Delay 3
++    Delay 4
+```
+
+### Using Helping Hand Moves the Target's Sprite One Pixel Left
+
+Due to the delays between shake commands being too short, they overlap with
+each other, resulting in the sprite permanently moving left.
+
+**Fix:** Move the `Delay 1` command into the loop in [`res/battle/moves/helping_hand/anim.s`](https://github.com/pret/pokeplatinum/blob/e7c9da4c9ff9e9c70c82fd03714cf9a9674d71cc/res/battle/moves/helping_hand/anim.s#L19)
+
+
+```diff
+-    EndLoop
+-    Delay 1
++    Delay 1
++    EndLoop
+```
+
+### Using Strength Moves the Attacker's Sprite Two Pixels Right
+
+The animation moves the attacker's sprite right and left 2 pixels every other frame
+as it shrinks. Since this happens an odd number of times, the sprite is moved permanently.
+
+**Fix:** Edit the routine `BattleAnimTask_Strength` in [`src/battle_anim/script_funcs_0.c`](https://github.com/pret/pokeplatinum/blob/e7c9da4c9ff9e9c70c82fd03714cf9a9674d71cc/src/battle_anim/script_funcs_0.c#L771)
+
+```diff 
+    } else {
++     Point2D *pos;
++     BattleAnimUtil_GetBattlerDefaultPos(ctx->battleAnimSys, BattleAnimSystem_GetAttacker(ctx->battleAnimSys), pos);
++     PokemonSprite_SetAttribute(ctx->sprite, MON_SPRITE_X_CENTER, pos->x);
+      ctx->state++;
+    }
+```
+
+### Using Spit Up Moves the Attacker's Sprite Two Pixels Right
+
+Essentially the same as Strength.
+
+**Fix:** Edit the routine `BattleAnimTask_ShakeAndScaleAttacker` in [`src/battle_anim/script_funcs_3.c`](https://github.com/pret/pokeplatinum/blob/e7c9da4c9ff9e9c70c82fd03714cf9a9674d71cc/src/battle_anim/script_funcs_3.c#L2286)
+
+```diff 
+    } else {
++     Point2D *pos;
++     BattleAnimUtil_GetBattlerDefaultPos(ctx->battleAnimSys, BattleAnimSystem_GetAttacker(ctx->battleAnimSys), pos);
++     PokemonSprite_SetAttribute(ctx->sprite, MON_SPRITE_X_CENTER, pos->x);
+      ctx->state++;
+    }
+```
+
+## Items
+
+### Defog HM Uses Water Palette
+
+HM05 (Defog) is a Flying-type move, but its TM/HM icon in the bag erroneously
+uses the water-type palette instead of the flying-type palette.
+
+**Fix:** Edit the `sItemArchiveIDs` entry for `ITEM_HM05` in [`src/item.c`](https://github.com/pret/pokeplatinum/blob/main/src/item.c):
+
+```diff
+     [ITEM_HM05] = {
+         .dataID = 0x192,
+         .iconID = hm_NCGR,
+-        .paletteID = tm_water_NCLR, // BUG: Defog is a flying type move, but erroneously uses the water palette.
++        .paletteID = tm_flying_NCLR,
+         .gen3ID = GBA_ITEM_HM05,
+     },
+```
+
 ## Wild Encounters
 ### Fishing Encounters ignore Sticky Hold and Suction Cups
 
@@ -174,4 +294,26 @@ due to lacking a check in between Magnet Pull and Static.
 +        encounterSlot = GetWaterEncounterSlot();
 +    }
 +  }
+```
+
+## Title Screen
+### Giratina Hover Range
+The Giratina model on the title screen hovers up and down slowly, but the range of motion is smaller than intended because the hover angle is incorrectly scaled before being passed to `CalcSineDegrees_Wraparound`, which expects degrees as input.
+
+**Fix:** Edit the hover calculation in the function `TitleScreen_Render` in [`src/applications/title_screen.c`](https://github.com/pret/pokeplatinum/blob/main/src/applications/title_screen.c#L656):
+
+```diff
+-    fx32 offset = CalcSineDegrees_Wraparound((titleScreen->giratinaHoverAngle * 0xFFFF) / 360);
++    fx32 offset = CalcSineDegrees_Wraparound(titleScreen->giratinaHoverAngle);
+```
+
+## 3D Rendering
+### Invalid VRAM Manager Type in G3DPipeline_InitEx
+When creating a new 3D graphics state using `G3DPipeline_InitEx`, with the `plttVramManagerType` parameter set to `VRAM_MANAGER_TYPE_FRAME`, the system will allocate a second texture VRAM manager instead of the intended palette VRAM manager. This bug never actually occurs in the game as the `plttVramManagerType` parameter is always set to `VRAM_MANAGER_TYPE_LINKED_LIST`, but it is still a bug in the code.
+
+**Fix:** Edit the function `G3DPipeline_InitEx` in [`src/g3d_pipeline_state.c`](https://github.com/pret/pokeplatinum/blob/main/src/g3d_pipeline_state.c#L40):
+
+```diff
+- NNS_GfdInitFrmTexVramManager(plttVramSize * PALETTE_VRAM_BLOCK_SIZE, TRUE);
++ NNS_GfdInitFrmPlttVramManager(plttVramSize * PALETTE_VRAM_BLOCK_SIZE, TRUE);
 ```

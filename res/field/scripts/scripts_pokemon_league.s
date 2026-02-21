@@ -1,38 +1,27 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pokemon_league.h"
 
-    .data
 
-    ScriptEntry _000E
-    ScriptEntry _0025
-    ScriptEntry _003C
+    ScriptEntry PokemonLeague_ArrowSignPokemonleague
+    ScriptEntry PokemonLeague_SignboardVictoryRoad
+    ScriptEntry PokemonLeague_Statue
     ScriptEntryEnd
 
-_000E:
-    ScrCmd_036 1, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+PokemonLeague_ArrowSignPokemonleague:
+    ShowArrowSign PokemonLeague_Text_PokemonLeagueAhead
     End
 
-_0025:
-    ScrCmd_036 2, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+PokemonLeague_SignboardVictoryRoad:
+    ShowLandmarkSign PokemonLeague_Text_VictoryRoadAhead
     End
 
-_003C:
+PokemonLeague_Statue:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    Message 0
+    Message PokemonLeague_Text_PokemonLeagueThePinnacleOfTrainerdom
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

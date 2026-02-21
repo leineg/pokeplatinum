@@ -8,9 +8,9 @@
 #include "struct_defs/sentence.h"
 #include "struct_defs/struct_0203330C.h"
 #include "struct_defs/struct_0205B4F8.h"
-#include "struct_defs/struct_02072014.h"
 
 #include "field/field_system.h"
+#include "global/pm_version.h"
 
 #include "communication_information.h"
 #include "communication_system.h"
@@ -18,21 +18,21 @@
 #include "field_task.h"
 #include "heap.h"
 #include "journal.h"
-#include "math.h"
+#include "math_util.h"
 #include "message.h"
 #include "save_player.h"
 #include "savedata.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
+#include "trainer_card.h"
 #include "trainer_info.h"
 #include "unk_02014A84.h"
 #include "unk_02014D38.h"
 #include "unk_02033200.h"
 #include "unk_020366A0.h"
 #include "unk_0205C980.h"
-#include "unk_02071D40.h"
 #include "unk_02095E98.h"
 #include "unk_02099500.h"
 
@@ -52,7 +52,7 @@ typedef struct {
 
 struct UnkStruct_0205B43C_t {
     FieldSystem *fieldSystem;
-    SaveData *unk_04;
+    SaveData *saveData;
     TrainerInfo *unk_08;
     SysTask *unk_0C;
     UnkFuncPtr_0205B43C unk_10;
@@ -114,7 +114,7 @@ UnkStruct_0205B43C *FieldSystem_InitCommUnionRoom(FieldSystem *fieldSystem)
         return NULL;
     }
 
-    if (Heap_CreateAtEnd(3, 31, 0xa80)) {
+    if (Heap_CreateAtEnd(HEAP_ID_APPLICATION, HEAP_ID_31, 0xa80)) {
         (void)0;
     }
 
@@ -143,25 +143,25 @@ void sub_0205B388(FieldSystem *fieldSystem)
 static UnkStruct_0205B43C *sub_0205B3A0(FieldSystem *fieldSystem)
 {
     void *v0;
-    SaveData *v1;
+    SaveData *saveData;
     UnkStruct_0205B43C *v2 = NULL;
 
     if (fieldSystem->unk_7C != NULL) {
         return NULL;
     }
 
-    v1 = FieldSystem_GetSaveData(fieldSystem);
-    sub_020369EC(v1);
+    saveData = FieldSystem_GetSaveData(fieldSystem);
+    sub_020369EC(saveData);
 
-    v2 = (UnkStruct_0205B43C *)Heap_AllocFromHeap(31, sizeof(UnkStruct_0205B43C));
+    v2 = (UnkStruct_0205B43C *)Heap_Alloc(HEAP_ID_31, sizeof(UnkStruct_0205B43C));
     MI_CpuClear8(v2, sizeof(UnkStruct_0205B43C));
 
     v2->unk_10 = NULL;
     v2->unk_14 = 40;
     v2->unk_0C = SysTask_Start(sub_0205B5BC, v2, 10);
     v2->fieldSystem = fieldSystem;
-    v2->unk_04 = v1;
-    v2->unk_08 = SaveData_GetTrainerInfo(v1);
+    v2->saveData = saveData;
+    v2->unk_08 = SaveData_GetTrainerInfo(saveData);
 
     sub_0205C160(v2);
     CommSys_Seed(&v2->unk_150);
@@ -250,8 +250,8 @@ static void sub_0205B4F8(UnkStruct_0205B43C *param0)
     Unk_021C0850++;
     v0 = sub_020340E8();
 
-    if (sub_020360E8() && (sub_0205B4D4() == 1) && (v0->unk_1C != 4)) {
-        CommInfo_SendBattleRegulation();
+    if (CommSys_IsClientConnecting() && (sub_0205B4D4() == 1) && (v0->unk_1C != 4)) {
+        CommInfo_SendPlayerInfo();
         CommMan_SetErrorHandling(1, 1);
         sub_0205BEA8(11);
         sub_0205B5B4(param0, sub_0205B578, 0);
@@ -267,11 +267,11 @@ static void sub_0205B4F8(UnkStruct_0205B43C *param0)
 
 static void sub_0205B578(UnkStruct_0205B43C *param0)
 {
-    if (sub_02038938() && (0 == sub_020360E8())) {
+    if (sub_02038938() && (0 == CommSys_IsClientConnecting())) {
         return;
     }
 
-    if (0 == sub_020360E8()) {
+    if (0 == CommSys_IsClientConnecting()) {
         sub_02036AC4();
         sub_0205C160(param0);
         sub_0205BEA8(0);
@@ -331,10 +331,10 @@ static void sub_0205B620(UnkStruct_0205B43C *param0)
 static void sub_0205B634(UnkStruct_0205B43C *param0)
 {
     if (1 == sub_02036A68()) {
-        CommInfo_SendBattleRegulation();
+        CommInfo_SendPlayerInfo();
         sub_0205B5B4(param0, sub_0205B6C4, 3);
         return;
-    } else if (sub_020360E8()) {
+    } else if (CommSys_IsClientConnecting()) {
         param0->unk_20 = 0;
         param0->unk_1C = 3;
 
@@ -406,8 +406,8 @@ static void sub_0205B754(UnkStruct_0205B43C *param0)
     }
 
     SysTask_Done(param0->unk_0C);
-    Heap_FreeToHeap(param0);
-    Heap_Destroy(31);
+    Heap_Free(param0);
+    Heap_Destroy(HEAP_ID_31);
 }
 
 FieldSystem *sub_0205B770(UnkStruct_0205B43C *param0)
@@ -1094,9 +1094,7 @@ int sub_0205BCF4(UnkStruct_0205B43C *param0, int param1, int param2, StringTempl
 u8 sub_0205BE38(void)
 {
     u8 v0;
-    TrainerInfo *v1;
-
-    v1 = CommInfo_TrainerInfo(CommSys_CurNetId() ^ 1);
+    TrainerInfo *v1 = CommInfo_TrainerInfo(CommSys_CurNetId() ^ 1);
     GF_ASSERT(v1 != NULL);
     v0 = TrainerInfo_GameCode(v1);
 
@@ -1229,7 +1227,7 @@ int sub_0205BF44(UnkStruct_0205B43C *param0, StringTemplate *param1)
         v2 = 0;
     }
 
-    if ((v3 = sub_02014C78(&param0->unk_178, 0)) != 0xffff) {
+    if ((v3 = Sentence_GetWord(&param0->unk_178, 0)) != 0xffff) {
         StringTemplate_SetCustomMessageWord(param1, 0, v3);
     }
 
@@ -1269,9 +1267,9 @@ Sentence *sub_0205C028(UnkStruct_0205B43C *param0)
 void sub_0205C040(StringTemplate *param0, int param1, int param2, TrainerInfo *param3, UnkStruct_02014EC4 *param4)
 {
     TrainerInfo *v0;
-    Strbuf *v1;
-    MessageLoader *v2 = MessageLoader_Init(1, 26, 635, 4);
-    int v3, v4;
+    String *v1;
+    MessageLoader *v2 = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_UNION_ROOM, HEAP_ID_FIELD1);
+    int language, v4;
 
     param2--;
 
@@ -1289,9 +1287,9 @@ void sub_0205C040(StringTemplate *param0, int param1, int param2, TrainerInfo *p
     StringTemplate_SetPlayerName(param0, 0, v0);
     StringTemplate_SetPlayerName(param0, 1, param3);
 
-    v3 = TrainerInfo_RegionCode(v0);
+    language = TrainerInfo_Language(v0);
 
-    if ((v3 >= 1) && (v3 <= 7)) {
+    if (language >= JAPANESE && language <= SPANISH) {
         static const int v5[] = {
             0,
             1,
@@ -1301,40 +1299,40 @@ void sub_0205C040(StringTemplate *param0, int param1, int param2, TrainerInfo *p
             -1,
             5,
         };
-        u16 v6 = v3 - 1;
+        u16 v6 = language - 1;
 
-        if ((v6 < NELEMS(v5)) && (v5[v6] >= 0)) {
+        if (v6 < NELEMS(v5) && v5[v6] >= 0) {
             sub_02014F98(param4, v5[v6]);
         }
     }
 
-    switch (v3) {
-    case 1:
+    switch (language) {
+    case JAPANESE:
         v4 = 211;
         break;
-    case 2:
+    case ENGLISH:
         v4 = 212;
         break;
-    case 3:
+    case FRENCH:
         v4 = 213;
         break;
-    case 4:
+    case ITALIAN:
         v4 = 214;
         break;
-    case 5:
+    case GERMAN:
         v4 = 215;
         break;
-    case 7:
+    case SPANISH:
         v4 = 216;
         break;
     default:
         v4 = 217;
     }
 
-    v1 = MessageLoader_GetNewStrbuf(v2, v4);
+    v1 = MessageLoader_GetNewString(v2, v4);
 
-    StringTemplate_SetStrbuf(param0, 2, v1, 0, 1, v3);
-    Heap_FreeToHeap(v1);
+    StringTemplate_SetString(param0, 2, v1, 0, 1, language);
+    Heap_Free(v1);
     MessageLoader_Free(v2);
 }
 
@@ -1371,20 +1369,20 @@ static void sub_0205C160(UnkStruct_0205B43C *param0)
 
 void *sub_0205C17C(UnkStruct_0205B43C *param0)
 {
-    param0->unk_184 = sub_02071F04(0);
-    param0->unk_188[0] = sub_02071F04(0);
-    param0->unk_188[1] = sub_02071F04(0);
+    param0->unk_184 = TrainerCard_New(HEAP_ID_SYSTEM);
+    param0->unk_188[0] = TrainerCard_New(HEAP_ID_SYSTEM);
+    param0->unk_188[1] = TrainerCard_New(HEAP_ID_SYSTEM);
 
-    sub_02071D40(0, 0, 0, sub_0205CA14(TrainerInfo_Gender(param0->unk_08), TrainerInfo_Appearance(param0->unk_08), 0), param0->fieldSystem, param0->unk_184);
+    TrainerCard_Init(FALSE, FALSE, 0, sub_0205CA14(TrainerInfo_Gender(param0->unk_08), TrainerInfo_Appearance(param0->unk_08), 0), param0->fieldSystem, param0->unk_184);
 
     return (void *)param0->unk_188[CommSys_CurNetId() ^ 1];
 }
 
 void sub_0205C1F0(UnkStruct_0205B43C *param0)
 {
-    Heap_FreeToHeap(param0->unk_188[0]);
-    Heap_FreeToHeap(param0->unk_188[1]);
-    Heap_FreeToHeap(param0->unk_184);
+    Heap_Free(param0->unk_188[0]);
+    Heap_Free(param0->unk_188[1]);
+    Heap_Free(param0->unk_184);
 }
 
 void sub_0205C214(UnkStruct_0205B43C *param0)

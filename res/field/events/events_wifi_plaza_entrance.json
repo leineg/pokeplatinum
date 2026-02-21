@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 235,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "WIFI_PLAZA_ENTRANCEWIFI_PLAZA_ATTENDANT_F_0",
+            "graphics_id": "OBJ_EVENT_GFX_WIFI_PLAZA_ATTENDANT_F",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 0,
             "initial_dir": 1,
             "data": [],

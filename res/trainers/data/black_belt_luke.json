@@ -14,7 +14,7 @@
             "level": 37,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -23,7 +23,7 @@
             "level": 37,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -32,8 +32,35 @@
             "level": 37,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I dress light wherever I go.\n",
+                "Hiyah!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Achoo!\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Maybe I’ll dress warm and come back.\n",
+                "Hiyah!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Lightly dressed like always.\n",
+                "Hiyah!\r"
+            ]
         }
     ]
 }

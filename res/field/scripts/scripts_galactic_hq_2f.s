@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/galactic_hq_2f.h"
 
-    .data
 
     ScriptEntry _001E
     ScriptEntry _007A
@@ -16,20 +15,20 @@ _001E:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 0
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _003E
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _003E
     GoTo _0074
 
 _003E:
     BufferPlayerName 0
     Message 1
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     PlaySound SEQ_ASA
     WaitSound
     HealParty
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     BufferPlayerName 0
     Message 2
@@ -93,11 +92,11 @@ _00CF:
     LockAll
     FacePlayer
     Message 3
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _010A
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _010A
     Message 5
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _010A
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _010A
     Message 6
     GoTo _010A
     End

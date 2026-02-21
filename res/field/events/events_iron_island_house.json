@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 132,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 589,
+            "id": "IRON_ISLAND_HOUSE_BYRON_0",
+            "graphics_id": "OBJ_EVENT_GFX_BYRON",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x024D",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -20,7 +21,7 @@
         {
             "x": 4,
             "z": 8,
-            "dest_header_id": 288,
+            "dest_header_id": "MAP_HEADER_IRON_ISLAND",
             "dest_warp_id": 0
         }
     ],

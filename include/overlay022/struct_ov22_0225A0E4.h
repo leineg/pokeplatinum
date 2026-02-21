@@ -3,28 +3,25 @@
 
 #include <nnsys.h>
 
-#include "struct_decls/struct_02007768_decl.h"
-#include "struct_decls/struct_02015064_decl.h"
-#include "struct_decls/struct_02015128_decl.h"
-#include "struct_decls/struct_020151A4_decl.h"
-
 #include "bg_window.h"
 #include "narc.h"
+#include "pokemon_sprite.h"
 #include "resource_collection.h"
+#include "software_sprite.h"
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_util.h"
 
 typedef struct {
-    UnkStruct_02015064 *unk_00;
-    UnkStruct_02015128 **unk_04;
+    SoftwareSpriteManager *unk_00;
+    SoftwareSpriteChars **unk_04;
     int unk_08;
     int unk_0C;
-    UnkStruct_020151A4 **unk_10;
+    SoftwareSpritePalette **unk_10;
     int unk_14;
     int unk_18;
     BOOL unk_1C;
-    UnkStruct_02007768 *unk_20;
+    PokemonSpriteManager *unk_20;
     NNSGfdTexKey unk_24;
     NNSGfdPlttKey unk_28;
     BOOL unk_2C;

@@ -1,6 +1,5 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _007B
     ScriptEntry _0092
@@ -9,20 +8,20 @@
     ScriptEntryEnd
 
 _0012:
-    CallIfNe 0x406B, 0x122, _003F
-    ScrCmd_32B 0x4001
-    GoToIfEq 0x4001, 0, _0067
-    GoToIfEq 0x4001, 1, _0071
+    CallIfNe VAR_UNK_0x406B, 0x122, _003F
+    CheckPartyHasFatefulEncounterRegigigas VAR_MAP_LOCAL_1
+    GoToIfEq VAR_MAP_LOCAL_1, 0, _0067
+    GoToIfEq VAR_MAP_LOCAL_1, 1, _0071
     End
 
 _003F:
-    SetVar 0x406B, 0
+    SetVar VAR_UNK_0x406B, 0
     Return
 
 _0047:
-    ScrCmd_32B 0x4001
-    GoToIfEq 0x4001, 0, _0067
-    GoToIfEq 0x4001, 1, _0071
+    CheckPartyHasFatefulEncounterRegigigas VAR_MAP_LOCAL_1
+    GoToIfEq VAR_MAP_LOCAL_1, 0, _0067
+    GoToIfEq VAR_MAP_LOCAL_1, 1, _0071
     End
 
 _0067:
@@ -34,21 +33,11 @@ _0071:
     End
 
 _007B:
-    ScrCmd_036 0, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 0
     End
 
 _0092:
-    ScrCmd_036 1, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 1
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

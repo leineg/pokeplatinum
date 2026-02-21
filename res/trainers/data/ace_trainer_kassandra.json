@@ -20,7 +20,7 @@
                 "MOVE_TOXIC",
                 "MOVE_BOUNCE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -34,7 +34,7 @@
                 "MOVE_IRON_TAIL",
                 "MOVE_DRAGON_BREATH"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -48,8 +48,30 @@
                 "MOVE_SIGNAL_BEAM",
                 "MOVE_FIRE_PUNCH"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "You’ve come all this way for Pokémon?\n",
+                "You must be dedicated.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Your dedication won out.\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "The Pokémon here must battle each\n",
+                "other all the time.\r",
+                "That must be why they are so strong\n",
+                "in this area.\n"
+            ]
         }
     ]
 }

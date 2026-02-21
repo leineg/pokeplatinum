@@ -1,75 +1,75 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pokemon_league_bertha_room.h"
+#include "res/field/events/events_pokemon_league_bertha_room.h"
 
-    .data
 
-    ScriptEntry _000A
-    ScriptEntry _00B7
+    ScriptEntry PokemonLeagueBerthaRoom_Bertha
+    ScriptEntry PokemonLeagueBerthaRoom_OnFrame
     ScriptEntryEnd
 
-_000A:
+PokemonLeagueBerthaRoom_Bertha:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 177, _00AC
-    ScrCmd_0EA TRAINER_ELITE_FOUR_BERTHA
-    Message 0
+    GoToIfSet FLAG_DEFEATED_BERTHA, PokemonLeagueBerthaRoom_BerthaPostBattle
+    PlayTrainerEncounterBGM TRAINER_ELITE_FOUR_BERTHA
+    Message PokemonLeagueBerthaRoom_Text_BerthaIntro
     CloseMessage
-    CallIfUnset 214, _007A
-    CallIfSet 214, _0082
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _00A6
-    SetFlag 177
+    CallIfUnset FLAG_ARRESTED_CHARON_STARK_MOUNTAIN, PokemonLeagueBerthaRoom_StartBerthaBattle
+    CallIfSet FLAG_ARRESTED_CHARON_STARK_MOUNTAIN, PokemonLeagueBerthaRoom_StartBerthaRematchBattle
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, PokemonLeagueBerthaRoom_BlackOut
+    SetFlag FLAG_DEFEATED_BERTHA
     PlayFanfare SEQ_SE_DP_KI_GASYAN
-    RemoveObject 2
-    CallIfUnset 214, _008A
-    CallIfSet 214, _0098
-    Message 1
+    RemoveObject LOCALID_EXIT_DOOR
+    CallIfUnset FLAG_ARRESTED_CHARON_STARK_MOUNTAIN, PokemonLeagueBerthaRoom_CreateJournalEventDefeatedBertha
+    CallIfSet FLAG_ARRESTED_CHARON_STARK_MOUNTAIN, PokemonLeagueBerthaRoom_CreateJournalEventDefeatedRematchBertha
+    Message PokemonLeagueBerthaRoom_Text_BerthaDefeat
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_007A:
+PokemonLeagueBerthaRoom_StartBerthaBattle:
     StartTrainerBattle TRAINER_ELITE_FOUR_BERTHA
     Return
 
-_0082:
+PokemonLeagueBerthaRoom_StartBerthaRematchBattle:
     StartTrainerBattle TRAINER_ELITE_FOUR_BERTHA_REMATCH
     Return
 
-_008A:
+PokemonLeagueBerthaRoom_CreateJournalEventDefeatedBertha:
     CreateJournalEvent LOCATION_EVENT_BEAT_ELITE_FOUR_MEMBER, TRAINER_ELITE_FOUR_BERTHA, 0, 0, 0
     Return
 
-_0098:
+PokemonLeagueBerthaRoom_CreateJournalEventDefeatedRematchBertha:
     CreateJournalEvent LOCATION_EVENT_BEAT_ELITE_FOUR_MEMBER, TRAINER_ELITE_FOUR_BERTHA_REMATCH, 0, 0, 0
     Return
 
-_00A6:
+PokemonLeagueBerthaRoom_BlackOut:
     BlackOutFromBattle
     ReleaseAll
     End
 
-_00AC:
-    Message 2
+PokemonLeagueBerthaRoom_BerthaPostBattle:
+    Message PokemonLeagueBerthaRoom_Text_BerthaPostBattle
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00B7:
+PokemonLeagueBerthaRoom_OnFrame:
     LockAll
-    ApplyMovement LOCALID_PLAYER, _00DC
+    ApplyMovement LOCALID_PLAYER, PokemonLeagueBerthaRoom_Movement_PlayerEnterRoom
     WaitMovement
     PlayFanfare SEQ_SE_DP_KI_GASYAN
-    ClearFlag 0x283
-    AddObject 1
-    SetVar 0x4001, 1
+    ClearFlag FLAG_HIDE_POKEMON_LEAGUE_BERTHA_ROOM_ENTRANCE_DOOR
+    AddObject LOCALID_ENTRANCE_DOOR
+    SetVar VAR_MAP_LOCAL_1, 1
     ReleaseAll
     End
 
     .balign 4, 0
-_00DC:
-    MoveAction_012 2
+PokemonLeagueBerthaRoom_Movement_PlayerEnterRoom:
+    WalkNormalNorth 2
     EndMovement

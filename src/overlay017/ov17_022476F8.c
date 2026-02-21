@@ -3,8 +3,6 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_defs/archived_sprite.h"
-
 #include "overlay017/struct_ov17_022476F8.h"
 #include "overlay017/struct_ov17_0224792C.h"
 #include "overlay017/struct_ov17_02247A48.h"
@@ -13,18 +11,18 @@
 #include "bg_window.h"
 #include "game_options.h"
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
 #include "message.h"
 #include "narc.h"
 #include "pokemon.h"
+#include "pokemon_sprite.h"
+#include "sound_playback.h"
 #include "sprite_system.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
-#include "unk_02005474.h"
-#include "unk_0200762C.h"
 
 typedef struct {
     u8 *unk_00;
@@ -73,15 +71,15 @@ static void ov17_02247840(SysTask *param0, void *param1);
 void ov17_022476F8(UnkStruct_ov17_022476F8 *param0, int param1)
 {
     if (param0->unk_08[param1] == NULL) {
-        GF_ASSERT(param0->unk_48[param1].unk_00 == NULL);
+        GF_ASSERT(param0->pokemonSpriteDataArray[param1].tiles == NULL);
         return;
     }
 
-    sub_02007DC8(param0->unk_08[param1]);
-    Heap_FreeToHeap(param0->unk_48[param1].unk_00);
+    PokemonSprite_Delete(param0->unk_08[param1]);
+    Heap_Free(param0->pokemonSpriteDataArray[param1].tiles);
 
     param0->unk_08[param1] = NULL;
-    param0->unk_48[param1].unk_00 = NULL;
+    param0->pokemonSpriteDataArray[param1].tiles = NULL;
 }
 
 void ov17_02247734(UnkStruct_ov17_022476F8 *param0)
@@ -109,9 +107,7 @@ void ov17_02247798(SpriteManager *param0)
 
 void ov17_022477B8(UnkStruct_ov17_02247A48 *param0, int param1, int param2, fx32 param3, int param4)
 {
-    UnkStruct_ov17_022477B8 *v0;
-
-    v0 = Heap_AllocFromHeap(22, sizeof(UnkStruct_ov17_022477B8));
+    UnkStruct_ov17_022477B8 *v0 = Heap_Alloc(HEAP_ID_22, sizeof(UnkStruct_ov17_022477B8));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_022477B8));
 
     v0->unk_04 = SpriteSystem_NewSprite(param0->unk_0C.unk_1C, param0->unk_0C.unk_20, &Unk_ov17_022543F8);
@@ -129,7 +125,7 @@ void ov17_022477B8(UnkStruct_ov17_02247A48 *param0, int param1, int param2, fx32
     param0->unk_4F7++;
 
     SysTask_Start(ov17_02247840, v0, 50000);
-    Sound_PlayEffect(1761);
+    Sound_PlayEffect(SEQ_SE_DP_CON_003);
 }
 
 static void ov17_02247840(SysTask *param0, void *param1)
@@ -154,7 +150,7 @@ static void ov17_02247840(SysTask *param0, void *param1)
     default:
         Sprite_DeleteAndFreeResources(v0->unk_04);
         (*(v0->unk_00))--;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -162,12 +158,12 @@ static void ov17_02247840(SysTask *param0, void *param1)
 
 void ov17_022478D0(UnkStruct_ov17_02247A48 *param0, int param1)
 {
-    ArchivedSprite v0;
+    PokemonSpriteTemplate v0;
 
     GF_ASSERT(param0->unk_0C.unk_18 == NULL);
 
     sub_0207697C(&v0, param0->unk_00->unk_00.unk_10[param1].unk_0A);
-    param0->unk_0C.unk_18 = sub_02007C34(param0->unk_0C.unk_04, &v0, 320, 32, (-0x200 - 0x40), 3, NULL, NULL);
+    param0->unk_0C.unk_18 = PokemonSpriteManager_CreateSprite(param0->unk_0C.unk_04, &v0, 320, 32, (-0x200 - 0x40), 3, NULL, NULL);
 }
 
 void ov17_02247918(UnkStruct_ov17_02247A48 *param0)
@@ -176,7 +172,7 @@ void ov17_02247918(UnkStruct_ov17_02247A48 *param0)
         return;
     }
 
-    sub_02007DC8(param0->unk_0C.unk_18);
+    PokemonSprite_Delete(param0->unk_0C.unk_18);
     param0->unk_0C.unk_18 = NULL;
 }
 
@@ -190,7 +186,7 @@ static void ov17_0224792C(UnkStruct_ov17_02247A48 *param0, int param1, const Unk
     case 0:
         break;
     case 1:
-        StringTemplate_SetStrbuf(param0->unk_0C.unk_3C, 0, param0->unk_00->unk_00.unk_D8[param2->unk_00], param0->unk_00->unk_00.unk_F8[param2->unk_00], 1, GAME_LANGUAGE);
+        StringTemplate_SetString(param0->unk_0C.unk_3C, 0, param0->unk_00->unk_00.unk_D8[param2->unk_00], param0->unk_00->unk_00.unk_F8[param2->unk_00], 1, GAME_LANGUAGE);
         StringTemplate_SetNickname(param0->unk_0C.unk_3C, 1, Pokemon_GetBoxPokemon(param0->unk_0C.unk_00->unk_00[param2->unk_00]));
         break;
     default:
@@ -201,23 +197,23 @@ static void ov17_0224792C(UnkStruct_ov17_02247A48 *param0, int param1, const Unk
 
 static void ov17_02247990(UnkStruct_ov17_02247A48 *param0, MessageLoader *param1, u32 param2, int param3, const UnkStruct_ov17_0224792C *param4)
 {
-    Strbuf *v0;
+    String *v0;
     int v1;
 
-    if (param0->unk_00->unk_155 == 0) {
-        v1 = Options_TextFrameDelay(param0->unk_00->unk_196C);
+    if (param0->unk_00->isLinkContest == FALSE) {
+        v1 = Options_TextFrameDelay(param0->unk_00->options);
     } else {
         v1 = TEXT_SPEED_FAST;
     }
 
-    v0 = MessageLoader_GetNewStrbuf(param1, param2);
+    v0 = MessageLoader_GetNewString(param1, param2);
     ov17_0224792C(param0, param3, param4);
 
     StringTemplate_Format(param0->unk_0C.unk_3C, param0->unk_0C.unk_40, v0);
     Window_FillTilemap(&param0->unk_0C.unk_28[0], 0xff);
 
     param0->unk_0C.unk_C4 = Text_AddPrinterWithParams(&param0->unk_0C.unk_28[0], FONT_MESSAGE, param0->unk_0C.unk_40, 0, 0, v1, NULL);
-    Strbuf_Free(v0);
+    String_Free(v0);
 }
 
 void ov17_02247A08(UnkStruct_ov17_02247A48 *param0, u32 param1, const UnkStruct_ov17_0224792C *param2)

@@ -13,8 +13,17 @@
             "level": 31,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Fweh... If I didn’t run...\n",
+                "I could’ve...battled harder...\n"
+            ]
         }
     ]
 }

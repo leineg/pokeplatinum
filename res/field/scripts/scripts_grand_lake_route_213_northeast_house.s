@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/grand_lake_route_213_northeast_house.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0045
@@ -11,11 +10,11 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckPoketchAppRegistered POKETCH_APPID_COINTOSS, 0x800C
-    GoToIfNe 0x800C, 0, _003A
+    CheckPoketchAppRegistered POKETCH_APPID_COINTOSS, VAR_RESULT
+    GoToIfNe VAR_RESULT, 0, _003A
     Message 0
-    SetVar 0x8004, 14
-    CallCommonScript 0x7D9
+    SetVar VAR_0x8004, POKETCH_APPID_COINTOSS
+    Common_GivePoketchApp
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -32,8 +31,8 @@ _0045:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckPoketchAppRegistered POKETCH_APPID_COINTOSS, 0x800C
-    GoToIfNe 0x800C, 0, _0071
+    CheckPoketchAppRegistered POKETCH_APPID_COINTOSS, VAR_RESULT
+    GoToIfNe VAR_RESULT, 0, _0071
     GoTo _0066
 
 _0066:

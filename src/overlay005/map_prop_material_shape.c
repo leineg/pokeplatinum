@@ -9,7 +9,7 @@
 
 MapPropMaterialShape *MapPropMaterialShape_Alloc(void)
 {
-    MapPropMaterialShape *propMatShp = Heap_AllocFromHeap(HEAP_ID_FIELD, sizeof(MapPropMaterialShape));
+    MapPropMaterialShape *propMatShp = Heap_Alloc(HEAP_ID_FIELD1, sizeof(MapPropMaterialShape));
     GF_ASSERT(propMatShp != NULL);
 
     return propMatShp;
@@ -18,29 +18,24 @@ MapPropMaterialShape *MapPropMaterialShape_Alloc(void)
 void MapPropMaterialShape_Load(const char *path, MapPropMaterialShape *propMatShp)
 {
     FSFile file;
-    u16 idsLocatorsCount;
-    u16 idsCount;
-    int idsLocatorsSize;
-    int idsSize;
-
     FS_InitFile(&file);
 
     if (FS_OpenFile(&file, path)) {
-        int readLength;
-
-        readLength = FS_ReadFile(&file, &idsLocatorsCount, 2);
+        u16 idsLocatorsCount;
+        int readLength = FS_ReadFile(&file, &idsLocatorsCount, 2);
         GF_ASSERT(readLength >= 0);
 
+        u16 idsCount;
         readLength = FS_ReadFile(&file, &idsCount, 2);
         GF_ASSERT(readLength >= 0);
 
-        idsLocatorsSize = sizeof(MapPropMaterialShapeIDsLocator) * idsLocatorsCount;
-        idsSize = sizeof(MapPropMaterialShapeIDs) * idsCount;
+        int idsLocatorsSize = sizeof(MapPropMaterialShapeIDsLocator) * idsLocatorsCount;
+        int idsSize = sizeof(MapPropMaterialShapeIDs) * idsCount;
 
-        propMatShp->idsLocators = Heap_AllocFromHeap(HEAP_ID_FIELD, idsLocatorsSize);
+        propMatShp->idsLocators = Heap_Alloc(HEAP_ID_FIELD1, idsLocatorsSize);
         GF_ASSERT(propMatShp->idsLocators != NULL);
 
-        propMatShp->ids = Heap_AllocFromHeap(HEAP_ID_FIELD, idsSize);
+        propMatShp->ids = Heap_Alloc(HEAP_ID_FIELD1, idsSize);
         GF_ASSERT(propMatShp->ids != NULL);
 
         readLength = FS_ReadFile(&file, propMatShp->idsLocators, idsLocatorsSize);
@@ -57,9 +52,9 @@ void MapPropMaterialShape_Load(const char *path, MapPropMaterialShape *propMatSh
 
 void MapPropMaterialShape_Free(MapPropMaterialShape *propMatShp)
 {
-    Heap_FreeToHeap(propMatShp->ids);
-    Heap_FreeToHeap(propMatShp->idsLocators);
-    Heap_FreeToHeap(propMatShp);
+    Heap_Free(propMatShp->ids);
+    Heap_Free(propMatShp->idsLocators);
+    Heap_Free(propMatShp);
 }
 
 void MapProp_GetMaterialShapeIDsCount(const int modelID, const MapPropMaterialShape *propMatShp, u16 *idsCount)

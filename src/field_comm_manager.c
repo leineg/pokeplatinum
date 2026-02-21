@@ -3,16 +3,16 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/graphics.h"
 #include "constants/heap.h"
 
-#include "struct_decls/struct_02029894_decl.h"
 #include "struct_defs/struct_0205964C.h"
-#include "struct_defs/struct_02072014.h"
+#include "struct_defs/underground.h"
 
 #include "field/field_system.h"
 #include "functypes/funcptr_020598EC.h"
 #include "overlay007/communication_club.h"
-#include "overlay023/ov23_02241F74.h"
+#include "overlay023/underground_manager.h"
 
 #include "comm_player_manager.h"
 #include "communication_information.h"
@@ -22,16 +22,16 @@
 #include "heap.h"
 #include "party.h"
 #include "savedata.h"
+#include "screen_fade.h"
 #include "script_manager.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
+#include "trainer_card.h"
 #include "trainer_info.h"
-#include "unk_0200F174.h"
 #include "unk_02033200.h"
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 #include "unk_0205A0D8.h"
-#include "unk_02071D40.h"
 #include "unk_02099500.h"
 
 static void FieldCommMan_RunTask(SysTask *task, void *unused);
@@ -82,7 +82,7 @@ void FieldCommMan_Init(FieldSystem *fieldSystem)
 
     CommFieldCmd_Init(fieldSystem);
 
-    sFieldCommMan = (FieldCommunicationManager *)Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sizeof(FieldCommunicationManager));
+    sFieldCommMan = (FieldCommunicationManager *)Heap_Alloc(HEAP_ID_COMMUNICATION, sizeof(FieldCommunicationManager));
     MI_CpuFill8(sFieldCommMan, 0, sizeof(FieldCommunicationManager));
 
     sFieldCommMan->timer = 50;
@@ -106,15 +106,15 @@ void FieldCommMan_Delete(void)
 
     for (i = 0; i < 4; i++) {
         if (sFieldCommMan->trainerCard[i]) {
-            Heap_FreeToHeap(sFieldCommMan->trainerCard[i]);
+            Heap_Free(sFieldCommMan->trainerCard[i]);
         }
     }
 
     if (sFieldCommMan->party) {
-        Heap_FreeToHeap(sFieldCommMan->party);
+        Heap_Free(sFieldCommMan->party);
     }
 
-    Heap_FreeToHeap(sFieldCommMan);
+    Heap_Free(sFieldCommMan);
     sFieldCommMan = NULL;
 }
 
@@ -153,8 +153,8 @@ void FieldCommMan_ReconnectBattleClient(void)
 
 void FieldCommMan_EnterBattleRoom(FieldSystem *fieldSystem)
 {
-    sub_0200F3B0(0, 0x0);
-    sub_0200F3B0(1, 0x0);
+    SetupScreenFadeRegisters(DS_SCREEN_MAIN, COLOR_BLACK);
+    SetupScreenFadeRegisters(DS_SCREEN_SUB, COLOR_BLACK);
     CommMan_SetErrorHandling(1, 1);
 
     if (!CommMan_IsInitialized()) {
@@ -176,11 +176,11 @@ void FieldCommMan_EnterBattleRoom(FieldSystem *fieldSystem)
 
         for (netJd = 0; netJd < CommSys_ConnectedCount(); netJd++) {
             if (sFieldCommMan->trainerCard[netJd] == NULL) {
-                sFieldCommMan->trainerCard[netJd] = Heap_AllocFromHeap(0, sizeof(TrainerCard));
+                sFieldCommMan->trainerCard[netJd] = Heap_Alloc(HEAP_ID_SYSTEM, sizeof(TrainerCard));
             }
         }
 
-        sub_02071D40(0, 0, 0, 0xff, sFieldCommMan->fieldSystem, sFieldCommMan->trainerCard[netId]);
+        TrainerCard_Init(FALSE, FALSE, 0, 0xFF, sFieldCommMan->fieldSystem, sFieldCommMan->trainerCard[netId]);
     }
 
     CommTiming_StartSync(95);
@@ -236,7 +236,7 @@ static void Task_StartBattleServer(void)
 
     ov7_0224B4B8();
 
-    CommInfo_SendBattleRegulation();
+    CommInfo_SendPlayerInfo();
     FieldCommMan_SetTask(Task_ServerWait, 0);
 }
 
@@ -247,11 +247,11 @@ static void Task_ServerWait(void)
 
 static void Task_StartBattleClient(void)
 {
-    if (!sub_020334A4()) {
+    if (!WirelessDriver_IsReady()) {
         return;
     }
 
-    ov7_0224B450();
+    CommClub_PrintChooseJoinMsg();
     FieldCommMan_SetTask(Task_ClientWait, 0);
 }
 
@@ -272,7 +272,7 @@ static void sub_02059964(void)
         return;
     }
 
-    CommInfo_SendBattleRegulation();
+    CommInfo_SendPlayerInfo();
     FieldCommMan_SetTask(sub_02059980, 0);
 }
 
@@ -286,7 +286,7 @@ static void sub_02059984(void)
     void *v0;
 
     if (CommTiming_IsSyncState(98)) {
-        v0 = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, CommPlayer_Size());
+        v0 = Heap_Alloc(HEAP_ID_COMMUNICATION, CommPlayer_Size());
         CommPlayerMan_Init(v0, sFieldCommMan->fieldSystem, 0);
         sub_02059524();
         CommSys_DisableSendMovementData();
@@ -310,9 +310,9 @@ static void sub_020599E4(void)
     }
 
     if (CommTiming_IsSyncState(92)) {
-        StartScreenTransition(0, 1, 1, 0x0, 6, 1, 4);
-        sub_0200F32C(0);
-        sub_0200F32C(1);
+        StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_FIELD1);
+        ResetVisibleHardwareWindows(DS_SCREEN_MAIN);
+        ResetVisibleHardwareWindows(DS_SCREEN_SUB);
         CommPlayerMan_Restart();
         CommPlayer_SendPos(0);
         FieldCommMan_SetTask(sub_02059A70, 1);
@@ -357,7 +357,7 @@ static void sub_02059AB4(void)
     void *v0;
 
     if (CommTiming_IsSyncState(98)) {
-        v0 = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, CommPlayer_Size());
+        v0 = Heap_Alloc(HEAP_ID_COMMUNICATION, CommPlayer_Size());
         CommPlayerMan_Init(v0, sFieldCommMan->fieldSystem, 0);
         sub_02059524();
         CommTiming_StartSync(92);
@@ -386,9 +386,9 @@ static void sub_02059B10(void)
         u8 v0 = 1;
         CommSys_SendDataFixedSize(94, &v0);
 
-        StartScreenTransition(0, 1, 1, 0x0, 6, 1, 4);
-        sub_0200F32C(0);
-        sub_0200F32C(1);
+        StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_FIELD1);
+        ResetVisibleHardwareWindows(DS_SCREEN_MAIN);
+        ResetVisibleHardwareWindows(DS_SCREEN_SUB);
         FieldCommMan_SetTask(sub_02059CD8, 0);
     }
 }
@@ -403,12 +403,12 @@ static void sub_02059B74(void)
                 if (sFieldCommMan->fieldSystem->task == NULL) {
                     for (j = 0; j < 4; j++) {
                         if (sFieldCommMan->trainerCard[j]) {
-                            Heap_FreeToHeap(sFieldCommMan->trainerCard[j]);
+                            Heap_Free(sFieldCommMan->trainerCard[j]);
                             sFieldCommMan->trainerCard[j] = NULL;
                         }
                     }
 
-                    ScriptManager_Set(sFieldCommMan->fieldSystem, 9102, NULL);
+                    ScriptManager_Set(sFieldCommMan->fieldSystem, SCRIPT_ID(COMMUNICATION_CLUB, 2), NULL);
                 }
             }
         }
@@ -434,7 +434,7 @@ static void sub_02059BF4(void)
 static void sub_02059C2C(BOOL param0, const Party *party)
 {
     if (party) {
-        sFieldCommMan->party = Party_New(11);
+        sFieldCommMan->party = Party_New(HEAP_ID_FIELD2);
         Party_Copy(party, sFieldCommMan->party);
     }
 
@@ -464,7 +464,7 @@ static void sub_02059C8C(void)
         return;
     }
 
-    sub_020594FC();
+    CommPlayerMan_PauseFieldSystem();
     sub_0205AB10(sFieldCommMan->fieldSystem, sub_02059C2C);
     FieldCommMan_SetTask(sub_02059C7C, 0);
 }
@@ -530,7 +530,7 @@ static void sub_02059D58(void)
         Encounter_NewVsLinkWithRecording(sFieldCommMan->fieldSystem, v2, v1);
     } else {
         Encounter_NewVsLinkWithRecordingAndParty(sFieldCommMan->fieldSystem, sFieldCommMan->party, v1);
-        Heap_FreeToHeap(sFieldCommMan->party);
+        Heap_Free(sFieldCommMan->party);
         sFieldCommMan->party = NULL;
     }
 
@@ -715,25 +715,25 @@ static void sub_0205A058(void)
     FieldCommMan_SetTask(FieldCommMan_Delete, 0);
 }
 
-UnkStruct_02029894 *sub_0205A080(SaveData *saveData)
+SecretBase *sub_0205A080(SaveData *saveData)
 {
-    if (!sFieldCommMan || !sFieldCommMan->unk_41) {
+    if (!sFieldCommMan || !sFieldCommMan->isUnderground) {
         return NULL;
     }
 
-    return ov23_02242E10(saveData);
+    return UndergroundMan_GetCurrentOccupiedSecretBase(saveData);
 }
 
 void sub_0205A0A0(void)
 {
-    if (sFieldCommMan && sFieldCommMan->unk_41) {
-        ov23_02242C78();
+    if (sFieldCommMan && sFieldCommMan->isUnderground) {
+        UndergroundMan_PauseResources();
     }
 }
 
 void sub_0205A0BC(void)
 {
-    if (sFieldCommMan && sFieldCommMan->unk_41) {
-        ov23_02242CB4();
+    if (sFieldCommMan && sFieldCommMan->isUnderground) {
+        UndergroundMan_UnpauseResources();
     }
 }

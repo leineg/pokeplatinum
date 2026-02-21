@@ -20,7 +20,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_POISON_STING"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -34,7 +34,7 @@
                 "MOVE_PURSUIT",
                 "MOVE_QUICK_ATTACK"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -48,8 +48,26 @@
                 "MOVE_STOCKPILE",
                 "MOVE_SHADOW_BALL"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I’ll battle against people who’ve\n",
+                "beaten me again and again.\r",
+                "By doing that, we both grow a little\n",
+                "as Trainers.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "You won and I lost, but the both of\n",
+                "us gained something from this.\n"
+            ]
         }
     ]
 }

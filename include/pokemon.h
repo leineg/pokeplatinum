@@ -3,15 +3,14 @@
 
 #include <nitro/rtc.h>
 
+#include "constants/flavor.h"
+#include "constants/forms.h"
 #include "constants/pokemon.h"
 #include "constants/sound.h"
 
-#include "struct_decls/pokemon_animation_sys_decl.h"
 #include "struct_decls/struct_02078B40_decl.h"
-#include "struct_defs/archived_sprite.h"
 #include "struct_defs/chatot_cry.h"
 #include "struct_defs/pokemon.h"
-#include "struct_defs/pokemon_sprite.h"
 #include "struct_defs/species.h"
 #include "struct_defs/sprite_animation_frame.h"
 
@@ -20,8 +19,9 @@
 #include "narc.h"
 #include "palette.h"
 #include "party.h"
+#include "pokemon_anim.h"
+#include "pokemon_sprite.h"
 #include "sprite_system.h"
-#include "string.h"
 #include "trainer_info.h"
 
 #define OTID_NOT_SET   0
@@ -32,6 +32,22 @@
 #define FACE_FRONT 2
 
 #define INIT_IVS_RANDOM 32
+
+#define BATTLE_FRONTIER_BANLIST_SIZE 18
+
+enum FriendshipEvents {
+    FRIENDSHIP_EVENT_LEVEL_UP,
+    FRIENDSHIP_EVENT_UNK_1,
+    FRIENDSHIP_EVENT_UNK_2,
+    FRIENDSHIP_EVENT_BEAT_GYM_LEADER_E4_OR_CHAMPION,
+    FRIENDSHIP_EVENT_LEARN_TMHM,
+    FRIENDSHIP_EVENT_WALK_CYCLE,
+    FRIENDSHIP_EVENT_BATTLE_FAINT,
+    FRIENDSHIP_EVENT_POISON_SURVIVE,
+    FRIENDSHIP_EVENT_BATTLE_FAINT_HIGH_LVL_DIFF,
+    FRIENDSHIP_EVENT_CONTEST_WIN,
+    FRIENDSHIP_EVENT_MAX
+};
 
 enum EvolutionClass {
     EVO_CLASS_BY_LEVEL = 0,
@@ -67,7 +83,7 @@ int Pokemon_StructSize(void);
  * @param heapID
  * @return A new empty but encrypted Pokemon struct
  */
-Pokemon *Pokemon_New(u32 heapID);
+Pokemon *Pokemon_New(enum HeapID heapID);
 
 /**
  * @brief Decrypts a Pokemon data structure. PartyPokemon data is encrypted using the pokemons personality value, BoxPokemon data using a checksum value
@@ -180,7 +196,7 @@ void Pokemon_IncreaseValue(Pokemon *mon, enum PokemonDataParam param, int value)
  * @param heapID The index of the heap that the SpeciesData should be loaded into
  * @return SpeciesData*
  */
-SpeciesData *SpeciesData_FromMonForm(int monSpecies, int monForm, int heapID);
+SpeciesData *SpeciesData_FromMonForm(int monSpecies, int monForm, enum HeapID heapID);
 
 /**
  * @brief Gets a SpeciesData based on a pokemon species
@@ -189,7 +205,7 @@ SpeciesData *SpeciesData_FromMonForm(int monSpecies, int monForm, int heapID);
  * @param heapID The index of the heap that the SpeciesData should be loaded into
  * @return SpeciesData*
  */
-SpeciesData *SpeciesData_FromMonSpecies(int monSpecies, int heapID);
+SpeciesData *SpeciesData_FromMonSpecies(int monSpecies, enum HeapID heapID);
 
 /**
  * @brief Gets a value from a SpeciesData structure
@@ -327,7 +343,7 @@ u8 Pokemon_GetNatureOf(u32 monPersonality);
  */
 s8 Pokemon_GetStatAffinityOf(u8 monNature, u8 statType);
 
-void Pokemon_UpdateFriendship(Pokemon *mon, u8 param1, u16 param2);
+void Pokemon_UpdateFriendship(Pokemon *mon, u8 friendshipEvent, u16 mapID);
 
 /**
  * @brief Gets the gender of a Pokemon based on its species and personality value
@@ -391,47 +407,47 @@ u8 Pokemon_IsPersonalityShiny(u32 monOTID, u32 monPersonality);
 u32 Pokemon_FindShinyPersonality(u32 monOTID);
 
 /**
- * @brief Build an ArchivedSprite for a Pokemon.
+ * @brief Build a PokemonSpriteTemplate for a Pokemon.
  *
- * @param sprite    Pointer to the sprite structure to be populated
- * @param mon       The Pokemon whose data will be used to build the sprite
- * @param face      Which face of the Pokemon the player sees
+ * @param spriteTemplate Pointer to the sprite template to be populated
+ * @param mon            The Pokemon whose data will be used to build the sprite
+ * @param face           Which face of the Pokemon the player sees
  */
-void Pokemon_BuildArchivedSprite(ArchivedSprite *sprite, Pokemon *mon, u8 face);
+void Pokemon_BuildSpriteTemplate(PokemonSpriteTemplate *spriteTemplate, Pokemon *mon, u8 face);
 
 /**
- * @brief Build an ArchivedSprite for a Pokemon, preferring sprites from
+ * @brief Build a PokemonSpriteTemplate for a Pokemon, preferring sprites from
  * Diamond/Pearl where possible.
  *
- * @param sprite    Pointer to the sprite structure to be populated
- * @param mon       The Pokemon whose data will be used to build the sprite
- * @param face      Which face of the Pokemon the player sees
+ * @param spriteTemplate Pointer to the sprite template to be populated
+ * @param mon            The Pokemon whose data will be used to build the sprite
+ * @param face           Which face of the Pokemon the player sees
  */
-void Pokemon_BuildArchivedDPSprite(ArchivedSprite *sprite, Pokemon *mon, u8 face);
+void Pokemon_BuildSpriteTemplateDP(PokemonSpriteTemplate *spriteTemplate, Pokemon *mon, u8 face);
 
 /**
- * @brief Build an ArchivedSprite for a BoxPokemon.
+ * @brief Build a PokemonSpriteTemplate for a BoxPokemon.
  *
- * @param sprite    Pointer to the sprite structure to be populated
- * @param mon       The Pokemon whose data will be used to build the sprite
- * @param face      Which face of the Pokemon the player sees
- * @param preferDP  If TRUE, prefer sprites from Diamond/Pearl over Platinum
+ * @param spriteTemplate Pointer to the sprite template to be populated
+ * @param mon            The Pokemon whose data will be used to build the sprite
+ * @param face           Which face of the Pokemon the player sees
+ * @param preferDP       If TRUE, prefer sprites from Diamond/Pearl over Platinum
  */
-void BoxPokemon_BuildArchivedSprite(ArchivedSprite *sprite, BoxPokemon *boxMon, u8 face, BOOL preferDP);
+void BoxPokemon_BuildSpriteTemplate(PokemonSpriteTemplate *spriteTemplate, BoxPokemon *boxMon, u8 face, BOOL preferDP);
 
 /**
- * @brief Build an ArchivedSprite for a Pokemon sprite according to the input
+ * @brief Build a PokemonSpriteTemplate for a Pokemon sprite according to the input
  * species, form, and gender.
  *
- * @param sprite        Pointer to the sprite structure to be populated
- * @param species       The Pokemon's species
- * @param gender        The Pokemon's gender
- * @param face          Which face of the Pokemon the player sees
- * @param shiny         1 if the Pokemon is shiny, 0 if not
- * @param form          The Pokemon's form
- * @param personality   The Pokemon's personality value
+ * @param spriteTemplate Pointer to the sprite template to be populated
+ * @param species        The Pokemon's species
+ * @param gender         The Pokemon's gender
+ * @param face           Which face of the Pokemon the player sees
+ * @param shiny          1 if the Pokemon is shiny, 0 if not
+ * @param form           The Pokemon's form
+ * @param personality    The Pokemon's personality value
  */
-void BuildArchivedPokemonSprite(ArchivedSprite *sprite, u16 monSpecies, u8 monGender, u8 param3, u8 monShininess, u8 monForm, u32 monPersonality);
+void BuildPokemonSpriteTemplate(PokemonSpriteTemplate *spriteTemplate, u16 species, u8 gender, u8 face, u8 shiny, u8 form, u32 personality);
 
 /**
  * @brief Sanitizes a pokemon form. If the given form is greater than the max for the given species, returns zero, else returns the form unchanged
@@ -481,8 +497,8 @@ u8 BoxPokemon_SpriteYOffset(BoxPokemon *boxMon, u8 face, BOOL preferDP);
  * @return Y-offset applied to the sprite-face on display
  */
 u8 LoadPokemonSpriteYOffset(u16 species, u8 gender, u8 face, u8 form, u32 personality);
-void sub_0207697C(ArchivedSprite *param0, u16 param1);
-ManagedSprite *sub_02076994(SpriteSystem *param0, SpriteManager *param1, PaletteData *param2, int param3, int param4, int param5, int param6, int param7, int heapID);
+void sub_0207697C(PokemonSpriteTemplate *param0, u16 param1);
+ManagedSprite *sub_02076994(SpriteSystem *param0, SpriteManager *param1, PaletteData *param2, int param3, int param4, int param5, int param6, int param7, enum HeapID heapID);
 void sub_02076AAC(int param0, int param1, UnkStruct_ov5_021DE5D0 *param2);
 
 /**
@@ -525,8 +541,8 @@ BoxPokemon *Pokemon_GetBoxPokemon(Pokemon *mon);
 
 BOOL Pokemon_ShouldLevelUp(Pokemon *mon);
 u16 Pokemon_GetEvolutionTargetSpecies(Party *party, Pokemon *mon, u8 evoClass, u16 evoParam, int *evoTypeResult);
-u16 sub_02076F84(const u16 monSpecies);
-u16 sub_02076FD4(const u16 monSpecies);
+u16 Pokemon_GetBaseSpeciesFromPersonalData(const u16 species);
+u16 Pokemon_GetBaseSpeciesForBattle(const u16 species);
 
 /**
  * @brief Adds a move to the moveset of a Pokemon
@@ -629,7 +645,7 @@ void BoxPokemon_FromPokemon(Pokemon *src, BoxPokemon *dest);
  * @param flavor
  * @return 1 if liked flavor, -1 if disliked flavor, else 0
  */
-s8 Pokemon_GetFlavorAffinity(Pokemon *mon, int flavor);
+s8 Pokemon_GetFlavorAffinity(Pokemon *mon, enum Flavor flavor);
 
 /**
  * @brief Gets the affinitiy of a given Pokemon personality to a given flavor
@@ -638,7 +654,7 @@ s8 Pokemon_GetFlavorAffinity(Pokemon *mon, int flavor);
  * @param flavor
  * @return 1 if liked flavor, -1 if disliked flavor, else 0
  */
-s8 Pokemon_GetFlavorAffinityOf(u32 monPersonality, int flavor);
+s8 Pokemon_GetFlavorAffinityOf(u32 monPersonality, enum Flavor flavor);
 
 /**
  * @brief Gets all moves that the given pokemon species and form can learn by leveling up
@@ -685,7 +701,7 @@ u8 Pokemon_GetArceusTypeOf(u16 itemHoldEffect);
  * @param mon
  * @return The form Giratina was set to, or -1 if the given BoxPokemon was not a Giratina
  */
-int Pokemon_SetGiratinaForm(Pokemon *mon);
+int Pokemon_SetGiratinaFormByHeldItem(Pokemon *mon);
 
 /**
  * @brief Sets Giratina's form based on its held item. Has no effect if the given BoxPokemon is not a Giratina
@@ -704,28 +720,28 @@ void Pokemon_SetGiratinaOriginForm(Pokemon *mon);
 
 /**
  * @brief Iterates over all the Pokemon in Party, setting the form of any Giratina.
- *        If param1 is 1, always sets Giratina into Origin form, otherwise its form is based on held item
+ *        If form is GIRATINA_FORM_ORIGIN, always sets Giratina into Origin form, otherwise its form is based on held item
  *
  * @param party
- * @param param1
+ * @param form
  */
-void Party_SetGiratinaForm(Party *party, int param1);
+void Party_SetGiratinaForm(Party *party, int form);
 
 /**
  * @brief Sets Shaymin to the given form. Has no effect if the given Pokemon is not a Shaymin
  *
  * @param mon
- * @param monForm
+ * @param form
  */
-void Pokemon_SetShayminForm(Pokemon *mon, int monForm);
+void Pokemon_SetShayminForm(Pokemon *mon, int form);
 
 /**
  * @brief Sets Shaymin to the given form. Has no effect if the given BoxPokemon is not a Shaymin
  *
  * @param boxMon
- * @param monForm
+ * @param form
  */
-void BoxPokemon_SetShayminForm(BoxPokemon *boxMon, int monForm);
+void BoxPokemon_SetShayminForm(BoxPokemon *boxMon, int form);
 
 /**
  * @brief Checks whether Shaymin is allowed to change into Sky Form. Always returns false if the given Pokemon is not a Shaymin
@@ -759,11 +775,11 @@ BOOL Party_SetShayminForm(Party *party, int param1, const RTCTime *rtcTime);
  * If Rotom should learn a form specific move and there is no room, overwrites moveSlot with the new move
  *
  * @param mon
- * @param monForm
+ * @param form
  * @param moveSlot
  * @return Whether the given pokemon was a Rotom
  */
-BOOL Pokemon_SetRotomForm(Pokemon *mon, int monForm, int moveSlot);
+BOOL Pokemon_SetRotomForm(Pokemon *mon, int form, int moveSlot);
 
 /**
  * @brief Loads a Level-Up move table based on a pokemon species and form into the pointed to array
@@ -779,7 +795,7 @@ void Pokemon_LoadLevelUpMovesOf(int monSpecies, int monForm, u16 *monLevelUpMove
  *
  * @param chatotCry             Chatot cry data from the save block. Only used
  *                              if the Pokemon itself is Chatot.
- * @param crymod                Modification to apply to the Pokemon's cry.
+ * @param cryMod                Modification to apply to the Pokemon's cry.
  * @param species
  * @param form
  * @param pan
@@ -787,7 +803,7 @@ void Pokemon_LoadLevelUpMovesOf(int monSpecies, int monForm, u16 *monLevelUpMove
  * @param forceDefaultChatot    If TRUE, force usage of Chatot's default cry.
  * @param heapID
  */
-void Pokemon_PlayCry(ChatotCry *chatotCry, enum PokemonCryMod crymod, u16 species, int form, int pan, int volume, int forceDefaultChatot, int heapID);
+void PlayCryWithParams(ChatotCry *chatotCry, enum PokemonCryMod cryMod, u16 species, int form, int pan, int volume, int forceDefaultChatot, enum HeapID heapID);
 
 /**
  * @brief Play a Pokemon's cry, according to the given species and form number.
@@ -803,9 +819,9 @@ void Pokemon_PlayCry(ChatotCry *chatotCry, enum PokemonCryMod crymod, u16 specie
  * @param heapID
  * @param delay                 Number of frames until playback will begin.
  */
-void Pokemon_PlayDelayedCry(ChatotCry *chatotCry, enum PokemonCryMod crymod, u16 species, int form, int pan, int volume, int forceDefaultChatot, int heapID, u8 delay);
-BOOL Pokemon_IsEligibleForAction(Pokemon *mon);
-void Pokemon_SetCatchData(Pokemon *mon, TrainerInfo *trainerInfo, int monPokeball, int metLocation, int metTerrain, enum HeapId heapId);
+void Species_PlayDelayedCry(ChatotCry *chatotCry, enum PokemonCryMod crymod, u16 species, int form, int pan, int volume, int forceDefaultChatot, enum HeapID heapID, u8 delay);
+BOOL Pokemon_PlayCry(Pokemon *mon);
+void Pokemon_SetCatchData(Pokemon *mon, TrainerInfo *trainerInfo, int monPokeball, int metLocation, int metTerrain, enum HeapID heapID);
 void Pokemon_UpdateAfterCatch(Pokemon *mon, TrainerInfo *param1, int monPokeball, int param3, int param4, int param5);
 void Pokemon_GiveHeldItem(Pokemon *mon, u32 battleType, int itemRates);
 BOOL Pokemon_CanLearnTM(Pokemon *mon, u8 tmID);
@@ -820,13 +836,13 @@ void Pokemon_CalcAbility(Pokemon *mon);
 
 void sub_020780C4(Pokemon *mon, u32 monPersonality);
 
-BOOL sub_02078804(u16 param0);
-u16 sub_02078824(u8 index);
-BOOL sub_02078838(Pokemon *mon);
-BOOL sub_0207884C(BoxPokemon *boxMon, TrainerInfo *param1, int heapID);
+BOOL Pokemon_IsOnBattleFrontierBanlist(u16 species);
+u16 Pokemon_GetBattleFrontierBanlistEntry(u8 index);
+BOOL Pokemon_IsBannedFromBattleFrontier(Pokemon *mon);
+BOOL sub_0207884C(BoxPokemon *boxMon, TrainerInfo *param1, enum HeapID heapID);
 int sub_020788D0(int param0);
-void sub_0207893C(Pokemon *mon);
-void sub_0207896C(BoxPokemon *boxMon);
+void Pokemon_ClearBallCapsuleData(Pokemon *mon);
+void BoxPokemon_RestorePP(BoxPokemon *boxMon);
 
 /**
  * @brief Load the animation frames for a given species and a client type
@@ -837,20 +853,20 @@ void sub_0207896C(BoxPokemon *boxMon);
  * @param species       Species to be loaded
  * @param clientType    Client-type of who made the load request
  */
-void PokeSprite_LoadAnimationFrames(NARC *narc, SpriteAnimationFrame *frames, u16 species, u16 clientType);
+void PokemonSprite_LoadAnimFrames(NARC *narc, SpriteAnimFrame *frames, u16 species, u16 clientType);
 
 /**
  * @brief Load the animation data for a given species and a client type.
  *
  * @param narc          Handle to the pl_poke_data archive
- * @param animationSys  Animation system container
+ * @param monAnimMan    Pokemon animation manager
  * @param sprite        Pre-loaded Pokemon sprite
  * @param species       Species to be loaded
  * @param face          Which face is visible to the player
- * @param reverse       If TRUE, reverse the sprite + animation
+ * @param flipSprite    If TRUE, flip the sprite + animation
  * @param frame         Which frame of the animation to initialize
  */
-void PokeSprite_LoadAnimation(NARC *narc, PokemonAnimationSys *animationSys, PokemonSprite *sprite, u16 species, int face, int reverse, int frame);
+void PokemonSprite_LoadAnim(NARC *narc, PokemonAnimManager *monAnimMan, PokemonSprite *sprite, u16 species, int face, int flipSprite, int frame);
 
 /**
  * @brief Load the cry delay for a given species and a client type.
@@ -860,7 +876,7 @@ void PokeSprite_LoadAnimation(NARC *narc, PokemonAnimationSys *animationSys, Pok
  * @param species       Species to be loaded
  * @param clientType    Client-type of who made the load request
  */
-void PokeSprite_LoadCryDelay(NARC *narc, u8 *cryDelay, u16 species, u16 clientType);
+void PokemonSprite_LoadCryDelay(NARC *narc, u8 *cryDelay, u16 species, u16 clientType);
 
 /**
  * @brief Load the vertical offset for a given species and a client type.
@@ -870,7 +886,7 @@ void PokeSprite_LoadCryDelay(NARC *narc, u8 *cryDelay, u16 species, u16 clientTy
  * @param species       Species to be loaded
  * @param clientType    Client-type of who made the load request
  */
-void PokeSprite_LoadYOffset(NARC *narc, s8 *yOffset, u16 species);
+void PokemonSprite_LoadYOffset(NARC *narc, s8 *yOffset, u16 species);
 
 /**
  * @brief Load the shadow's horizontal offset for a given species and a client type.
@@ -880,7 +896,7 @@ void PokeSprite_LoadYOffset(NARC *narc, s8 *yOffset, u16 species);
  * @param species               Species to be loaded
  * @param clientType            Client-type of who made the load request
  */
-void PokeSprite_LoadXOffsetShadow(NARC *narc, s8 *xOffsetShadow, u16 species);
+void PokemonSprite_LoadXOffsetShadow(NARC *narc, s8 *xOffsetShadow, u16 species);
 
 /**
  * @brief Load the shadow size for a given species and a client type.
@@ -890,8 +906,8 @@ void PokeSprite_LoadXOffsetShadow(NARC *narc, s8 *xOffsetShadow, u16 species);
  * @param species           Species to be loaded
  * @param clientType        Client-type of who made the load request
  */
-void PokeSprite_LoadShadowSize(NARC *narc, u8 *shadowSize, u16 species);
-BOOL Pokemon_SetBallSeal(int param0, Pokemon *mon, int heapID);
+void PokemonSprite_LoadShadowSize(NARC *narc, u8 *shadowSize, u16 species);
+BOOL Pokemon_SetBallSeal(int param0, Pokemon *mon, enum HeapID heapID);
 void sub_02078B40(Pokemon *mon, UnkStruct_02078B40 *param1);
 void sub_02078E0C(UnkStruct_02078B40 *param0, Pokemon *mon);
 

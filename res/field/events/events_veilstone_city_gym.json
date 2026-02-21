@@ -6,7 +6,7 @@
             "x": 10,
             "z": 29,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         },
         {
             "script": 4,
@@ -14,7 +14,7 @@
             "x": 14,
             "z": 29,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         },
         {
             "script": 7,
@@ -22,7 +22,7 @@
             "x": 12,
             "z": 2,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         },
         {
             "script": 5,
@@ -30,7 +30,7 @@
             "x": 10,
             "z": 2,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         },
         {
             "script": 6,
@@ -38,15 +38,16 @@
             "x": 14,
             "z": 2,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 129,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 664,
+            "id": "VEILSTONE_CITY_GYM_MAYLENE_0",
+            "graphics_id": "OBJ_EVENT_GFX_MAYLENE",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0298",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -57,10 +58,11 @@
             "y": 0
         },
         {
-            "graphics_id": 168,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "VEILSTONE_CITY_GYM_GYM_GUIDE_1",
+            "graphics_id": "OBJ_EVENT_GFX_GYM_GUIDE",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 1,
             "data": [],
@@ -71,11 +73,12 @@
             "y": 0
         },
         {
-            "graphics_id": 51,
-            "movement_type": 7,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3308,
+            "id": "VEILSTONE_CITY_GYM_BLACK_BELT_COLBY",
+            "graphics_id": "OBJ_EVENT_GFX_BLACK_BELT",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_BLACK_BELT_COLBY",
             "initial_dir": 3,
             "data": [
                 3
@@ -87,11 +90,12 @@
             "y": 0
         },
         {
-            "graphics_id": 51,
-            "movement_type": 2,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3309,
+            "id": "VEILSTONE_CITY_GYM_BLACK_BELT_DARREN",
+            "graphics_id": "OBJ_EVENT_GFX_BLACK_BELT",
+            "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_BLACK_BELT_DARREN",
             "initial_dir": 2,
             "data": [
                 2
@@ -103,11 +107,12 @@
             "y": 0
         },
         {
-            "graphics_id": 51,
-            "movement_type": 8,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3311,
+            "id": "VEILSTONE_CITY_GYM_BLACK_BELT_JEFFERY",
+            "graphics_id": "OBJ_EVENT_GFX_BLACK_BELT",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_BLACK_BELT_JEFFERY",
             "initial_dir": 1,
             "data": [
                 2
@@ -119,11 +124,12 @@
             "y": 0
         },
         {
-            "graphics_id": 51,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3310,
+            "id": "VEILSTONE_CITY_GYM_BLACK_BELT_RAFAEL",
+            "graphics_id": "OBJ_EVENT_GFX_BLACK_BELT",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_BLACK_BELT_RAFAEL",
             "initial_dir": 2,
             "data": [
                 4
@@ -139,7 +145,7 @@
         {
             "x": 12,
             "z": 30,
-            "dest_header_id": 132,
+            "dest_header_id": "MAP_HEADER_VEILSTONE_CITY",
             "dest_warp_id": 13
         }
     ],

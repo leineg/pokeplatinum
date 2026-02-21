@@ -6,7 +6,7 @@
 #include "struct_defs/struct_020954F0.h"
 #include "struct_defs/struct_02095C48.h"
 
-#include "overlay012/is_form_symmetrical.h"
+#include "battle_anim/is_form_symmetrical.h"
 #include "overlay017/const_ov17_022536B4.h"
 #include "overlay017/ov17_0223B140.h"
 #include "overlay017/ov17_0223F118.h"
@@ -26,21 +26,21 @@
 #include "graphics.h"
 #include "heap.h"
 #include "inlines.h"
-#include "math.h"
+#include "math_util.h"
 #include "message.h"
 #include "narc.h"
 #include "palette.h"
 #include "pokemon.h"
+#include "pokemon_sprite.h"
+#include "sound.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "sprite_system.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
-#include "unk_020041CC.h"
-#include "unk_02005474.h"
-#include "unk_0200762C.h"
 #include "unk_02012744.h"
 #include "unk_0208C098.h"
 #include "unk_02094EDC.h"
@@ -415,9 +415,7 @@ void ov17_02241428(UnkStruct_ov17_02246F24 *param0)
 
 UnkStruct_ov17_0224145C *ov17_0224145C(UnkStruct_ov17_02246F24 *param0, int param1)
 {
-    UnkStruct_ov17_0224145C *v0;
-
-    v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_0224145C));
+    UnkStruct_ov17_0224145C *v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_0224145C));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_0224145C));
 
     v0->unk_00 = param0->unk_0C.unk_50;
@@ -432,7 +430,7 @@ void ov17_02241494(UnkStruct_ov17_0224145C *param0)
     GF_ASSERT(param0->unk_0B == 0);
 
     SysTask_Done(param0->unk_04);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov17_022414B0(UnkStruct_ov17_0224145C *param0)
@@ -470,15 +468,15 @@ static void ov17_022414C0(SysTask *param0, void *param1)
 
 void ov17_02241524(UnkStruct_ov17_0223F88C *param0, int param1)
 {
-    sub_02007DC8(param0->unk_08[param1]);
+    PokemonSprite_Delete(param0->unk_08[param1]);
 
-    GF_ASSERT(param0->unk_58[param1].unk_00 != NULL);
-    MI_CpuClear8(param0->unk_58[param1].unk_00, (32 * 10 * 10));
+    GF_ASSERT(param0->pokemonSpriteDataArray[param1].tiles != NULL);
+    MI_CpuClear8(param0->pokemonSpriteDataArray[param1].tiles, (32 * 10 * 10));
 
-    param0->unk_08[param1] = sub_02095484(param0->unk_04, param1, param0->unk_00->unk_00[param1], 0, &param0->unk_58[param1], 21, (256 - 40) - 32 * param1, (104 + 8) - 32 * param1, -0x200);
+    param0->unk_08[param1] = sub_02095484(param0->unk_04, param1, param0->unk_00->unk_00[param1], 0, &param0->pokemonSpriteDataArray[param1], HEAP_ID_21, (256 - 40) - 32 * param1, (104 + 8) - 32 * param1, -0x200);
 
-    sub_02007DEC(param0->unk_08[param1], 6, 1);
-    sub_02007DEC(param0->unk_08[param1], 37, 1);
+    PokemonSprite_SetAttribute(param0->unk_08[param1], MON_SPRITE_HIDE, 1);
+    PokemonSprite_SetAttribute(param0->unk_08[param1], MON_SPRITE_HIDE_2, 1);
 
     {
         u32 v0, v1;
@@ -487,7 +485,7 @@ void ov17_02241524(UnkStruct_ov17_0223F88C *param0, int param1)
         v1 = Pokemon_GetValue(param0->unk_00->unk_00[param1], MON_DATA_FORM, NULL);
 
         if (IsFormSymmetrical(v0, v1) == 1) {
-            sub_02007DEC(param0->unk_08[param1], 35, 1);
+            PokemonSprite_SetAttribute(param0->unk_08[param1], MON_SPRITE_FLIP_H, 1);
         }
     }
 }
@@ -497,13 +495,13 @@ void ov17_022415E4(UnkStruct_ov17_0223F88C *param0)
     int v0;
 
     for (v0 = 0; v0 < 4; v0++) {
-        GF_ASSERT(param0->unk_58[v0].unk_00 == NULL);
+        GF_ASSERT(param0->pokemonSpriteDataArray[v0].tiles == NULL);
 
-        param0->unk_58[v0].unk_00 = Heap_AllocFromHeap(21, (32 * 10 * 10));
-        param0->unk_08[v0] = sub_02095484(param0->unk_04, v0, param0->unk_00->unk_00[v0], 0, &param0->unk_58[v0], 21, (256 - 40) - 32 * v0, (104 + 8) - 32 * v0, -0x200);
+        param0->pokemonSpriteDataArray[v0].tiles = Heap_Alloc(HEAP_ID_21, (32 * 10 * 10));
+        param0->unk_08[v0] = sub_02095484(param0->unk_04, v0, param0->unk_00->unk_00[v0], 0, &param0->pokemonSpriteDataArray[v0], HEAP_ID_21, (256 - 40) - 32 * v0, (104 + 8) - 32 * v0, -0x200);
 
-        sub_02007DEC(param0->unk_08[v0], 6, 1);
-        sub_02007DEC(param0->unk_08[v0], 37, 1);
+        PokemonSprite_SetAttribute(param0->unk_08[v0], MON_SPRITE_HIDE, 1);
+        PokemonSprite_SetAttribute(param0->unk_08[v0], MON_SPRITE_HIDE_2, 1);
 
         {
             u32 v1, v2;
@@ -512,18 +510,18 @@ void ov17_022415E4(UnkStruct_ov17_0223F88C *param0)
             v2 = Pokemon_GetValue(param0->unk_00->unk_00[v0], MON_DATA_FORM, NULL);
 
             if (IsFormSymmetrical(v1, v2) == 1) {
-                sub_02007DEC(param0->unk_08[v0], 35, 1);
+                PokemonSprite_SetAttribute(param0->unk_08[v0], MON_SPRITE_FLIP_H, 1);
             }
         }
     }
 
-    GF_ASSERT(param0->unk_98.unk_00 == NULL);
+    GF_ASSERT(param0->pokemonSpriteData.tiles == NULL);
 
-    param0->unk_98.unk_00 = Heap_AllocFromHeap(21, (32 * 10 * 10));
-    param0->unk_98.unk_08 = param0->unk_58[0].unk_08;
-    param0->unk_98.unk_04 = param0->unk_58[0].unk_04;
+    param0->pokemonSpriteData.tiles = Heap_Alloc(HEAP_ID_21, (32 * 10 * 10));
+    param0->pokemonSpriteData.palette = param0->pokemonSpriteDataArray[0].palette;
+    param0->pokemonSpriteData.narcID = param0->pokemonSpriteDataArray[0].narcID;
 
-    MI_CpuClear32(param0->unk_98.unk_00, (32 * 10 * 10));
+    MI_CpuClear32(param0->pokemonSpriteData.tiles, (32 * 10 * 10));
 }
 
 void ov17_022416E4(UnkStruct_ov17_0223F88C *param0)
@@ -531,13 +529,13 @@ void ov17_022416E4(UnkStruct_ov17_0223F88C *param0)
     int v0;
 
     for (v0 = 0; v0 < 4; v0++) {
-        sub_02007DC8(param0->unk_08[v0]);
-        Heap_FreeToHeap(param0->unk_58[v0].unk_00);
-        param0->unk_58[v0].unk_00 = NULL;
+        PokemonSprite_Delete(param0->unk_08[v0]);
+        Heap_Free(param0->pokemonSpriteDataArray[v0].tiles);
+        param0->pokemonSpriteDataArray[v0].tiles = NULL;
     }
 
-    Heap_FreeToHeap(param0->unk_98.unk_00);
-    param0->unk_98.unk_00 = NULL;
+    Heap_Free(param0->pokemonSpriteData.tiles);
+    param0->pokemonSpriteData.tiles = NULL;
 }
 
 static ManagedSprite *ov17_02241720(PaletteData *param0, SpriteSystem *param1, SpriteManager *param2, const UnkStruct_020954F0 *param3, int param4, NARC *param5)
@@ -597,11 +595,9 @@ static void ov17_02241814(SpriteManager *param0, ManagedSprite *param1, int para
 
 static void ov17_02241854(PaletteData *param0, SpriteSystem *param1, SpriteManager *param2, NARC *param3)
 {
-    u32 v0, v1, v2;
-
-    v0 = 39;
-    v1 = 40;
-    v2 = 41;
+    u32 v0 = 39;
+    u32 v1 = 40;
+    u32 v2 = 41;
 
     SpriteSystem_LoadCharResObjFromOpenNarc(param1, param2, param3, v0, TRUE, NNS_G2D_VRAM_TYPE_2DMAIN, 33004);
     SpriteSystem_LoadCellResObjFromOpenNarc(param1, param2, param3, v1, TRUE, 33004);
@@ -667,11 +663,9 @@ void ov17_0224197C(UnkStruct_ov17_0223F88C *param0)
 
 void ov17_022419AC(PaletteData *param0, SpriteSystem *param1, SpriteManager *param2, NARC *param3)
 {
-    u32 v0, v1, v2;
-
-    v0 = 14;
-    v1 = 13;
-    v2 = 12;
+    u32 v0 = 14;
+    u32 v1 = 13;
+    u32 v2 = 12;
 
     SpriteSystem_LoadCharResObjFromOpenNarc(param1, param2, param3, v0, TRUE, NNS_G2D_VRAM_TYPE_2DMAIN, 33013);
     SpriteSystem_LoadCellResObjFromOpenNarc(param1, param2, param3, v1, TRUE, 33011);
@@ -717,16 +711,16 @@ void ov17_02241A8C(UnkStruct_ov17_0223F88C *param0, int param1, int param2)
 
     switch (param2) {
     case 0:
-        Sound_PlayEffect(1761);
+        Sound_PlayEffect(SEQ_SE_DP_CON_003);
         break;
     case 1:
-        Sound_PlayEffect(1759);
+        Sound_PlayEffect(SEQ_SE_DP_CON_001);
         break;
     case 2:
-        Sound_PlayEffect(1501);
+        Sound_PlayEffect(SEQ_SE_DP_DECIDE);
         break;
     case 3:
-        Sound_PlayEffect(1501);
+        Sound_PlayEffect(SEQ_SE_DP_DECIDE);
         break;
     }
 }
@@ -739,9 +733,7 @@ void ov17_02241B1C(UnkStruct_ov17_0223F88C *param0)
 
 void ov17_02241B3C(UnkStruct_ov17_02246F24 *param0, int param1, int param2, u8 *param3)
 {
-    UnkStruct_ov17_02241B3C *v0;
-
-    v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_02241B3C));
+    UnkStruct_ov17_02241B3C *v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_02241B3C));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_02241B3C));
 
     *param3 = 0;
@@ -820,7 +812,7 @@ static void ov17_02241C2C(SysTask *param0, void *param1)
         break;
     default:
         *(v0->unk_04) = 1;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -857,7 +849,7 @@ static void ov17_02241CF0(SysTask *param0, void *param1)
         break;
     default:
         *(v0->unk_04) = 1;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -929,9 +921,7 @@ void ov17_02241EF0(UnkStruct_ov17_0223F88C *param0)
 
 static ManagedSprite *ov17_02241F08(SpriteSystem *param0, SpriteManager *param1, int param2, int param3)
 {
-    ManagedSprite *v0;
-
-    v0 = SpriteSystem_NewSprite(param0, param1, &Unk_ov17_02253888);
+    ManagedSprite *v0 = SpriteSystem_NewSprite(param0, param1, &Unk_ov17_02253888);
 
     Sprite_TickFrame(v0->sprite);
     ManagedSprite_SetPositionXY(v0, param2, param3);
@@ -967,15 +957,13 @@ void ov17_02241F34(UnkStruct_ov17_0223F88C *param0, int param1, int param2, int 
         }
     }
 
-    Sound_PlayEffect(1761);
-    sub_02004F7C(1761, 0xffff, 64 * (v0 - 1));
+    Sound_PlayEffect(SEQ_SE_DP_CON_003);
+    Sound_SetPitchForSequence(1761, 0xffff, 64 * (v0 - 1));
 }
 
 static void ov17_02242048(ManagedSprite *param0)
 {
-    UnkStruct_ov17_02242048 *v0;
-
-    v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_02242048));
+    UnkStruct_ov17_02242048 *v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_02242048));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_02242048));
     v0->unk_00 = param0;
 
@@ -1020,7 +1008,7 @@ static void ov17_0224207C(SysTask *param0, void *param1)
         break;
     default:
         ManagedSprite_SetAffineOverwriteMode(v0->unk_00, AFFINE_OVERWRITE_MODE_NONE);
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -1074,9 +1062,7 @@ void ov17_02242248(UnkStruct_ov17_0223F88C *param0)
 
 static ManagedSprite *ov17_02242260(SpriteSystem *param0, SpriteManager *param1, int param2, int param3)
 {
-    ManagedSprite *v0;
-
-    v0 = SpriteSystem_NewSprite(param0, param1, &Unk_ov17_022537EC);
+    ManagedSprite *v0 = SpriteSystem_NewSprite(param0, param1, &Unk_ov17_022537EC);
 
     Sprite_TickFrame(v0->sprite);
     ManagedSprite_SetPositionXY(v0, param2, param3);
@@ -1086,9 +1072,7 @@ static ManagedSprite *ov17_02242260(SpriteSystem *param0, SpriteManager *param1,
 
 static ManagedSprite *ov17_0224228C(SpriteSystem *param0, SpriteManager *param1, int param2, int param3)
 {
-    ManagedSprite *v0;
-
-    v0 = SpriteSystem_NewSprite(param0, param1, &Unk_ov17_0225371C);
+    ManagedSprite *v0 = SpriteSystem_NewSprite(param0, param1, &Unk_ov17_0225371C);
 
     Sprite_TickFrame(v0->sprite);
     ManagedSprite_SetPositionXY(v0, param2, param3);
@@ -1152,8 +1136,8 @@ static void ov17_022422B8(SysTask *param0, void *param1)
     default:
         Sprite_DeleteAndFreeResources(v0->unk_04);
         ManagedSprite_SetDrawFlag(v0->unk_08, 1);
-        Sound_PlayEffect(1760);
-        Heap_FreeToHeap(param1);
+        Sound_PlayEffect(SEQ_SE_DP_CON_002);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -1190,7 +1174,7 @@ void ov17_022424D4(UnkStruct_ov17_0223F88C *param0, int param1, int param2)
             param0->unk_124[param1][v1] = ov17_02242260(param0->unk_18, param0->unk_1C, Unk_ov17_022536D8[param1][0] + v1 * 5, Unk_ov17_022536D8[param1][1]);
             ManagedSprite_SetDrawFlag(param0->unk_124[param1][v1], 0);
 
-            v2 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_022422B8));
+            v2 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_022422B8));
             MI_CpuClear8(v2, sizeof(UnkStruct_ov17_022422B8));
 
             v2->unk_00 = param0;
@@ -1253,7 +1237,7 @@ void ov17_022426E8(UnkStruct_ov17_02246F24 *param0, int param1, u8 *param2)
 
     *param2 = 0;
 
-    v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_022426E8));
+    v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_022426E8));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_022426E8));
 
     v0->unk_00 = param0;
@@ -1319,7 +1303,7 @@ static void ov17_02242720(SysTask *param0, void *param1)
     default:
         ov17_022413D8();
         *(v0->unk_04) = 1;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -1506,20 +1490,20 @@ void ov17_02242DA8(UnkStruct_ov17_02246F24 *param0)
 
 static void ov17_02242DC0(UnkStruct_ov17_02246F24 *param0, MessageLoader *param1, u32 param2, int param3, const UnkStruct_ov17_022449B8 *param4, const void *param5, int param6)
 {
-    Strbuf *v0;
+    String *v0;
     u32 v1;
 
     if (param6 == 1) {
         v1 = TEXT_SPEED_INSTANT;
     } else {
-        if (param0->unk_00->unk_155 == 0) {
-            v1 = Options_TextFrameDelay(param0->unk_00->unk_196C);
+        if (param0->unk_00->isLinkContest == FALSE) {
+            v1 = Options_TextFrameDelay(param0->unk_00->options);
         } else {
             v1 = TEXT_SPEED_FAST;
         }
     }
 
-    v0 = MessageLoader_GetNewStrbuf(param1, param2);
+    v0 = MessageLoader_GetNewString(param1, param2);
     ov17_0224290C(param0, param3, param4, param5);
 
     StringTemplate_Format(param0->unk_0C.unk_48, param0->unk_0C.unk_4C, v0);
@@ -1536,7 +1520,7 @@ static void ov17_02242DC0(UnkStruct_ov17_02246F24 *param0, MessageLoader *param1
         (void)0;
     }
 
-    Strbuf_Free(v0);
+    String_Free(v0);
 }
 
 void ov17_02242E5C(UnkStruct_ov17_02246F24 *param0, u32 param1, const UnkStruct_ov17_022449B8 *param2, const void *param3)
@@ -1571,12 +1555,12 @@ int ov17_02242ECC(UnkStruct_ov17_02246F24 *param0)
 
 void ov17_02242EE4(UnkStruct_ov17_02246F24 *param0, int param1)
 {
-    Strbuf *v0;
+    String *v0;
     TextColor v1;
 
-    v0 = Strbuf_Init(12, 21);
+    v0 = String_Init(12, HEAP_ID_21);
 
-    Pokemon_GetValue(param0->unk_0C.unk_00->unk_00[param1], MON_DATA_NICKNAME_STRBUF, v0);
+    Pokemon_GetValue(param0->unk_0C.unk_00->unk_00[param1], MON_DATA_NICKNAME_STRING, v0);
 
     if (param1 == param0->unk_00->unk_00.unk_113) {
         v1 = TEXT_COLOR(1, 2, 0);
@@ -1584,10 +1568,10 @@ void ov17_02242EE4(UnkStruct_ov17_02246F24 *param0, int param1)
         v1 = TEXT_COLOR(5, 6, 0);
     }
 
-    ov17_0223F1E8(21, param0->unk_0C.unk_24, param0->unk_0C.unk_1C, param0->unk_0C.unk_54, &param0->unk_0C.unk_1C8[param1], v0, FONT_SYSTEM, v1, 0, 33005, 0, 0, 0, 0, 15);
-    ov17_0223F1E8(21, param0->unk_0C.unk_24, param0->unk_0C.unk_1C, param0->unk_0C.unk_54, &param0->unk_0C.unk_180[param1], param0->unk_00->unk_00.unk_D8[param1], FONT_SYSTEM, v1, 0, 33005, 0, 0, 0, 0, 15);
+    ov17_0223F1E8(HEAP_ID_21, param0->unk_0C.unk_24, param0->unk_0C.unk_1C, param0->unk_0C.unk_54, &param0->unk_0C.unk_1C8[param1], v0, FONT_SYSTEM, v1, 0, 33005, 0, 0, 0, 0, 15);
+    ov17_0223F1E8(HEAP_ID_21, param0->unk_0C.unk_24, param0->unk_0C.unk_1C, param0->unk_0C.unk_54, &param0->unk_0C.unk_180[param1], param0->unk_00->unk_00.unk_D8[param1], FONT_SYSTEM, v1, 0, 33005, 0, 0, 0, 0, 15);
 
-    Strbuf_Free(v0);
+    String_Free(v0);
 }
 
 void ov17_02242FA4(UnkStruct_ov17_02246F24 *param0)
@@ -1714,7 +1698,7 @@ void ov17_022431A0(UnkStruct_ov17_02246F24 *param0, int param1, u8 param2, int p
 
     *param5 = 0;
 
-    v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_022431A0));
+    v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_022431A0));
 
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_022431A0));
 
@@ -1739,8 +1723,8 @@ static void ov17_022431E8(SysTask *param0, void *param1)
             break;
         }
 
-        Sound_PlayEffect(1765);
-        sub_02004AD4(1765, v0->unk_04);
+        Sound_PlayEffect(SEQ_SE_DP_CON_007);
+        Sound_SetInitialVolumeForSequence(1765, v0->unk_04);
         v0->unk_08++;
     case 1: {
         u32 v1;
@@ -1751,7 +1735,7 @@ static void ov17_022431E8(SysTask *param0, void *param1)
             v1 = 2;
         }
 
-        Graphics_LoadTilemapToBgLayer(45, v1, v0->unk_00->unk_0C.unk_24, 3, 0, 0, 1, 21);
+        Graphics_LoadTilemapToBgLayer(NARC_INDEX_CONTEST__GRAPHIC__CONTEST_BG, v1, v0->unk_00->unk_0C.unk_24, 3, 0, 0, 1, HEAP_ID_21);
     }
 
         v0->unk_08++;
@@ -1805,7 +1789,7 @@ static void ov17_022431E8(SysTask *param0, void *param1)
         }
 
         *(v0->unk_10) = 1;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -1848,7 +1832,7 @@ void ov17_0224331C(UnkStruct_ov17_02246F24 *param0, int param1, int param2, u8 *
             }
         }
 
-        v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_0224331C));
+        v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_0224331C));
         MI_CpuClear8(v0, sizeof(UnkStruct_ov17_0224331C));
 
         v0->unk_04 = param4;
@@ -1916,11 +1900,11 @@ static void ov17_022434E0(SysTask *param0, void *param1)
         break;
     default:
         ManagedSprite_SetDrawFlag(v0->unk_08, 0);
-        Sound_PlayEffect(1505);
+        Sound_PlayEffect(SEQ_SE_DP_SELECT5);
         ov17_022414B0(v0->unk_04);
 
         (*(v0->unk_0C))--;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }
@@ -1928,9 +1912,7 @@ static void ov17_022434E0(SysTask *param0, void *param1)
 
 UnkStruct_ov17_0224365C *ov17_0224365C(UnkStruct_ov17_02246F24 *param0, int param1)
 {
-    UnkStruct_ov17_0224365C *v0;
-
-    v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_0224365C));
+    UnkStruct_ov17_0224365C *v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_0224365C));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov17_0224365C));
 
     v0->unk_00 = param0;
@@ -1943,7 +1925,7 @@ UnkStruct_ov17_0224365C *ov17_0224365C(UnkStruct_ov17_02246F24 *param0, int para
 void ov17_02243690(UnkStruct_ov17_0224365C *param0)
 {
     SysTask_Done(param0->unk_04);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static void ov17_022436A4(SysTask *param0, void *param1)
@@ -1976,7 +1958,7 @@ void ov17_022436D0(UnkStruct_ov17_02246F24 *param0, int param1, int param2, int 
             continue;
         }
 
-        v0 = Heap_AllocFromHeap(21, sizeof(UnkStruct_ov17_022436D0));
+        v0 = Heap_Alloc(HEAP_ID_21, sizeof(UnkStruct_ov17_022436D0));
         MI_CpuClear8(v0, sizeof(UnkStruct_ov17_022436D0));
 
         v0->unk_00 = param0;
@@ -2011,7 +1993,7 @@ static void ov17_02243750(SysTask *param0, void *param1)
         v0->unk_1C = v1 << 8;
         v0->unk_20 = v2 << 8;
 
-        Sound_PlayEffect(2041);
+        Sound_PlayEffect(SEQ_SE_DP_W234);
         v0->unk_0E++;
     case 1:
         v0->unk_0C += 0x800;
@@ -2045,7 +2027,7 @@ static void ov17_02243750(SysTask *param0, void *param1)
                     v0->unk_18 = -v0->unk_18;
                 }
             }
-            Sound_PlayEffect(1770);
+            Sound_PlayEffect(SEQ_SE_DP_CON_013);
             v0->unk_0E++;
         }
         break;
@@ -2062,9 +2044,9 @@ static void ov17_02243750(SysTask *param0, void *param1)
         break;
     default:
         ManagedSprite_SetDrawFlag(v0->unk_04, 0);
-        Sound_PlayEffect(1505);
+        Sound_PlayEffect(SEQ_SE_DP_SELECT5);
         (*(v0->unk_08))--;
-        Heap_FreeToHeap(param1);
+        Heap_Free(param1);
         SysTask_Done(param0);
         return;
     }

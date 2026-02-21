@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/floaroma_town.h"
 
-    .data
 
     ScriptEntry _002E
     ScriptEntry _0030
@@ -36,19 +35,19 @@ _0030:
 
     .balign 4, 0
 _005C:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0064:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
 _006C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfGe 0x40CF, 2, _0099
+    GoToIfGe VAR_UNK_0x40CF, 2, _0099
     Message 2
     ApplyMovement 2, _00A4
     WaitMovement
@@ -67,8 +66,8 @@ _0099:
 
     .balign 4, 0
 _00A4:
-    MoveAction_000
-    MoveAction_063 3
+    FaceNorth
+    Delay8 3
     EndMovement
 
 _00B0:
@@ -112,43 +111,31 @@ _00E9:
     End
 
 _00FC:
-    ScrCmd_036 12, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 12
     End
 
 _0113:
-    ScrCmd_036 13, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 13
     End
 
 _012A:
-    ScrCmd_036 14, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 14
     End
 
 _0141:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_31C 0x800C, 0x1EC
-    GoToIfEq 0x800C, 0xFF, _019D
-    ScrCmd_1C0 0x800C, 0x1EC
-    GoToIfEq 0x800C, 0, _019D
-    CheckItem ITEM_GRACIDEA, 1, 0x800C
-    GoToIfNe 0x800C, 0, _01A8
+    FindPartySlotWithFatefulEncounterSpecies VAR_RESULT, SPECIES_SHAYMIN
+    GoToIfEq VAR_RESULT, 0xFF, _019D
+    CheckPartyHasSpecies VAR_RESULT, SPECIES_SHAYMIN
+    GoToIfEq VAR_RESULT, 0, _019D
+    CheckItem ITEM_GRACIDEA, 1, VAR_RESULT
+    GoToIfNe VAR_RESULT, 0, _01A8
     Message 9
-    SetVar 0x8004, 0x1D2
-    SetVar 0x8005, 1
-    CallCommonScript 0x7E0
+    SetVar VAR_0x8004, 0x1D2
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantityNoLineFeed
     CloseMessage
     ReleaseAll
     End
@@ -169,4 +156,4 @@ _01B3:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

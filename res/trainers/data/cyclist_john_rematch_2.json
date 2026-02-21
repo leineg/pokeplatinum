@@ -13,7 +13,7 @@
             "level": 43,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,21 @@
             "level": 43,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Is your bicycle geared to 3-speed now?\n",
+                "Or the 4-speed gearing?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Crash! Tinkle...\n"
         }
     ]
 }

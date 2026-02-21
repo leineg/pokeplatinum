@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1177,
+            "id": "ACUITY_LAKEFRONT_POKEBALL_0",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0499",
             "script": 7163,
             "initial_dir": 0,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 94,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "ACUITY_LAKEFRONT_ARROW_SIGNPOST_1",
+            "graphics_id": "OBJ_EVENT_GFX_ARROW_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 0,
             "data": [
@@ -32,10 +34,11 @@
             "y": 0
         },
         {
-            "graphics_id": 148,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 426,
+            "id": "ACUITY_LAKEFRONT_RIVAL_2",
+            "graphics_id": "OBJ_EVENT_GFX_BARRY",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01AA",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -46,10 +49,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1324,
+            "id": "ACUITY_LAKEFRONT_POKEBALL_3",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x052C",
             "script": 7309,
             "initial_dir": 0,
             "data": [],
@@ -64,25 +68,25 @@
         {
             "x": 308,
             "z": 229,
-            "dest_header_id": 317,
+            "dest_header_id": "MAP_HEADER_LAKE_ACUITY_LOW_WATER",
             "dest_warp_id": 0
         },
         {
             "x": 309,
             "z": 229,
-            "dest_header_id": 317,
+            "dest_header_id": "MAP_HEADER_LAKE_ACUITY_LOW_WATER",
             "dest_warp_id": 1
         },
         {
             "x": 308,
             "z": 229,
-            "dest_header_id": 318,
+            "dest_header_id": "MAP_HEADER_LAKE_ACUITY",
             "dest_warp_id": 3
         },
         {
             "x": 309,
             "z": 229,
-            "dest_header_id": 318,
+            "dest_header_id": "MAP_HEADER_LAKE_ACUITY",
             "dest_warp_id": 4
         }
     ],
@@ -94,7 +98,7 @@
             "y": 0,
             "width": 2,
             "length": 1,
-            "var": 16516,
+            "var": "VAR_UNK_0x4084",
             "value": 0
         }
     ]

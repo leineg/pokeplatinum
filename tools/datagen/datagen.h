@@ -7,6 +7,7 @@
  */
 
 // clang-format off
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <filesystem>
@@ -18,6 +19,9 @@
 #include <vector>
 
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+#include "rapidjson/filewritestream.h"
+#include <rapidjson/writer.h>
 #include <narc/narc.h>
 // clang-format on
 
@@ -157,9 +161,15 @@ static inline std::string ReadWholeFile(std::ifstream &ifs)
 }
 
 // Read a whole file into a C++-string.
+// This routine is a potential exit-point if the file cannot be loaded for reading.
 static inline std::string ReadWholeFile(fs::path &fname)
 {
-    std::ifstream ifs(fname);
+    std::ifstream ifs(fname, std::ios::in);
+    if (ifs.fail()) {
+        std::cerr << "could not open file " << fs::relative(fname).generic_string() << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+
     return ReadWholeFile(ifs);
 }
 
@@ -187,6 +197,69 @@ static inline std::vector<std::string> ReadRegistryEnvVar(const char *var)
 
     std::string val = val_p;
     return Tokenize(val, ';');
+}
+
+struct Slice {
+    long begin;
+    long length;
+};
+
+static inline void ReportJsonError(rapidjson::ParseResult ok, std::string &json, fs::path &sourcepath)
+{
+    std::vector<Slice> linecoords { Slice { 0, 0 } };
+    for (int i = 0; i < json.length(); i++) {
+        if (json.at(i) == '\n') {
+            linecoords.back().length = i - linecoords.back().begin;
+            linecoords.emplace_back(Slice { i + 1, 0 });
+        }
+    }
+    linecoords.back().length = json.length() - linecoords.back().begin;
+
+    auto line = std::find_if(linecoords.begin(), linecoords.end(), [&ok](Slice slice) {
+        return slice.length + slice.begin >= ok.Offset();
+    });
+    auto lineidx = std::distance(linecoords.begin(), line);
+    auto linenum = lineidx + 1;
+    auto colnum = ok.Offset() - line->begin + 1;
+
+    std::cerr << "\033[1;37m" << fs::relative(sourcepath).generic_string() << ":" << linenum << ":" << colnum << ": ";
+    std::cerr << "\033[1;31merror: ";
+    std::cerr << "\033[1;37m" << rapidjson::GetParseError_En(ok.Code());
+    std::cerr << "\033[0m" << std::endl;
+
+    if (lineidx > 0) {
+        auto &prev = linecoords.at(lineidx - 1);
+        std::cerr << std::setw(5) << linenum - 1 << " | " << json.substr(prev.begin, prev.length) << std::endl;
+    }
+
+    std::cerr << std::setw(5) << linenum << " | " << "\033[0;31m" << json.substr(line->begin, line->length) << "\033[0m" << std::endl;
+
+    if (lineidx < linecoords.size() - 1) {
+        auto &next = linecoords.at(lineidx + 1);
+        std::cerr << std::setw(5) << linenum + 1 << " | " << json.substr(next.begin, next.length) << std::endl;
+    }
+}
+
+static inline void CopyMessage(const rapidjson::Value &member, rapidjson::Value &outMessage, rapidjson::MemoryPoolAllocator<> &allocator) {
+    if (member.HasMember("en_US")) {
+        if (member["en_US"].IsArray()) {
+            rapidjson::Value strings(rapidjson::kArrayType);
+            for (const auto &line : member["en_US"].GetArray()) {
+                std::string str = line.GetString();
+                rapidjson::Value string(rapidjson::kStringType);
+                string.SetString(str.c_str(), static_cast<rapidjson::SizeType>(str.length()), allocator);
+                strings.PushBack(string, allocator);
+            }
+            outMessage.AddMember("en_US", strings, allocator);
+        } else {
+            std::string str = member["en_US"].GetString();
+            rapidjson::Value string(rapidjson::kStringType);
+            string.SetString(str.c_str(), static_cast<rapidjson::SizeType>(str.length()), allocator);
+            outMessage.AddMember("en_US", string, allocator);
+        }
+    } else if (member.HasMember("garbage")) {
+        outMessage.AddMember("garbage", member["garbage"].GetInt(), allocator);
+    }
 }
 
 #endif // POKEPLATINUM_DATAGEN_H

@@ -10,7 +10,6 @@
 subproject('narc')
 subproject('rapidjson')
 
-rapidjson_dep = dependency('rapidjson')
 libnarc_dep = dependency('libnarc')
 
 datagen_cpp_args = [
@@ -43,6 +42,44 @@ datagen_trainer_exe = executable(
     'datagen-trainer',
     sources: [
         files('datagen_trainer.cpp'),
+        c_consts_generators,
+    ],
+    cpp_args: datagen_cpp_args,
+    implicit_include_directories: true,
+    include_directories: [
+        public_includes,
+        toplevel_includes,
+    ],
+    dependencies: [
+        libnarc_dep,
+        rapidjson_dep,
+    ],
+    native: true,
+)
+
+datagen_frontier_exe = executable(
+    'datagen-frontier',
+    sources: [
+        files('datagen_frontier.cpp'),
+        c_consts_generators,
+    ],
+    cpp_args: datagen_cpp_args,
+    implicit_include_directories: true,
+    include_directories: [
+        public_includes,
+        toplevel_includes,
+    ],
+    dependencies: [
+        libnarc_dep,
+        rapidjson_dep,
+    ],
+    native: true,
+)
+
+datagen_events_exe = executable(
+    'datagen-events',
+    sources: [
+        files('datagen_events.cpp'),
         c_consts_generators,
     ],
     cpp_args: datagen_cpp_args,

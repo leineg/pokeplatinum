@@ -13,7 +13,7 @@
 #include "map_object.h"
 #include "map_tile_behavior.h"
 #include "player_avatar.h"
-#include "unk_02005474.h"
+#include "sound_playback.h"
 #include "unk_0205F180.h"
 #include "unk_020655F4.h"
 
@@ -61,7 +61,7 @@ static void ov5_021E11B0(FieldSystem *fieldSystem, PlayerAvatar *playerAvatar, i
     v0->playerAvatar = playerAvatar;
     v0->unk_00 = param2;
 
-    Sound_PlayEffect(1624);
+    Sound_PlayEffect(SEQ_SE_DP_F209);
     FieldSystem_CreateTask(fieldSystem, ov5_021E120C, v0);
 }
 
@@ -96,7 +96,7 @@ static BOOL ov5_021E120C(FieldTask *param0)
         if (sub_02061544(v0->playerAvatar)) {
             int v3 = 0xc;
 
-            v3 = sub_02065838(v0->unk_00, v3);
+            v3 = MovementAction_TurnActionTowardsDir(v0->unk_00, v3);
             PlayerAvatar_SetAnimationCode(v0->playerAvatar, v3, 1);
             Player_SetDir(v0->playerAvatar, v0->unk_00);
             v0->unk_08++;
@@ -153,7 +153,7 @@ static BOOL ov5_021E120C(FieldTask *param0)
 
 static void *ov5_021E132C(int param0)
 {
-    void *v0 = Heap_AllocFromHeapAtEnd(4, param0);
+    void *v0 = Heap_AllocAtEnd(HEAP_ID_FIELD1, param0);
 
     GF_ASSERT(v0 != NULL);
     memset(v0, 0, param0);
@@ -163,5 +163,5 @@ static void *ov5_021E132C(int param0)
 
 static void ov5_021E1350(void *param0)
 {
-    Heap_FreeToHeapExplicit(4, param0);
+    Heap_FreeExplicit(HEAP_ID_FIELD1, param0);
 }

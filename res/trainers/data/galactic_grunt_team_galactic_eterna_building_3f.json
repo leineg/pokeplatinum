@@ -13,7 +13,7 @@
             "level": 16,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,7 +22,7 @@
             "level": 16,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -31,8 +31,31 @@
             "level": 16,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Why, thank you!\r",
+                "We love it when people come to us\n",
+                "to donate their Pokémon!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "What do you think you’re doing?!\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "You can catch Pokémon anywhere.\n",
+                "What’s so special about them?\r",
+                "Trainers that lose theirs should\n",
+                "quit whining and catch some more!\n"
+            ]
         }
     ]
 }

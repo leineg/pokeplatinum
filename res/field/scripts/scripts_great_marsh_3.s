@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/great_marsh_3.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _001D
@@ -18,9 +17,5 @@ _000A:
     End
 
 _001D:
-    ScrCmd_036 1, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 1
     End

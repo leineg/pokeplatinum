@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_206_cycling_road_south_gate.h"
 
-    .data
 
     ScriptEntry _001A
     ScriptEntry _003D
@@ -15,13 +14,13 @@ _001A:
     End
 
 _001C:
-    GetPlayerMapPos 0x4004, 0x4005
-    CallIfLe 0x4005, 3, _0037
-    SetVar 0x4003, 1
+    GetPlayerMapPos VAR_MAP_LOCAL_4, VAR_MAP_LOCAL_5
+    CallIfLe VAR_MAP_LOCAL_5, 3, _0037
+    SetVar VAR_MAP_LOCAL_3, 1
     End
 
 _0037:
-    SetFlag 0x996
+    SetFlag FLAG_FORCE_BIKING_IN_GATE
     Return
 
 _003D:
@@ -36,8 +35,8 @@ _003D:
 
 _0050:
     LockAll
-    CheckPlayerOnBike 0x800C
-    GoToIfEq 0x800C, TRUE, _0080
+    CheckPlayerOnBike VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, _0080
     ApplyMovement 0, _0090
     WaitMovement
     Message 1
@@ -48,25 +47,25 @@ _0050:
     End
 
 _0080:
-    SetFlag 0x996
-    SetVar 0x4002, 1
+    SetFlag FLAG_FORCE_BIKING_IN_GATE
+    SetVar VAR_MAP_LOCAL_2, 1
     ReleaseAll
     End
 
     .balign 4, 0
 _0090:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _0098:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
 _00A0:
     LockAll
-    ClearFlag 0x996
-    SetVar 0x4002, 0
+    ClearFlag FLAG_FORCE_BIKING_IN_GATE
+    SetVar VAR_MAP_LOCAL_2, 0
     ReleaseAll
     End
 
@@ -74,13 +73,13 @@ _00B0:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0x12B, _00E5
-    SetVar 0x8004, 96
-    ScrCmd_261 0, 0x8004
+    GoToIfSet FLAG_UNK_0x012B, _00E5
+    SetVar VAR_0x8004, ACCESSORY_FLAG
+    BufferAccessoryName 0, VAR_0x8004
     Message 3
-    SetVar 0x8005, 1
-    CallCommonScript 0x7DF
-    SetFlag 0x12B
+    SetVar VAR_0x8005, 1
+    Common_GiveAccessoryWaitForConfirm
+    SetFlag FLAG_UNK_0x012B
     CloseMessage
     ReleaseAll
     End

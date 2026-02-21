@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 229,
-            "movement_type": 16,
-            "trainer_type": 0,
-            "flag": 562,
+            "id": "STARK_MOUNTAIN_ROOM_3_CROAGUNK_0",
+            "graphics_id": "OBJ_EVENT_GFX_CROAGUNK",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0232",
             "script": 0,
             "initial_dir": 2,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 161,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 477,
+            "id": "STARK_MOUNTAIN_ROOM_3_HEATRAN_1",
+            "graphics_id": "OBJ_EVENT_GFX_HEATRAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_STARK_MOUNTAIN_ROOM_3_HEATRAN",
             "script": 4,
             "initial_dir": 1,
             "data": [],
@@ -30,10 +32,11 @@
             "y": 0
         },
         {
-            "graphics_id": 144,
-            "movement_type": 14,
-            "trainer_type": 0,
-            "flag": 475,
+            "id": "STARK_MOUNTAIN_ROOM_3_BUCK_2",
+            "graphics_id": "OBJ_EVENT_GFX_BUCK",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_STARK_MOUNTAIN_ROOM_3_BUCK",
             "script": 0,
             "initial_dir": 0,
             "data": [],
@@ -44,10 +47,11 @@
             "y": 0
         },
         {
-            "graphics_id": 84,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 478,
+            "id": "STARK_MOUNTAIN_ROOM_3_STRENGTH_BOULDER_3",
+            "graphics_id": "OBJ_EVENT_GFX_STRENGTH_BOULDER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01DE",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -58,10 +62,11 @@
             "y": 0
         },
         {
-            "graphics_id": 213,
-            "movement_type": 16,
-            "trainer_type": 0,
-            "flag": 561,
+            "id": "STARK_MOUNTAIN_ROOM_3_LOOKER_4",
+            "graphics_id": "OBJ_EVENT_GFX_LOOKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0231",
             "script": 0,
             "initial_dir": 2,
             "data": [],
@@ -72,10 +77,11 @@
             "y": 0
         },
         {
-            "graphics_id": 214,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 476,
+            "id": "STARK_MOUNTAIN_ROOM_3_CHARON_5",
+            "graphics_id": "OBJ_EVENT_GFX_CHARON",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01DC",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -86,10 +92,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 16,
-            "trainer_type": 0,
-            "flag": 563,
+            "id": "STARK_MOUNTAIN_ROOM_3_ROCK_SMASH_6",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0233",
             "script": 0,
             "initial_dir": 2,
             "data": [],
@@ -100,10 +107,11 @@
             "y": 0
         },
         {
-            "graphics_id": 34,
-            "movement_type": 14,
-            "trainer_type": 0,
-            "flag": 560,
+            "id": "STARK_MOUNTAIN_ROOM_3_POLICEMAN_7",
+            "graphics_id": "OBJ_EVENT_GFX_POLICEMAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0230",
             "script": 0,
             "initial_dir": 0,
             "data": [],
@@ -114,10 +122,11 @@
             "y": 0
         },
         {
-            "graphics_id": 34,
-            "movement_type": 14,
-            "trainer_type": 0,
-            "flag": 560,
+            "id": "STARK_MOUNTAIN_ROOM_3_POLICEMAN_8",
+            "graphics_id": "OBJ_EVENT_GFX_POLICEMAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0230",
             "script": 0,
             "initial_dir": 0,
             "data": [],
@@ -128,10 +137,11 @@
             "y": 0
         },
         {
-            "graphics_id": 124,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 476,
+            "id": "STARK_MOUNTAIN_ROOM_3_GRUNT_M_9",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01DC",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -142,10 +152,11 @@
             "y": 0
         },
         {
-            "graphics_id": 124,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 476,
+            "id": "STARK_MOUNTAIN_ROOM_3_GRUNT_M_10",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01DC",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -160,9 +171,10 @@
         {
             "x": 7,
             "z": 17,
-            "dest_header_id": 264,
+            "dest_header_id": "MAP_HEADER_STARK_MOUNTAIN_ROOM_2",
             "dest_warp_id": 0
         }
     ],
     "coord_events": []
 }
+

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/snowpoint_city_west_house.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0033
@@ -11,7 +10,7 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 244, _0028
+    GoToIfSet FLAG_UNK_0x00F4, _0028
     Message 0
     WaitABXPadPress
     CloseMessage
@@ -29,30 +28,28 @@ _0033:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 244, _00DC
+    GoToIfSet FLAG_UNK_0x00F4, _00DC
     Message 2
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0060
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0060
     GoTo _00D1
 
 _0060:
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    ScrCmd_2A5
-    ScrCmd_193 0x800C
-    ReturnToField
-    FadeScreen 6, 1, 1, 0
+    SelectPokemonToTrade
+    FadeScreenIn
     WaitFadeScreen
-    GoToIfEq 0x800C, 0xFF, _00D1
+    GoToIfEq VAR_RESULT, 0xFF, _00D1
     StartNpcTrade NPC_TRADE_GASPAR_HAUNTER
-    SetVar 0x8004, 0x800C
-    ScrCmd_198 0x8004, 0x8005
-    GetNpcTradeRequestedSpecies 0x800C
-    GoToIfNe 0x8005, 0x800C, _00C4
-    ScrCmd_229 0x8004
+    SetVar VAR_0x8004, VAR_RESULT
+    GetPartyMonSpecies VAR_0x8004, VAR_0x8005
+    GetNpcTradeRequestedSpecies VAR_RESULT
+    GoToIfNe VAR_0x8005, VAR_RESULT, _00C4
+    ScrCmd_229 VAR_0x8004
     FinishNpcTrade
-    SetFlag 244
+    SetFlag FLAG_UNK_0x00F4
     Message 3
     WaitABXPadPress
     CloseMessage
@@ -81,4 +78,4 @@ _00DC:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

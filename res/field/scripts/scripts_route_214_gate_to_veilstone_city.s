@@ -1,35 +1,34 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_214_gate_to_veilstone_city.h"
 
-    .data
 
     ScriptEntry _0068
     ScriptEntry _000A
     ScriptEntryEnd
 
 _000A:
-    ScrCmd_1B7 0x4032, 4
-    ScrCmd_238 15, 0x4000
-    GoToIfEq 0x4000, 0, _0062
-    ScrCmd_238 16, 0x4000
-    GoToIfEq 0x4000, 0, _0062
-    ScrCmd_238 17, 0x4000
-    GoToIfEq 0x4000, 0, _0062
-    ScrCmd_238 18, 0x4000
-    GoToIfEq 0x4000, 0, _0062
-    ClearFlag 0x2C2
+    GetRandom VAR_UNK_0x4032, 4
+    CheckTVInterviewEligible TV_PROGRAM_SEGMENT_IN_YOUR_FACE_INTERVIEW_QUESTION_1, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0062
+    CheckTVInterviewEligible TV_PROGRAM_SEGMENT_IN_YOUR_FACE_INTERVIEW_QUESTION_2, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0062
+    CheckTVInterviewEligible TV_PROGRAM_SEGMENT_IN_YOUR_FACE_INTERVIEW_QUESTION_3, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0062
+    CheckTVInterviewEligible TV_PROGRAM_SEGMENT_IN_YOUR_FACE_INTERVIEW_QUESTION_4, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0062
+    ClearFlag FLAG_UNK_0x02C2
     End
 
 _0062:
-    SetFlag 0x2C2
+    SetFlag FLAG_UNK_0x02C2
     End
 
 _0068:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_284 0x4000
-    GoToIfGe 0x4000, 26, _008C
+    GetUnownFormsSeenCount VAR_MAP_LOCAL_0
+    GoToIfGe VAR_MAP_LOCAL_0, 26, _008C
     Message 1
     WaitABXPadPress
     CloseMessage
@@ -43,4 +42,4 @@ _008C:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

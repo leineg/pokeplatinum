@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_208_gate_to_hearthome_city.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0021
@@ -35,10 +34,10 @@ _0034:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_CLEFAIRY
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

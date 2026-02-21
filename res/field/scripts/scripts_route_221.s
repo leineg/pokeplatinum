@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_221.h"
 
-    .data
 
     ScriptEntry _002E
     ScriptEntry _0041
@@ -10,10 +9,10 @@
     ScriptEntryEnd
 
 _0012:
-    ScrCmd_22D 2, 0x4000
-    GoToIfEq 0x4000, 0, _002C
-    SetFlag 0x27F
-    SetFlag 0x280
+    GetNationalDexEnabled VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _002C
+    SetFlag FLAG_UNK_0x027F
+    SetFlag FLAG_UNK_0x0280
 _002C:
     End
 
@@ -38,11 +37,7 @@ _0041:
     End
 
 _0054:
-    ScrCmd_036 2, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 2
     End
 
-    .byte 0
+    .balign 4, 0

@@ -6,7 +6,7 @@
             "x": 13,
             "z": 5,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         },
         {
             "script": 12,
@@ -14,7 +14,7 @@
             "x": 17,
             "z": 5,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         },
         {
             "script": 13,
@@ -22,15 +22,16 @@
             "x": 21,
             "z": 5,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 231,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_FRONTIER_SINGLE_ATTENDANT_0",
+            "graphics_id": "OBJ_EVENT_GFX_FRONTIER_SINGLE_ATTENDANT",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 1,
             "initial_dir": 1,
             "data": [],
@@ -41,10 +42,11 @@
             "y": 0
         },
         {
-            "graphics_id": 232,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_FRONTIER_MULTI_ATTENDANT_1",
+            "graphics_id": "OBJ_EVENT_GFX_FRONTIER_MULTI_ATTENDANT",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -55,10 +57,11 @@
             "y": 0
         },
         {
-            "graphics_id": 235,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWERWIFI_PLAZA_ATTENDANT_F_2",
+            "graphics_id": "OBJ_EVENT_GFX_WIFI_PLAZA_ATTENDANT_F",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 1,
             "data": [],
@@ -69,10 +72,11 @@
             "y": 0
         },
         {
-            "graphics_id": 27,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 489,
+            "id": "BATTLE_TOWER_TEALA_3",
+            "graphics_id": "OBJ_EVENT_GFX_TEALA",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01E9",
             "script": 7,
             "initial_dir": 1,
             "data": [],
@@ -83,10 +87,11 @@
             "y": 0
         },
         {
-            "graphics_id": 44,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_ARTIST_4",
+            "graphics_id": "OBJ_EVENT_GFX_ARTIST",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 19,
             "initial_dir": 1,
             "data": [],
@@ -97,10 +102,11 @@
             "y": 0
         },
         {
-            "graphics_id": 45,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_JOGGER_5",
+            "graphics_id": "OBJ_EVENT_GFX_JOGGER",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 15,
             "initial_dir": 2,
             "data": [],
@@ -111,10 +117,11 @@
             "y": 0
         },
         {
-            "graphics_id": 35,
-            "movement_type": 7,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_IDOL_6",
+            "graphics_id": "OBJ_EVENT_GFX_IDOL",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 16,
             "initial_dir": 0,
             "data": [],
@@ -125,10 +132,11 @@
             "y": 0
         },
         {
-            "graphics_id": 62,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_RICH_BOY_7",
+            "graphics_id": "OBJ_EVENT_GFX_RICH_BOY",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 17,
             "initial_dir": 1,
             "data": [],
@@ -139,10 +147,11 @@
             "y": 0
         },
         {
-            "graphics_id": 71,
-            "movement_type": 13,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_PIKACHU_8",
+            "graphics_id": "OBJ_EVENT_GFX_PIKACHU",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 18,
             "initial_dir": 2,
             "data": [],
@@ -153,10 +162,11 @@
             "y": 0
         },
         {
-            "graphics_id": 71,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_PIKACHU_9",
+            "graphics_id": "OBJ_EVENT_GFX_PIKACHU",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 21,
             "initial_dir": 3,
             "data": [],
@@ -167,10 +177,11 @@
             "y": 0
         },
         {
-            "graphics_id": 3,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_SCHOOL_KID_M_10",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 20,
             "initial_dir": 2,
             "data": [],
@@ -181,10 +192,11 @@
             "y": 0
         },
         {
-            "graphics_id": 55,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_PARASOL_LADY_11",
+            "graphics_id": "OBJ_EVENT_GFX_PARASOL_LADY",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 14,
             "initial_dir": 1,
             "data": [],
@@ -195,10 +207,11 @@
             "y": 0
         },
         {
-            "graphics_id": 22,
-            "movement_type": 6,
-            "trainer_type": 0,
-            "flag": 526,
+            "id": "BATTLE_TOWER_REPORTER_12",
+            "graphics_id": "OBJ_EVENT_GFX_REPORTER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_AND_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x020E",
             "script": 10151,
             "initial_dir": 0,
             "data": [],
@@ -209,10 +222,11 @@
             "y": 0
         },
         {
-            "graphics_id": 3,
-            "movement_type": 8,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_SCHOOL_KID_M_13",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2033,
             "initial_dir": 2,
             "data": [],
@@ -223,10 +237,11 @@
             "y": 0
         },
         {
-            "graphics_id": 29,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "BATTLE_TOWER_SCIENTIST_M_14",
+            "graphics_id": "OBJ_EVENT_GFX_SCIENTIST_M",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 24,
             "initial_dir": 1,
             "data": [],
@@ -241,21 +256,22 @@
         {
             "x": 15,
             "z": 19,
-            "dest_header_id": 559,
+            "dest_header_id": "MAP_HEADER_BATTLE_FRONTIER",
             "dest_warp_id": 0
         },
         {
             "x": 14,
             "z": 19,
-            "dest_header_id": 559,
+            "dest_header_id": "MAP_HEADER_BATTLE_FRONTIER",
             "dest_warp_id": 0
         },
         {
             "x": 16,
             "z": 19,
-            "dest_header_id": 559,
+            "dest_header_id": "MAP_HEADER_BATTLE_FRONTIER",
             "dest_warp_id": 0
         }
     ],
     "coord_events": []
 }
+

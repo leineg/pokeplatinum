@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/fight_area_mart.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0028
@@ -13,9 +12,9 @@ _0012:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_147 1
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartCommon
     ReleaseAll
     End
 
@@ -26,14 +25,13 @@ _002A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 213, _0071
+    GoToIfSet FLAG_UNK_0x00D5, _0071
     Message 0
-    SetVar 0x8004, 232
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _007C
-    CallCommonScript 0x7FC
-    SetFlag 213
+    SetVar VAR_0x8004, ITEM_SCOPE_LENS
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _007C
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x00D5
     GoTo _0071
     End
 
@@ -45,7 +43,7 @@ _0071:
     End
 
 _007C:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
@@ -60,6 +58,4 @@ _0086:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

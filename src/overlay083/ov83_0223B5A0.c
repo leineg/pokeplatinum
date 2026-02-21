@@ -9,7 +9,7 @@
 #include "struct_decls/struct_0202440C_decl.h"
 #include "struct_decls/struct_0202B370_decl.h"
 
-#include "overlay004/ov4_021D0D80.h"
+#include "nintendo_wfc/main.h"
 #include "overlay083/ov83_0223C958.h"
 #include "overlay083/ov83_0223D150.h"
 #include "overlay083/ov83_0223D4CC.h"
@@ -30,17 +30,17 @@
 #include "journal.h"
 #include "overlay_manager.h"
 #include "poffin.h"
+#include "screen_fade.h"
+#include "sound.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "system.h"
-#include "unk_020041CC.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
+#include "tv_episode_segment.h"
 #include "unk_0202ACE0.h"
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 #include "unk_0203909C.h"
 #include "unk_020393C8.h"
-#include "unk_0206CCB0.h"
 #include "vram_transfer.h"
 
 typedef int (*UnkFuncPtr_ov83_0224024C)(UnkStruct_ov83_0223C344 *, UnkStruct_ov83_0223B784 *, int *);
@@ -50,9 +50,9 @@ typedef struct {
     int unk_04;
 } UnkStruct_ov83_0224024C;
 
-int ov83_0223B5B0(OverlayManager *param0, int *param1);
-int ov83_0223B65C(OverlayManager *param0, int *param1);
-int ov83_0223B710(OverlayManager *param0, int *param1);
+int ov83_0223B5B0(ApplicationManager *appMan, int *param1);
+int ov83_0223B65C(ApplicationManager *appMan, int *param1);
+int ov83_0223B710(ApplicationManager *appMan, int *param1);
 static int ov83_0223C344(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B784 *param1, int *param2);
 static int ov83_0223B78C(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B784 *param1, int *param2);
 static int ov83_0223B920(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B784 *param1, int *param2);
@@ -102,19 +102,19 @@ static void ov83_0223B5A0(void *param0)
     VramTransfer_Process();
 }
 
-int ov83_0223B5B0(OverlayManager *param0, int *param1)
+int ov83_0223B5B0(ApplicationManager *appMan, int *param1)
 {
-    UnkStruct_ov83_0223C344 *v0 = OverlayManager_Args(param0);
+    UnkStruct_ov83_0223C344 *v0 = ApplicationManager_Args(appMan);
     UnkStruct_ov83_0223B784 *v1;
 
-    Heap_Create(3, 56, 0x20000);
-    v1 = OverlayManager_NewData(param0, sizeof(UnkStruct_ov83_0223B784), 56);
+    Heap_Create(HEAP_ID_APPLICATION, HEAP_ID_56, 0x20000);
+    v1 = ApplicationManager_NewData(appMan, sizeof(UnkStruct_ov83_0223B784), HEAP_ID_56);
     memset(v1, 0, sizeof(UnkStruct_ov83_0223B784));
 
     v0->unk_18 = v1;
-    v1->unk_00 = 56;
+    v1->heapID = HEAP_ID_56;
 
-    VramTransfer_New(16, v1->unk_00);
+    VramTransfer_New(16, v1->heapID);
 
     if (v0->unk_06_0 == 1) {
         v1->unk_1490 = 1;
@@ -122,28 +122,28 @@ int ov83_0223B5B0(OverlayManager *param0, int *param1)
         v1->unk_1490 = 0;
     }
 
-    ov83_0223D150(v1, v0->unk_10->unk_10);
+    ov83_0223D150(v1, v0->unk_10->trainerInfo);
 
     if (v0->unk_26) {
         sub_0203632C(1);
     }
 
-    v1->unk_24 = Options_Frame(v0->unk_10->unk_18);
-    v1->unk_28 = Options_TextFrameDelay(v0->unk_10->unk_18);
+    v1->unk_24 = Options_Frame(v0->unk_10->options);
+    v1->unk_28 = Options_TextFrameDelay(v0->unk_10->options);
     v1->unk_31C = 1;
 
     SetVBlankCallback(ov83_0223B5A0, v0);
     DisableHBlank();
-    sub_02004550(12, 1183, 1);
+    Sound_SetSceneAndPlayBGM(SOUND_SCENE_12, SEQ_KINOMI1, 1);
 
     return 1;
 }
 
-int ov83_0223B65C(OverlayManager *param0, int *param1)
+int ov83_0223B65C(ApplicationManager *appMan, int *param1)
 {
     int v0, v1;
-    UnkStruct_ov83_0223C344 *v2 = OverlayManager_Args(param0);
-    UnkStruct_ov83_0223B784 *v3 = (UnkStruct_ov83_0223B784 *)OverlayManager_Data(param0);
+    UnkStruct_ov83_0223C344 *v2 = ApplicationManager_Args(appMan);
+    UnkStruct_ov83_0223B784 *v3 = (UnkStruct_ov83_0223B784 *)ApplicationManager_Data(appMan);
     const UnkStruct_ov83_0224024C *v4;
 
     v0 = v3->unk_0C;
@@ -195,7 +195,7 @@ int ov83_0223B65C(OverlayManager *param0, int *param1)
     }
 
     ov83_0223CBA4(v3);
-    sub_02038A1C(v3->unk_00, v3->unk_20);
+    sub_02038A1C(v3->heapID, v3->unk_20);
 
     if (v3->unk_04) {
         return 1;
@@ -204,17 +204,17 @@ int ov83_0223B65C(OverlayManager *param0, int *param1)
     }
 }
 
-int ov83_0223B710(OverlayManager *param0, int *param1)
+int ov83_0223B710(ApplicationManager *appMan, int *param1)
 {
-    int v0;
-    UnkStruct_ov83_0223C344 *v1 = OverlayManager_Args(param0);
-    UnkStruct_ov83_0223B784 *v2 = (UnkStruct_ov83_0223B784 *)OverlayManager_Data(param0);
+    int heapID;
+    UnkStruct_ov83_0223C344 *v1 = ApplicationManager_Args(appMan);
+    UnkStruct_ov83_0223B784 *v2 = (UnkStruct_ov83_0223B784 *)ApplicationManager_Data(appMan);
 
-    v0 = v2->unk_00;
+    heapID = v2->heapID;
 
     if (v1->unk_26) {
         if (CommSys_CurNetId() == 0) {
-            ov4_021D25FC();
+            NintendoWFC_ResetMatchmakingCancelState();
         }
     }
 
@@ -224,11 +224,11 @@ int ov83_0223B710(OverlayManager *param0, int *param1)
     DisableHBlank();
     VramTransfer_Free();
     MI_CpuClear8(v2, sizeof(UnkStruct_ov83_0223B784));
-    OverlayManager_FreeData(param0);
+    ApplicationManager_FreeData(appMan);
 
     v1->unk_18 = NULL;
 
-    Heap_Destroy(v0);
+    Heap_Destroy(heapID);
     return 1;
 }
 
@@ -260,9 +260,9 @@ static int ov83_0223B78C(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
             ov83_0223FDB0(&param1->unk_34C);
         }
 
-        ov83_0223DEA0(&param1->unk_5B0, param1->unk_1488, &param1->unk_15E0, &param1->unk_1494, param1->unk_24, param1->unk_00);
+        ov83_0223DEA0(&param1->unk_5B0, param1->unk_1488, &param1->unk_15E0, &param1->unk_1494, param1->unk_24, param1->heapID);
         ov83_0223E340(&param1->unk_608);
-        ov83_0223E6D4(&param1->unk_6A0, param1->unk_1488, &param1->unk_15E0, &param1->unk_1494, param1->unk_24, param1->unk_00);
+        ov83_0223E6D4(&param1->unk_6A0, param1->unk_1488, &param1->unk_15E0, &param1->unk_1494, param1->unk_24, param1->heapID);
         ov83_0223E244(&param1->unk_5E4);
         ov83_0223E244(&param1->unk_5F0);
         ov83_0223E244(&param1->unk_5FC);
@@ -287,11 +287,11 @@ static int ov83_0223B78C(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         (*param2)++;
         break;
     case 1:
-        StartScreenTransition(0, 1, 1, 0xffff, 6, 1, param1->unk_00);
+        StartScreenFade(FADE_BOTH_SCREENS, 1, 1, 0xffff, 6, 1, param1->heapID);
         (*param2)++;
         break;
     case 2:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             return param1->unk_0C + 1;
         }
         break;
@@ -371,7 +371,7 @@ static int ov83_0223B9EC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
 
     switch (*param2) {
     case 0:
-        ov83_0223F790(&param1->unk_1480, param1->unk_00, param1->unk_20);
+        ov83_0223F790(&param1->unk_1480, param1->heapID, param1->unk_20);
         (*param2)++;
         break;
     case 1:
@@ -415,9 +415,9 @@ static int ov83_0223B9EC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
 
             if (param1->unk_3BC != (v3 + 1) / 3) {
                 if (v3 < 10) {
-                    Sound_PlayEffect(1725);
+                    Sound_PlayEffect(SEQ_SE_DP_NM10);
                 } else {
-                    Sound_PlayEffect(1726);
+                    Sound_PlayEffect(SEQ_SE_DP_NM10_2);
                 }
 
                 param1->unk_3BC = (v3 + 1) / 3;
@@ -535,7 +535,7 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         Sound_StopEffect(1723, 0);
         Sound_StopEffect(1727, 0);
         Sound_StopEffect(1729, 0);
-        Sound_PlayEffect(1730);
+        Sound_PlayEffect(SEQ_SE_DP_NM13);
 
         ov83_0223E484(&param1->unk_608, 0, 0);
         ov83_0223E484(&param1->unk_608, 1, 0);
@@ -547,11 +547,11 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
             break;
         }
 
-        StartScreenTransition(3, 0, 0, 0x0, 6, 1, param1->unk_00);
+        StartScreenFade(FADE_MAIN_ONLY, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, param1->heapID);
         (*param2)++;
         break;
     case 2:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             if (param0->unk_26) {
                 sub_0203632C(0);
             }
@@ -559,7 +559,7 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         }
         break;
     case 3: {
-        GameRecords *v2 = SaveData_GetGameRecordsPtr(param0->unk_10->unk_0C);
+        GameRecords *v2 = SaveData_GetGameRecords(param0->unk_10->saveData);
 
         if (param1->unk_1490 == 0) {
             GameRecords_IncrementTrainerScore(v2, TRAINER_SCORE_EVENT_UNK_12);
@@ -571,7 +571,7 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
     }
 
         if (param1->unk_1490 != 0) {
-            UnkStruct_0202B370 *v3 = sub_0202B370(param0->unk_10->unk_0C);
+            WiFiList *v3 = SaveData_GetWiFiList(param0->unk_10->saveData);
             int v4;
             int v5, v6;
             int v7;
@@ -580,7 +580,7 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
             for (v4 = 0; v4 < param1->unk_1488; v4++) {
                 v5 = param1->unk_1494.unk_130[v4];
                 v8 = CommInfo_DWCFriendData(v5);
-                v6 = sub_0203909C(param0->unk_10->unk_0C, v8, &v7);
+                v6 = sub_0203909C(param0->unk_10->saveData, v8, &v7);
 
                 switch (v6) {
                 case 0:
@@ -597,10 +597,10 @@ static int ov83_0223BCEC(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         break;
     case 4:
         if (ov83_0223D570(param1->unk_148C) == 0) {
-            v0 = Poffin_New(param1->unk_00);
-            ov83_0223FFD4(&param1->unk_34C, v0, &param1->unk_1494, param1->unk_1488, param1->unk_00);
+            v0 = Poffin_New(param1->heapID);
+            ov83_0223FFD4(&param1->unk_34C, v0, &param1->unk_1494, param1->unk_1488, param1->heapID);
             v1 = ov83_0223D508(28, v0, Poffin_SizeOf(), param1->unk_148C);
-            Heap_FreeToHeap(v0);
+            Heap_Free(v0);
 
             if (v1 == 1) {
                 (*param2)++;
@@ -646,12 +646,12 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
 
         param1->unk_31C = 0;
 
-        ov83_0223F730(&param1->unk_1478, 128, 144, param1->unk_1494.unk_58.unk_0C, param1->unk_00);
-        StartScreenTransition(3, 1, 0, 0x0, 6, 1, param1->unk_00);
+        ov83_0223F730(&param1->unk_1478, 128, 144, param1->unk_1494.unk_58.unk_0C, param1->heapID);
+        StartScreenFade(FADE_MAIN_ONLY, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, param1->heapID);
         (*param2)++;
         break;
     case 1:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             (*param2)++;
             param1->unk_1C = (30 * 1);
         }
@@ -661,7 +661,7 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
 
         if (param1->unk_1C < 0) {
             ov83_0223EC4C(&param1->unk_6A0, 1);
-            Sound_PlayEffect(1731);
+            Sound_PlayEffect(SEQ_SE_DP_NM14);
             (*param2)++;
             param1->unk_1C = (30 * 1);
         }
@@ -672,7 +672,7 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         if (param1->unk_1C < 0) {
             ov83_0223EC4C(&param1->unk_6A0, 2);
             ov83_0223F784(&param1->unk_1478);
-            Sound_PlayEffect(1731);
+            Sound_PlayEffect(SEQ_SE_DP_NM14);
             (*param2)++;
             param1->unk_1C = (30 * 20);
         }
@@ -712,14 +712,14 @@ static int ov83_0223BF74(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
 
         if ((v0 == 1) || (v0 == 2)) {
             if (v0 == 1) {
-                if (Poffin_GetNumberOfFilledSlots(param0->unk_10->unk_08) >= MAX_POFFINS) {
+                if (PoffinCase_CountFilledSlots(param0->unk_10->poffinCase) >= MAX_POFFINS) {
                     ov83_0223EC8C(&param1->unk_6A0, 2);
                     (*param2) = 10;
                     param1->unk_1C = (30 * 5);
                     break;
                 }
 
-                if (Bag_HasItemsInPocket(param0->unk_10->unk_14, 4) == 0) {
+                if (Bag_HasItemsInPocket(param0->unk_10->bag, POCKET_BERRIES) == FALSE) {
                     ov83_0223EC8C(&param1->unk_6A0, 5);
                     (*param2) = 10;
                     param1->unk_1C = (30 * 5);
@@ -797,8 +797,8 @@ static int ov83_0223C258(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
             void *journalEntryOnlineEvent;
 
             if (param1->unk_1490 == 1) {
-                journalEntryOnlineEvent = JournalEntry_CreateEventMadePoffins(param1->unk_00);
-                JournalEntry_SaveData(param0->unk_10->unk_1C, journalEntryOnlineEvent, JOURNAL_ONLINE_EVENT);
+                journalEntryOnlineEvent = JournalEntry_CreateEventMadePoffins(param1->heapID);
+                JournalEntry_SaveData(param0->unk_10->journalEntry, journalEntryOnlineEvent, JOURNAL_ONLINE_EVENT);
             }
         }
 
@@ -813,11 +813,11 @@ static int ov83_0223C258(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B78
         }
         break;
     case 2:
-        StartScreenTransition(0, 0, 0, 0x0, 6, 1, param1->unk_00);
+        StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, param1->heapID);
         (*param2)++;
         break;
     case 3:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             (*param2)++;
         }
         break;
@@ -924,14 +924,14 @@ static void ov83_0223C558(UnkStruct_ov83_0223B784 *param0)
                 ov83_0223F3A0(&param0->unk_AEC, 1);
                 param0->unk_328 = 1;
                 ov83_0223F3D0(&param0->unk_AEC, 3);
-                Sound_PlayEffect(1729);
+                Sound_PlayEffect(SEQ_SE_DP_NM12_2);
             }
         } else {
             if (param0->unk_328 != 2) {
                 ov83_0223F3A0(&param0->unk_AEC, 3);
                 param0->unk_328 = 2;
                 ov83_0223F3D0(&param0->unk_AEC, 1);
-                Sound_PlayEffect(1729);
+                Sound_PlayEffect(SEQ_SE_DP_NM12_2);
             }
         }
     }
@@ -1016,12 +1016,12 @@ static void ov83_0223C758(UnkStruct_ov83_0223B784 *param0)
         if (v0->unk_11 == 0) {
             ov83_0223F3A0(&param0->unk_AEC, 0);
             ov83_0223F3D0(&param0->unk_AEC, 2);
-            Sound_PlayEffect(1729);
+            Sound_PlayEffect(SEQ_SE_DP_NM12_2);
             param0->unk_324 = 1;
         } else {
             ov83_0223F3A0(&param0->unk_AEC, 2);
             ov83_0223F3D0(&param0->unk_AEC, 0);
-            Sound_PlayEffect(1729);
+            Sound_PlayEffect(SEQ_SE_DP_NM12_2);
             param0->unk_324 = 2;
         }
     }
@@ -1049,7 +1049,7 @@ static void ov83_0223C7FC(UnkStruct_ov83_0223B784 *param0)
 
     if (v0->unk_0F == 1) {
         ov83_0223F544(&param0->unk_B6C, v1, v2);
-        Sound_PlayEffect(1727);
+        Sound_PlayEffect(SEQ_SE_DP_NM11);
     }
 }
 
@@ -1057,7 +1057,7 @@ static void ov83_0223C82C(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B7
 {
     int v0;
 
-    param1->unk_1494.unk_100 = Poffin_New(param1->unk_00);
+    param1->unk_1494.unk_100 = Poffin_New(param1->heapID);
     param1->unk_1494.unk_144 = ov83_0223D570(param1->unk_148C);
 
     for (v0 = 0; v0 < 4; v0++) {
@@ -1074,7 +1074,7 @@ static void ov83_0223C87C(UnkStruct_ov83_0223C344 *param0, UnkStruct_ov83_0223B7
 {
     GF_ASSERT(param1->unk_1494.unk_100);
 
-    Heap_FreeToHeap(param1->unk_1494.unk_100);
+    Heap_Free(param1->unk_1494.unk_100);
     param1->unk_1494.unk_100 = NULL;
 
     if (param0->unk_26) {
@@ -1088,10 +1088,10 @@ static BOOL ov83_0223C8B0(UnkStruct_ov83_0223C344 *param0, Poffin *param1, int p
     u16 v1;
     int v2;
     BOOL v3 = 1;
-    TVBroadcast *v4 = SaveData_TVBroadcast(param0->unk_10->unk_0C);
+    TVBroadcast *broadcast = SaveData_GetTVBroadcast(param0->unk_10->saveData);
 
     for (v0 = 0; v0 < param2; v0++) {
-        v1 = Poffin_AddToCase(param0->unk_10->unk_08, param1);
+        v1 = PoffinCase_AddPoffin(param0->unk_10->poffinCase, param1);
 
         if (v1 == POFFIN_NONE) {
             v3 = 0;
@@ -1101,7 +1101,7 @@ static BOOL ov83_0223C8B0(UnkStruct_ov83_0223C344 *param0, Poffin *param1, int p
 
     if (param0->unk_26 == 0) {
         v2 = Poffin_GetAttribute(param1, 0);
-        sub_0206CFCC(v4, v2);
+        sub_0206CFCC(broadcast, v2);
     }
 
     return v3;

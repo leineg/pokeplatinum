@@ -35,10 +35,10 @@
 
 #include "enums.h"
 #include "list_menu.h"
-#include "math.h"
-#include "strbuf.h"
+#include "math_util.h"
+#include "sound_playback.h"
+#include "string_gf.h"
 #include "system.h"
-#include "unk_02005474.h"
 
 typedef struct {
     fx32 unk_00;
@@ -537,11 +537,8 @@ static UnkStruct_ov70_0225CC54 *ov70_022631F8(UnkStruct_ov70_0225DEE8 *param0, u
 static void ov70_02263230(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2, u32 param3, int param4)
 {
     UnkStruct_ov70_0225CC54 *v0;
-    UnkStruct_ov70_0225CA20 *v1;
-    UnkStruct_ov70_02260AD4 *v2;
-
-    v1 = ov70_0225DEF0(param0);
-    v2 = ov70_0225DF08(param0);
+    UnkStruct_ov70_0225CA20 *v1 = ov70_0225DEF0(param0);
+    UnkStruct_ov70_02260AD4 *v2 = ov70_0225DF08(param0);
     v0 = ov70_0225CB5C(v1, param1, param2, param3);
 
     ov70_0225CD7C(v1, v0, 0, param4);
@@ -609,13 +606,9 @@ static BOOL ov70_02263334(const UnkStruct_ov70_02263270 *param0)
 
 static BOOL ov70_02263344(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *param1, u32 param2)
 {
-    UnkStruct_ov70_0225CA20 *v0;
-    UnkStruct_ov70_0225CC54 *v1;
-    UnkStruct_ov66_0222DFF8 *v2;
-
-    v0 = ov70_0225DEF0(param1);
-    v1 = ov70_0225CC70(v0, param2);
-    v2 = ov70_0225DEE8(param1);
+    UnkStruct_ov70_0225CA20 *v0 = ov70_0225DEF0(param1);
+    UnkStruct_ov70_0225CC54 *v1 = ov70_0225CC70(v0, param2);
+    UnkStruct_ov66_0222DFF8 *v2 = ov70_0225DEE8(param1);
 
     switch (ov70_02262E84(param0)) {
     case 0:
@@ -660,7 +653,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     UnkStruct_ov70_0225CC54 *v1;
     UnkStruct_ov70_0225CA20 *v2;
     UnkStruct_ov66_0222DFF8 *v3;
-    Strbuf *v4;
+    String *v4;
 
     v3 = ov70_0225DEE8(param1);
     v2 = ov70_0225DEF0(param1);
@@ -756,7 +749,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         case 0xffffffff:
             break;
         case 0xfffffffe:
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         case 0:
             v0->unk_28 = 0;
             v8 = 1;
@@ -793,7 +786,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
             ov70_02262E88(param0, 12);
             ov66_0222E56C(v3, v0->unk_28, v0->unk_2A);
             ov70_0225E390(param1);
-            Sound_PlayEffect(1509);
+            Sound_PlayEffect(SEQ_SE_DP_BUTTON3);
             break;
         case 1:
             ov70_0225E1F8(param1);
@@ -821,7 +814,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         case 0xffffffff:
             break;
         case 0xfffffffe:
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         case 0:
             v0->unk_2A = 0;
             v12 = 1;
@@ -858,7 +851,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
             ov70_02262E88(param0, 20);
             ov66_0222E56C(v3, v0->unk_28, v0->unk_2A);
             ov70_0225E390(param1);
-            Sound_PlayEffect(1509);
+            Sound_PlayEffect(SEQ_SE_DP_BUTTON3);
             break;
         case 1:
             ov70_0225E1F8(param1);
@@ -869,7 +862,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         }
     } break;
     case 16:
-        Sound_PlayEffect(1448);
+        Sound_PlayEffect(SEQ_SE_PL_EFF03_4);
         ov70_0225E430(param1);
         ov70_0225E234(param1, param2, 0);
         ov70_0225E29C(param1, v0->unk_02, 1);
@@ -899,7 +892,7 @@ static BOOL ov70_02263414(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
             break;
         }
 
-        Sound_PlayEffect(1500);
+        Sound_PlayEffect(SEQ_SE_CONFIRM);
 
         v4 = ov70_0225E20C(param1, 1, 4);
         ov70_0225DF8C(param1, v4);
@@ -960,11 +953,8 @@ static BOOL ov70_02263910(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 {
     UnkStruct_ov70_0225CC54 *v0;
     UnkStruct_ov70_0225CA20 *v1;
-    UnkStruct_ov70_02263910 *v2;
-    UnkStruct_ov66_0222DFF8 *v3;
-
-    v3 = ov70_0225DEE8(param1);
-    v2 = ov70_0225DEEC(param1);
+    UnkStruct_ov66_0222DFF8 *v3 = ov70_0225DEE8(param1);
+    UnkStruct_ov70_02263910 *v2 = ov70_0225DEEC(param1);
     v1 = ov70_0225DEF0(param1);
     v0 = ov70_0225CCAC(v1);
 
@@ -1009,7 +999,7 @@ static BOOL ov70_02263910(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         }
     } break;
     case 3: {
-        Strbuf *v5;
+        String *v5;
 
         ov70_0225E27C(param1, v2->unk_08, 0);
 
@@ -1092,7 +1082,7 @@ static BOOL ov70_02263A58(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         }
     } break;
     case 3: {
-        Strbuf *v7;
+        String *v7;
 
         ov70_0225E27C(param1, v3->unk_08, 0);
         v7 = ov70_0225E20C(param1, 0, 8);
@@ -1127,11 +1117,8 @@ static BOOL ov70_02263BA4(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 {
     UnkStruct_ov70_0225CC54 *v0;
     UnkStruct_ov70_0225CA20 *v1;
-    UnkStruct_ov70_02263910 *v2;
-    UnkStruct_ov66_0222DFF8 *v3;
-
-    v3 = ov70_0225DEE8(param1);
-    v2 = ov70_0225DEEC(param1);
+    UnkStruct_ov66_0222DFF8 *v3 = ov70_0225DEE8(param1);
+    UnkStruct_ov70_02263910 *v2 = ov70_0225DEEC(param1);
     v1 = ov70_0225DEF0(param1);
     v0 = ov70_0225CCAC(v1);
 
@@ -1165,7 +1152,7 @@ static BOOL ov70_02263BA4(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     } break;
 
     case 3: {
-        Strbuf *v5;
+        String *v5;
 
         v5 = ov70_0225E20C(param1, 1, 91);
 
@@ -1198,9 +1185,7 @@ static BOOL ov70_02263BA4(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 
 static BOOL ov70_02263CC8(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *param1, u32 param2)
 {
-    UnkStruct_ov70_0226315C *v0;
-
-    v0 = ov70_02262E80(param0);
+    UnkStruct_ov70_0226315C *v0 = ov70_02262E80(param0);
 
     switch (ov70_02262E84(param0)) {
     case 0:
@@ -1399,7 +1384,7 @@ static BOOL ov70_02263CC8(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
                 if (gSystem.pressedKeys & PAD_BUTTON_X) {
                     if (ov70_0225E3F0(param1) == 0) {
                         ov70_0225E328(param1, ov66_0222E338(v11), 0);
-                        Sound_PlayEffect(1500);
+                        Sound_PlayEffect(SEQ_SE_CONFIRM);
                     } else {
                         u32 v25;
 
@@ -1407,7 +1392,7 @@ static BOOL ov70_02263CC8(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 
                         if (v25 == param2) {
                             ov70_0225E3D0(param1);
-                            Sound_PlayEffect(1500);
+                            Sound_PlayEffect(SEQ_SE_CONFIRM);
                         }
                     }
 
@@ -1424,11 +1409,8 @@ static BOOL ov70_02263CC8(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 static BOOL ov70_0226412C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *param1, u32 param2)
 {
     u32 v0;
-    UnkStruct_ov70_0225CC54 *v1;
-    UnkStruct_ov70_0225CA20 *v2;
-
-    v2 = ov70_0225DEF0(param1);
-    v1 = ov70_0225CCAC(v2);
+    UnkStruct_ov70_0225CA20 *v2 = ov70_0225DEF0(param1);
+    UnkStruct_ov70_0225CC54 *v1 = ov70_0225CCAC(v2);
     v0 = ov70_0225CD60(v1, 5);
 
     if (v0 != 0) {
@@ -1453,10 +1435,10 @@ static BOOL ov70_02264150(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     }
 
         ov66_0222E3E4(ov70_0225DEE8(param1), 11);
-        Sound_PlayEffect(1501);
+        Sound_PlayEffect(SEQ_SE_DP_DECIDE);
 
         {
-            Strbuf *v2;
+            String *v2;
 
             v2 = ov70_0225E20C(param1, 1, 65);
 
@@ -1470,7 +1452,7 @@ static BOOL ov70_02264150(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         }
         break;
     case 2: {
-        Strbuf *v3;
+        String *v3;
 
         v3 = ov70_0225E20C(param1, 2, 25);
 
@@ -1812,7 +1794,7 @@ static BOOL ov70_02264324(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         v4->unk_00--;
 
         if (v4->unk_00 <= 0) {
-            Strbuf *v27;
+            String *v27;
 
             ov70_0225E27C(param1, v4->unk_08, 0);
             v27 = ov70_0225E20C(param1, v4->unk_06, v4->unk_04);
@@ -1975,7 +1957,7 @@ static BOOL ov70_022646C8(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         }
     } break;
     case 5: {
-        Strbuf *v16;
+        String *v16;
         u32 v17;
         BOOL v18 = 1;
 
@@ -2047,7 +2029,7 @@ static BOOL ov70_02264974(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     UnkStruct_ov70_0225CA20 *v2;
     UnkStruct_ov70_0225CC54 *v3;
     UnkStruct_ov66_0222DFF8 *v4;
-    Strbuf *v5;
+    String *v5;
 
     v0 = ov70_02262E80(param0);
     v1 = ov70_0225DF10(param1);
@@ -2309,7 +2291,7 @@ static BOOL ov70_02264C9C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 {
     switch (ov70_02262E84(param0)) {
     case 0: {
-        Strbuf *v0;
+        String *v0;
         UnkStruct_ov66_0222DFF8 *v1;
 
         v1 = ov70_0225DEE8(param1);
@@ -2325,7 +2307,7 @@ static BOOL ov70_02264C9C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
         }
 
         ov70_0225DF8C(param1, v0);
-        Sound_PlayEffect(1500);
+        Sound_PlayEffect(SEQ_SE_CONFIRM);
         ov70_02262E8C(param0);
     } break;
     case 1:
@@ -2357,7 +2339,7 @@ static BOOL ov70_02264D38(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     UnkStruct_ov70_02260AD4 *v3;
     UnkStruct_ov66_0222DFF8 *v4;
     BOOL v5;
-    Strbuf *v6;
+    String *v6;
 
     v2 = ov70_0225DEF0(param1);
     v1 = ov70_0225DEF8(param1);
@@ -2433,7 +2415,7 @@ static BOOL ov70_02264D38(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
                 ov70_02260B3C(v3);
                 ov70_0225D030(v0->unk_0C, 0);
                 ov70_0225D06C(v0->unk_0C, 1);
-                Sound_PlayEffect(1450);
+                Sound_PlayEffect(SEQ_SE_PL_DANSA5);
                 ov70_0225E410(param1);
 
                 v0->unk_0A = 3;
@@ -2684,7 +2666,7 @@ static void ov70_02265370(UnkStruct_ov70_02265104 *param0, UnkStruct_ov70_02261E
 static void ov70_022653DC(UnkStruct_ov70_022653DC *param0, UnkStruct_ov70_0225DEE8 *param1)
 {
     int v0;
-    const Strbuf *v1;
+    const String *v1;
 
     ov70_0225E00C(param1, 18);
 
@@ -2815,13 +2797,9 @@ static BOOL ov70_02265630(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     UnkStruct_ov70_0226545C *v0;
     UnkStruct_ov70_0225CC54 *v1;
     UnkStruct_ov70_0225CC54 *v2;
-    UnkStruct_ov66_0222DFF8 *v3;
-    UnkStruct_ov70_0225CA20 *v4;
-    UnkStruct_ov70_022630A4 *v5;
-
-    v3 = ov70_0225DEE8(param1);
-    v4 = ov70_0225DEF0(param1);
-    v5 = ov70_0225DF10(param1);
+    UnkStruct_ov66_0222DFF8 *v3 = ov70_0225DEE8(param1);
+    UnkStruct_ov70_0225CA20 *v4 = ov70_0225DEF0(param1);
+    UnkStruct_ov70_022630A4 *v5 = ov70_0225DF10(param1);
     v1 = ov70_0225CC70(v4, param2);
     v2 = ov70_0225CCAC(v4);
     v0 = ov70_02262E80(param0);
@@ -2893,11 +2871,8 @@ static BOOL ov70_02265630(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
 
 static BOOL ov70_022657D0(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *param1, u32 param2)
 {
-    UnkStruct_ov70_0225CC54 *v0;
-    UnkStruct_ov70_0225CA20 *v1;
-
-    v1 = ov70_0225DEF0(param1);
-    v0 = ov70_0225CC70(v1, param2);
+    UnkStruct_ov70_0225CA20 *v1 = ov70_0225DEF0(param1);
+    UnkStruct_ov70_0225CC54 *v0 = ov70_0225CC70(v1, param2);
 
     switch (ov70_02262E84(param0)) {
     case 0:
@@ -2933,9 +2908,7 @@ static BOOL ov70_02265840(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
     UnkStruct_ov70_02265840 *v0;
     UnkStruct_ov70_0225CA20 *v1;
     UnkStruct_ov70_02261E10 *v2;
-    UnkStruct_ov66_0222DFF8 *v3;
-
-    v3 = ov70_0225DEE8(param1);
+    UnkStruct_ov66_0222DFF8 *v3 = ov70_0225DEE8(param1);
     v1 = ov70_0225DEF0(param1);
     v2 = ov70_0225DEF8(param1);
     v0 = ov70_02262E80(param0);
@@ -2970,7 +2943,7 @@ static BOOL ov70_02265840(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DE
                 ov70_0225CCB4(v0->unk_00, v5);
             }
 
-            Sound_PlayEffect(1615);
+            Sound_PlayEffect(SEQ_SE_DP_TELE2);
 
             ov70_0225D084(v0->unk_00, 1);
             ov70_02262E88(param0, 2);

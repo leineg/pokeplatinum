@@ -20,8 +20,9 @@
                 "MOVE_LIGHT_SCREEN",
                 "MOVE_REFLECT"
             ],
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         }
-    ]
+    ],
+    "messages": []
 }

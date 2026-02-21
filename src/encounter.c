@@ -10,17 +10,18 @@
 #include "generated/map_headers.h"
 #include "generated/trainer_score_events.h"
 
+#include "struct_decls/pc_boxes_decl.h"
 #include "struct_decls/struct_0202440C_decl.h"
-#include "struct_decls/struct_020797DC_decl.h"
-#include "struct_defs/struct_0202610C.h"
 
 #include "field/field_system.h"
 #include "overlay006/roamer_after_battle.h"
 #include "overlay006/wild_encounters.h"
 #include "savedata/save_table.h"
 
+#include "battle_regulation.h"
 #include "catching_show.h"
 #include "communication_information.h"
+#include "dexmode_checker.h"
 #include "enc_effects.h"
 #include "enums.h"
 #include "field_battle_data_transfer.h"
@@ -31,26 +32,24 @@
 #include "field_transition.h"
 #include "game_records.h"
 #include "heap.h"
+#include "item_use_pokemon.h"
 #include "journal.h"
 #include "location.h"
 #include "map_object.h"
 #include "party.h"
+#include "pc_boxes.h"
 #include "pokemon.h"
 #include "pokeradar.h"
 #include "save_player.h"
 #include "script_manager.h"
+#include "sound.h"
 #include "system_flags.h"
 #include "system_vars.h"
 #include "trainer_data.h"
-#include "unk_020041CC.h"
-#include "unk_02026150.h"
+#include "tv_episode_segment.h"
 #include "unk_0202F1D4.h"
 #include "unk_0203D1B8.h"
 #include "unk_020528D0.h"
-#include "unk_0206CCB0.h"
-#include "unk_020797C8.h"
-#include "unk_0207A274.h"
-#include "unk_02096420.h"
 #include "vars_flags.h"
 
 typedef struct Encounter {
@@ -123,7 +122,7 @@ static void CallBattleTask(FieldTask *task, FieldBattleDTO *dto)
 
 static Encounter *NewEncounter(FieldBattleDTO *dto, int introEffectID, int battleBGM, int *resultMaskPtr)
 {
-    Encounter *encounter = Heap_AllocFromHeapAtEnd(HEAP_ID_FIELDMAP, sizeof(Encounter));
+    Encounter *encounter = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(Encounter));
     encounter->resultMaskPtr = resultMaskPtr;
     if (resultMaskPtr != NULL) {
         *resultMaskPtr = BATTLE_IN_PROGRESS;
@@ -139,7 +138,7 @@ static Encounter *NewEncounter(FieldBattleDTO *dto, int introEffectID, int battl
 static void FreeEncounter(Encounter *encounter)
 {
     FieldBattleDTO_Free(encounter->dto);
-    Heap_FreeToHeap(encounter);
+    Heap_Free(encounter);
 }
 
 static BOOL CheckPlayerWonEncounter(Encounter *encounter)
@@ -189,7 +188,7 @@ static BOOL FieldTask_Encounter(FieldTask *task)
         if (encounter->dto->battleType == BATTLE_TYPE_WILD_MON
             || encounter->dto->battleType == BATTLE_TYPE_ROAMER
             || encounter->dto->battleType == BATTLE_TYPE_AI_PARTNER) {
-            sub_0206D1B8(fieldSystem, encounter->dto->unk_10C, encounter->dto->resultMask);
+            FieldSystem_SaveTVEpisodeSegment_CatchThatPokemonShow(fieldSystem, encounter->dto->captureAttempt, encounter->dto->resultMask);
         }
 
         if (CheckPlayerWonEncounter(encounter) == FALSE) {
@@ -198,7 +197,7 @@ static BOOL FieldTask_Encounter(FieldTask *task)
         }
 
         if (SystemFlag_CheckHasPartner(SaveData_GetVarsFlags(fieldSystem->saveData))) {
-            HealAllPokemonInParty(Party_GetFromSavedata(fieldSystem->saveData));
+            Party_HealAllMembers(SaveData_GetParty(fieldSystem->saveData));
         }
 
         UpdateGameRecords(fieldSystem, encounter->dto);
@@ -270,7 +269,7 @@ static BOOL FieldTask_LinkEncounter(FieldTask *task)
         SetLinkBattleResult(encounter->dto->resultMask, fieldSystem);
         FieldBattleDTO_UpdatePokedex(encounter->dto, fieldSystem);
 
-        GameRecords *records = SaveData_GetGameRecordsPtr(fieldSystem->saveData);
+        GameRecords *records = SaveData_GetGameRecords(fieldSystem->saveData);
         GameRecords_IncrementTrainerScore(records, TRAINER_SCORE_EVENT_FOUGHT_LINK_BATTLE);
 
         FieldTransition_StartMap(task);
@@ -294,8 +293,8 @@ static BOOL FieldTask_WiFiEncounter(FieldTask *task)
 
     switch (*state) {
     case 0:
-        sub_02004234(0);
-        sub_02004550(5, encounter->battleBGM, 1);
+        Sound_SetScene(SOUND_SCENE_NONE);
+        Sound_SetSceneAndPlayBGM(SOUND_SCENE_BATTLE, encounter->battleBGM, 1);
         CallBattleTask(task, encounter->dto);
         (*state)++;
         break;
@@ -304,7 +303,7 @@ static BOOL FieldTask_WiFiEncounter(FieldTask *task)
         SetLinkBattleResult(encounter->dto->resultMask, fieldSystem);
         FieldBattleDTO_UpdatePokedex(encounter->dto, fieldSystem);
 
-        GameRecords *records = SaveData_GetGameRecordsPtr(fieldSystem->saveData);
+        GameRecords *records = SaveData_GetGameRecords(fieldSystem->saveData);
         GameRecords_IncrementTrainerScore(records, TRAINER_SCORE_EVENT_FOUGHT_LINK_BATTLE);
 
         (*state)++;
@@ -321,7 +320,7 @@ static BOOL FieldTask_WiFiEncounter(FieldTask *task)
 
 static WildEncounter *NewWildEncounter(FieldBattleDTO *dto, int introEffectID, int battleBGM, int *resultMaskPtr)
 {
-    WildEncounter *encounter = Heap_AllocFromHeapAtEnd(HEAP_ID_FIELDMAP, sizeof(WildEncounter));
+    WildEncounter *encounter = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(WildEncounter));
     encounter->resultMaskPtr = resultMaskPtr;
 
     if (resultMaskPtr != NULL) {
@@ -339,12 +338,12 @@ static WildEncounter *NewWildEncounter(FieldBattleDTO *dto, int introEffectID, i
 static void FreeWildEncounter(WildEncounter *encounter)
 {
     FieldBattleDTO_Free(encounter->dto);
-    Heap_FreeToHeap(encounter);
+    Heap_Free(encounter);
 }
 
 void Encounter_NewVsWild(FieldSystem *fieldSystem, FieldBattleDTO *dto)
 {
-    if (SystemFlag_CheckSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData))) {
+    if (SystemFlag_CheckSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData)) != FALSE) {
         Encounter *encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
         FieldSystem_CreateTask(fieldSystem, FieldTask_SafariEncounter, encounter);
     } else {
@@ -355,7 +354,7 @@ void Encounter_NewVsWild(FieldSystem *fieldSystem, FieldBattleDTO *dto)
 
 void Encounter_StartVsWild(FieldSystem *fieldSystem, FieldTask *task, FieldBattleDTO *dto)
 {
-    if (SystemFlag_CheckSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData))) {
+    if (SystemFlag_CheckSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData)) != FALSE) {
         Encounter *encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
         FieldTask_InitJump(task, FieldTask_SafariEncounter, encounter);
     } else {
@@ -372,7 +371,7 @@ static BOOL FieldTask_WildEncounter(FieldTask *task)
     switch (encounter->state) {
     case 0:
         MapObjectMan_PauseAllMovement(fieldSystem->mapObjMan);
-        GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+        GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
         FieldTransition_StartEncounterEffect(task, encounter->introEffectID, encounter->battleBGM);
         encounter->state++;
         break;
@@ -389,17 +388,17 @@ static BOOL FieldTask_WildEncounter(FieldTask *task)
 
     case 3:
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
-        sub_0206D1B8(fieldSystem, encounter->dto->unk_10C, encounter->dto->resultMask);
+        FieldSystem_SaveTVEpisodeSegment_CatchThatPokemonShow(fieldSystem, encounter->dto->captureAttempt, encounter->dto->resultMask);
 
         if (CheckPlayerWonBattle(encounter->dto->resultMask) == 0) {
             FreeWildEncounter(encounter);
             RadarChain_Clear(fieldSystem->chain);
-            FieldTask_InitJump(task, sub_02052B2C, NULL);
+            FieldTask_InitJump(task, FieldTask_BlackOutFromBattle, NULL);
             return FALSE;
         }
 
         if (SystemFlag_CheckHasPartner(SaveData_GetVarsFlags(fieldSystem->saveData))) {
-            HealAllPokemonInParty(Party_GetFromSavedata(fieldSystem->saveData));
+            Party_HealAllMembers(SaveData_GetParty(fieldSystem->saveData));
         }
 
         UpdateGameRecords(fieldSystem, encounter->dto);
@@ -429,7 +428,7 @@ static BOOL FieldTask_WildEncounter(FieldTask *task)
     case 5:
         if (GetRadarChainActive(fieldSystem->chain)) {
             SetupGrassPatches(fieldSystem, encounter->dto->resultMask, fieldSystem->chain);
-            sub_02069638(fieldSystem, fieldSystem->chain);
+            FieldSystem_CreateShakingRadarPatches(fieldSystem, fieldSystem->chain);
         }
 
         encounter->state++;
@@ -457,7 +456,7 @@ static BOOL FieldTask_SafariEncounter(FieldTask *task)
     switch (*state) {
     case 0:
         MapObjectMan_PauseAllMovement(fieldSystem->mapObjMan);
-        GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+        GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
         FieldTransition_StartEncounterEffect(task, encounter->introEffectID, encounter->battleBGM);
         (*state)++;
         break;
@@ -476,10 +475,10 @@ static BOOL FieldTask_SafariEncounter(FieldTask *task)
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
 
         if (encounter->dto->resultMask == BATTLE_RESULT_CAPTURED_MON) {
-            TVBroadcast *broadcast = SaveData_TVBroadcast(fieldSystem->saveData);
+            TVBroadcast *broadcast = SaveData_GetTVBroadcast(fieldSystem->saveData);
             Pokemon *caughtMon = Party_GetPokemonBySlotIndex(encounter->dto->parties[1], 0);
 
-            sub_0206D018(broadcast, caughtMon);
+            TVBroadcast_UpdateSafariGameData(broadcast, caughtMon);
         }
 
         UpdateGameRecords(fieldSystem, encounter->dto);
@@ -507,16 +506,16 @@ static BOOL FieldTask_SafariEncounter(FieldTask *task)
     case 6:
         if (*ballCount == 0) {
             if (encounter->dto->resultMask == BATTLE_RESULT_CAPTURED_MON) {
-                ScriptManager_Start(task, 8802, NULL, NULL);
+                ScriptManager_Start(task, SCRIPT_ID(SAFARI_GAME, 2), NULL, NULL);
             } else {
-                ScriptManager_Start(task, 8809, NULL, NULL);
+                ScriptManager_Start(task, SCRIPT_ID(SAFARI_GAME, 9), NULL, NULL);
             }
         } else {
-            PCBoxes *boxes = SaveData_PCBoxes(fieldSystem->saveData);
-            Party *party = Party_GetFromSavedata(fieldSystem->saveData);
+            PCBoxes *pcBoxes = SaveData_GetPCBoxes(fieldSystem->saveData);
+            Party *party = SaveData_GetParty(fieldSystem->saveData);
 
-            if (PCBoxes_FirstEmptyBox(boxes) == MAX_PC_BOXES && Party_GetCurrentCount(party) == MAX_PARTY_SIZE) {
-                ScriptManager_Start(task, 8822, NULL, NULL);
+            if (PCBoxes_FirstEmptyBox(pcBoxes) == MAX_PC_BOXES && Party_GetCurrentCount(party) == MAX_PARTY_SIZE) {
+                ScriptManager_Start(task, SCRIPT_ID(SAFARI_GAME, 22), NULL, NULL);
             }
         }
 
@@ -537,7 +536,7 @@ void Encounter_NewVsHoneyTree(FieldTask *task, int *resultMaskPtr)
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
     RadarChain_Clear(fieldSystem->chain);
 
-    dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, BATTLE_TYPE_WILD_MON);
+    dto = FieldBattleDTO_New(HEAP_ID_FIELD2, BATTLE_TYPE_WILD_MON);
     FieldBattleDTO_Init(dto, fieldSystem);
 
     dto->background = BACKGROUND_PLAIN;
@@ -545,7 +544,7 @@ void Encounter_NewVsHoneyTree(FieldTask *task, int *resultMaskPtr)
 
     CreateWildMon_HoneyTree(fieldSystem, dto);
 
-    GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+    GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
     StartEncounter(task, dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), resultMaskPtr);
 }
 
@@ -555,7 +554,7 @@ void Encounter_NewVsSpeciesAtLevel(FieldTask *task, u16 species, u8 level, int *
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
     RadarChain_Clear(fieldSystem->chain);
 
-    dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, BATTLE_TYPE_WILD_MON);
+    dto = FieldBattleDTO_New(HEAP_ID_FIELD2, BATTLE_TYPE_WILD_MON);
     FieldBattleDTO_Init(dto, fieldSystem);
 
     CreateWildMon_Scripted(fieldSystem, species, level, dto);
@@ -564,7 +563,7 @@ void Encounter_NewVsSpeciesAtLevel(FieldTask *task, u16 species, u8 level, int *
         dto->battleStatusMask |= BATTLE_STATUS_LEGENDARY;
     }
 
-    GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+    GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
     StartEncounter(task, dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), resultMaskPtr);
 }
 
@@ -574,7 +573,7 @@ void Encounter_NewFatefulVsSpeciesAtLevel(FieldTask *taskMan, u16 species, u8 le
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(taskMan);
     RadarChain_Clear(fieldSystem->chain);
 
-    dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, BATTLE_TYPE_WILD_MON);
+    dto = FieldBattleDTO_New(HEAP_ID_FIELD2, BATTLE_TYPE_WILD_MON);
     FieldBattleDTO_Init(dto, fieldSystem);
 
     CreateWildMon_Scripted(fieldSystem, species, level, dto);
@@ -587,7 +586,7 @@ void Encounter_NewFatefulVsSpeciesAtLevel(FieldTask *taskMan, u16 species, u8 le
         dto->battleStatusMask |= BATTLE_STATUS_LEGENDARY;
     }
 
-    GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+    GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
     StartEncounter(taskMan, dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), resultMaskPtr);
 }
 
@@ -600,7 +599,7 @@ static BOOL FieldTask_PalParkEncounter(FieldTask *task)
     switch (*state) {
     case 0:
         MapObjectMan_PauseAllMovement(fieldSystem->mapObjMan);
-        GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+        GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
         FieldTransition_StartEncounterEffect(task, encounter->introEffectID, encounter->battleBGM);
         (*state)++;
         break;
@@ -617,7 +616,7 @@ static BOOL FieldTask_PalParkEncounter(FieldTask *task)
 
     case 3:
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
-        CatchingShow_UpdateBattleResult(fieldSystem, encounter->dto);
+        FieldSystem_UpdateCatchingShowResult(fieldSystem, encounter->dto);
         UpdateGameRecords(fieldSystem, encounter->dto);
         (*state)++;
         break;
@@ -636,7 +635,7 @@ static BOOL FieldTask_PalParkEncounter(FieldTask *task)
     case 6:
         FreeEncounter(encounter);
 
-        if (CatchingShow_GetParkBallCount(fieldSystem) == 0) {
+        if (FieldSystem_GetParkBallCount(fieldSystem) == 0) {
             ScriptManager_Change(task, 3, NULL);
             return FALSE;
         } else {
@@ -653,10 +652,10 @@ void Encounter_NewVsPalParkTransfer(FieldSystem *fieldSystem, FieldBattleDTO *dt
     FieldSystem_CreateTask(fieldSystem, FieldTask_PalParkEncounter, encounter);
 }
 
-void Encounter_NewVsFirstBattle(FieldTask *task, int trainerID, int heapID, int *resultMaskPtr)
+void Encounter_NewVsFirstBattle(FieldTask *task, int trainerID, enum HeapID heapID, int *resultMaskPtr)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
-    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, BATTLE_TYPE_TRAINER);
+    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELD2, BATTLE_TYPE_TRAINER);
     FieldBattleDTO_Init(dto, fieldSystem);
 
     dto->battleStatusMask = BATTLE_STATUS_FIRST_BATTLE;
@@ -665,7 +664,7 @@ void Encounter_NewVsFirstBattle(FieldTask *task, int trainerID, int heapID, int 
     dto->trainerIDs[BATTLER_PLAYER_2] = 0;
 
     Trainer_Encounter(dto, fieldSystem->saveData, heapID);
-    GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_TRAINER_BATTLES_FOUGHT);
+    GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_TRAINER_BATTLES_FOUGHT);
     StartEncounter(task, dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), resultMaskPtr);
 }
 
@@ -718,13 +717,13 @@ static BOOL FieldTask_CatchingTutorialEncounter(FieldTask *task)
 void Encounter_NewCatchingTutorial(FieldTask *task)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
-    FieldBattleDTO *dto = FieldBattleDTO_NewCatchingTutorial(HEAP_ID_FIELDMAP, fieldSystem);
+    FieldBattleDTO *dto = FieldBattleDTO_NewCatchingTutorial(HEAP_ID_FIELD2, fieldSystem);
     Encounter *encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
 
     FieldTask_InitCall(task, FieldTask_CatchingTutorialEncounter, encounter);
 }
 
-void Encounter_NewVsTrainer(FieldTask *taskMan, int enemyTrainer1ID, int enemyTrainer2ID, int partnerTrainerID, int heapID, int *resultMaskPtr)
+void Encounter_NewVsTrainer(FieldTask *taskMan, int enemyTrainer1ID, int enemyTrainer2ID, int partnerTrainerID, enum HeapID heapID, int *resultMaskPtr)
 {
     u32 battleType;
     FieldBattleDTO *dto;
@@ -743,7 +742,7 @@ void Encounter_NewVsTrainer(FieldTask *taskMan, int enemyTrainer1ID, int enemyTr
     }
 
     RadarChain_Clear(fieldSystem->chain);
-    dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+    dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
     FieldBattleDTO_Init(dto, fieldSystem);
 
     if (fieldSystem->location->mapId >= MAP_HEADER_DISTORTION_WORLD_1F
@@ -756,7 +755,7 @@ void Encounter_NewVsTrainer(FieldTask *taskMan, int enemyTrainer1ID, int enemyTr
     dto->trainerIDs[BATTLER_PLAYER_2] = partnerTrainerID;
 
     Trainer_Encounter(dto, fieldSystem->saveData, heapID);
-    GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_TRAINER_BATTLES_FOUGHT);
+    GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_TRAINER_BATTLES_FOUGHT);
     StartEncounter(taskMan, dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), resultMaskPtr);
 }
 
@@ -764,7 +763,7 @@ void Encounter_NewVsLink(FieldTask *task, const u8 *partyOrder, int battleType)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
     Encounter *encounter;
-    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
     FieldBattleDTO_InitWithPartyOrderFromSave(dto, fieldSystem, partyOrder);
 
     encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
@@ -774,7 +773,7 @@ void Encounter_NewVsLink(FieldTask *task, const u8 *partyOrder, int battleType)
 static int sub_020516C8(const BattleRegulation *regulation, int battleType)
 {
     int v0;
-    int v1 = sub_020261B0(regulation);
+    int v1 = BattleRegulation_GetIndex(regulation);
 
     if (battleType & BATTLE_TYPE_2vs2) {
         v0 = (UnkEnum_0202F510_14);
@@ -800,25 +799,25 @@ void Encounter_NewVsWiFi(FieldTask *task, int param1, int normalizedLevel, int w
 
     if (wifiBattleType == 0) {
         battleType = BATTLE_TYPE_LINK | BATTLE_TYPE_TRAINER;
-        dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+        dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
         v5 = (UnkEnum_0202F510_00);
     } else if (wifiBattleType == 1) {
         battleType = BATTLE_TYPE_LINK_DOUBLES;
-        dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+        dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
         v5 = (UnkEnum_0202F510_07);
     } else {
         battleType = BATTLE_TYPE_FRONTIER_DOUBLES | BATTLE_TYPE_LINK | BATTLE_TYPE_2vs2;
-        dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+        dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
         dto->trainerIDs[BATTLER_ENEMY_1] = 1;
         dto->trainerIDs[BATTLER_ENEMY_2] = 2;
 
-        Trainer_Encounter(dto, fieldSystem->saveData, HEAP_ID_FIELDMAP);
+        Trainer_Encounter(dto, fieldSystem->saveData, HEAP_ID_FIELD2);
 
         v5 = (UnkEnum_0202F510_14);
     }
 
     FieldBattleDTO_InitWithNormalizedMonLevels(dto, fieldSystem, normalizedLevel);
-    sub_0202F1F8(fieldSystem->saveData, HEAP_ID_FIELDMAP, &recordingResultCode);
+    sub_0202F1F8(fieldSystem->saveData, HEAP_ID_FIELD2, &recordingResultCode);
     dto->unk_18A = v5;
 
     encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
@@ -853,11 +852,11 @@ static BOOL FieldTask_LinkEncounterWithRecording(FieldTask *task)
 
 void Encounter_NewVsLinkWithRecording(FieldSystem *fieldSystem, const u8 *partyOrder, int battleType)
 {
-    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
     FieldBattleDTO_InitWithPartyOrderFromSave(dto, fieldSystem, partyOrder);
 
     int recordingResultCode;
-    sub_0202F1F8(fieldSystem->saveData, HEAP_ID_FIELDMAP, &recordingResultCode);
+    sub_0202F1F8(fieldSystem->saveData, HEAP_ID_FIELD2, &recordingResultCode);
     dto->unk_18A = sub_020516C8(fieldSystem->unk_B0, battleType);
 
     Encounter *encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
@@ -866,11 +865,11 @@ void Encounter_NewVsLinkWithRecording(FieldSystem *fieldSystem, const u8 *partyO
 
 void Encounter_NewVsLinkWithRecordingAndParty(FieldSystem *fieldSystem, const Party *party, int battleType)
 {
-    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, battleType);
+    FieldBattleDTO *dto = FieldBattleDTO_New(HEAP_ID_FIELD2, battleType);
     FieldBattleDTO_InitWithPartyOrder(dto, fieldSystem, party, NULL);
 
     int recordingResultCode;
-    sub_0202F1F8(fieldSystem->saveData, HEAP_ID_FIELDMAP, &recordingResultCode);
+    sub_0202F1F8(fieldSystem->saveData, HEAP_ID_FIELD2, &recordingResultCode);
     dto->unk_18A = sub_020516C8(fieldSystem->unk_B0, battleType);
 
     Encounter *encounter = NewEncounter(dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), NULL);
@@ -895,30 +894,30 @@ static void UpdateGameRecords(FieldSystem *fieldSystem, FieldBattleDTO *dto)
         || battleType == BATTLE_TYPE_ROAMER
         || battleType == BATTLE_TYPE_AI_PARTNER) {
         if (resultMask == BATTLE_RESULT_WIN) {
-            GameRecords_IncrementTrainerScore(SaveData_GetGameRecordsPtr(fieldSystem->saveData), TRAINER_SCORE_EVENT_WON_WILD_BATTLE);
+            GameRecords_IncrementTrainerScore(SaveData_GetGameRecords(fieldSystem->saveData), TRAINER_SCORE_EVENT_WON_WILD_BATTLE);
         } else if (resultMask == BATTLE_RESULT_CAPTURED_MON) {
             // BUG: This always chooses slot 1 of a double-wild battle when the player has an AI partner,
             // rather than choosing the Pokemon that was actually captured.
             caughtMon = Party_GetPokemonBySlotIndex(dto->parties[BATTLER_ENEMY_1], 0);
 
-            if (sub_0207A294(0, Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, NULL))) {
-                GameRecords_IncrementTrainerScore(SaveData_GetGameRecordsPtr(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_REGIONAL_MON);
+            if (GetDexNumber(0, Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, NULL))) {
+                GameRecords_IncrementTrainerScore(SaveData_GetGameRecords(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_REGIONAL_MON);
             } else {
-                GameRecords_IncrementTrainerScore(SaveData_GetGameRecordsPtr(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_NATIONAL_MON);
+                GameRecords_IncrementTrainerScore(SaveData_GetGameRecords(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_NATIONAL_MON);
             }
         }
     } else if ((battleType & BATTLE_TYPE_TRAINER) || (battleType & BATTLE_TYPE_TAG)) {
         if (resultMask == BATTLE_RESULT_WIN) {
-            GameRecords_IncrementTrainerScore(SaveData_GetGameRecordsPtr(fieldSystem->saveData), TRAINER_SCORE_EVENT_WON_TRAINER_BATTLE);
+            GameRecords_IncrementTrainerScore(SaveData_GetGameRecords(fieldSystem->saveData), TRAINER_SCORE_EVENT_WON_TRAINER_BATTLE);
         }
     } else if ((battleType & BATTLE_TYPE_SAFARI) || (battleType & BATTLE_TYPE_PAL_PARK)) {
         if (resultMask == BATTLE_RESULT_CAPTURED_MON) {
             caughtMon = Party_GetPokemonBySlotIndex(dto->parties[BATTLER_ENEMY_1], 0);
 
-            if (sub_0207A294(0, Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, NULL))) {
-                GameRecords_IncrementTrainerScore(SaveData_GetGameRecordsPtr(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_REGIONAL_MON);
+            if (GetDexNumber(0, Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, NULL))) {
+                GameRecords_IncrementTrainerScore(SaveData_GetGameRecords(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_REGIONAL_MON);
             } else {
-                GameRecords_IncrementTrainerScore(SaveData_GetGameRecordsPtr(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_NATIONAL_MON);
+                GameRecords_IncrementTrainerScore(SaveData_GetGameRecords(fieldSystem->saveData), TRAINER_SCORE_EVENT_CAPTURED_NATIONAL_MON);
             }
         }
     }
@@ -953,19 +952,19 @@ static void UpdateJournal(FieldSystem *fieldSystem, FieldBattleDTO *dto)
 
             if (fieldSystem->wildBattleMetadata.wildMonDefeated >= 5) {
                 caughtMon = Party_GetPokemonBySlotIndex(dto->parties[1], 0);
-                journalEntryMon = JournalEntry_CreateEventMonDefeated(SaveData_GetPlayTime(fieldSystem->saveData), Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, 0), Pokemon_GetValue(caughtMon, MON_DATA_GENDER, 0), dto->timeOfDay, HEAP_ID_FIELDMAP);
+                journalEntryMon = JournalEntry_CreateEventMonDefeated(SaveData_GetPlayTime(fieldSystem->saveData), Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, 0), Pokemon_GetValue(caughtMon, MON_DATA_GENDER, 0), dto->timeOfDay, HEAP_ID_FIELD2);
                 JournalEntry_SaveData(fieldSystem->journalEntry, journalEntryMon, JOURNAL_MON);
             }
         } else if (resultMask == BATTLE_RESULT_CAPTURED_MON) {
             int caughtBattlerIdx = dto->caughtBattlerIdx;
             caughtMon = Party_GetPokemonBySlotIndex(dto->parties[caughtBattlerIdx], 0);
-            journalEntryMon = JournalEntry_CreateEventMonCaught(SaveData_GetPlayTime(fieldSystem->saveData), Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, 0), Pokemon_GetValue(caughtMon, MON_DATA_GENDER, 0), dto->timeOfDay, HEAP_ID_FIELDMAP);
+            journalEntryMon = JournalEntry_CreateEventMonCaught(SaveData_GetPlayTime(fieldSystem->saveData), Pokemon_GetValue(caughtMon, MON_DATA_SPECIES, 0), Pokemon_GetValue(caughtMon, MON_DATA_GENDER, 0), dto->timeOfDay, HEAP_ID_FIELD2);
 
             JournalEntry_SaveData(fieldSystem->journalEntry, journalEntryMon, JOURNAL_MON);
         }
     } else if ((battleType & BATTLE_TYPE_TRAINER) || (battleType & BATTLE_TYPE_TAG)) {
         if (resultMask == BATTLE_RESULT_WIN) {
-            JournalEntry_CreateAndSaveEventTrainer(fieldSystem->journalEntry, fieldSystem->location->mapId, dto->trainerIDs[BATTLER_ENEMY_1], HEAP_ID_FIELDMAP);
+            JournalEntry_CreateAndSaveEventTrainer(fieldSystem->journalEntry, fieldSystem->location->mapId, dto->trainerIDs[BATTLER_ENEMY_1], HEAP_ID_FIELD2);
         }
     }
 }
@@ -976,7 +975,7 @@ void Encounter_NewVsGiratinaOrigin(FieldTask *task, u16 species, u8 level, int *
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
     RadarChain_Clear(fieldSystem->chain);
 
-    dto = FieldBattleDTO_New(HEAP_ID_FIELDMAP, BATTLE_TYPE_WILD_MON);
+    dto = FieldBattleDTO_New(HEAP_ID_FIELD2, BATTLE_TYPE_WILD_MON);
     FieldBattleDTO_Init(dto, fieldSystem);
 
     CreateWildMon_Scripted(fieldSystem, species, level, dto);
@@ -991,6 +990,6 @@ void Encounter_NewVsGiratinaOrigin(FieldTask *task, u16 species, u8 level, int *
     dto->battleStatusMask |= BATTLE_STATUS_GIRATINA | BATTLE_STATUS_DISTORTION;
     dto->terrain = TERRAIN_GIRATINA;
 
-    GameRecords_IncrementRecordValue(SaveData_GetGameRecordsPtr(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
+    GameRecords_IncrementRecordValue(SaveData_GetGameRecords(fieldSystem->saveData), RECORD_WILD_BATTLES_FOUGHT);
     StartEncounter(task, dto, EncEffects_CutInEffect(dto), EncEffects_BGM(dto), resultMaskPtr);
 }

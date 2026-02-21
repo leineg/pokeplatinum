@@ -1,6 +1,6 @@
 [wrap-git]
 url = https://github.com/ntrtwl/NitroWiFi.git
-revision = 8f4f0a60d5ecf6f7d90bfd1f85dce252ee12e692
+revision = e6048fc294480831e154b3d53205d6cbda1775cd
 depth = 1
 directory = NitroWiFi-2.1.30003
 

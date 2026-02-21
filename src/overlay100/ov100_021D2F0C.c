@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/heap.h"
+
 #include "overlay100/ov100_021D46C8.h"
 #include "overlay100/ov100_021D4E04.h"
 #include "overlay100/struct_ov100_021D3084.h"
@@ -10,7 +12,6 @@
 #include "overlay100/struct_ov100_021D37F4.h"
 #include "overlay100/struct_ov100_021D4DD8.h"
 #include "overlay100/struct_ov100_021D4EBC.h"
-#include "overlay115/camera_angle.h"
 
 #include "bg_window.h"
 #include "camera.h"
@@ -19,14 +20,14 @@
 #include "heap.h"
 #include "narc.h"
 #include "palette.h"
+#include "screen_fade.h"
+#include "sound.h"
+#include "sound_playback.h"
 #include "sprite_system.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
 #include "trainer_info.h"
-#include "unk_020041CC.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
 #include "unk_0202419C.h"
 
 static void ov100_021D3084(UnkStruct_ov100_021D3084 *param0);
@@ -40,16 +41,9 @@ BOOL ov100_021D3FD4(void *param0);
 
 static void ov100_021D2F0C(BgConfig *param0, PaletteData *param1)
 {
-    int v0 = 12;
-    int v1 = 10;
-    int v2 = 11;
-    int v3 = 12;
-    int v4 = 4;
-    int v5 = 111;
-
-    Graphics_LoadTilesToBgLayer(v0, v1, param0, v4, 0, 0, 1, v5);
-    Graphics_LoadTilemapToBgLayer(v0, v2, param0, v4, 0, 0, 1, v5);
-    PaletteData_LoadBufferFromFileStart(param1, v0, v3, v5, 1, 0x20 * 1, 0);
+    Graphics_LoadTilesToBgLayer(NARC_INDEX_GRAPHIC__POKETCH, 10, param0, 4, 0, 0, 1, HEAP_ID_111);
+    Graphics_LoadTilemapToBgLayer(NARC_INDEX_GRAPHIC__POKETCH, 11, param0, 4, 0, 0, 1, HEAP_ID_111);
+    PaletteData_LoadBufferFromFileStart(param1, NARC_INDEX_GRAPHIC__POKETCH, 12, HEAP_ID_111, 1, 0x20 * 1, 0);
 }
 
 static void ov100_021D2F64(UnkStruct_ov100_021D3084 *param0)
@@ -131,8 +125,8 @@ static void ov100_021D3084(UnkStruct_ov100_021D3084 *param0)
     param0->unk_0C.unk_624[0].unk_164 = 1;
     param0->unk_0C.unk_624[0].unk_154 = FX32_HALF;
 
-    Easy3DObject_SetVisibility(&param0->unk_0C.unk_624[0].unk_00, 0);
-    Easy3DObject_SetVisibility(&param0->unk_0C.unk_16FC[0].unk_00, 0);
+    Easy3DObject_SetVisible(&param0->unk_0C.unk_624[0].unk_00, 0);
+    Easy3DObject_SetVisible(&param0->unk_0C.unk_16FC[0].unk_00, 0);
 
     ov100_021D4AC8(&param0->unk_0C.unk_624[1], 68, param0->unk_1D28->unk_00);
     Easy3DObject_SetPosition(&param0->unk_0C.unk_624[1].unk_00, FX32_CONST(+50), FX32_CONST(+0), FX32_CONST(-50));
@@ -142,8 +136,8 @@ static void ov100_021D3084(UnkStruct_ov100_021D3084 *param0)
     param0->unk_0C.unk_624[1].unk_164 = 1;
     param0->unk_0C.unk_624[1].unk_154 = FX32_HALF;
 
-    Easy3DObject_SetVisibility(&param0->unk_0C.unk_624[1].unk_00, 0);
-    Easy3DObject_SetVisibility(&param0->unk_0C.unk_16FC[1].unk_00, 0);
+    Easy3DObject_SetVisible(&param0->unk_0C.unk_624[1].unk_00, 0);
+    Easy3DObject_SetVisible(&param0->unk_0C.unk_16FC[1].unk_00, 0);
 
     if (TrainerInfo_Gender(param0->unk_1D2C->unk_08) != 1) {
         ov100_021D4AC8(&param0->unk_0C.unk_13EC[0], 61, param0->unk_1D28->unk_00);
@@ -212,7 +206,7 @@ static void ov100_021D3504(Camera *camera, VecFx32 *param1)
 
 static void ov100_021D3558(UnkStruct_ov100_021D3084 *param0)
 {
-    sub_020241B4();
+    G3_ResetG3X();
     Camera_ComputeViewMatrix();
 
     ov100_021D47A0(param0->unk_1D28);
@@ -243,7 +237,7 @@ static void ov100_021D3558(UnkStruct_ov100_021D3084 *param0)
 
 void *ov100_021D3620(UnkStruct_ov100_021D4DD8 *param0)
 {
-    UnkStruct_ov100_021D3084 *v0 = Heap_AllocFromHeap(111, sizeof(UnkStruct_ov100_021D3084));
+    UnkStruct_ov100_021D3084 *v0 = Heap_Alloc(HEAP_ID_111, sizeof(UnkStruct_ov100_021D3084));
 
     memset(v0, 0, sizeof(UnkStruct_ov100_021D3084));
 
@@ -277,7 +271,7 @@ void *ov100_021D3620(UnkStruct_ov100_021D4DD8 *param0)
     v0->unk_1D28->unk_44.z = FX32_CONST(34);
 
     ov100_021D3504(v0->unk_1D28->camera, &v0->unk_1D28->unk_44);
-    sub_02004550(63, 0, 0);
+    Sound_SetSceneAndPlayBGM(SOUND_SCENE_SUB_63, SEQ_NONE, 0);
 
     return v0;
 }
@@ -366,14 +360,14 @@ static void ov100_021D37F4(SysTask *param0, void *param1)
 
         v0->unk_04++;
 
-        Easy3DObject_SetVisibility(&v0->unk_10->unk_00, 1);
-        Easy3DObject_SetVisibility(&v0->unk_14->unk_00, 1);
+        Easy3DObject_SetVisible(&v0->unk_10->unk_00, 1);
+        Easy3DObject_SetVisible(&v0->unk_14->unk_00, 1);
 
         v0->unk_00++;
         break;
     case 1:
         if ((++v0->unk_04) >= NELEMS(v1)) {
-            Sound_PlayPokemonCry(0, v0->unk_08, v0->unk_0C, 80, 111, 0);
+            Sound_PlayPokemonCryEx(POKECRY_NORMAL, v0->unk_08, v0->unk_0C, 80, HEAP_ID_111, 0);
             v0->unk_00++;
         } else {
             Easy3DObject_SetScale(&v0->unk_10->unk_00, FX32_CONST(v1[v0->unk_04]), FX32_CONST(1.00f), FX32_CONST(1.00f));
@@ -411,7 +405,7 @@ BOOL ov100_021D39E4(void *param0)
 
     switch (v0->unk_00) {
     case 0:
-        if (IsScreenTransitionDone() == 0) {
+        if (IsScreenFadeDone() == FALSE) {
             break;
         }
 
@@ -485,35 +479,35 @@ BOOL ov100_021D39E4(void *param0)
         v0->unk_04++;
 
         if (v0->unk_04 == 80) {
-            sub_02005728(1746, -70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX01, -70);
         }
 
         if (v0->unk_04 == 135) {
-            sub_02005728(1746, +70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX01, +70);
         }
 
         if ((v0->unk_04 == 310) || (v0->unk_04 == 375) || (v0->unk_04 == 432)) {
-            Sound_PlayEffect(1748);
+            Sound_PlayEffect(SEQ_SE_DP_CLIMAX06);
         }
 
         if ((v0->unk_04 == 284) || (v0->unk_04 == 338) || (v0->unk_04 == 406)) {
-            Sound_PlayEffect(1749);
+            Sound_PlayEffect(SEQ_SE_DP_CLIMAX09);
         }
 
         if (v0->unk_04 == 165) {
-            sub_02005728(1747, -70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX03, -70);
         }
 
         if (v0->unk_04 == 220) {
-            sub_02005728(1747, +70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX03, +70);
         }
 
         if (v0->unk_04 == 470) {
-            sub_02005728(1750, -70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX10, -70);
         }
 
         if (v0->unk_04 == 520) {
-            sub_02005728(1750, +70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX10, +70);
         }
 
         if (v0->unk_04 == 120) {
@@ -527,7 +521,7 @@ BOOL ov100_021D39E4(void *param0)
         if (v0->unk_0C.unk_10DC[0].unk_160 == 0) {
             v0->unk_1D28->unk_AC.unk_00 = 6;
             ov100_021D398C(v0, 0, 483);
-            sub_02005728(1751, -70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX12, -70);
             v0->unk_00++;
         }
         break;
@@ -535,7 +529,7 @@ BOOL ov100_021D39E4(void *param0)
         if (v0->unk_0C.unk_10DC[1].unk_160 == 0) {
             v0->unk_1D28->unk_AC.unk_00 = 7;
             ov100_021D398C(v0, 1, 484);
-            sub_02005728(1751, +70);
+            Sound_PlayPannedEffect(SEQ_SE_DP_CLIMAX12, +70);
             v0->unk_00++;
             v0->unk_04 = 0;
         }
@@ -552,14 +546,14 @@ BOOL ov100_021D39E4(void *param0)
         if (v0->unk_08 == 0) {
             if (v0->unk_1D28->unk_50.unk_03 < 8) {
                 v0->unk_1D28->unk_50.unk_03 += 1;
-                G2_SetBlendBrightness((GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), v0->unk_1D28->unk_50.unk_03);
+                G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, v0->unk_1D28->unk_50.unk_03);
             } else {
                 v0->unk_08 = 1;
             }
         } else {
             if (v0->unk_1D28->unk_50.unk_03 > 0) {
                 v0->unk_1D28->unk_50.unk_03 -= 2;
-                G2_SetBlendBrightness((GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), v0->unk_1D28->unk_50.unk_03);
+                G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, v0->unk_1D28->unk_50.unk_03);
             } else {
                 v0->unk_00++;
                 v0->unk_08 = 0;
@@ -570,14 +564,14 @@ BOOL ov100_021D39E4(void *param0)
         if (v0->unk_08 == 0) {
             if (v0->unk_1D28->unk_50.unk_03 < 12) {
                 v0->unk_1D28->unk_50.unk_03 += 1;
-                G2_SetBlendBrightness((GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), v0->unk_1D28->unk_50.unk_03);
+                G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, v0->unk_1D28->unk_50.unk_03);
             } else {
                 v0->unk_08 = 1;
             }
         } else {
             if (v0->unk_1D28->unk_50.unk_03 > 0) {
                 v0->unk_1D28->unk_50.unk_03 -= 2;
-                G2_SetBlendBrightness((GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), v0->unk_1D28->unk_50.unk_03);
+                G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, v0->unk_1D28->unk_50.unk_03);
             } else {
                 v0->unk_00++;
                 v0->unk_08 = 0;
@@ -587,7 +581,7 @@ BOOL ov100_021D39E4(void *param0)
     case 11:
         if (v0->unk_1D28->unk_50.unk_03 < (+16)) {
             v0->unk_1D28->unk_50.unk_03 += 2;
-            G2_SetBlendBrightness((GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), v0->unk_1D28->unk_50.unk_03);
+            G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, v0->unk_1D28->unk_50.unk_03);
         } else {
             ov100_021D34C0(v0);
             ov100_021D2F64(v0);
@@ -597,7 +591,7 @@ BOOL ov100_021D39E4(void *param0)
     case 12:
         if (v0->unk_1D28->unk_50.unk_03 != 0) {
             v0->unk_1D28->unk_50.unk_03--;
-            G2_SetBlendBrightness((GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD), v0->unk_1D28->unk_50.unk_03);
+            G2_SetBlendBrightness(GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, v0->unk_1D28->unk_50.unk_03);
         } else {
             {
                 UnkStruct_ov100_021D4EBC v2 = {
@@ -646,12 +640,12 @@ BOOL ov100_021D39E4(void *param0)
             Easy3DObject_SetScale(&v0->unk_0C.unk_934[0].unk_00, v0->unk_0C.unk_934[0].unk_150, FX32_CONST(1.0), v0->unk_0C.unk_934[0].unk_150);
             Easy3DObject_SetScale(&v0->unk_0C.unk_934[1].unk_00, v0->unk_0C.unk_934[1].unk_150, FX32_CONST(1.0), v0->unk_0C.unk_934[1].unk_150);
         } else {
-            StartScreenTransition(0, 0, 0, 0x0, 6, 1, 111);
+            StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, HEAP_ID_111);
             v0->unk_00++;
         }
         break;
     case 16:
-        if (IsScreenTransitionDone() == 0) {
+        if (IsScreenFadeDone() == FALSE) {
             break;
         }
 
@@ -694,7 +688,7 @@ BOOL ov100_021D3FD4(void *param0)
         v0->unk_00++;
         break;
     default:
-        Heap_FreeToHeap(v0);
+        Heap_Free(v0);
         return 0;
     }
 

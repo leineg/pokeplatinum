@@ -3,10 +3,9 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_02029C68_decl.h"
+#include "struct_defs/dress_up_photo.h"
 #include "struct_defs/struct_0208B284.h"
 #include "struct_defs/struct_0208C06C.h"
-#include "struct_defs/struct_02099F80.h"
 
 #include "overlay062/ov62_022300D8.h"
 #include "overlay062/ov62_02231690.h"
@@ -14,24 +13,24 @@
 #include "overlay062/ov62_const_funcptr_tables.h"
 
 #include "bg_window.h"
+#include "g3d_pipeline.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "message.h"
 #include "narc.h"
 #include "palette.h"
+#include "pokemon_sprite.h"
 #include "render_text.h"
 #include "savedata_misc.h"
+#include "sound_playback.h"
 #include "sprite_system.h"
 #include "sprite_util.h"
 #include "sys_task.h"
 #include "system.h"
-#include "unk_02005474.h"
-#include "unk_0200762C.h"
+#include "touch_pad.h"
+#include "touch_screen_actions.h"
 #include "unk_02012744.h"
-#include "unk_0201E3D8.h"
-#include "unk_02023FCC.h"
 #include "unk_0202419C.h"
-#include "unk_02024220.h"
 #include "unk_020298BC.h"
 #include "unk_020393C8.h"
 #include "unk_0208B284.h"
@@ -50,32 +49,32 @@ void ov62_0222F2C0(UnkStruct_0208C06C *param0)
     GXLayers_DisableEngineBLayers();
     GX_SetVisiblePlane(0);
     GXS_SetVisiblePlane(0);
-    VramTransfer_New(4, 102);
+    VramTransfer_New(4, HEAP_ID_102);
 
-    param0->unk_14.unk_00 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__BATT_REC__BATT_REC_GRA, 102);
-    param0->unk_14.unk_10 = BgConfig_New(102);
-    param0->unk_14.unk_14 = PaletteData_New(102);
-    param0->unk_14.unk_4C = sub_02024220(102, 0, 1, 0, 4, NULL);
-    param0->unk_14.unk_50 = sub_0200762C(102);
+    param0->unk_14.unk_00 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__BATT_REC__BATT_REC_GRA, HEAP_ID_102);
+    param0->unk_14.unk_10 = BgConfig_New(HEAP_ID_102);
+    param0->unk_14.unk_14 = PaletteData_New(HEAP_ID_102);
+    param0->unk_14.unk_4C = G3DPipeline_Init(HEAP_ID_102, TEXTURE_VRAM_SIZE_128K, PALETTE_VRAM_SIZE_64K, NULL);
+    param0->unk_14.unk_50 = PokemonSpriteManager_New(HEAP_ID_102);
 
     NNS_G2dSetupSoftwareSpriteCamera();
 
     PaletteData_SetAutoTransparent(param0->unk_14.unk_14, 1);
-    PaletteData_AllocBuffer(param0->unk_14.unk_14, 0, 0x200, 102);
-    PaletteData_AllocBuffer(param0->unk_14.unk_14, 1, 0x200, 102);
-    PaletteData_AllocBuffer(param0->unk_14.unk_14, 2, 0x200, 102);
-    PaletteData_AllocBuffer(param0->unk_14.unk_14, 3, 0x200, 102);
+    PaletteData_AllocBuffer(param0->unk_14.unk_14, 0, 0x200, HEAP_ID_102);
+    PaletteData_AllocBuffer(param0->unk_14.unk_14, 1, 0x200, HEAP_ID_102);
+    PaletteData_AllocBuffer(param0->unk_14.unk_14, 2, 0x200, HEAP_ID_102);
+    PaletteData_AllocBuffer(param0->unk_14.unk_14, 3, 0x200, HEAP_ID_102);
     ov62_0222F670(param0->unk_14.unk_10);
     ov62_0222F848(param0);
 
     {
-        sub_0201E3D8();
-        sub_0201E450(4);
+        EnableTouchPad();
+        InitializeTouchPad(4);
 
         param0->unk_14.unk_30 = 1;
 
         ov62_0222FF40(param0);
-        RenderControlFlags_SetSpeedUpOnTouch(1);
+        RenderControlFlags_SetSpeedUpOnTouch(TRUE);
     }
 
     SetVBlankCallback(ov62_0222F8E4, param0);
@@ -87,16 +86,16 @@ void ov62_0222F2C0(UnkStruct_0208C06C *param0)
         ReserveVramForWirelessIconChars(NNS_G2D_VRAM_TYPE_2DSUB, GX_OBJVRAMMODE_CHAR_1D_128K);
         ReserveSlotsForWirelessIconPalette(NNS_G2D_VRAM_TYPE_2DSUB);
         sub_02039734();
-        sub_020397C8(1, 102);
+        sub_020397C8(1, HEAP_ID_102);
 
         {
             NNSG2dPaletteData *v0;
-            void *v1 = sub_020394A8(102);
+            void *v1 = sub_020394A8(HEAP_ID_102);
 
             NNS_G2dGetUnpackedPaletteData(v1, &v0);
             PaletteData_LoadBuffer(param0->unk_14.unk_14, v0->pRawData, 2, 14 * 16, 32);
             PaletteData_LoadBuffer(param0->unk_14.unk_14, v0->pRawData, 3, 14 * 16, 32);
-            Heap_FreeToHeap(v1);
+            Heap_Free(v1);
         }
     }
 
@@ -104,7 +103,7 @@ void ov62_0222F2C0(UnkStruct_0208C06C *param0)
         UnkStruct_0208B284 v2;
 
         v2.unk_00 = 12;
-        v2.unk_04 = 102;
+        v2.heapID = HEAP_ID_102;
         v2.unk_08 = 1;
         v2.unk_0C = param0->unk_00;
         v2.unk_10 = (256 * FX32_ONE);
@@ -124,9 +123,9 @@ void ov62_0222F2C0(UnkStruct_0208C06C *param0)
     }
 
     {
-        param0->unk_14.unk_3C = sub_02012744((5 * 2) + 10, 102);
-        param0->unk_14.unk_34 = MessageLoader_Init(0, 26, 10, 102);
-        param0->unk_14.unk_38 = MessageLoader_Init(0, 26, 20, 102);
+        param0->unk_14.unk_3C = sub_02012744((5 * 2) + 10, HEAP_ID_102);
+        param0->unk_14.unk_34 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_UNK_0010, HEAP_ID_102);
+        param0->unk_14.unk_38 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_UNK_0020, HEAP_ID_102);
     }
 
     ov62_022338A8(param0);
@@ -153,7 +152,7 @@ void ov62_0222F514(UnkStruct_0208C06C *param0)
     Bg_FreeTilemapBuffer(param0->unk_14.unk_10, 5);
     Bg_FreeTilemapBuffer(param0->unk_14.unk_10, 6);
     Bg_FreeTilemapBuffer(param0->unk_14.unk_10, 7);
-    Heap_FreeToHeap(param0->unk_14.unk_10);
+    Heap_Free(param0->unk_14.unk_10);
     PaletteData_FreeBuffer(param0->unk_14.unk_14, 0);
     PaletteData_FreeBuffer(param0->unk_14.unk_14, 1);
     PaletteData_FreeBuffer(param0->unk_14.unk_14, 2);
@@ -161,7 +160,7 @@ void ov62_0222F514(UnkStruct_0208C06C *param0)
     PaletteData_Free(param0->unk_14.unk_14);
 
     if (param0->unk_00 == 0) {
-        MiscSaveBlock *v0 = SaveData_MiscSaveBlock(param0->unk_830);
+        MiscSaveBlock *v0 = SaveData_MiscSaveBlock(param0->saveData);
         MiscSaveBlock_SetVsRecorderColor(v0, param0->unk_14.unk_48);
     }
 
@@ -169,14 +168,14 @@ void ov62_0222F514(UnkStruct_0208C06C *param0)
     SysTask_Done(param0->unk_41E8);
     SpriteSystem_FreeResourcesAndManager(param0->unk_14.unk_04, param0->unk_14.unk_08);
     SpriteSystem_Free(param0->unk_14.unk_04);
-    sub_02039794();
+    NetworkIcon_Destroy();
 
     {
         u32 v1;
-        v1 = sub_0201E530();
+        v1 = DisableTouchPad();
 
-        sub_02024034(param0->unk_14.unk_18);
-        RenderControlFlags_SetSpeedUpOnTouch(0);
+        TouchScreenActions_Free(param0->unk_14.unk_18);
+        RenderControlFlags_SetSpeedUpOnTouch(FALSE);
     }
 
     {
@@ -184,11 +183,11 @@ void ov62_0222F514(UnkStruct_0208C06C *param0)
 
         for (v2 = 0; v2 < 4; v2++) {
             if (param0->unk_87C[v2] != NULL) {
-                Heap_FreeToHeap(param0->unk_87C[v2]);
+                Heap_Free(param0->unk_87C[v2]);
             }
 
             if (param0->unk_88C[v2] != NULL) {
-                Heap_FreeToHeap(param0->unk_88C[v2]);
+                Heap_Free(param0->unk_88C[v2]);
             }
         }
     }
@@ -199,8 +198,8 @@ void ov62_0222F514(UnkStruct_0208C06C *param0)
         MessageLoader_Free(param0->unk_14.unk_38);
     }
 
-    sub_020242C4(param0->unk_14.unk_4C);
-    sub_02007B6C(param0->unk_14.unk_50);
+    G3DPipelineBuffers_Free(param0->unk_14.unk_4C);
+    PokemonSpriteManager_Free(param0->unk_14.unk_50);
 
     ov62_022411EC(param0);
 
@@ -209,17 +208,121 @@ void ov62_0222F514(UnkStruct_0208C06C *param0)
 }
 
 static const BgTemplate Unk_ov62_022487B0[] = {
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0x2000, GX_BG_CHARBASE_0x10000, GX_BG_EXTPLTT_01, 0x1, 0x0, 0x0, 0x0 },
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0x2800, GX_BG_CHARBASE_0x14000, GX_BG_EXTPLTT_01, 0x3, 0x0, 0x0, 0x0 },
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0x3000, GX_BG_CHARBASE_0x18000, GX_BG_EXTPLTT_01, 0x2, 0x0, 0x0, 0x0 },
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0x3800, GX_BG_CHARBASE_0x1c000, GX_BG_EXTPLTT_01, 0x1, 0x0, 0x0, 0x0 }
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0x2000,
+        .charBase = GX_BG_CHARBASE_0x10000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x1,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    },
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0x2800,
+        .charBase = GX_BG_CHARBASE_0x14000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x3,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    },
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0x3000,
+        .charBase = GX_BG_CHARBASE_0x18000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x2,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    },
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0x3800,
+        .charBase = GX_BG_CHARBASE_0x1c000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x1,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    }
 };
 
 static const BgTemplate Unk_ov62_02248820[] = {
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0xc000, GX_BG_CHARBASE_0x00000, GX_BG_EXTPLTT_01, 0x1, 0x0, 0x0, 0x0 },
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0xc800, GX_BG_CHARBASE_0x04000, GX_BG_EXTPLTT_01, 0x3, 0x0, 0x0, 0x0 },
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0xd000, GX_BG_CHARBASE_0x08000, GX_BG_EXTPLTT_01, 0x2, 0x0, 0x0, 0x0 },
-    { 0x0, 0x0, 0x800, 0x0, 0x1, GX_BG_COLORMODE_16, GX_BG_SCRBASE_0xd800, GX_BG_CHARBASE_0x00000, GX_BG_EXTPLTT_01, 0x1, 0x0, 0x0, 0x0 }
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0xc000,
+        .charBase = GX_BG_CHARBASE_0x00000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x1,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    },
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0xc800,
+        .charBase = GX_BG_CHARBASE_0x04000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x3,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    },
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0xd000,
+        .charBase = GX_BG_CHARBASE_0x08000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x2,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    },
+    {
+        .x = 0x0,
+        .y = 0x0,
+        .bufferSize = 0x800,
+        .baseTile = 0x0,
+        .screenSize = BG_SCREEN_SIZE_256x256,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0xd800,
+        .charBase = GX_BG_CHARBASE_0x00000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0x1,
+        .areaOver = 0x0,
+        .mosaic = FALSE,
+    }
 };
 
 static void ov62_0222F670(BgConfig *param0)
@@ -238,7 +341,7 @@ static void ov62_0222F670(BgConfig *param0)
     }
 
     {
-        UnkStruct_02099F80 v1 = {
+        GXBanks v1 = {
             GX_VRAM_BG_128_A,
             GX_VRAM_BGEXTPLTT_NONE,
             GX_VRAM_SUB_BG_128_C,
@@ -260,25 +363,25 @@ static void ov62_0222F670(BgConfig *param0)
     }
 
     {
-        Bg_InitFromTemplate(param0, 0, &Unk_ov62_022487B0[0], 0);
-        Bg_InitFromTemplate(param0, 1, &Unk_ov62_022487B0[1], 0);
-        Bg_InitFromTemplate(param0, 2, &Unk_ov62_022487B0[2], 0);
-        Bg_InitFromTemplate(param0, 3, &Unk_ov62_022487B0[3], 0);
-        Bg_ClearTilemap(param0, 0);
-        Bg_ClearTilemap(param0, 1);
-        Bg_ClearTilemap(param0, 2);
-        Bg_ClearTilemap(param0, 3);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_0, &Unk_ov62_022487B0[0], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_1, &Unk_ov62_022487B0[1], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_2, &Unk_ov62_022487B0[2], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_3, &Unk_ov62_022487B0[3], 0);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_0);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_1);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_2);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_3);
     }
 
     {
-        Bg_InitFromTemplate(param0, 4, &Unk_ov62_02248820[0], 0);
-        Bg_InitFromTemplate(param0, 5, &Unk_ov62_02248820[1], 0);
-        Bg_InitFromTemplate(param0, 6, &Unk_ov62_02248820[2], 0);
-        Bg_InitFromTemplate(param0, 7, &Unk_ov62_02248820[3], 0);
-        Bg_ClearTilemap(param0, 4);
-        Bg_ClearTilemap(param0, 5);
-        Bg_ClearTilemap(param0, 6);
-        Bg_ClearTilemap(param0, 7);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_0, &Unk_ov62_02248820[0], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_1, &Unk_ov62_02248820[1], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_2, &Unk_ov62_02248820[2], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_3, &Unk_ov62_02248820[3], 0);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_0);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_1);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_2);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_3);
     }
 
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG0, 0);
@@ -351,7 +454,7 @@ static void ov62_0222F848(UnkStruct_0208C06C *param0)
         GF_ASSERT(v2);
     }
 
-    SetSubScreenViewRect(SpriteSystem_GetRenderer(param0->unk_14.unk_04), 0, (256 * FX32_ONE));
+    SetSubScreenViewRect(SpriteSystem_GetRenderer(param0->unk_14.unk_04), 0, 256 * FX32_ONE);
 }
 
 void ov62_0222F8E4(void *param0)
@@ -450,8 +553,8 @@ BOOL ov62_0222F910(UnkStruct_0208C06C *param0, int *param1)
         return 1;
     }
 
-    sub_020241B4();
-    sub_02007768(param0->unk_14.unk_50);
+    G3_ResetG3X();
+    PokemonSpriteManager_DrawSprites(param0->unk_14.unk_50);
     G3_RequestSwapBuffers(GX_SORTMODE_MANUAL, GX_BUFFERMODE_Z);
 
     ov62_022411D4(param0);
@@ -593,10 +696,10 @@ BOOL ov62_0222FD3C(UnkStruct_0208C06C *param0)
         break;
     case 5:
         if (v0 == 0) {
-            UnkStruct_02029C68 *v2 = sub_02029CA8(sub_0202A750(param0->unk_830), v0);
-            v1 = sub_02029F34(v2);
+            DressUpPhoto *photo = ImageClips_GetDressUpPhoto(SaveData_GetImageClips(param0->saveData), v0);
+            v1 = DressUpPhoto_HasData(photo);
 
-            if (v1 == 0) {
+            if (v1 == FALSE) {
                 ov62_0223197C(param0, 290);
             }
         }
@@ -623,19 +726,19 @@ BOOL ov62_0222FD3C(UnkStruct_0208C06C *param0)
     }
 
     if (v1 == 0) {
-        Sound_PlayEffect(1380);
+        Sound_PlayEffect(SEQ_SE_PL_BREC58);
     } else {
-        Sound_PlayEffect(1379);
+        Sound_PlayEffect(SEQ_SE_PL_BREC57);
     }
 
     return v1;
 }
 
-static void ov62_0222FE1C(u32 param0, u32 param1, void *param2)
+static void ov62_0222FE1C(u32 param0, enum TouchScreenButtonState param1, void *param2)
 {
     UnkStruct_0208C06C *v0 = param2;
 
-    if (param1 != 0) {
+    if (param1 != TOUCH_BUTTON_PRESSED) {
         return;
     }
 
@@ -687,7 +790,7 @@ void ov62_0222FF40(UnkStruct_0208C06C *param0)
         param0->unk_534.unk_C8[v0].unk_10 = &param0->unk_14.unk_1C[v0];
     }
 
-    param0->unk_14.unk_18 = sub_02023FCC(param0->unk_14.unk_1C, 5, ov62_0222FE1C, param0, 102);
+    param0->unk_14.unk_18 = TouchScreenActions_RegisterHandler(param0->unk_14.unk_1C, 5, ov62_0222FE1C, param0, HEAP_ID_102);
 }
 
 void ov62_0222FF7C(UnkStruct_0208C06C *param0)
@@ -733,7 +836,7 @@ void ov62_02230014(UnkStruct_0208C06C *param0)
 
 void ov62_02230054(UnkStruct_0208C06C *param0)
 {
-    sub_0202404C(param0->unk_14.unk_18);
+    TouchScreenActions_HandleAction(param0->unk_14.unk_18);
 }
 
 void ov62_02230060(UnkStruct_0208C06C *param0)

@@ -2,15 +2,14 @@
 #define POKEPLATINUM_FIELD_BATTLE_DATA_TRANSFER_H
 
 #include "constants/battle.h"
+#include "generated/evolution_methods.h"
 #include "generated/map_headers.h"
 
+#include "struct_decls/pc_boxes_decl.h"
 #include "struct_decls/pokedexdata_decl.h"
-#include "struct_decls/struct_02027F8C_decl.h"
-#include "struct_decls/struct_0202C878_decl.h"
-#include "struct_decls/struct_0206D140_decl.h"
-#include "struct_decls/struct_020797DC_decl.h"
 #include "struct_defs/chatot_cry.h"
 #include "struct_defs/trainer.h"
+#include "struct_defs/wi_fi_history.h"
 
 #include "field/field_system_decl.h"
 
@@ -18,6 +17,7 @@
 #include "game_options.h"
 #include "game_records.h"
 #include "journal.h"
+#include "pal_pad.h"
 #include "party.h"
 #include "poketch.h"
 #include "rtc.h"
@@ -29,6 +29,18 @@ typedef struct BattleRecords {
     int totalFainted;
     int totalDamage;
 } BattleRecords;
+
+typedef struct CaptureAttempt {
+    int resultMask;
+    u16 ballsThrown;
+    u16 species;
+    u8 gender;
+    u8 language;
+    u8 metGame;
+    u8 hasNickname;
+    u16 nickname[11];
+    u16 pokeballItemID;
+} CaptureAttempt;
 
 typedef struct FieldBattleDTO {
     u32 battleType;
@@ -43,19 +55,19 @@ typedef struct FieldBattleDTO {
     PCBoxes *pcBoxes;
     ChatotCry *chatotCries[MAX_BATTLERS];
     Poketch *poketch;
-    UnkStruct_0202C878 *unk_104;
+    WiFiHistory *wiFiHistory;
     Options *options;
-    UnkStruct_0206D140 *unk_10C;
+    CaptureAttempt *captureAttempt;
     BattleRecords battleRecords;
     GameRecords *records;
     JournalEntry *journalEntry;
-    UnkStruct_02027F8C *unk_124;
-    int background;
+    PalPad *palPad;
+    enum BattleBackground background;
     enum BattleTerrain terrain;
     int mapLabelTextID;
     int mapHeaderID;
     enum TimeOfDay timeOfDay;
-    int mapEvolutionMethod;
+    enum EvolutionMethod mapEvolutionMethod;
     BOOL visitedContestHall;
     BOOL metBebe;
     int caughtBattlerIdx;
@@ -78,10 +90,10 @@ typedef struct FieldBattleDTO {
     u32 unk_19C;
 } FieldBattleDTO;
 
-FieldBattleDTO *FieldBattleDTO_New(enum HeapId heapID, u32 battleType);
-FieldBattleDTO *FieldBattleDTO_NewSafari(enum HeapId heapID, int countSafariBalls);
-FieldBattleDTO *FieldBattleDTO_NewPalPark(enum HeapId heapID, int countParkBalls);
-FieldBattleDTO *FieldBattleDTO_NewCatchingTutorial(enum HeapId heapID, const FieldSystem *fieldSystem);
+FieldBattleDTO *FieldBattleDTO_New(enum HeapID heapID, u32 battleType);
+FieldBattleDTO *FieldBattleDTO_NewSafari(enum HeapID heapID, int countSafariBalls);
+FieldBattleDTO *FieldBattleDTO_NewPalPark(enum HeapID heapID, int countParkBalls);
+FieldBattleDTO *FieldBattleDTO_NewCatchingTutorial(enum HeapID heapID, const FieldSystem *fieldSystem);
 void FieldBattleDTO_Free(FieldBattleDTO *dto);
 void FieldBattleDTO_AddPokemonToBattler(FieldBattleDTO *dto, Pokemon *src, int battler);
 void FieldBattleDTO_CopyPartyToBattler(FieldBattleDTO *dto, const Party *src, int battler);

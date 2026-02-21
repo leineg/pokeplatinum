@@ -6,9 +6,9 @@
 #include <string.h>
 
 #include "struct_decls/struct_0202B370_decl.h"
-#include "struct_decls/struct_0202C878_decl.h"
+#include "struct_defs/wi_fi_history.h"
 
-#include "overlay004/ov4_021D0D80.h"
+#include "nintendo_wfc/main.h"
 #include "overlay066/struct_ov66_02232B20.h"
 #include "overlay066/struct_ov66_022589B4.h"
 
@@ -56,9 +56,9 @@ typedef struct {
 } UnkStruct_ov66_0223439C;
 
 typedef struct {
-    SaveData *unk_00;
-    UnkStruct_0202B370 *unk_04;
-    UnkStruct_0202C878 *unk_08;
+    SaveData *saveData;
+    WiFiList *unk_04;
+    WiFiHistory *wiFiHistory;
     UnkStruct_ov66_022324F0 unk_0C;
     void *unk_20;
     u8 *unk_24;
@@ -92,7 +92,7 @@ static void ov66_0223369C(void);
 static UnkEnum_ov66_022336B8 ov66_022336B8(PPW_LOBBY_CHANNEL_KIND param0);
 static PPW_LOBBY_CHANNEL_KIND ov66_022336C0(UnkEnum_ov66_022336B8 param0);
 static BOOL ov66_022336C4(UnkStruct_ov66_022336C4 *param0);
-static void ov66_02233758(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param2);
+static void ov66_02233758(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 heapID);
 static void ov66_02233788(UnkStruct_ov66_022336C4 *param0);
 static void ov66_0223379C(UnkStruct_ov66_022336C4 *param0, s32 param1, const void *param2);
 static void ov66_022337A8(UnkStruct_ov66_022336C4 *param0, s32 param1, const void *param2, u32 param3);
@@ -101,7 +101,7 @@ static void ov66_0223380C(UnkStruct_ov66_022336C4 *param0, s32 param1);
 static void ov66_02233838(UnkStruct_ov66_022336C4 *param0, s32 param1, const PPW_LobbySystemProfile *param2);
 static const PPW_LobbySystemProfile *ov66_02233864(const UnkStruct_ov66_022336C4 *param0, s32 param1);
 static void ov66_02233888(UnkStruct_ov66_022336C4 *param0, s32 param1);
-static void ov66_022338C8(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param2, u32 param3);
+static void ov66_022338C8(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param2, u32 heapID);
 static void ov66_02233920(UnkStruct_ov66_022336C4 *param0);
 static void ov66_02233950(UnkStruct_ov66_022336C4 *param0, u32 param1);
 static void ov66_02233984(UnkStruct_ov66_022336C4 *param0, s32 param1, u32 param2);
@@ -139,7 +139,7 @@ static void ov66_02234294(const PPW_LobbyRecruitInfo *param0, s64 *param1);
 static void ov66_022342A0(u16 param0, void *param1);
 static void ov66_022342A4(u16 param0, void *param1);
 static u32 ov66_022342CC(const PPW_LobbySchedule *param0, PPW_LOBBY_TIME_EVENT param1);
-static void ov66_022342F4(UnkStruct_ov66_022342F4 *param0, u32 param1, u32 param2);
+static void ov66_022342F4(UnkStruct_ov66_022342F4 *param0, u32 param1, u32 heapID);
 static void ov66_0223430C(UnkStruct_ov66_022342F4 *param0);
 static void ov66_0223431C(UnkStruct_ov66_022342F4 *param0, const PPW_LobbyVipRecord *param1, u32 param2);
 static BOOL ov66_02234344(const UnkStruct_ov66_022342F4 *param0, s32 param1);
@@ -152,24 +152,24 @@ static const char *Unk_ov66_02258DF0[1] = {
 
 static UnkStruct_ov66_022336C4 *Unk_ov66_0225B6C0 = NULL;
 
-void ov66_022324F0(u32 param0, SaveData *param1, u32 param2, const UnkStruct_ov66_022324F0 *param3, void *param4)
+void ov66_022324F0(u32 heapID, SaveData *saveData, u32 param2, const UnkStruct_ov66_022324F0 *param3, void *param4)
 {
     GF_ASSERT(Unk_ov66_0225B6C0 == NULL);
     GF_ASSERT(param2 < PPW_LOBBY_MAX_BINARY_SIZE);
 
-    Unk_ov66_0225B6C0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov66_022336C4));
+    Unk_ov66_0225B6C0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov66_022336C4));
     memset(Unk_ov66_0225B6C0, 0, sizeof(UnkStruct_ov66_022336C4));
 
-    Unk_ov66_0225B6C0->unk_00 = param1;
-    Unk_ov66_0225B6C0->unk_04 = sub_0202B370(param1);
-    Unk_ov66_0225B6C0->unk_08 = sub_0202C878(param1);
+    Unk_ov66_0225B6C0->saveData = saveData;
+    Unk_ov66_0225B6C0->unk_04 = SaveData_GetWiFiList(saveData);
+    Unk_ov66_0225B6C0->wiFiHistory = SaveData_WiFiHistory(saveData);
     Unk_ov66_0225B6C0->unk_0C = *param3;
     Unk_ov66_0225B6C0->unk_20 = param4;
 
-    ov66_02233758(Unk_ov66_0225B6C0, param2, param0);
-    ov66_022338C8(Unk_ov66_0225B6C0, PPW_LOBBY_MAX_PLAYER_NUM_MAIN, PPW_LOBBY_MAX_PLAYER_NUM_FOOT, param0);
+    ov66_02233758(Unk_ov66_0225B6C0, param2, heapID);
+    ov66_022338C8(Unk_ov66_0225B6C0, PPW_LOBBY_MAX_PLAYER_NUM_MAIN, PPW_LOBBY_MAX_PLAYER_NUM_FOOT, heapID);
     ov66_02234054(Unk_ov66_0225B6C0);
-    ov66_022342F4(&Unk_ov66_0225B6C0->unk_6A0, 128, param0);
+    ov66_022342F4(&Unk_ov66_0225B6C0->unk_6A0, 128, heapID);
 }
 
 void ov66_02232598(void)
@@ -180,7 +180,7 @@ void ov66_02232598(void)
     ov66_02233920(Unk_ov66_0225B6C0);
     ov66_02233788(Unk_ov66_0225B6C0);
 
-    Heap_FreeToHeap(Unk_ov66_0225B6C0);
+    Heap_Free(Unk_ov66_0225B6C0);
     Unk_ov66_0225B6C0 = NULL;
 }
 
@@ -301,7 +301,7 @@ BOOL ov66_02232720(const void *param0, u32 param1)
     {
         DWCUserData *v2;
 
-        v2 = sub_0202AD28(Unk_ov66_0225B6C0->unk_04);
+        v2 = WiFiList_GetUserData(Unk_ov66_0225B6C0->unk_04);
         Unk_ov66_0225B6C0->unk_984 = PPW_LobbyInitializeAsync(("pokemonplatds"), ("IIup73"), param1, &v0, v2, param0, Unk_ov66_0225B6C0->unk_28);
     }
 
@@ -763,12 +763,12 @@ BOOL ov66_02232F38(UnkEnum_ov66_02232F38 param0, u32 param1)
     Unk_ov66_0225B6C0->unk_69E = 1;
     Unk_ov66_0225B6C0->unk_69F = 0;
 
-    if (ov4_021D116C((u8 *)Unk_ov66_0225B6C0->unk_5B8[param0].unk_00.matchMakingString, param1, 1, (Unk_ov66_0225B6C0->unk_5B8[param0].unk_46 / 30))) {
+    if (NintendoWFC_StartPublicMatchmaking((u8 *)Unk_ov66_0225B6C0->unk_5B8[param0].unk_00.matchMakingString, param1, 1, (Unk_ov66_0225B6C0->unk_5B8[param0].unk_46 / 30))) {
         (void)0;
     }
 
-    ov4_021D1150(ov66_022342A0, Unk_ov66_0225B6C0);
-    ov4_021D1120(ov66_022342A4, Unk_ov66_0225B6C0);
+    NintendoWFC_SetNewClientCallback(ov66_022342A0, Unk_ov66_0225B6C0);
+    NintendoWFC_SetConnectionClosedCB(ov66_022342A4, Unk_ov66_0225B6C0);
 
     return 1;
 }
@@ -907,12 +907,12 @@ BOOL ov66_02233260(UnkEnum_ov66_02232F38 param0)
 
     Unk_ov66_0225B6C0->unk_69C = param0;
 
-    if (ov4_021D116C((u8 *)Unk_ov66_0225B6C0->unk_5B8[param0].unk_00.matchMakingString, Unk_ov66_0225B6C0->unk_5B8[param0].unk_00.maxNum, 0, (Unk_ov66_0225B6C0->unk_5B8[param0].unk_46 / 30))) {
+    if (NintendoWFC_StartPublicMatchmaking((u8 *)Unk_ov66_0225B6C0->unk_5B8[param0].unk_00.matchMakingString, Unk_ov66_0225B6C0->unk_5B8[param0].unk_00.maxNum, 0, (Unk_ov66_0225B6C0->unk_5B8[param0].unk_46 / 30))) {
         (void)0;
     }
 
-    ov4_021D1150(ov66_022342A0, Unk_ov66_0225B6C0);
-    ov4_021D1120(ov66_022342A4, Unk_ov66_0225B6C0);
+    NintendoWFC_SetNewClientCallback(ov66_022342A0, Unk_ov66_0225B6C0);
+    NintendoWFC_SetConnectionClosedCB(ov66_022342A4, Unk_ov66_0225B6C0);
 
     return 1;
 }
@@ -1068,26 +1068,26 @@ u16 *ov66_02233538(UnkEnum_ov66_02233538 param0)
     return v0;
 }
 
-BOOL ov66_022335C0(UnkEnum_ov66_022335C0 param0, u32 param1)
+BOOL ov66_022335C0(UnkEnum_ov66_022335C0 param0, u32 language)
 {
     BOOL v0;
 
     GF_ASSERT(Unk_ov66_0225B6C0 != NULL);
     GF_ASSERT(param0 < UnkEnum_ov66_022335C0_02);
-    GF_ASSERT(param1 < 12);
+    GF_ASSERT(language < 12);
 
     if (param0 >= UnkEnum_ov66_022335C0_02) {
         return 0;
     }
 
-    if (param1 >= 12) {
+    if (language >= 12) {
         return 0;
     }
 
     if (param0 == UnkEnum_ov66_022335C0_00) {
-        v0 = Unk_ov66_0225B6C0->unk_6A8.unk_00.currentQuestionnaireRecord.multiLanguageSummarizeFlags[param1];
+        v0 = Unk_ov66_0225B6C0->unk_6A8.unk_00.currentQuestionnaireRecord.multiLanguageSummarizeFlags[language];
     } else {
-        v0 = Unk_ov66_0225B6C0->unk_6A8.unk_00.lastQuestionnaireRecord.multiLanguageSummarizeFlags[param1];
+        v0 = Unk_ov66_0225B6C0->unk_6A8.unk_00.lastQuestionnaireRecord.multiLanguageSummarizeFlags[language];
     }
 
     return v0;
@@ -1097,8 +1097,8 @@ void ov66_0223361C(void)
 {
     GF_ASSERT(Unk_ov66_0225B6C0 != NULL);
 
-    ov4_021D1150(NULL, NULL);
-    ov4_021D1120(NULL, NULL);
+    NintendoWFC_SetNewClientCallback(NULL, NULL);
+    NintendoWFC_SetConnectionClosedCB(NULL, NULL);
 
     Unk_ov66_0225B6C0->unk_69C = UnkEnum_ov66_02232F38_03;
     Unk_ov66_0225B6C0->unk_69E = 0;
@@ -1143,9 +1143,7 @@ static void ov66_0223369C(void)
 
 static UnkEnum_ov66_022336B8 ov66_022336B8(PPW_LOBBY_CHANNEL_KIND param0)
 {
-    s32 v0;
-
-    v0 = param0 - 1;
+    s32 v0 = param0 - 1;
 
     if (v0 < 0) {
         v0 = UnkEnum_ov66_022336B8_04;
@@ -1166,8 +1164,8 @@ static BOOL ov66_022336C4(UnkStruct_ov66_022336C4 *param0)
     int v2;
     PPW_LOBBY_RESULT v3;
 
-    v0 = sub_0202C8C0(param0->unk_08);
-    v1 = sub_0202C8C4(param0->unk_08);
+    v0 = WiFiHistory_GetCountry(param0->wiFiHistory);
+    v1 = WiFiHistory_GetRegion(param0->wiFiHistory);
 
     if (v0 == 0) {
         return 0;
@@ -1196,16 +1194,16 @@ static BOOL ov66_022336C4(UnkStruct_ov66_022336C4 *param0)
     return ov66_0223365C(v3);
 }
 
-static void ov66_02233758(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param2)
+static void ov66_02233758(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 heapID)
 {
-    Unk_ov66_0225B6C0->unk_24 = Heap_AllocFromHeap(param2, param1 * PPW_LOBBY_MAX_PLAYER_NUM_MAIN);
+    Unk_ov66_0225B6C0->unk_24 = Heap_Alloc(heapID, param1 * PPW_LOBBY_MAX_PLAYER_NUM_MAIN);
     memset(Unk_ov66_0225B6C0->unk_24, 0, param1 * PPW_LOBBY_MAX_PLAYER_NUM_MAIN);
     Unk_ov66_0225B6C0->unk_28 = param1;
 }
 
 static void ov66_02233788(UnkStruct_ov66_022336C4 *param0)
 {
-    Heap_FreeToHeap(Unk_ov66_0225B6C0->unk_24);
+    Heap_Free(Unk_ov66_0225B6C0->unk_24);
 }
 
 static void ov66_0223379C(UnkStruct_ov66_022336C4 *param0, s32 param1, const void *param2)
@@ -1265,9 +1263,7 @@ static void ov66_0223380C(UnkStruct_ov66_022336C4 *param0, s32 param1)
 
 static void ov66_02233838(UnkStruct_ov66_022336C4 *param0, s32 param1, const PPW_LobbySystemProfile *param2)
 {
-    s32 v0;
-
-    v0 = ov66_02233A34(param0, param1, 0);
+    s32 v0 = ov66_02233A34(param0, param1, 0);
     GF_ASSERT(v0 != 0xffffffff);
 
     param0->unk_2C[v0] = *param2;
@@ -1275,9 +1271,7 @@ static void ov66_02233838(UnkStruct_ov66_022336C4 *param0, s32 param1, const PPW
 
 static const PPW_LobbySystemProfile *ov66_02233864(const UnkStruct_ov66_022336C4 *param0, s32 param1)
 {
-    s32 v0;
-
-    v0 = ov66_02233A34(param0, param1, 0);
+    s32 v0 = ov66_02233A34(param0, param1, 0);
     GF_ASSERT(v0 != 0xffffffff);
 
     return &param0->unk_2C[v0];
@@ -1285,15 +1279,13 @@ static const PPW_LobbySystemProfile *ov66_02233864(const UnkStruct_ov66_022336C4
 
 static void ov66_02233888(UnkStruct_ov66_022336C4 *param0, s32 param1)
 {
-    s32 v0;
-
-    v0 = ov66_02233A34(param0, param1, 0);
+    s32 v0 = ov66_02233A34(param0, param1, 0);
     GF_ASSERT(v0 != 0xffffffff);
 
     memset(&param0->unk_2C[v0], 0, sizeof(PPW_LobbySystemProfile));
 }
 
-static void ov66_022338C8(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param2, u32 param3)
+static void ov66_022338C8(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param2, u32 heapID)
 {
     int v0;
     int v1;
@@ -1308,7 +1300,7 @@ static void ov66_022338C8(UnkStruct_ov66_022336C4 *param0, u32 param1, u32 param
         }
 
         param0->unk_11C[v0].unk_00 = 0;
-        param0->unk_11C[v0].unk_04 = Heap_AllocFromHeap(param3, sizeof(s32) * v1);
+        param0->unk_11C[v0].unk_04 = Heap_Alloc(heapID, sizeof(s32) * v1);
         param0->unk_11C[v0].unk_02 = v1;
 
         ov66_02233950(param0, v0);
@@ -1321,7 +1313,7 @@ static void ov66_02233920(UnkStruct_ov66_022336C4 *param0)
 
     for (v0 = 0; v0 < 2; v0++) {
         GF_ASSERT(param0->unk_11C[v0].unk_04 != NULL);
-        Heap_FreeToHeap(param0->unk_11C[v0].unk_04);
+        Heap_Free(param0->unk_11C[v0].unk_04);
         param0->unk_11C[v0].unk_04 = NULL;
     }
 }
@@ -1365,9 +1357,7 @@ static void ov66_02233984(UnkStruct_ov66_022336C4 *param0, s32 param1, u32 param
 
 static void ov66_02233A08(UnkStruct_ov66_022336C4 *param0, s32 param1, u32 param2)
 {
-    u32 v0;
-
-    v0 = ov66_02233A34(param0, param1, param2);
+    u32 v0 = ov66_02233A34(param0, param1, param2);
 
     if (v0 == 0xffffffff) {
         return;
@@ -1400,9 +1390,7 @@ static void ov66_02233A94(UnkStruct_ov66_022336C4 *param0, UnkEnum_ov66_022336B8
 {
     int v0;
     s32 v1;
-    u32 v2;
-
-    v2 = ov66_022336C0(param1);
+    u32 v2 = ov66_022336C0(param1);
     ov66_02233950(param0, 1);
 
     for (v0 = 0; v0 < param0->unk_11C[0].unk_02; v0++) {
@@ -1538,9 +1526,7 @@ static void ov66_02233CE8(s32 param0, PPW_LOBBY_CHANNEL_KIND param1, s32 param2,
 {
     u32 v0;
     u32 v1;
-    s32 v2;
-
-    v2 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
+    s32 v2 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
 
     if (v2 == 0xffffffff) {
         return;
@@ -1594,9 +1580,7 @@ static void ov66_02233DD4(s32 param0, const PPW_LobbySystemProfile *param1)
 {
     u32 v0, v1, v2;
     const PPW_LobbySystemProfile *v3;
-    s32 v4;
-
-    v4 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
+    s32 v4 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
 
     if (v4 == 0xffffffff) {
         return;
@@ -1620,9 +1604,7 @@ static void ov66_02233DD4(s32 param0, const PPW_LobbySystemProfile *param1)
 
 static void ov66_02233E50(s32 param0, const u8 *param1, u32 param2)
 {
-    s32 v0;
-
-    v0 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
+    s32 v0 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
 
     if (v0 == 0xffffffff) {
         return;
@@ -1638,9 +1620,7 @@ static void ov66_02233E8C(s32 param0, const PPW_LobbyRecruitInfo *param1)
     u32 v0;
     s64 v1;
     s64 v2;
-    s32 v3;
-
-    v3 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
+    s32 v3 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
 
     if (v3 == 0xffffffff) {
         return;
@@ -1671,9 +1651,7 @@ static void ov66_02233E8C(s32 param0, const PPW_LobbyRecruitInfo *param1)
 static void ov66_02233F18(s32 param0, const PPW_LobbyRecruitInfo *param1)
 {
     BOOL v0;
-    s32 v1;
-
-    v1 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
+    s32 v1 = ov66_02233A34(Unk_ov66_0225B6C0, param0, 0);
 
     if (v1 == 0xffffffff) {
         return;
@@ -1828,7 +1806,7 @@ static void ov66_022341F4(UnkStruct_ov66_022336C4 *param0)
         UnkStruct_ov66_022336C4_sub4 *v2;
         u32 v3;
 
-        v3 = ov4_021D2610();
+        v3 = NintendoWFC_GetNumConnections();
         GF_ASSERT(v3 <= 4);
         v2 = &Unk_ov66_0225B6C0->unk_5B8[Unk_ov66_0225B6C0->unk_69C];
 
@@ -1855,17 +1833,13 @@ static void ov66_022341F4(UnkStruct_ov66_022336C4 *param0)
 
 static void ov66_02234288(PPW_LobbyRecruitInfo *param0, const s64 *param1)
 {
-    s64 *v0;
-
-    v0 = (s64 *)param0->paramBuf;
+    s64 *v0 = (s64 *)param0->paramBuf;
     *v0 = *param1;
 }
 
 static void ov66_02234294(const PPW_LobbyRecruitInfo *param0, s64 *param1)
 {
-    const s64 *v0;
-
-    v0 = (const s64 *)param0->paramBuf;
+    const s64 *v0 = (const s64 *)param0->paramBuf;
     *param1 = *v0;
 }
 
@@ -1876,9 +1850,7 @@ static void ov66_022342A0(u16 param0, void *param1)
 
 static void ov66_022342A4(u16 param0, void *param1)
 {
-    UnkStruct_ov66_022336C4 *v0;
-
-    v0 = param1;
+    UnkStruct_ov66_022336C4 *v0 = param1;
 
     if (v0->unk_69E == 1) {
         ov66_02233064();
@@ -1905,16 +1877,16 @@ static u32 ov66_022342CC(const PPW_LobbySchedule *param0, PPW_LOBBY_TIME_EVENT p
     return v0;
 }
 
-static void ov66_022342F4(UnkStruct_ov66_022342F4 *param0, u32 param1, u32 param2)
+static void ov66_022342F4(UnkStruct_ov66_022342F4 *param0, u32 param1, u32 heapID)
 {
-    param0->unk_00 = Heap_AllocFromHeap(param2, sizeof(PPW_LobbyVipRecord) * param1);
+    param0->unk_00 = Heap_Alloc(heapID, sizeof(PPW_LobbyVipRecord) * param1);
     param0->unk_04 = param1;
     param0->unk_06 = 0;
 }
 
 static void ov66_0223430C(UnkStruct_ov66_022342F4 *param0)
 {
-    Heap_FreeToHeap(param0->unk_00);
+    Heap_Free(param0->unk_00);
     param0->unk_00 = NULL;
 }
 

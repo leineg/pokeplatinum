@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/global_terminal_2f.h"
 
-    .data
 
     ScriptEntry _0107
     ScriptEntry _003A
@@ -133,21 +132,21 @@ _0107:
 _0109:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    SetVar 0x8005, 6
+    SetVar VAR_0x8005, 6
     GoTo _011D
     End
 
 _011D:
     Message 13
-    ScrCmd_041 31, 11, 0, 1, 0x800C
-    ScrCmd_33A 1
-    ScrCmd_042 15, 0
-    ScrCmd_042 16, 1
-    ScrCmd_042 17, 2
-    ScrCmd_043
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _0167
-    GoToIfEq 0x8008, 1, _0188
+    InitLocalTextMenu 31, 11, 0, VAR_RESULT
+    SetMenuXOriginToRight
+    AddMenuEntryImm 15, 0
+    AddMenuEntryImm 16, 1
+    AddMenuEntryImm 17, 2
+    ShowMenu
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, _0167
+    GoToIfEq VAR_0x8008, 1, _0188
     GoTo _0161
     End
 
@@ -157,9 +156,9 @@ _0161:
     End
 
 _0167:
-    CallCommonScript 0x7D6
-    SetVar 0x800C, 0x4000
-    GoToIfEq 0x800C, 0, _0161
+    Common_SaveGame
+    SetVar VAR_RESULT, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_RESULT, 0, _0161
     CloseMessage
     CallCommonScript 0x802
     ReleaseAll
@@ -173,21 +172,21 @@ _0188:
 _0193:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    SetVar 0x8005, 5
+    SetVar VAR_0x8005, 5
     GoTo _01A7
     End
 
 _01A7:
     Message 11
-    ScrCmd_041 31, 11, 0, 1, 0x800C
-    ScrCmd_33A 1
-    ScrCmd_042 15, 0
-    ScrCmd_042 16, 1
-    ScrCmd_042 17, 2
-    ScrCmd_043
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _01F1
-    GoToIfEq 0x8008, 1, _0212
+    InitLocalTextMenu 31, 11, 0, VAR_RESULT
+    SetMenuXOriginToRight
+    AddMenuEntryImm 15, 0
+    AddMenuEntryImm 16, 1
+    AddMenuEntryImm 17, 2
+    ShowMenu
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, _01F1
+    GoToIfEq VAR_0x8008, 1, _0212
     GoTo _01EB
     End
 
@@ -197,9 +196,9 @@ _01EB:
     End
 
 _01F1:
-    CallCommonScript 0x7D6
-    SetVar 0x800C, 0x4000
-    GoToIfEq 0x800C, 0, _01EB
+    Common_SaveGame
+    SetVar VAR_RESULT, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_RESULT, 0, _01EB
     CloseMessage
     CallCommonScript 0x802
     ReleaseAll
@@ -208,9 +207,6 @@ _01F1:
 _0212:
     Message 12
     GoTo _01A7
+    End
 
-    .byte 2
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

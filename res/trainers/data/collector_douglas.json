@@ -13,7 +13,7 @@
             "level": 24,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,7 +22,7 @@
             "level": 24,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -31,8 +31,42 @@
             "level": 24,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "For the sake of my collection, I\n",
+                "take on people I know I can’t beat.\f",
+                "That’s what a Collector does.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "That attack right then was remarkable!\n",
+                "You ought to be proud of it!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "I take pride in having Pokémon that\n",
+                "others don’t.\r",
+                "Oh, I’m also proud about winning second\n",
+                "prize in one of Jubilife TV’s drawings.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "For the sake of my collection, I\n",
+                "keep battling people I can’t beat.\r",
+                "That’s what a Collector does.\r"
+            ]
         }
     ]
 }

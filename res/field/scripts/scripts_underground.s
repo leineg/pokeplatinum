@@ -1,6 +1,5 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _001A
     ScriptEntry _00BE
@@ -35,13 +34,13 @@ _001A:
     End
 
 _00BE:
-    GoToIfEq 0x40D0, 0, _00CD
+    GoToIfEq VAR_UNK_0x40D0, 0, _00CD
     End
 
 _00CD:
-    GetPlayerMapPos 0x4000, 0x4001
-    AddVar 0x4000, 1
-    ScrCmd_187 16, 0x4000, 1, 0x4001, 1
+    GetPlayerMapPos VAR_MAP_LOCAL_0, VAR_MAP_LOCAL_1
+    AddVar VAR_MAP_LOCAL_0, 1
+    SetPosition 16, VAR_MAP_LOCAL_0, 1, VAR_MAP_LOCAL_1, 1
     End
 
 _00E7:
@@ -50,13 +49,13 @@ _00E7:
     End
 
 _00F3:
-    ScrCmd_19E 1, 0x800C
-    SetVar 0x8004, 0x800C
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, -5, _0141
-    GoToIfEq 0x8008, -4, _014D
-    GoToIfEq 0x8008, -3, _0159
-    GoToIfEq 0x8008, -1, _0165
+    ScrCmd_19E 1, VAR_RESULT
+    SetVar VAR_0x8004, VAR_RESULT
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, -5, _0141
+    GoToIfEq VAR_0x8008, -4, _014D
+    GoToIfEq VAR_0x8008, -3, _0159
+    GoToIfEq VAR_0x8008, -1, _0165
     GoTo _017F
     End
 
@@ -102,13 +101,13 @@ _018F:
     End
 
 _019B:
-    ScrCmd_19E 0, 0x800C
-    SetVar 0x8004, 0x800C
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, -5, _0201
-    GoToIfEq 0x8008, -4, _01E9
-    GoToIfEq 0x8008, -3, _01F5
-    GoToIfEq 0x8008, -1, _0165
+    ScrCmd_19E 0, VAR_RESULT
+    SetVar VAR_0x8004, VAR_RESULT
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, -5, _0201
+    GoToIfEq VAR_0x8008, -4, _01E9
+    GoToIfEq VAR_0x8008, -3, _01F5
+    GoToIfEq VAR_0x8008, -1, _0165
     GoTo _020D
     End
 
@@ -144,11 +143,11 @@ _0225:
     End
 
 _0231:
-    ScrCmd_19E 2, 0x800C
-    SetVar 0x8004, 0x800C
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, -4, _0265
-    GoToIfEq 0x8008, -1, _0165
+    ScrCmd_19E 2, VAR_RESULT
+    SetVar VAR_0x8004, VAR_RESULT
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, -4, _0265
+    GoToIfEq VAR_0x8008, -1, _0165
     GoTo _0271
     End
 
@@ -181,54 +180,46 @@ _0289:
     ApplyMovement 16, _02F0
     WaitMovement
     RemoveObject 16
-    SetVar 0x40D0, 1
-    SetFlag 0x992
+    SetVar VAR_UNK_0x40D0, 1
+    SetFlag FLAG_UNDERGROUND_FIRST_ENTERED
     End
 
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0
+Underground_UnusedMovement:
+    Delay8
+    WalkOnSpotNormalEast
+    EndMovement
 
     .balign 4, 0
 _02D4:
-    MoveAction_034
-    MoveAction_075
-    MoveAction_063
+    WalkOnSpotNormalWest
+    EmoteExclamationMark
+    Delay8
     EndMovement
 
     .balign 4, 0
 _02E4:
-    MoveAction_033
-    MoveAction_063 2
+    WalkOnSpotNormalSouth
+    Delay8 2
     EndMovement
 
     .balign 4, 0
 _02F0:
-    MoveAction_003
-    MoveAction_061
-    MoveAction_000
-    MoveAction_061
-    MoveAction_002
-    MoveAction_061
-    MoveAction_001
-    MoveAction_061
-    MoveAction_003
-    MoveAction_060
-    MoveAction_000
-    MoveAction_060
-    MoveAction_002
-    MoveAction_060
-    MoveAction_001
-    MoveAction_067
-    MoveAction_063 2
+    FaceEast
+    Delay2
+    FaceNorth
+    Delay2
+    FaceWest
+    Delay2
+    FaceSouth
+    Delay2
+    FaceEast
+    Delay1
+    FaceNorth
+    Delay1
+    FaceWest
+    Delay1
+    FaceSouth
+    WarpOut
+    Delay8 2
     EndMovement

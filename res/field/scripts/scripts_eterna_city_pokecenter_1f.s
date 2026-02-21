@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/eterna_city_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _0016
     ScriptEntry _0022
@@ -11,8 +10,7 @@
     ScriptEntryEnd
 
 _0016:
-    SetVar 0x8007, 3
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 3
     End
 
 _0022:
@@ -29,7 +27,7 @@ _0035:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 129, _0053
+    GoToIfSet FLAG_UNK_0x0081, _0053
     Message 1
     WaitABXPadPress
     CloseMessage
@@ -50,7 +48,7 @@ _005E:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_BUNEARY
     Message 3
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -60,23 +58,23 @@ _007D:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfEq 0x4002, 1, _00F4
-    CheckPoketchAppRegistered POKETCH_APPID_FRIENDSHIPCHECKER, 0x800C
-    GoToIfEq 0x800C, 0, _00D9
-    ScrCmd_247 0x8000
-    BufferPartyMonSpecies 0, 0x8000
+    GoToIfEq VAR_MAP_LOCAL_2, 1, _00F4
+    CheckPoketchAppRegistered POKETCH_APPID_FRIENDSHIPCHECKER, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _00D9
+    GetFirstNonEggInParty VAR_0x8000
+    BufferPartyMonSpecies 0, VAR_0x8000
     Message 6
-    ScrCmd_1B9 0x800C, 0x8000
-    GoToIfGe 0x800C, 120, _00FF
-    GoToIfGe 0x800C, 70, _010A
+    GetPartyMonFriendship VAR_RESULT, VAR_0x8000
+    GoToIfGe VAR_RESULT, 120, _00FF
+    GoToIfGe VAR_RESULT, 70, _010A
     GoTo _0115
     End
 
 _00D9:
     Message 4
-    SetVar 0x4002, 1
-    SetVar 0x8004, 5
-    CallCommonScript 0x7D9
+    SetVar VAR_MAP_LOCAL_2, 1
+    SetVar VAR_0x8004, POKETCH_APPID_FRIENDSHIPCHECKER
+    Common_GivePoketchApp
     WaitABXPadPress
     CloseMessage
     ReleaseAll

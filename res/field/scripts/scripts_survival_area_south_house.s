@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/survival_area_south_house.h"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
@@ -10,14 +9,13 @@ _0006:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 203, _004B
+    GoToIfSet FLAG_UNK_0x00CB, _004B
     Message 0
-    SetVar 0x8004, 0x171
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0056
-    CallCommonScript 0x7FC
-    SetFlag 203
+    SetVar VAR_0x8004, ITEM_TM42
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0056
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x00CB
     GoTo _004B
 
 _004B:
@@ -28,7 +26,7 @@ _004B:
     End
 
 _0056:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End

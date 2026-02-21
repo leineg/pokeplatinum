@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/veilstone_city_galactic_warehouse.h"
 
-    .data
 
     ScriptEntry _003B
     ScriptEntry _00D8
@@ -11,21 +10,21 @@
     ScriptEntryEnd
 
 _0016:
-    CallIfLt 0x411F, 2, _0025
+    CallIfLt VAR_UNK_0x411F, 2, _0025
     End
 
 _0025:
     SetObjectEventPos 4, 8, 10
-    ScrCmd_188 4, 14
-    ScrCmd_189 4, 0
+    SetObjectEventMovementType 4, MOVEMENT_TYPE_LOOK_NORTH
+    SetObjectEventDir 4, DIR_NORTH
     Return
 
 _003B:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckItem ITEM_STORAGE_KEY, 1, 0x800C
-    GoToIfEq 0x800C, 1, _0063
+    CheckItem ITEM_STORAGE_KEY, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _0063
     Message 7
     WaitABXPadPress
     CloseMessage
@@ -34,14 +33,14 @@ _003B:
 
 _0063:
     Message 8
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0086
-    GoToIfEq 0x800C, MENU_NO, _00C2
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0086
+    GoToIfEq VAR_RESULT, MENU_NO, _00C2
     End
 
 _0086:
-    SetFlag 0x10E
-    RemoveItem ITEM_STORAGE_KEY, 1, 0x800C
+    SetFlag FLAG_UNK_0x010E
+    RemoveItem ITEM_STORAGE_KEY, 1, VAR_RESULT
     BufferPlayerName 0
     Message 9
     WaitABXPadPress
@@ -63,12 +62,12 @@ _00C2:
 
     .balign 4, 0
 _00C8:
-    MoveAction_018
+    WalkFastWest
     EndMovement
 
     .balign 4, 0
 _00D0:
-    MoveAction_019
+    WalkFastEast
     EndMovement
 
 _00D8:
@@ -86,8 +85,8 @@ _00D8:
     ApplyMovement LOCALID_PLAYER, _0174
     ApplyMovement 4, _015C
     WaitMovement
-    SetVar 0x407C, 1
-    SetVar 0x411F, 2
+    SetVar VAR_PASTORIA_STATE, 1
+    SetVar VAR_UNK_0x411F, 2
     Message 2
     WaitABXPadPress
     CloseMessage
@@ -96,39 +95,39 @@ _00D8:
 
     .balign 4, 0
 _012C:
-    MoveAction_012 2
+    WalkNormalNorth 2
     EndMovement
 
     .balign 4, 0
 _0134:
-    MoveAction_013 2
-    MoveAction_034
-    MoveAction_063 2
-    MoveAction_035
-    MoveAction_063 2
-    MoveAction_015 5
-    MoveAction_032
-    MoveAction_075
-    MoveAction_034
+    WalkNormalSouth 2
+    WalkOnSpotNormalWest
+    Delay8 2
+    WalkOnSpotNormalEast
+    Delay8 2
+    WalkNormalEast 5
+    WalkOnSpotNormalNorth
+    EmoteExclamationMark
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _015C:
-    MoveAction_014 5
-    MoveAction_033
+    WalkNormalWest 5
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0168:
-    MoveAction_063 9
-    MoveAction_035
+    Delay8 9
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0174:
-    MoveAction_063 4
-    MoveAction_061
-    MoveAction_032
+    Delay8 4
+    Delay2
+    WalkOnSpotNormalNorth
     EndMovement
 
 _0184:
@@ -144,20 +143,20 @@ _0184:
 _0197:
     LockAll
     SetObjectEventPos 4, 8, 11
-    ScrCmd_188 4, 14
-    ScrCmd_189 4, 0
-    ClearFlag 0x20D
+    SetObjectEventMovementType 4, MOVEMENT_TYPE_LOOK_NORTH
+    SetObjectEventDir 4, DIR_NORTH
+    ClearFlag FLAG_UNK_0x020D
     AddObject 4
-    GetPlayerMapPos 0x8004, 0x8005
-    CallIfEq 0x8004, 8, _025A
-    CallIfEq 0x8004, 9, _026E
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    CallIfEq VAR_0x8004, 8, _025A
+    CallIfEq VAR_0x8004, 9, _026E
     Message 4
     CloseMessage
     ApplyMovement 4, _0308
     WaitMovement
     Message 5
     CloseMessage
-    SetFlag 0x10E
+    SetFlag FLAG_UNK_0x010E
     WaitFanfare SEQ_SE_CONFIRM
     PlayFanfare SEQ_SE_DP_DOOR10
     ApplyMovement 2, _00C8
@@ -165,15 +164,15 @@ _0197:
     WaitMovement
     RemoveObject 2
     RemoveObject 3
-    CallIfEq 0x8004, 8, _0282
-    CallIfEq 0x8004, 9, _028E
+    CallIfEq VAR_0x8004, 8, _0282
+    CallIfEq VAR_0x8004, 9, _028E
     Message 6
     CloseMessage
-    CallIfEq 0x8004, 8, _029A
-    CallIfEq 0x8004, 9, _02AE
+    CallIfEq VAR_0x8004, 8, _029A
+    CallIfEq VAR_0x8004, 9, _02AE
     RemoveObject 4
-    SetFlag 0x28A
-    SetVar 0x411F, 4
+    SetFlag FLAG_UNK_0x028A
+    SetVar VAR_UNK_0x411F, 4
     ReleaseAll
     End
 
@@ -213,65 +212,65 @@ _02AE:
 
     .balign 4, 0
 _02C4:
-    MoveAction_063 4
-    MoveAction_035
+    Delay8 4
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _02D0:
-    MoveAction_063 3
-    MoveAction_034
+    Delay8 3
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _02DC:
-    MoveAction_063
-    MoveAction_032
+    Delay8
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02E8:
-    MoveAction_012 2
-    MoveAction_015
-    MoveAction_012
-    MoveAction_034
+    WalkNormalNorth 2
+    WalkNormalEast
+    WalkNormalNorth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _02FC:
-    MoveAction_012 3
-    MoveAction_035
+    WalkNormalNorth 3
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0308:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0310:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0318:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0320:
-    MoveAction_012 5
-    MoveAction_038
-    MoveAction_039
-    MoveAction_063 2
-    MoveAction_019 6
+    WalkNormalNorth 5
+    WalkOnSpotFastWest
+    WalkOnSpotFastEast
+    Delay8 2
+    WalkFastEast 6
     EndMovement
 
     .balign 4, 0
 _0338:
-    MoveAction_012 5
-    MoveAction_038
-    MoveAction_039
-    MoveAction_063 2
-    MoveAction_019 7
+    WalkNormalNorth 5
+    WalkOnSpotFastWest
+    WalkOnSpotFastEast
+    Delay8 2
+    WalkFastEast 7
     EndMovement

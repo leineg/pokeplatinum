@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/battle_park.h"
 
-    .data
 
     ScriptEntry _0032
     ScriptEntry _0308
@@ -19,14 +18,14 @@
 
 _0032:
     LockAll
-    GetPlayerMapPos 0x8004, 0x8005
-    CallIfEq 0x8004, 23, _01A8
-    CallIfEq 0x8004, 24, _01BA
-    CallIfEq 0x8004, 25, _01CC
-    CallIfEq 0x8004, 26, _01DE
-    ClearFlag 0x276
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    CallIfEq VAR_0x8004, 23, _01A8
+    CallIfEq VAR_0x8004, 24, _01BA
+    CallIfEq VAR_0x8004, 25, _01CC
+    CallIfEq VAR_0x8004, 26, _01DE
+    ClearFlag FLAG_UNK_0x0276
     AddObject 11
-    ScrCmd_062 11
+    LockObject 11
     ApplyMovement 11, _02C8
     ApplyMovement LOCALID_PLAYER, _0290
     WaitMovement
@@ -34,7 +33,7 @@ _0032:
     BufferPlayerName 1
     Message 0
     CloseMessage
-    WaitTime 30, 0x800C
+    WaitTime 30, VAR_RESULT
     ApplyMovement 11, _02D0
     WaitMovement
     Message 1
@@ -46,15 +45,15 @@ _0032:
     WaitMovement
     Message 3
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    CallIfEq 0x8004, 23, _01F0
-    CallIfEq 0x8004, 24, _0204
-    CallIfEq 0x8004, 25, _0218
-    CallIfEq 0x8004, 26, _022C
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    CallIfEq VAR_0x8004, 23, _01F0
+    CallIfEq VAR_0x8004, 24, _0204
+    CallIfEq VAR_0x8004, 25, _0218
+    CallIfEq VAR_0x8004, 26, _022C
     RemoveObject 11
-    ClearFlag 0x277
+    ClearFlag FLAG_UNK_0x0277
     AddObject 12
-    ScrCmd_062 12
+    LockObject 12
     ApplyMovement 12, _02C8
     ApplyMovement LOCALID_PLAYER, _0290
     WaitMovement
@@ -63,17 +62,17 @@ _0032:
     BufferPlayerName 1
     Message 4
     CloseMessage
-    WaitTime 30, 0x800C
-    CallIfLt 0x409E, 1, _019E
-    CallIfGe 0x409E, 1, _01A3
+    WaitTime 30, VAR_RESULT
+    CallIfLt VAR_UNK_0x409E, 1, _019E
+    CallIfGe VAR_UNK_0x409E, 1, _01A3
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    CallIfEq 0x8004, 23, _0240
-    CallIfEq 0x8004, 24, _0254
-    CallIfEq 0x8004, 25, _0268
-    CallIfEq 0x8004, 26, _027C
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    CallIfEq VAR_0x8004, 23, _0240
+    CallIfEq VAR_0x8004, 24, _0254
+    CallIfEq VAR_0x8004, 25, _0268
+    CallIfEq VAR_0x8004, 26, _027C
     RemoveObject 12
-    SetVar 0x410E, 1
+    SetVar VAR_UNK_0x410E, 1
     ReleaseAll
     End
 
@@ -155,59 +154,59 @@ _027C:
 
     .balign 4, 0
 _0290:
-    MoveAction_062 7
-    MoveAction_037
-    MoveAction_071
-    MoveAction_016
-    MoveAction_072
+    Delay4 7
+    WalkOnSpotFastSouth
+    LockDir
+    WalkFastNorth
+    UnlockDir
     EndMovement
 
     .balign 4, 0
 _02A8:
-    MoveAction_063
-    MoveAction_035
-    MoveAction_032
+    Delay8
+    WalkOnSpotNormalEast
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02B8:
-    MoveAction_063
-    MoveAction_034
-    MoveAction_032
+    Delay8
+    WalkOnSpotNormalWest
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02C8:
-    MoveAction_016 8
+    WalkFastNorth 8
     EndMovement
 
     .balign 4, 0
 _02D0:
-    MoveAction_034
-    MoveAction_035
-    MoveAction_033
+    WalkOnSpotNormalWest
+    WalkOnSpotNormalEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _02E0:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02E8:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _02F0:
-    MoveAction_019
-    MoveAction_016 8
+    WalkFastEast
+    WalkFastNorth 8
     EndMovement
 
     .balign 4, 0
 _02FC:
-    MoveAction_018
-    MoveAction_016 8
+    WalkFastWest
+    WalkFastNorth 8
     EndMovement
 
 _0308:
@@ -298,19 +297,11 @@ _039A:
     End
 
 _03AD:
-    ScrCmd_036 7, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 7
     End
 
 _03C4:
-    ScrCmd_036 8, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 8
     End
 
-    .byte 0
+    .balign 4, 0

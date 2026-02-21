@@ -35,7 +35,7 @@
 
 typedef struct {
     u32 mapLabelTextID;
-    u32 unk_04;
+    u32 useExited;
 } MapInfo;
 
 typedef struct {
@@ -82,46 +82,49 @@ static void JournalEntry_GetOnlineEventMinigame(u8 *onlineEvent, JournalEntryOnl
 static u8 JournalEntry_GetGymTooTough(TrainerInfo *trainerInfo, u32 mapID);
 static u8 JournalEntry_TrainerType(u32 trainerID);
 
+// clang-format off
 static const MapInfo sMapsInfo[] = {
-    { location_names_00090, 0x1 },
-    { location_names_00091, 0x0 },
-    { location_names_00092, 0x1 },
-    { location_names_00093, 0x1 },
-    { location_names_00094, 0x0 },
-    { location_names_00095, 0x1 },
-    { location_names_00096, 0x1 },
-    { location_names_00097, 0x1 },
-    { location_names_00098, 0x1 },
-    { location_names_00099, 0x0 },
-    { location_names_00100, 0x1 },
-    { location_names_00101, 0x0 },
-    { location_names_00102, 0x1 },
-    { location_names_00071, 0x0 },
-    { location_names_00103, 0x0 },
-    { location_names_00064, 0x0 },
-    { location_names_00104, 0x0 },
-    { location_names_00105, 0x1 },
-    { location_names_00080, 0x1 },
-    { location_names_00106, 0x0 },
-    { location_names_00107, 0x1 },
-    { location_names_00108, 0x0 },
-    { location_names_00109, 0x0 },
-    { location_names_00110, 0x0 },
-    { location_names_00047, 0x0 },
-    { location_names_00049, 0x0 },
-    { location_names_00070, 0x0 }
+    // Message ID,                      // Use "Exited" instead of "Departed"
+    { LocationNames_Text_JubilifeTV,      TRUE },
+    { LocationNames_Text_PoketchCo,       FALSE },
+    { LocationNames_Text_GTS,             TRUE },
+    { LocationNames_Text_TrainersSchool,  TRUE },
+    { LocationNames_Text_MiningMuseum,    FALSE },
+    { LocationNames_Text_FlowerShop,      TRUE },
+    { LocationNames_Text_CycleShop,       TRUE },
+    { LocationNames_Text_ContestHall,     TRUE },
+    { LocationNames_Text_PoffinHouse,     TRUE },
+    { LocationNames_Text_ForeignBuilding, FALSE },
+    { LocationNames_Text_PokemonDayCare,  TRUE },
+    { LocationNames_Text_VeilstoneStore,  FALSE },
+    { LocationNames_Text_GameCorner,      TRUE },
+    { LocationNames_Text_GalacticHQ,      FALSE },
+    { LocationNames_Text_CanalaveLibrary, FALSE },
+    { LocationNames_Text_SnowpointTemple, FALSE },
+    { LocationNames_Text_VistaLighthouse, FALSE },
+    { LocationNames_Text_SunyshoreMarket, TRUE },
+    { LocationNames_Text_BattleTower,     TRUE },
+    { LocationNames_Text_PokemonMansion,  FALSE },
+    { LocationNames_Text_FootstepHouse,   TRUE },
+    { LocationNames_Text_Cafe,            FALSE },
+    { LocationNames_Text_GrandLake,       FALSE },
+    { LocationNames_Text_Restaurant,      FALSE },
+    { LocationNames_Text_ValleyWindworks, FALSE },
+    { LocationNames_Text_FuegoIronworks,  FALSE },
+    { LocationNames_Text_OldChateau,      FALSE },
 };
 
 static const GymInfo sGymsInfo[] = {
-    { TRAINER_LEADER_ROARK, MAP_HEADER_OREBURGH_CITY_GYM, BADGE_ID_COAL },
-    { TRAINER_LEADER_GARDENIA, MAP_HEADER_ETERNA_CITY_GYM, BADGE_ID_FOREST },
-    { TRAINER_LEADER_WAKE, MAP_HEADER_PASTORIA_CITY_GYM, BADGE_ID_FEN },
-    { TRAINER_LEADER_MAYLENE, MAP_HEADER_VEILSTONE_CITY_GYM, BADGE_ID_COBBLE },
-    { TRAINER_LEADER_FANTINA, MAP_HEADER_HEARTHOME_CITY_GYM_ENTRANCE_ROOM, BADGE_ID_RELIC },
-    { TRAINER_LEADER_CANDICE, MAP_HEADER_SNOWPOINT_CITY_GYM, BADGE_ID_ICICLE },
-    { TRAINER_LEADER_BYRON, MAP_HEADER_CANALAVE_CITY_GYM, BADGE_ID_MINE },
-    { TRAINER_LEADER_VOLKNER, MAP_HEADER_SUNYSHORE_CITY_GYM_ROOM_1, BADGE_ID_BEACON }
+    { TRAINER_LEADER_ROARK,    MAP_HEADER_OREBURGH_CITY_GYM,                BADGE_ID_COAL },
+    { TRAINER_LEADER_GARDENIA, MAP_HEADER_ETERNA_CITY_GYM,                  BADGE_ID_FOREST },
+    { TRAINER_LEADER_WAKE,     MAP_HEADER_PASTORIA_CITY_GYM,                BADGE_ID_FEN },
+    { TRAINER_LEADER_MAYLENE,  MAP_HEADER_VEILSTONE_CITY_GYM,               BADGE_ID_COBBLE },
+    { TRAINER_LEADER_FANTINA,  MAP_HEADER_HEARTHOME_CITY_GYM_ENTRANCE_ROOM, BADGE_ID_RELIC },
+    { TRAINER_LEADER_CANDICE,  MAP_HEADER_SNOWPOINT_CITY_GYM,               BADGE_ID_ICICLE },
+    { TRAINER_LEADER_BYRON,    MAP_HEADER_CANALAVE_CITY_GYM,                BADGE_ID_MINE },
+    { TRAINER_LEADER_VOLKNER,  MAP_HEADER_SUNYSHORE_CITY_GYM_ROOM_1,        BADGE_ID_BEACON }
 };
+// clang-format on
 
 int Journal_SaveSize(void)
 {
@@ -226,7 +229,7 @@ void JournalEntry_SaveData(JournalEntry *journalEntry, void *data, u8 dataType)
         }
     }
 
-    Heap_FreeToHeap(data);
+    Heap_Free(data);
 }
 
 static void JournalEntry_SaveTitle(JournalEntry *journalEntry, JournalEntryTitle *journalEntryTitle)
@@ -575,9 +578,9 @@ static void JournalEntry_SaveOnlineEventMinigame(u8 *onlineEvent, JournalEntryOn
     onlineEvent[1] = journalEntryOnlineEvent->result;
 }
 
-void *JournalEntry_CreateTitle(u16 mapID, u32 heapID)
+void *JournalEntry_CreateTitle(u16 mapID, enum HeapID heapID)
 {
-    JournalEntryTitle *journalEntryTitle = Heap_AllocFromHeap(heapID, sizeof(JournalEntryTitle));
+    JournalEntryTitle *journalEntryTitle = Heap_Alloc(heapID, sizeof(JournalEntryTitle));
     RTCDate currDate;
 
     GetCurrentDate(&currDate);
@@ -591,15 +594,15 @@ void *JournalEntry_CreateTitle(u16 mapID, u32 heapID)
     return journalEntryTitle;
 }
 
-static JournalEntryLocationEvent *JournalEntry_CreateLocationEvent(u32 heapID)
+static JournalEntryLocationEvent *JournalEntry_CreateLocationEvent(enum HeapID heapID)
 {
-    JournalEntryLocationEvent *journalEntryLocationEvent = Heap_AllocFromHeap(heapID, sizeof(JournalEntryLocationEvent));
+    JournalEntryLocationEvent *journalEntryLocationEvent = Heap_Alloc(heapID, sizeof(JournalEntryLocationEvent));
 
     memset(journalEntryLocationEvent, 0, sizeof(JournalEntryLocationEvent));
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventRestedAtHome(u32 heapID)
+void *JournalEntry_CreateEventRestedAtHome(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -607,7 +610,7 @@ void *JournalEntry_CreateEventRestedAtHome(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventLeftResearchLab(u32 heapID)
+void *JournalEntry_CreateEventLeftResearchLab(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -615,7 +618,7 @@ void *JournalEntry_CreateEventLeftResearchLab(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventUsedPCBox(u32 heapID)
+void *JournalEntry_CreateEventUsedPCBox(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -623,7 +626,7 @@ void *JournalEntry_CreateEventUsedPCBox(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventShoppedAtMart(u32 heapID)
+void *JournalEntry_CreateEventShoppedAtMart(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -631,7 +634,7 @@ void *JournalEntry_CreateEventShoppedAtMart(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventLotsOfShopping(u32 heapID)
+void *JournalEntry_CreateEventLotsOfShopping(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -639,7 +642,7 @@ void *JournalEntry_CreateEventLotsOfShopping(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventSoldALittle(u32 heapID)
+void *JournalEntry_CreateEventSoldALittle(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -647,7 +650,7 @@ void *JournalEntry_CreateEventSoldALittle(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventSoldALot(u32 heapID)
+void *JournalEntry_CreateEventSoldALot(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -655,7 +658,7 @@ void *JournalEntry_CreateEventSoldALot(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventBusinessAtMart(u32 heapID)
+void *JournalEntry_CreateEventBusinessAtMart(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -663,7 +666,7 @@ void *JournalEntry_CreateEventBusinessAtMart(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventGymTooTough(u16 gymTooTough, u32 heapID)
+void *JournalEntry_CreateEventGymTooTough(u16 gymTooTough, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -673,7 +676,7 @@ void *JournalEntry_CreateEventGymTooTough(u16 gymTooTough, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventGymLeader(u16 gymDefeated, u16 trainerID, u32 heapID)
+void *JournalEntry_CreateEventGymLeader(u16 gymDefeated, u16 trainerID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -684,7 +687,7 @@ void *JournalEntry_CreateEventGymLeader(u16 gymDefeated, u16 trainerID, u32 heap
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventEliteFour(u16 trainerID, u32 heapID)
+void *JournalEntry_CreateEventEliteFour(u16 trainerID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -694,7 +697,7 @@ void *JournalEntry_CreateEventEliteFour(u16 trainerID, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventChampion(u16 trainerID, u32 heapID)
+void *JournalEntry_CreateEventChampion(u16 trainerID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -704,7 +707,7 @@ void *JournalEntry_CreateEventChampion(u16 trainerID, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventArrivedInLocation(u16 mapID, u32 heapID)
+void *JournalEntry_CreateEventArrivedInLocation(u16 mapID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -714,7 +717,7 @@ void *JournalEntry_CreateEventArrivedInLocation(u16 mapID, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventLeftCave(u16 mapLabelTextID, u32 heapID)
+void *JournalEntry_CreateEventLeftCave(u16 mapLabelTextID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -724,7 +727,7 @@ void *JournalEntry_CreateEventLeftCave(u16 mapLabelTextID, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventLeftBuilding(u16 mapLabelTextID, u32 heapID)
+void *JournalEntry_CreateEventLeftBuilding(u16 mapLabelTextID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -734,7 +737,7 @@ void *JournalEntry_CreateEventLeftBuilding(u16 mapLabelTextID, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventGameCorner(u32 heapID)
+void *JournalEntry_CreateEventGameCorner(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -742,7 +745,7 @@ void *JournalEntry_CreateEventGameCorner(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventSafariGame(u32 heapID)
+void *JournalEntry_CreateEventSafariGame(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -750,7 +753,7 @@ void *JournalEntry_CreateEventSafariGame(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventObtainedItem(u16 item, u32 heapID)
+void *JournalEntry_CreateEventObtainedItem(u16 item, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -760,7 +763,7 @@ void *JournalEntry_CreateEventObtainedItem(u16 item, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventUsedMove(u8 moveIndex, u16 mapID, u32 heapID)
+void *JournalEntry_CreateEventUsedMove(u8 moveIndex, u16 mapID, enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -770,7 +773,7 @@ void *JournalEntry_CreateEventUsedMove(u8 moveIndex, u16 mapID, u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventDugUnderground(u32 heapID)
+void *JournalEntry_CreateEventDugUnderground(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -778,7 +781,7 @@ void *JournalEntry_CreateEventDugUnderground(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventBuiltSecretBase(u32 heapID)
+void *JournalEntry_CreateEventBuiltSecretBase(enum HeapID heapID)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -786,7 +789,7 @@ void *JournalEntry_CreateEventBuiltSecretBase(u32 heapID)
     return journalEntryLocationEvent;
 }
 
-void *JournalEntry_CreateEventBattleFacility(u32 heapID, u32 eventType)
+void *JournalEntry_CreateEventBattleFacility(enum HeapID heapID, u32 eventType)
 {
     JournalEntryLocationEvent *journalEntryLocationEvent = JournalEntry_CreateLocationEvent(heapID);
 
@@ -794,15 +797,15 @@ void *JournalEntry_CreateEventBattleFacility(u32 heapID, u32 eventType)
     return journalEntryLocationEvent;
 }
 
-static JournalEntryMon *JournalEntry_CreateMon(u32 heapID)
+static JournalEntryMon *JournalEntry_CreateMon(enum HeapID heapID)
 {
-    JournalEntryMon *journalEntryMon = Heap_AllocFromHeap(heapID, sizeof(JournalEntryMon));
+    JournalEntryMon *journalEntryMon = Heap_Alloc(heapID, sizeof(JournalEntryMon));
 
     memset(journalEntryMon, 0, sizeof(JournalEntryMon));
     return journalEntryMon;
 }
 
-void *JournalEntry_CreateEventMonCaught(const PlayTime *playTime, u16 species, u8 gender, u8 timeOfDay, u32 heapID)
+void *JournalEntry_CreateEventMonCaught(const PlayTime *playTime, u16 species, u8 gender, u8 timeOfDay, enum HeapID heapID)
 {
     JournalEntryMon *journalEntryMon = JournalEntry_CreateMon(heapID);
     u8 v1;
@@ -825,7 +828,7 @@ void *JournalEntry_CreateEventMonCaught(const PlayTime *playTime, u16 species, u
     return journalEntryMon;
 }
 
-void *JournalEntry_CreateEventMonDefeated(const PlayTime *playTime, u16 species, u8 gender, u8 timeOfDay, u32 heapID)
+void *JournalEntry_CreateEventMonDefeated(const PlayTime *playTime, u16 species, u8 gender, u8 timeOfDay, enum HeapID heapID)
 {
     JournalEntryMon *journalEntryMon = JournalEntry_CreateMon(heapID);
     u8 v1;
@@ -848,9 +851,9 @@ void *JournalEntry_CreateEventMonDefeated(const PlayTime *playTime, u16 species,
     return journalEntryMon;
 }
 
-void *JournalEntry_CreateEventStandardTrainer(u16 mapID, u16 trainerID, u32 heapID)
+void *JournalEntry_CreateEventStandardTrainer(u16 mapID, u16 trainerID, enum HeapID heapID)
 {
-    JournalEntryTrainer *journalEntryTrainer = Heap_AllocFromHeap(heapID, sizeof(JournalEntryTrainer));
+    JournalEntryTrainer *journalEntryTrainer = Heap_Alloc(heapID, sizeof(JournalEntryTrainer));
 
     journalEntryTrainer->standard = 1;
     journalEntryTrainer->mapID = mapID;
@@ -859,9 +862,9 @@ void *JournalEntry_CreateEventStandardTrainer(u16 mapID, u16 trainerID, u32 heap
     return journalEntryTrainer;
 }
 
-static JournalEntryOnlineEvent *JournalEntry_CreateOnlineEvent(u32 heapID)
+static JournalEntryOnlineEvent *JournalEntry_CreateOnlineEvent(enum HeapID heapID)
 {
-    JournalEntryOnlineEvent *journalEntryOnlineEvent = Heap_AllocFromHeap(heapID, sizeof(JournalEntryOnlineEvent));
+    JournalEntryOnlineEvent *journalEntryOnlineEvent = Heap_Alloc(heapID, sizeof(JournalEntryOnlineEvent));
 
     memset(journalEntryOnlineEvent, 0, sizeof(JournalEntryOnlineEvent));
     return journalEntryOnlineEvent;
@@ -884,7 +887,7 @@ static void JournalEntry_StringCopy(const u16 *src, u16 *dst, u32 strLength)
     }
 }
 
-void *JournalEntry_CreateEventSingleBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, u32 heapID)
+void *JournalEntry_CreateEventSingleBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -896,7 +899,7 @@ void *JournalEntry_CreateEventSingleBattle(u16 *opponentName, u8 opponentGender,
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventDoubleBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, u32 heapID)
+void *JournalEntry_CreateEventDoubleBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -908,7 +911,7 @@ void *JournalEntry_CreateEventDoubleBattle(u16 *opponentName, u8 opponentGender,
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventMultiBattle(u16 *opponentName1, u16 *opponentName2, u8 opponentGender1, u8 opponentGender2, u8 battleResult, u32 heapID)
+void *JournalEntry_CreateEventMultiBattle(u16 *opponentName1, u16 *opponentName2, u8 opponentGender1, u8 opponentGender2, u8 battleResult, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -923,7 +926,7 @@ void *JournalEntry_CreateEventMultiBattle(u16 *opponentName1, u16 *opponentName2
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventMixSingleBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, u32 heapID)
+void *JournalEntry_CreateEventMixSingleBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -935,7 +938,7 @@ void *JournalEntry_CreateEventMixSingleBattle(u16 *opponentName, u8 opponentGend
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventGreetedInUnionRoom(u16 *playerName, u8 playerGender, u32 heapID)
+void *JournalEntry_CreateEventGreetedInUnionRoom(u16 *playerName, u8 playerGender, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -946,7 +949,7 @@ void *JournalEntry_CreateEventGreetedInUnionRoom(u16 *playerName, u8 playerGende
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventGotPokemonFromTrade(u16 *otName, u8 otGender, u16 *pokemonName, u8 pokemonGender, u32 heapID)
+void *JournalEntry_CreateEventGotPokemonFromTrade(u16 *otName, u8 otGender, u16 *pokemonName, u8 pokemonGender, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -960,7 +963,7 @@ void *JournalEntry_CreateEventGotPokemonFromTrade(u16 *otName, u8 otGender, u16 
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventDrewPictures(u32 heapID)
+void *JournalEntry_CreateEventDrewPictures(enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -968,7 +971,7 @@ void *JournalEntry_CreateEventDrewPictures(u32 heapID)
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventUnionBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, u32 heapID)
+void *JournalEntry_CreateEventUnionBattle(u16 *opponentName, u8 opponentGender, u8 battleResult, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -980,7 +983,7 @@ void *JournalEntry_CreateEventUnionBattle(u16 *opponentName, u8 opponentGender, 
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventMixedRecords(u32 heapID)
+void *JournalEntry_CreateEventMixedRecords(enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -988,7 +991,7 @@ void *JournalEntry_CreateEventMixedRecords(u32 heapID)
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventPlacedInContest(u8 placement, u32 heapID)
+void *JournalEntry_CreateEventPlacedInContest(u8 placement, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -998,7 +1001,7 @@ void *JournalEntry_CreateEventPlacedInContest(u8 placement, u32 heapID)
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventMadePoffins(u32 heapID)
+void *JournalEntry_CreateEventMadePoffins(enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -1006,7 +1009,7 @@ void *JournalEntry_CreateEventMadePoffins(u32 heapID)
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventGotPokemonGTS(u16 *otName, u8 otGender, u16 *pokemonName, u8 pokemonGender, u32 heapID)
+void *JournalEntry_CreateEventGotPokemonGTS(u16 *otName, u8 otGender, u16 *pokemonName, u8 pokemonGender, enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -1020,7 +1023,7 @@ void *JournalEntry_CreateEventGotPokemonGTS(u16 *otName, u8 otGender, u16 *pokem
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventBattleRoom(u32 heapID)
+void *JournalEntry_CreateEventBattleRoom(enum HeapID heapID)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -1028,7 +1031,7 @@ void *JournalEntry_CreateEventBattleRoom(u32 heapID)
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventMisc(u32 heapID, u32 eventType)
+void *JournalEntry_CreateEventMisc(enum HeapID heapID, u32 eventType)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -1036,7 +1039,7 @@ void *JournalEntry_CreateEventMisc(u32 heapID, u32 eventType)
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventInteraction(const u16 *playerName, u8 playerGender, u32 heapID, u32 eventType)
+void *JournalEntry_CreateEventInteraction(const u16 *playerName, u8 playerGender, enum HeapID heapID, u32 eventType)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -1047,7 +1050,7 @@ void *JournalEntry_CreateEventInteraction(const u16 *playerName, u8 playerGender
     return journalEntryOnlineEvent;
 }
 
-void *JournalEntry_CreateEventPlazaMinigame(int minigame, u32 heapID, u32 eventType)
+void *JournalEntry_CreateEventPlazaMinigame(int minigame, enum HeapID heapID, u32 eventType)
 {
     JournalEntryOnlineEvent *journalEntryOnlineEvent = JournalEntry_CreateOnlineEvent(heapID);
 
@@ -1275,7 +1278,7 @@ static void JournalEntry_GetOnlineEventMinigame(u8 *onlineEvent, JournalEntryOnl
     journalEntryOnlineEvent->result = onlineEvent[1];
 }
 
-void JournalEntry_CreateAndSaveEventMapTransition(TrainerInfo *trainerInfo, JournalEntry *journalEntry, u32 currMapID, u32 prevMapID, u32 heapID)
+void JournalEntry_CreateAndSaveEventMapTransition(TrainerInfo *trainerInfo, JournalEntry *journalEntry, u32 currMapID, u32 prevMapID, enum HeapID heapID)
 {
     void *data = NULL;
     u32 i;
@@ -1317,7 +1320,7 @@ void JournalEntry_CreateAndSaveEventMapTransition(TrainerInfo *trainerInfo, Jour
     }
 }
 
-u32 sub_0202C6A4(u32 mapLabelTextID)
+u32 Journal_DoesBuildingUseExitedMessage(u32 mapLabelTextID)
 {
     u32 i;
 
@@ -1326,10 +1329,10 @@ u32 sub_0202C6A4(u32 mapLabelTextID)
             continue;
         }
 
-        return sMapsInfo[i].unk_04;
+        return sMapsInfo[i].useExited;
     }
 
-    return 0;
+    return FALSE;
 }
 
 static u8 JournalEntry_GetGymTooTough(TrainerInfo *trainerInfo, u32 mapID)
@@ -1349,13 +1352,13 @@ static u8 JournalEntry_GetGymTooTough(TrainerInfo *trainerInfo, u32 mapID)
     return GYM_NONE;
 }
 
-void JournalEntry_CreateAndSaveEventArrivedInLocation(JournalEntry *journalEntry, u32 mapID, u32 heapID)
+void JournalEntry_CreateAndSaveEventArrivedInLocation(JournalEntry *journalEntry, u32 mapID, enum HeapID heapID)
 {
     void *data = JournalEntry_CreateEventArrivedInLocation((u16)mapID, heapID);
     JournalEntry_SaveData(journalEntry, data, JOURNAL_LOCATION);
 }
 
-void JournalEntry_CreateAndSaveEventTrainer(JournalEntry *journalEntry, u16 mapID, u16 trainerID, u32 heapID)
+void JournalEntry_CreateAndSaveEventTrainer(JournalEntry *journalEntry, u16 mapID, u16 trainerID, enum HeapID heapID)
 {
     void *data;
     u8 trainerType = JournalEntry_TrainerType(trainerID);

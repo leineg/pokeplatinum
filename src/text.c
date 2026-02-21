@@ -6,16 +6,16 @@
 #include "constants/heap.h"
 #include "constants/narc.h"
 
-#include "fonts/pl_font.naix"
-
 #include "bg_window.h"
 #include "font.h"
 #include "graphics.h"
 #include "heap.h"
 #include "render_text.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
+
+#include "res/fonts/pl_font.naix.h"
 
 static enum RenderResult TextPrinter_Render(TextPrinter *printer);
 static u8 Text_CreatePrinterTask(SysTaskFunc taskFunc, TextPrinter *printer, u32 priority);
@@ -66,7 +66,7 @@ static void Text_DestroyPrinterTask(u8 printerID)
 
         if (printer) {
             Text_FreePrinterIconGfx(printer);
-            Heap_FreeToHeap(printer);
+            Heap_Free(printer);
         }
 
         SysTask_Done(sTextPrinterTasks[printerID]);
@@ -96,11 +96,11 @@ void Text_RemovePrinter(u8 printerID)
     Text_DestroyPrinterTask(printerID);
 }
 
-u8 Text_AddPrinterWithParams(Window *window, u32 fontID, const Strbuf *strbuf, u32 xOffset, u32 yOffset, u32 renderDelay, TextPrinterCallback callback)
+u8 Text_AddPrinterWithParams(Window *window, u32 fontID, const String *string, u32 xOffset, u32 yOffset, u32 renderDelay, TextPrinterCallback callback)
 {
     TextPrinterTemplate template;
 
-    template.toPrint.strbuf = strbuf;
+    template.toPrint.string = string;
     template.window = window;
     template.fontID = fontID;
     template.x = xOffset;
@@ -120,11 +120,11 @@ u8 Text_AddPrinterWithParams(Window *window, u32 fontID, const Strbuf *strbuf, u
     return Text_AddPrinter(&template, renderDelay, callback);
 }
 
-u8 Text_AddPrinterWithParamsAndColor(Window *window, u32 fontID, const Strbuf *strbuf, u32 xOffset, u32 yOffset, u32 renderDelay, TextColor color, TextPrinterCallback callback)
+u8 Text_AddPrinterWithParamsAndColor(Window *window, u32 fontID, const String *string, u32 xOffset, u32 yOffset, u32 renderDelay, TextColor color, TextPrinterCallback callback)
 {
     TextPrinterTemplate template;
 
-    template.toPrint.strbuf = strbuf;
+    template.toPrint.string = string;
     template.window = window;
     template.fontID = fontID;
     template.x = xOffset;
@@ -144,11 +144,11 @@ u8 Text_AddPrinterWithParamsAndColor(Window *window, u32 fontID, const Strbuf *s
     return Text_AddPrinter(&template, renderDelay, callback);
 }
 
-u8 Text_AddPrinterWithParamsColorAndSpacing(Window *window, u32 fontID, const Strbuf *strbuf, u32 xOffset, u32 yOffset, u32 renderDelay, TextColor color, u32 letterSpacing, u32 lineSpacing, TextPrinterCallback callback)
+u8 Text_AddPrinterWithParamsColorAndSpacing(Window *window, u32 fontID, const String *string, u32 xOffset, u32 yOffset, u32 renderDelay, TextColor color, u32 letterSpacing, u32 lineSpacing, TextPrinterCallback callback)
 {
     TextPrinterTemplate template;
 
-    template.toPrint.strbuf = strbuf;
+    template.toPrint.string = string;
     template.window = window;
     template.fontID = fontID;
     template.x = xOffset;
@@ -174,7 +174,7 @@ u8 Text_AddPrinter(const TextPrinterTemplate *template, u32 renderDelay, TextPri
         return 0xFF;
     }
 
-    TextPrinter *printer = Heap_AllocFromHeap(HEAP_ID_SYSTEM, sizeof(TextPrinter));
+    TextPrinter *printer = Heap_Alloc(HEAP_ID_SYSTEM, sizeof(TextPrinter));
 
     printer->active = TRUE;
     printer->state = 0;
@@ -188,7 +188,7 @@ u8 Text_AddPrinter(const TextPrinterTemplate *template, u32 renderDelay, TextPri
     }
 
     printer->template = *template;
-    printer->template.toPrint.raw = Strbuf_GetData(printer->template.toPrint.strbuf);
+    printer->template.toPrint.raw = String_GetData(printer->template.toPrint.string);
     printer->callback = callback;
 
     sPausePrinter = FALSE;
@@ -220,7 +220,7 @@ u8 Text_AddPrinter(const TextPrinterTemplate *template, u32 renderDelay, TextPri
     }
 
     Text_FreePrinterIconGfx(printer);
-    Heap_FreeToHeap(printer);
+    Heap_Free(printer);
 
     return MAX_TEXT_PRINTERS;
 }
@@ -325,11 +325,11 @@ static u8 *Text_LoadScreenIndicatorGfx(void)
 {
     NNSG2dCharacterData *g2dCharData;
 
-    u8 *gfx = Heap_AllocFromHeap(HEAP_ID_SYSTEM, 24 * 64); // These numbers are file dimensions. Curiously, this only loads the bottom-screen indicators.
+    u8 *gfx = Heap_Alloc(HEAP_ID_SYSTEM, 24 * 64); // These numbers are file dimensions. Curiously, this only loads the bottom-screen indicators.
     void *ncgr = Graphics_GetCharData(NARC_INDEX_GRAPHIC__PL_FONT, screen_indicators_NCGR, FALSE, &g2dCharData, HEAP_ID_SYSTEM);
 
     MI_CpuCopy32(g2dCharData->pRawData, gfx, 24 * 64);
-    Heap_FreeToHeap(ncgr);
+    Heap_Free(ncgr);
 
     return gfx;
 }
@@ -352,7 +352,7 @@ void Text_RenderScreenIndicator(TextPrinter *printer, u16 unusedX, u16 unusedY, 
 static void Text_FreePrinterIconGfx(TextPrinter *printer)
 {
     if (printer->iconGfx) {
-        Heap_FreeToHeap(printer->iconGfx);
+        Heap_Free(printer->iconGfx);
         printer->iconGfx = NULL;
     }
 }

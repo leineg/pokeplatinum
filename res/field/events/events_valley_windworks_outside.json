@@ -6,7 +6,7 @@
             "x": 236,
             "z": 651,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 4,
@@ -14,15 +14,16 @@
             "x": 243,
             "z": 654,
             "y": 0,
-            "player_facing_dir": 0
+            "player_facing_dir": "BG_EVENT_DIR_NORTH"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 124,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 398,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_GRUNT_M_0",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x018E",
             "script": 3,
             "initial_dir": 1,
             "data": [
@@ -35,10 +36,11 @@
             "y": 0
         },
         {
-            "graphics_id": 93,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_SIGNBOARD_1",
+            "graphics_id": "OBJ_EVENT_GFX_SIGNBOARD",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 5,
             "initial_dir": 0,
             "data": [],
@@ -49,11 +51,12 @@
             "y": 0
         },
         {
-            "local_id": 6,
-            "graphics_id": 94,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 347,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_ARROW_SIGNPOST_2",
+            "clone_id": 6,
+            "graphics_id": "OBJ_EVENT_GFX_ARROW_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x015B",
             "script": 65535,
             "initial_dir": 0,
             "data": [
@@ -66,10 +69,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1029,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_POKEBALL_3",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0405",
             "script": 7015,
             "initial_dir": 0,
             "data": [],
@@ -80,10 +84,11 @@
             "y": 0
         },
         {
-            "graphics_id": 185,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 523,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_DRIFLOON_4",
+            "graphics_id": "OBJ_EVENT_GFX_DRIFLOON",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x020B",
             "script": 6,
             "initial_dir": 1,
             "data": [
@@ -96,10 +101,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1266,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_POKEBALL_5",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x04F2",
             "script": 7252,
             "initial_dir": 0,
             "data": [],
@@ -110,10 +116,11 @@
             "y": 0
         },
         {
-            "graphics_id": 213,
-            "movement_type": 14,
-            "trainer_type": 0,
-            "flag": 506,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_LOOKER_6",
+            "graphics_id": "OBJ_EVENT_GFX_LOOKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01FA",
             "script": 0,
             "initial_dir": 0,
             "data": [
@@ -126,10 +133,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1333,
+            "id": "VALLEY_WINDWORKS_OUTSIDE_POKEBALL_7",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0535",
             "script": 7318,
             "initial_dir": 0,
             "data": [],
@@ -144,7 +152,7 @@
         {
             "x": 243,
             "z": 654,
-            "dest_header_id": 201,
+            "dest_header_id": "MAP_HEADER_VALLEY_WINDWORKS_BUILDING",
             "dest_warp_id": 0
         }
     ],

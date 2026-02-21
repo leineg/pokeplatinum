@@ -10,7 +10,6 @@
 #include "overlay100/struct_ov100_021D4890.h"
 #include "overlay100/struct_ov100_021D49B4.h"
 #include "overlay100/struct_ov100_021D4DD8.h"
-#include "overlay115/camera_angle.h"
 
 #include "bg_window.h"
 #include "camera.h"
@@ -21,7 +20,7 @@
 #include "narc.h"
 #include "palette.h"
 #include "render_window.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "system.h"
 #include "text.h"
@@ -31,34 +30,34 @@ int ov100_021D46C8(UnkStruct_ov100_021D46C8 *param0, UnkStruct_020985E4 *param1,
 {
     int v0;
     MessageLoader *v1;
-    Strbuf *v2;
-    Strbuf *v3 = Strbuf_Init(511, 111);
+    String *v2;
+    String *v3 = String_Init(511, HEAP_ID_111);
     u8 v4 = 0;
 
     v1 = param0->unk_2C;
-    v2 = MessageLoader_GetNewStrbuf(v1, param2);
+    v2 = MessageLoader_GetNewString(v1, param2);
 
     if (param2 == 22) {
-        Strbuf *v5 = TrainerInfo_NameNewStrbuf(param1->unk_08, 111);
-        StringTemplate *v6 = StringTemplate_Default(111);
+        String *v5 = TrainerInfo_NameNewString(param1->unk_08, 111);
+        StringTemplate *v6 = StringTemplate_Default(HEAP_ID_111);
 
-        StringTemplate_SetStrbuf(v6, 0, v5, 0, 1, GAME_LANGUAGE);
+        StringTemplate_SetString(v6, 0, v5, 0, 1, GAME_LANGUAGE);
         StringTemplate_Format(v6, v3, v2);
-        Strbuf_Free(v5);
+        String_Free(v5);
         StringTemplate_Free(v6);
     } else {
-        Strbuf_Copy(v3, v2);
+        String_Copy(v3, v2);
     }
 
-    v4 = Options_TextFrameDelay(param1->unk_04);
+    v4 = Options_TextFrameDelay(param1->options);
     Window_FillTilemap(&param0->unk_30, 0xFF);
 
     v0 = Text_AddPrinterWithParams(&param0->unk_30, FONT_MESSAGE, v3, 0, 0, v4, NULL);
     Window_CopyToVRAM(&param0->unk_30);
 
     Window_DrawMessageBoxWithScrollCursor(&param0->unk_30, 0, 500, 15);
-    Strbuf_Free(v2);
-    Strbuf_Free(v3);
+    String_Free(v2);
+    String_Free(v3);
 
     param0->unk_40 = v0;
 
@@ -215,11 +214,11 @@ void ov100_021D4AA4(UnkStruct_ov100_021D49B4 *param0, NNSFndAllocator *param1, i
 
 void ov100_021D4AC8(UnkStruct_ov100_021D49B4 *param0, int param1, NARC *param2)
 {
-    Easy3DModel_LoadFrom(&param0->unk_78, param2, param1, 111);
+    Easy3DModel_LoadFrom(&param0->unk_78, param2, param1, HEAP_ID_111);
     Easy3DObject_Init(&param0->unk_00, &param0->unk_78);
     Easy3DObject_SetPosition(&param0->unk_00, 0, 0, 0);
     Easy3DObject_SetScale(&param0->unk_00, FX32_CONST(1.00f), FX32_CONST(1.00f), FX32_CONST(1.00f));
-    Easy3DObject_SetVisibility(&param0->unk_00, 1);
+    Easy3DObject_SetVisible(&param0->unk_00, 1);
 
     param0->unk_174 = 1;
 }
@@ -229,7 +228,7 @@ void ov100_021D4B10(UnkStruct_ov100_021D49B4 *param0, UnkStruct_ov100_021D49B4 *
     Easy3DObject_Init(&param1->unk_00, &param0->unk_78);
     Easy3DObject_SetPosition(&param1->unk_00, 0, 0, 0);
     Easy3DObject_SetScale(&param1->unk_00, FX32_CONST(1.00f), FX32_CONST(1.00f), FX32_CONST(1.00f));
-    Easy3DObject_SetVisibility(&param1->unk_00, 1);
+    Easy3DObject_SetVisible(&param1->unk_00, 1);
 
     param1->unk_174 = 1;
 }

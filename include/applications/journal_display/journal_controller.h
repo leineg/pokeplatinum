@@ -6,7 +6,7 @@
 #include "message.h"
 #include "overlay_manager.h"
 #include "savedata.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "trainer_info.h"
 
@@ -26,7 +26,7 @@ typedef struct JournalManager {
     SaveData *saveData;
     MessageLoader *loader;
     StringTemplate *template;
-    Strbuf *strbuf;
+    String *string;
     u16 tilemapBuffer_5C[1024];
     u16 tilemapBuffer_85C[1024];
     s8 page;
@@ -41,8 +41,8 @@ typedef struct JournalManager {
     u8 unused[3];
 } JournalManager;
 
-int JournalController_Init(OverlayManager *ovyManager, int *state);
-int JournalController_Main(OverlayManager *ovyManager, int *state);
-int JournalController_Exit(OverlayManager *ovyManager, int *state);
+int JournalController_Init(ApplicationManager *appMan, int *state);
+int JournalController_Main(ApplicationManager *appMan, int *state);
+int JournalController_Exit(ApplicationManager *appMan, int *state);
 
 #endif // POKEPLATINUM_JOURNAL_CONTROLLER_H

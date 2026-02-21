@@ -7,7 +7,7 @@
 #include "struct_decls/struct_02061AB4_decl.h"
 
 #include "overlay005/const_ov5_021FB51C.h"
-#include "overlay005/ov5_021DF440.h"
+#include "overlay005/field_effect_manager.h"
 #include "overlay005/ov5_021ECA70.h"
 #include "overlay005/ov5_021ECC20.h"
 #include "overlay005/ov5_021ECE40.h"
@@ -16,10 +16,10 @@
 #include "overlay005/struct_ov5_021EC700.h"
 #include "overlay005/struct_ov5_021ECD10.h"
 #include "overlay005/struct_ov5_021ED01C.h"
-#include "overlay101/struct_ov101_021D5D90_decl.h"
 
 #include "map_object.h"
-#include "math.h"
+#include "math_util.h"
+#include "overworld_anim_manager.h"
 #include "unk_02020AEC.h"
 
 typedef struct {
@@ -50,7 +50,7 @@ typedef struct {
 } UnkStruct_ov5_021EBA0C;
 
 typedef struct {
-    UnkStruct_ov101_021D5D90 *unk_00;
+    OverworldAnimManager *unk_00;
 } UnkStruct_ov5_021EC760;
 
 typedef struct {
@@ -182,9 +182,7 @@ UnkStruct_020216E0 *ov5_021EB1A0(MapObject *mapObj)
 
 void ov5_021EB2EC(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EB2EC *v0;
-
-    v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EB2EC)));
+    UnkStruct_ov5_021EB2EC *v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EB2EC)));
     v0->unk_02 = -1;
 
     ov5_021ECF04(mapObj, &v0->unk_04);
@@ -196,17 +194,13 @@ void ov5_021EB2EC(MapObject *mapObj)
 
 void ov5_021EB314(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EB2EC *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB2EC *v0 = sub_02062AF0(mapObj);
     ov5_021ECFA4(mapObj, &v0->unk_04);
 }
 
 void ov5_021EB328(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EB2EC *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB2EC *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_04 != NULL) {
         ov5_021ED01C(v0->unk_04, &v0->unk_08);
@@ -219,9 +213,7 @@ void ov5_021EB328(MapObject *mapObj)
 void ov5_021EB354(MapObject *mapObj)
 {
     int v0;
-    UnkStruct_ov5_021EB2EC *v1;
-
-    v1 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB2EC *v1 = sub_02062AF0(mapObj);
 
     if (ov5_021EDD94(mapObj) == 1) {
         return;
@@ -572,9 +564,7 @@ static void (*const Unk_ov5_021FF420[])(MapObject *, UnkStruct_020216E0 *, UnkSt
 
 void ov5_021EB7F8(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EB7F8 *v0;
-
-    v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EB7F8)));
+    UnkStruct_ov5_021EB7F8 *v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EB7F8)));
 
     v0->unk_00 = -1;
     v0->unk_02 = LCRNG_Next() % 16;
@@ -588,17 +578,13 @@ void ov5_021EB7F8(MapObject *mapObj)
 
 void ov5_021EB834(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EB7F8 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB7F8 *v0 = sub_02062AF0(mapObj);
     ov5_021ECFA4(mapObj, &v0->unk_04);
 }
 
 void ov5_021EB848(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EB7F8 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB7F8 *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_04 != NULL) {
         ov5_021ED01C(v0->unk_04, &v0->unk_08);
@@ -611,9 +597,7 @@ void ov5_021EB848(MapObject *mapObj)
 void ov5_021EB874(MapObject *mapObj)
 {
     int v0;
-    UnkStruct_ov5_021EB7F8 *v1;
-
-    v1 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB7F8 *v1 = sub_02062AF0(mapObj);
 
     if (ov5_021EDD94(mapObj) == 1) {
         return;
@@ -734,9 +718,7 @@ void ov5_021EB944(MapObject *mapObj)
 
 void ov5_021EBA0C(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EBA0C *v0;
-
-    v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EBA0C)));
+    UnkStruct_ov5_021EBA0C *v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EBA0C)));
     v0->unk_00 = -1;
 
     ov5_021ECF04(mapObj, &v0->unk_04);
@@ -754,14 +736,12 @@ void ov5_021EBA34(MapObject *mapObj)
     v0 = sub_02062AF0(mapObj);
 
     ov5_021ECFA4(mapObj, &v0->unk_04);
-    sub_02063088(mapObj, &v1);
+    MapObject_SetSpriteJumpOffset(mapObj, &v1);
 }
 
 void ov5_021EBA60(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EBA0C *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EBA0C *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_04 != NULL) {
         ov5_021ED01C(v0->unk_04, &v0->unk_08);
@@ -774,9 +754,7 @@ void ov5_021EBA60(MapObject *mapObj)
 void ov5_021EBA8C(MapObject *mapObj)
 {
     int v0;
-    UnkStruct_ov5_021EBA0C *v1;
-
-    v1 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EBA0C *v1 = sub_02062AF0(mapObj);
 
     if (ov5_021EDD94(mapObj) == 1) {
         return;
@@ -1105,9 +1083,7 @@ static void ov5_021EBFDC(MapObject *mapObj, UnkStruct_020216E0 *param1, UnkStruc
 
 static void ov5_021EC068(MapObject *mapObj, UnkStruct_020216E0 *param1, UnkStruct_ov5_021EBA0C *param2, int param3)
 {
-    int v0;
-
-    v0 = ov5_021EDF30(param3);
+    int v0 = ov5_021EDF30(param3);
 
     if ((param3 != param2->unk_00) || (param2->unk_02 != 0x0)) {
         sub_02021344(param1, v0);
@@ -1127,9 +1103,7 @@ static void ov5_021EC068(MapObject *mapObj, UnkStruct_020216E0 *param1, UnkStruc
 
 static void ov5_021EC0E4(MapObject *mapObj, UnkStruct_020216E0 *param1, UnkStruct_ov5_021EBA0C *param2, int param3)
 {
-    int v0;
-
-    v0 = ov5_021EDF30(param3);
+    int v0 = ov5_021EDF30(param3);
 
     if (param3 != param2->unk_00) {
         sub_02021344(param1, v0);
@@ -1320,7 +1294,7 @@ static void ov5_021EC374(MapObject *mapObj, UnkStruct_020216E0 *param1, int para
         break;
     }
 
-    sub_02063088(mapObj, &v0);
+    MapObject_SetSpriteJumpOffset(mapObj, &v0);
 }
 
 static void (*const Unk_ov5_021FF31C[])(MapObject *, UnkStruct_020216E0 *, UnkStruct_ov5_021EBA0C *, int) = {
@@ -1586,10 +1560,8 @@ static void ov5_021EC700(u32 param0, VecFx32 *param1)
 void ov5_021EC734(MapObject *mapObj)
 {
     VecFx32 v0;
-    UnkStruct_ov5_021EC760 *v1;
-
-    v1 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC760)));
-    ov5_021EC700(sub_02062924(mapObj), &v0);
+    UnkStruct_ov5_021EC760 *v1 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC760)));
+    ov5_021EC700(MapObject_GetEffectiveGraphicsID(mapObj), &v0);
     v1->unk_00 = ov5_021F121C(mapObj, &v0);
 }
 
@@ -1600,24 +1572,20 @@ void ov5_021EC75C(MapObject *mapObj)
 
 void ov5_021EC760(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC760 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC760 *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_00 != NULL) {
-        ov5_021DF74C(v0->unk_00);
+        FieldEffectManager_FinishAnimManager(v0->unk_00);
         v0->unk_00 = NULL;
     }
 }
 
 void ov5_021EC778(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC760 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC760 *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_00 != NULL) {
-        ov5_021DF74C(v0->unk_00);
+        FieldEffectManager_FinishAnimManager(v0->unk_00);
         v0->unk_00 = NULL;
     }
 }
@@ -1625,35 +1593,27 @@ void ov5_021EC778(MapObject *mapObj)
 void ov5_021EC790(MapObject *mapObj)
 {
     VecFx32 v0;
-    UnkStruct_ov5_021EC760 *v1;
-
-    v1 = sub_02062AF0(mapObj);
-    ov5_021EC700(sub_02062924(mapObj), &v0);
+    UnkStruct_ov5_021EC760 *v1 = sub_02062AF0(mapObj);
+    ov5_021EC700(MapObject_GetEffectiveGraphicsID(mapObj), &v0);
     v1->unk_00 = ov5_021F121C(mapObj, &v0);
 }
 
 void ov5_021EC7B8(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC760 *v0;
-
-    v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC760)));
+    UnkStruct_ov5_021EC760 *v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC760)));
     v0->unk_00 = ov5_021F2438(mapObj);
 }
 
 void ov5_021EC7D0(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC760 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC760 *v0 = sub_02062AF0(mapObj);
     GF_ASSERT(v0->unk_00 == NULL);
     v0->unk_00 = ov5_021F2438(mapObj);
 }
 
 void ov5_021EC7F0(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC760 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC760 *v0 = sub_02062AF0(mapObj);
     ov5_021F247C(v0->unk_00);
     v0->unk_00 = NULL;
 }
@@ -1669,9 +1629,7 @@ static void ov5_021EC804(UnkStruct_020216E0 *param0, void *param1)
 
 void ov5_021EC824(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC804 *v0;
-
-    v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC804)));
+    UnkStruct_ov5_021EC804 *v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC804)));
     v0->unk_02 = -1;
 
     ov5_021ECF04(mapObj, &v0->unk_04);
@@ -1684,17 +1642,13 @@ void ov5_021EC824(MapObject *mapObj)
 
 void ov5_021EC858(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC804 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC804 *v0 = sub_02062AF0(mapObj);
     ov5_021ECFA4(mapObj, &v0->unk_04);
 }
 
 void ov5_021EC86C(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC804 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC804 *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_04 != NULL) {
         ov5_021ED01C(v0->unk_04, &v0->unk_08);
@@ -1707,9 +1661,7 @@ void ov5_021EC86C(MapObject *mapObj)
 void ov5_021EC898(MapObject *mapObj)
 {
     int v0;
-    UnkStruct_ov5_021EB2EC *v1;
-
-    v1 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EB2EC *v1 = sub_02062AF0(mapObj);
 
     if (ov5_021EDD94(mapObj) == 1) {
         return;
@@ -1759,9 +1711,7 @@ void ov5_021EC8EC(MapObject *mapObj)
 
 void ov5_021EC938(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC938 *v0;
-
-    v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC938)));
+    UnkStruct_ov5_021EC938 *v0 = sub_02062ACC(mapObj, (sizeof(UnkStruct_ov5_021EC938)));
     ov5_021ECF04(mapObj, &v0->unk_08);
 
     if (v0->unk_08 != NULL) {
@@ -1771,17 +1721,13 @@ void ov5_021EC938(MapObject *mapObj)
 
 void ov5_021EC95C(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC938 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC938 *v0 = sub_02062AF0(mapObj);
     ov5_021ECFA4(mapObj, &v0->unk_08);
 }
 
 void ov5_021EC970(MapObject *mapObj)
 {
-    UnkStruct_ov5_021EC938 *v0;
-
-    v0 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC938 *v0 = sub_02062AF0(mapObj);
 
     if (v0->unk_08 != NULL) {
         ov5_021ED01C(v0->unk_08, &v0->unk_0C);
@@ -1794,9 +1740,7 @@ void ov5_021EC970(MapObject *mapObj)
 void ov5_021EC9A0(MapObject *mapObj)
 {
     int v0;
-    UnkStruct_ov5_021EC938 *v1;
-
-    v1 = sub_02062AF0(mapObj);
+    UnkStruct_ov5_021EC938 *v1 = sub_02062AF0(mapObj);
 
     if (ov5_021EDD94(mapObj) == 1) {
         return;
@@ -1856,14 +1800,14 @@ void ov5_021EC9E8(MapObject *mapObj)
             0x0
         };
 
-        sub_02063078(mapObj, &v4);
+        MapObject_GetSpriteJumpOffset(mapObj, &v4);
 
         if (v4.y == v2->unk_04) {
             v4.y = v5[v2->unk_00 >> 1];
             v2->unk_00 = (v2->unk_00 + 1) & 0x1f;
             v2->unk_04 = v4.y;
 
-            sub_02063088(mapObj, &v4);
+            MapObject_SetSpriteJumpOffset(mapObj, &v4);
         }
     }
 

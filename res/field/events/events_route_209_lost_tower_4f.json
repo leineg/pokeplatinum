@@ -6,15 +6,16 @@
             "x": 2,
             "z": 11,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1108,
+            "id": "ROUTE_209_LOST_TOWER_4F_POKEBALL_0",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0454",
             "script": 7094,
             "initial_dir": 0,
             "data": [],
@@ -25,11 +26,12 @@
             "y": 0
         },
         {
-            "graphics_id": 16,
-            "movement_type": 9,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3530,
+            "id": "ROUTE_209_LOST_TOWER_4F_POKEFAN_REBEKAH",
+            "graphics_id": "OBJ_EVENT_GFX_POKEFAN_F",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_POKEFAN_REBEKAH",
             "initial_dir": 3,
             "data": [
                 2
@@ -41,11 +43,13 @@
             "y": 0
         },
         {
-            "graphics_id": 9,
-            "movement_type": 14,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3533,
+            "id": "ROUTE_209_LOST_TOWER_4F_YOUNG_COUPLE_TRAINER_MIKE",
+            "graphics_id": "OBJ_EVENT_GFX_POKEMON_BREEDER_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_YOUNG_COUPLE_MIKE_AND_NAT",
+            "double_battle_id": 1,
             "initial_dir": 0,
             "data": [
                 1
@@ -57,11 +61,13 @@
             "y": 0
         },
         {
-            "graphics_id": 12,
-            "movement_type": 14,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 5533,
+            "id": "ROUTE_209_LOST_TOWER_4F_YOUNG_COUPLE_TRAINER_NAT",
+            "graphics_id": "OBJ_EVENT_GFX_POKEMON_BREEDER_F",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_YOUNG_COUPLE_MIKE_AND_NAT",
+            "double_battle_id": 2,
             "initial_dir": 0,
             "data": [
                 1
@@ -73,11 +79,13 @@
             "y": 0
         },
         {
-            "graphics_id": 41,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3532,
+            "id": "ROUTE_209_LOST_TOWER_4F_PA_BOB",
+            "graphics_id": "OBJ_EVENT_GFX_RANCHER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_BELLE_AND_PA_BETH_AND_BOB",
+            "double_battle_id": 1,
             "initial_dir": 2,
             "data": [
                 2
@@ -89,11 +97,13 @@
             "y": 0
         },
         {
-            "graphics_id": 42,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 5532,
+            "id": "ROUTE_209_LOST_TOWER_4F_BELLE_BETH",
+            "graphics_id": "OBJ_EVENT_GFX_COWGIRL",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_BELLE_AND_PA_BETH_AND_BOB",
+            "double_battle_id": 2,
             "initial_dir": 2,
             "data": [
                 2
@@ -109,13 +119,13 @@
         {
             "x": 11,
             "z": 3,
-            "dest_header_id": 359,
+            "dest_header_id": "MAP_HEADER_ROUTE_209_LOST_TOWER_3F",
             "dest_warp_id": 1
         },
         {
             "x": 4,
             "z": 3,
-            "dest_header_id": 361,
+            "dest_header_id": "MAP_HEADER_ROUTE_209_LOST_TOWER_5F",
             "dest_warp_id": 0
         }
     ],

@@ -29,9 +29,7 @@ static void ov104_0223C208(u16 *param0, u8 param1);
 
 UnkStruct_ov104_0223C23C *ov104_0223C164(BgConfig *param0)
 {
-    UnkStruct_ov104_0223C23C *v0;
-
-    v0 = Heap_AllocFromHeap(94, sizeof(UnkStruct_ov104_0223C23C));
+    UnkStruct_ov104_0223C23C *v0 = Heap_Alloc(HEAP_ID_94, sizeof(UnkStruct_ov104_0223C23C));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov104_0223C23C));
     v0->unk_04 = ov104_0223C188(param0);
 
@@ -40,9 +38,7 @@ UnkStruct_ov104_0223C23C *ov104_0223C164(BgConfig *param0)
 
 static UnkStruct_ov104_0223C188 *ov104_0223C188(BgConfig *param0)
 {
-    UnkStruct_ov104_0223C188 *v0;
-
-    v0 = Heap_AllocFromHeap(94, sizeof(UnkStruct_ov104_0223C188));
+    UnkStruct_ov104_0223C188 *v0 = Heap_Alloc(HEAP_ID_94, sizeof(UnkStruct_ov104_0223C188));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov104_0223C188));
 
     v0->unk_04 = param0;
@@ -101,7 +97,7 @@ static void ov104_0223C250(UnkStruct_ov104_0223C188 *param0);
 void ov104_0223C23C(UnkStruct_ov104_0223C23C *param0)
 {
     ov104_0223C250(param0->unk_04);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 
     return;
 }
@@ -109,7 +105,7 @@ void ov104_0223C23C(UnkStruct_ov104_0223C23C *param0)
 static void ov104_0223C250(UnkStruct_ov104_0223C188 *param0)
 {
     SysTask_Done(param0->unk_00);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 
     return;
 }

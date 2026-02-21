@@ -12,10 +12,10 @@
 #include "heap.h"
 #include "map_object.h"
 #include "player_avatar.h"
+#include "screen_fade.h"
+#include "sound_playback.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
 
 typedef struct {
     FieldSystem *fieldSystem;
@@ -54,23 +54,23 @@ static void ov5_021E139C(SysTask *param0, void *param1)
     switch (v0->unk_08) {
     case 0:
         v0->unk_08 = 1;
-        Sound_PlayEffect(1615);
+        Sound_PlayEffect(SEQ_SE_DP_TELE2);
     case 1:
         if (v0->unk_0C % 2) {
             ov5_021E135C(v0);
         }
 
-        sub_0206309C(v1, &v2);
+        MapObject_GetSpritePosOffset(v1, &v2);
         v2.y = ((FX32_ONE * 2.2) + ((FX32_ONE / 2) * v0->unk_0C)) * v0->unk_0C;
 
-        sub_020630AC(v1, &v2);
+        MapObject_SetSpritePosOffset(v1, &v2);
         v0->unk_0C++;
 
         if (v0->unk_0C == 20) {
-            StartScreenTransition(2, 0, 0, 0x0, 6, 1, 4);
-        } else if ((v0->unk_0C > 20) && IsScreenTransitionDone()) {
+            StartScreenFade(FADE_SUB_THEN_MAIN, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, HEAP_ID_FIELD1);
+        } else if ((v0->unk_0C > 20) && IsScreenFadeDone()) {
             *v0->unk_04 = 1;
-            Heap_FreeToHeap(v0);
+            Heap_Free(v0);
             SysTask_Done(param0);
         } else {
             break;
@@ -88,28 +88,28 @@ static void ov5_021E1470(SysTask *param0, void *param1)
     switch (v0->unk_08) {
     case 0: {
         MapObject_SetPauseMovementOff(v1);
-        sub_0206309C(v1, &v2);
+        MapObject_GetSpritePosOffset(v1, &v2);
         v3 = (20 - v0->unk_0C);
         v2.y = ((FX32_ONE * 2.2) + ((FX32_ONE / 2) * v3)) * v3;
-        sub_020630AC(v1, &v2);
+        MapObject_SetSpritePosOffset(v1, &v2);
         MapObject_Draw(v1);
     }
 
-        Sound_PlayEffect(1615);
+        Sound_PlayEffect(SEQ_SE_DP_TELE2);
         v0->unk_08 = 1;
     case 1:
         if (v0->unk_0C % 2) {
             ov5_021E135C(v0);
         }
 
-        sub_0206309C(v1, &v2);
+        MapObject_GetSpritePosOffset(v1, &v2);
         v3 = (20 - v0->unk_0C);
         v2.y = ((FX32_ONE * 2.2) + ((FX32_ONE / 2) * v3)) * v3;
-        sub_020630AC(v1, &v2);
+        MapObject_SetSpritePosOffset(v1, &v2);
         v0->unk_0C++;
 
         if (v0->unk_0C == 2) {
-            StartScreenTransition(1, 1, 1, 0x0, 6, 1, 4);
+            StartScreenFade(FADE_MAIN_THEN_SUB, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_FIELD1);
         }
 
         if (v0->unk_0C > 20) {
@@ -117,10 +117,10 @@ static void ov5_021E1470(SysTask *param0, void *param1)
         }
         break;
     case 2:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             Player_SetDir(v0->fieldSystem->playerAvatar, 1);
             *v0->unk_04 = 1;
-            Heap_FreeToHeap(v0);
+            Heap_Free(v0);
             SysTask_Done(param0);
         }
         break;
@@ -129,7 +129,7 @@ static void ov5_021E1470(SysTask *param0, void *param1)
 
 void FieldSystem_StartWarpAnimation(FieldSystem *fieldSystem, BOOL param1, BOOL *param2)
 {
-    UnkStruct_ov5_021E135C *v0 = Heap_AllocFromHeapAtEnd(4, sizeof(UnkStruct_ov5_021E135C));
+    UnkStruct_ov5_021E135C *v0 = Heap_AllocAtEnd(HEAP_ID_FIELD1, sizeof(UnkStruct_ov5_021E135C));
 
     MI_CpuClear8(v0, sizeof(UnkStruct_ov5_021E135C));
 

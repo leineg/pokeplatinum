@@ -1,4 +1,6 @@
 subdir('encounters')
 subdir('events')
+subdir('frontier_scripts')
+subdir('maps')
 subdir('scripts')
 subdir('trades')

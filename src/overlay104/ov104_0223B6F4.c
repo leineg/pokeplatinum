@@ -3,12 +3,10 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_0203068C_decl.h"
-#include "struct_defs/struct_0204B184.h"
+#include "struct_defs/battle_frontier.h"
 
 #include "overlay104/ov104_0222DCE0.h"
 #include "overlay104/struct_ov104_02230BE4.h"
-#include "overlay104/struct_ov104_0223A348_sub1.h"
 #include "overlay104/struct_ov104_0223BA10.h"
 
 #include "bg_window.h"
@@ -16,16 +14,15 @@
 #include "communication_system.h"
 #include "field_battle_data_transfer.h"
 #include "heap.h"
-#include "math.h"
+#include "item_use_pokemon.h"
+#include "math_util.h"
 #include "message.h"
 #include "party.h"
 #include "pokemon.h"
 #include "save_player.h"
-#include "strbuf.h"
-#include "trainer_info.h"
+#include "string_gf.h"
 #include "unk_0203061C.h"
 #include "unk_0205DFC4.h"
-#include "unk_02096420.h"
 
 static int ov104_0223B6F4(u8 param0, int param1, int param2);
 void ov104_0223B760(u8 param0, int param1, u16 param2[], u8 param3);
@@ -34,7 +31,6 @@ u8 ov104_0223B7DC(u8 param0, BOOL param1);
 FieldBattleDTO *ov104_0223B810(UnkStruct_ov104_0223BA10 *param0, UnkStruct_ov104_02230BE4 *param1);
 static u32 ov104_0223B9E4(u8 param0);
 u8 ov104_0223BA10(UnkStruct_ov104_0223BA10 *param0);
-BOOL ov104_0223BA14(u8 param0);
 void ov104_0223BA24(Party *param0);
 void ov104_0223BAB8(UnkStruct_ov104_0223BA10 *param0);
 void ov104_0223BA7C(UnkStruct_ov104_0223BA10 *param0, Pokemon *param1);
@@ -158,23 +154,18 @@ FieldBattleDTO *ov104_0223B810(UnkStruct_ov104_0223BA10 *param0, UnkStruct_ov104
 {
     int v0;
     u32 v1;
-    u8 v2, v3, v4;
-    FieldBattleDTO *v5;
+    u8 v4;
     Pokemon *v6;
-    UnkStruct_ov104_0223A348_sub1 v7;
-    UnkStruct_0204B184 *v8;
-    MessageLoader *v9;
-    Strbuf *v10;
-    TrainerInfo *v11;
+    FrontierTrainerDataDTO v7;
 
-    v2 = ov104_0223B7A8(param0->unk_10, 0);
-    v3 = ov104_0223B7DC(param0->unk_10, 0);
+    u8 v2 = ov104_0223B7A8(param0->unk_10, 0);
+    u8 v3 = ov104_0223B7DC(param0->unk_10, 0);
 
-    HealAllPokemonInParty(param0->unk_2C);
-    v5 = FieldBattleDTO_New(11, ov104_0223B9E4(param0->unk_10));
-    FieldBattleDTO_InitFromGameState(v5, NULL, param1->unk_08, param1->unk_1C, param1->unk_0C, param1->unk_10, param1->unk_20);
+    Party_HealAllMembers(param0->unk_2C);
+    FieldBattleDTO *v5 = FieldBattleDTO_New(HEAP_ID_FIELD2, ov104_0223B9E4(param0->unk_10));
+    FieldBattleDTO_InitFromGameState(v5, NULL, param1->saveData, param1->unk_1C, param1->journalEntry, param1->bagCursor, param1->unk_20);
 
-    v5->background = 21;
+    v5->background = BACKGROUND_BATTLE_CASTLE;
     v5->terrain = TERRAIN_BATTLE_CASTLE;
 
     Party_InitWithCapacity(v5->parties[0], v2);
@@ -185,7 +176,7 @@ FieldBattleDTO *ov104_0223B810(UnkStruct_ov104_0223BA10 *param0, UnkStruct_ov104
         v4 = 2;
     }
 
-    v6 = Pokemon_New(11);
+    v6 = Pokemon_New(HEAP_ID_FIELD2);
 
     for (v0 = 0; v0 < v2; v0++) {
         Pokemon_Copy(Party_GetPokemonBySlotIndex(param0->unk_28, (v4 + v0)), v6);
@@ -193,12 +184,10 @@ FieldBattleDTO *ov104_0223B810(UnkStruct_ov104_0223BA10 *param0, UnkStruct_ov104
         FieldBattleDTO_AddPokemonToBattler(v5, v6, 0);
     }
 
-    Heap_FreeToHeap(v6);
+    Heap_Free(v6);
     FieldBattleDTO_CopyPlayerInfoToTrainerData(v5);
 
-    v8 = ov104_0222DD04(&v7, param0->unk_30[param0->unk_11], 11, 178);
-
-    Heap_FreeToHeap(v8);
+    Heap_Free(BattleTower_GetTrainerData(&v7, param0->unk_30[param0->unk_11], HEAP_ID_FIELD2, NARC_INDEX_BATTLE__B_PL_TOWER__PL_BTDTR));
     ov104_0222E284(v5, &v7, v3, 1, 11);
     Party_InitWithCapacity(v5->parties[1], ov104_0223B7DC(param0->unk_10, 0));
 
@@ -206,37 +195,35 @@ FieldBattleDTO *ov104_0223B810(UnkStruct_ov104_0223BA10 *param0, UnkStruct_ov104
         v5->trainer[v0].header.aiMask = ov104_0223BB10(param0);
     }
 
-    v6 = Pokemon_New(11);
+    v6 = Pokemon_New(HEAP_ID_FIELD2);
 
     for (v0 = 0; v0 < v3; v0++) {
         Pokemon_Copy(Party_GetPokemonBySlotIndex(param0->unk_2C, v0), v6);
         FieldBattleDTO_AddPokemonToBattler(v5, v6, 1);
     }
 
-    Heap_FreeToHeap(v6);
+    Heap_Free(v6);
 
     switch (param0->unk_10) {
     case 2:
     case 3:
         FieldBattleDTO_CopyPlayerInfoToTrainerData(v5);
 
-        v11 = CommInfo_TrainerInfo(1 - CommSys_CurNetId());
-        TrainerInfo_Copy(v11, v5->trainerInfo[2]);
+        TrainerInfo_Copy(CommInfo_TrainerInfo(1 - CommSys_CurNetId()), v5->trainerInfo[2]);
 
-        v8 = ov104_0222DD04(&v7, param0->unk_30[param0->unk_11 + 7], 11, 178);
-        Heap_FreeToHeap(v8);
+        Heap_Free(BattleTower_GetTrainerData(&v7, param0->unk_30[param0->unk_11 + 7], HEAP_ID_FIELD2, NARC_INDEX_BATTLE__B_PL_TOWER__PL_BTDTR));
 
         ov104_0222E284(v5, &v7, v3, 3, 11);
         Party_InitWithCapacity(v5->parties[3], ov104_0223B7DC(param0->unk_10, 0));
 
-        v6 = Pokemon_New(11);
+        v6 = Pokemon_New(HEAP_ID_FIELD2);
 
         for (v0 = 0; v0 < v3; v0++) {
             Pokemon_Copy(Party_GetPokemonBySlotIndex(param0->unk_2C, (v3 + v0)), v6);
             FieldBattleDTO_AddPokemonToBattler(v5, v6, 3);
         }
 
-        Heap_FreeToHeap(v6);
+        Heap_Free(v6);
         break;
     }
 
@@ -264,15 +251,9 @@ u8 ov104_0223BA10(UnkStruct_ov104_0223BA10 *param0)
     return 50;
 }
 
-BOOL ov104_0223BA14(u8 param0)
+BOOL BattleCastle_IsMultiPlayerChallenge(u8 challengeType)
 {
-    switch (param0) {
-    case 2:
-    case 3:
-        return 1;
-    }
-
-    return 0;
+    return challengeType == 2 || challengeType == 3;
 }
 
 void ov104_0223BA24(Party *param0)
@@ -290,13 +271,13 @@ void ov104_0223BA24(Party *param0)
             continue;
         }
 
-        if (Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL) == 0) {
+        if (Pokemon_GetValue(mon, MON_DATA_HP, NULL) == 0) {
             v3 = 1;
-            Pokemon_SetValue(mon, MON_DATA_CURRENT_HP, &v3);
+            Pokemon_SetValue(mon, MON_DATA_HP, &v3);
         }
 
         v3 = 0;
-        Pokemon_SetValue(mon, MON_DATA_STATUS_CONDITION, &v3);
+        Pokemon_SetValue(mon, MON_DATA_STATUS, &v3);
     }
 
     return;
@@ -304,7 +285,7 @@ void ov104_0223BA24(Party *param0)
 
 void ov104_0223BA7C(UnkStruct_ov104_0223BA10 *param0, Pokemon *param1)
 {
-    Pokemon_UpdateAfterCatch(param1, SaveData_GetTrainerInfo(param0->unk_04), 4, 0, 0, 11);
+    Pokemon_UpdateAfterCatch(param1, SaveData_GetTrainerInfo(param0->saveData), 4, 0, 0, 11);
     return;
 }
 
@@ -324,14 +305,14 @@ void ov104_0223BAB8(UnkStruct_ov104_0223BA10 *param0)
     Party_Init(param0->unk_2C);
 
     v2 = ov104_0223B7DC(param0->unk_10, 1);
-    v3 = Pokemon_New(11);
+    v3 = Pokemon_New(HEAP_ID_FIELD2);
 
     for (v0 = 0; v0 < v2; v0++) {
         ov104_0222DF40(&param0->unk_288[v0], v3, ov104_0223BA10(param0));
         ov104_0223BAA0(param0, param0->unk_2C, v3);
     }
 
-    Heap_FreeToHeap(v3);
+    Heap_Free(v3);
 
     return;
 }
@@ -365,11 +346,9 @@ static u16 ov104_0223BB10(UnkStruct_ov104_0223BA10 *param0)
 
 u16 ov104_0223BB60(UnkStruct_ov104_0223BA10 *param0)
 {
-    u16 v0;
+    u16 v0 = param0->unk_16;
 
-    v0 = param0->unk_16;
-
-    if (ov104_0223BA14(param0->unk_10) == 1) {
+    if (BattleCastle_IsMultiPlayerChallenge(param0->unk_10) == 1) {
         if (param0->unk_A12 > param0->unk_16) {
             v0 = param0->unk_A12;
         }
@@ -429,17 +408,17 @@ u16 ov104_0223BC24(u16 param0)
     return param0;
 }
 
-void ov104_0223BC2C(UnkStruct_0203068C *param0, u8 param1, int param2)
+void ov104_0223BC2C(BattleFrontier *frontier, u8 param1, int param2)
 {
     u16 v0;
 
-    sub_02030824(param0, sub_0205E630(param1), sub_0205E6A8(sub_0205E630(param1)), param2);
-    v0 = sub_02030698(param0, sub_0205E658(param1), sub_0205E6A8(sub_0205E658(param1)));
+    sub_02030824(frontier, sub_0205E630(param1), sub_0205E6A8(sub_0205E630(param1)), param2);
+    v0 = sub_02030698(frontier, sub_0205E658(param1), sub_0205E6A8(sub_0205E658(param1)));
 
     if (v0 + param2 > 9999) {
-        sub_020306E4(param0, sub_0205E658(param1), sub_0205E6A8(sub_0205E658(param1)), 9999);
+        sub_020306E4(frontier, sub_0205E658(param1), sub_0205E6A8(sub_0205E658(param1)), 9999);
     } else {
-        sub_02030804(param0, sub_0205E658(param1), sub_0205E6A8(sub_0205E658(param1)), param2);
+        sub_02030804(frontier, sub_0205E658(param1), sub_0205E6A8(sub_0205E658(param1)), param2);
     }
 
     return;

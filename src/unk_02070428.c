@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "struct_defs/special_encounter.h"
-#include "struct_defs/struct_020556C4.h"
 #include "struct_defs/struct_0205EC34.h"
 
 #include "field/field_system.h"
@@ -14,14 +13,14 @@
 #include "journal.h"
 #include "location.h"
 #include "map_header.h"
+#include "overworld_map_history.h"
 #include "player_avatar.h"
 #include "roaming_pokemon.h"
 #include "save_player.h"
+#include "spawn_locations.h"
 #include "special_encounter.h"
 #include "system_flags.h"
 #include "system_vars.h"
-#include "unk_0203A7D8.h"
-#include "unk_020556C4.h"
 #include "vars_flags.h"
 
 static BOOL sub_020705DC(FieldSystem *fieldSystem);
@@ -39,12 +38,12 @@ void FieldSystem_InitFlagsOnMapChange(FieldSystem *fieldSystem)
 
     SystemFlag_HandleStrengthActive(SaveData_GetVarsFlags(fieldSystem->saveData), HANDLE_FLAG_CLEAR);
 
-    sub_0203A8E8(fieldSystem, fieldSystem->location->mapId);
+    TryUnlockFlyLocationByMap(fieldSystem, fieldSystem->location->mapId);
     SpecialEncounter_SetFluteFactor(SaveData_GetSpecialEncounters(fieldSystem->saveData), FLUTE_FACTOR_NONE);
 
     fieldSystem->wildBattleMetadata.encounterAttempts = 0;
 
-    if (!SystemFlag_CheckSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData))) {
+    if (SystemFlag_CheckSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData)) == FALSE) {
         SpecialEncounter *v0;
 
         v0 = SaveData_GetSpecialEncounters(fieldSystem->saveData);
@@ -68,7 +67,7 @@ void FieldSystem_InitFlagsWarp(FieldSystem *fieldSystem)
 
     SystemFlag_HandleStrengthActive(SaveData_GetVarsFlags(fieldSystem->saveData), HANDLE_FLAG_CLEAR);
 
-    sub_0203A8E8(fieldSystem, fieldSystem->location->mapId);
+    TryUnlockFlyLocationByMap(fieldSystem, fieldSystem->location->mapId);
     SpecialEncounter_SetFluteFactor(SaveData_GetSpecialEncounters(fieldSystem->saveData), FLUTE_FACTOR_NONE);
 
     fieldSystem->wildBattleMetadata.encounterAttempts = 0;
@@ -98,14 +97,12 @@ void FieldSystem_InitFlagsWarp(FieldSystem *fieldSystem)
     }
 
     if (MapHeader_IsOnMainMatrix(fieldSystem->location->mapId)) {
-        UnkStruct_020556C4 *v3;
-
-        v3 = sub_0203A76C(SaveData_GetFieldOverworldState(fieldSystem->saveData));
-        sub_020556E8(v3, fieldSystem->location->x, fieldSystem->location->z);
+        OverworldMapHistory *mapHistory = FieldOverworldState_GetMapHistory(SaveData_GetFieldOverworldState(fieldSystem->saveData));
+        OverworldMapHistory_PushViaWarp(mapHistory, fieldSystem->location->x, fieldSystem->location->z);
     }
 }
 
-void sub_0207056C(FieldSystem *fieldSystem)
+void FieldSystem_SetFlyFlags(FieldSystem *fieldSystem)
 {
     SystemFlag_ClearSafariGameActive(SaveData_GetVarsFlags(fieldSystem->saveData));
     RoamingPokemon_RandomizeAllLocations(SaveData_GetSpecialEncounters(fieldSystem->saveData));
@@ -136,10 +133,10 @@ void sub_020705CC(FieldSystem *fieldSystem)
 
 static BOOL sub_020705DC(FieldSystem *fieldSystem)
 {
-    int v0 = sub_0203A87C(fieldSystem->location->mapId);
+    int v0 = GetMapFlyWarpId(fieldSystem->location->mapId);
 
-    if (v0 != 0 && sub_0203A920(fieldSystem, v0) == 0) {
-        JournalEntry_CreateAndSaveEventArrivedInLocation(fieldSystem->journalEntry, fieldSystem->location->mapId, HEAP_ID_FIELD_TASK);
+    if (v0 != 0 && CheckFlyLocationUnlocked(fieldSystem, v0) == 0) {
+        JournalEntry_CreateAndSaveEventArrivedInLocation(fieldSystem->journalEntry, fieldSystem->location->mapId, HEAP_ID_FIELD3);
         return TRUE;
     }
 
@@ -151,7 +148,7 @@ static BOOL sub_02070610(FieldSystem *fieldSystem)
     Location *location = FieldOverworldState_GetPrevLocation(SaveData_GetFieldOverworldState(fieldSystem->saveData));
 
     if (location->mapId != fieldSystem->location->mapId) {
-        JournalEntry_CreateAndSaveEventMapTransition(SaveData_GetTrainerInfo(fieldSystem->saveData), fieldSystem->journalEntry, fieldSystem->location->mapId, location->mapId, HEAP_ID_FIELD_TASK);
+        JournalEntry_CreateAndSaveEventMapTransition(SaveData_GetTrainerInfo(fieldSystem->saveData), fieldSystem->journalEntry, fieldSystem->location->mapId, location->mapId, HEAP_ID_FIELD3);
         return TRUE;
     }
 

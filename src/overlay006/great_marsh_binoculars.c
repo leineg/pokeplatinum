@@ -39,18 +39,14 @@ int GreatMarshBinoculars_GetMonSpecies(FieldSystem *fieldSystem)
     return encounterTable[LCRNG_RandMod(MAX_GRASS_ENCOUNTERS)];
 }
 
-GreatMarshBinoculars *GreatMarshBinoculars_InitData(const int heapId, FieldSystem *fieldSystem)
+GreatMarshBinoculars *GreatMarshBinoculars_InitData(const enum HeapID heapID, FieldSystem *fieldSystem)
 {
     u8 i;
-    GreatMarshBinoculars *binocularsData;
-
-    binocularsData = Heap_AllocFromHeapAtEnd(heapId, sizeof(GreatMarshBinoculars));
+    GreatMarshBinoculars *binocularsData = Heap_AllocAtEnd(heapID, sizeof(GreatMarshBinoculars));
     binocularsData->fieldSystem = fieldSystem;
 
     u8 randIndex;
-    BinocularCoords *coordData;
-
-    coordData = NARC_AllocAtEndAndReadWholeMemberByIndexPair(NARC_INDEX_ARC__ENCDATA_EX, 11, HEAP_ID_FIELD);
+    BinocularCoords *coordData = NARC_AllocAtEndAndReadWholeMemberByIndexPair(NARC_INDEX_ARC__ENCDATA_EX, 11, HEAP_ID_FIELD1);
 
     for (i = 0; i < BINOCULARS_CYCLE_COUNT; i++) {
         randIndex = LCRNG_RandMod(36);
@@ -61,14 +57,14 @@ GreatMarshBinoculars *GreatMarshBinoculars_InitData(const int heapId, FieldSyste
     binocularsData->coordsList[BINOCULARS_CYCLE_COUNT].x = Player_GetXPos(fieldSystem->playerAvatar);
     binocularsData->coordsList[BINOCULARS_CYCLE_COUNT].z = Player_GetZPos(fieldSystem->playerAvatar);
     binocularsData->lookoutMapId = fieldSystem->location->mapId;
-    Heap_FreeToHeap(coordData);
+    Heap_Free(coordData);
 
     return binocularsData;
 }
 
 void GreatMarshBinoculars_FreeData(GreatMarshBinoculars *data)
 {
-    Heap_FreeToHeap(data);
+    Heap_Free(data);
 }
 
 void GreatMarshBinoculars_SetNextLocationWithCoords(const u8 cycleNum, GreatMarshBinoculars *binocularsData)

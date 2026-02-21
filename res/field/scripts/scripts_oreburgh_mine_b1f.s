@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/oreburgh_mine_b1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _002F
@@ -10,13 +9,13 @@
     ScriptEntryEnd
 
 _0012:
-    SetFlag 0x9C2
-    SetFlag 0x2C8
-    CallIfEq 0x4056, 1, _0029
+    SetFlag FLAG_FIRST_ARRIVAL_OREBURGH_MINE
+    SetFlag FLAG_UNK_0x02C8
+    CallIfEq VAR_ARCEUS_EVENT_STATE, 1, _0029
     End
 
 _0029:
-    ClearFlag 0x2C8
+    ClearFlag FLAG_UNK_0x02C8
     Return
 
 _002F:
@@ -43,23 +42,22 @@ _0055:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 165, _012B
+    GoToIfSet FLAG_UNK_0x00A5, _012B
     Message 2
     GoTo _0073
     End
 
 _0073:
-    SetVar 0x8004, 0x12A
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0114
-    CallCommonScript 0x7FC
+    SetVar VAR_0x8004, ITEM_FLAME_PLATE
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0114
+    Common_GiveItemQuantity
     Message 5
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 3, _00CC
-    GoToIfEq 0x8005, 4, _00DE
-    GoToIfEq 0x8005, 5, _00F0
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 3, _00CC
+    GoToIfEq VAR_0x8005, 4, _00DE
+    GoToIfEq VAR_0x8005, 5, _00F0
     End
 
 _00CC:
@@ -83,12 +81,12 @@ _00F0:
 _0102:
     PlayFanfare SEQ_SE_DP_KAIDAN2
     RemoveObject 3
-    SetVar 0x4056, 2
+    SetVar VAR_ARCEUS_EVENT_STATE, 2
     ReleaseAll
     End
 
 _0114:
-    SetFlag 165
+    SetFlag FLAG_UNK_0x00A5
     Message 3
     GoTo _0123
     End
@@ -102,19 +100,15 @@ _0123:
 _012B:
     Message 4
     GoTo _0073
-
-    .byte 2
-    .byte 0
-    .byte 0
-    .byte 0
+    End
 
     .balign 4, 0
 _0138:
-    MoveAction_014
-    MoveAction_012 3
+    WalkNormalWest
+    WalkNormalNorth 3
     EndMovement
 
     .balign 4, 0
 _0144:
-    MoveAction_012 3
+    WalkNormalNorth 3
     EndMovement

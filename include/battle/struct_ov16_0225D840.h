@@ -1,13 +1,11 @@
 #ifndef POKEPLATINUM_STRUCT_OV16_0225D840_H
 #define POKEPLATINUM_STRUCT_OV16_0225D840_H
 
-#include "struct_decls/battle_system.h"
-
-#include "overlay013/struct_ov13_0221FC20.h"
+#include "battle_sub_menus/battle_party.h"
 
 typedef struct {
-    BattleSystem *unk_00;
-    UnkStruct_ov13_0221FC20 *unk_04;
+    BattleSystem *battleSys;
+    BattlePartyContext *unk_04;
     u8 unk_08;
     u8 unk_09;
     u8 unk_0A;

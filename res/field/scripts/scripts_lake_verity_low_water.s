@@ -1,671 +1,421 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/lake_verity_low_water.h"
+#include "res/field/events/events_lake_verity_low_water.h"
 
-    .data
 
-    ScriptEntry _001E
-    ScriptEntry _004E
-    ScriptEntry _006F
-    ScriptEntry _0418
-    ScriptEntry _044B
+    ScriptEntry LakeVerityLowWater_OnTransition
+    ScriptEntry LakeVerityLowWater_OnLoad
+    ScriptEntry LakeVerityLowWater_OnFrameCyrus
+    ScriptEntry LakeVerityLowWater_ProfRowan
+    ScriptEntry LakeVerityLowWater_Counterpart
     ScriptEntry _048A
     ScriptEntry _048C
     ScriptEntryEnd
 
-_001E:
-    GetPlayerGender 0x4000
-    GoToIfEq 0x4000, GENDER_MALE, _003E
-    GoToIfEq 0x4000, GENDER_FEMALE, _0046
+LakeVerityLowWater_OnTransition:
+    GetPlayerGender VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_MALE, LakeVerityLowWater_SetCounterpartGraphicsDawn
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_FEMALE, LakeVerityLowWater_SetCounterpartGraphicsLucas
     End
 
-_003E:
-    SetVar 0x4020, 97
+LakeVerityLowWater_SetCounterpartGraphicsDawn:
+    SetVar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_PLAYER_F
     End
 
-_0046:
-    SetVar 0x4020, 0
+LakeVerityLowWater_SetCounterpartGraphicsLucas:
+    SetVar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_PLAYER_M
     End
 
-_004E:
-    GoToIfSet 142, _005B
+LakeVerityLowWater_OnLoad:
+    GoToIfSet FLAG_MAP_LOCAL, LakeVerityLowWater_HideStarly
     End
 
-_005B:
-    SetFlag 0x18F
-    RemoveObject 3
-    RemoveObject 2
-    ClearFlag 142
+LakeVerityLowWater_HideStarly:
+    SetFlag FLAG_HIDE_LAKE_VERITY_LOW_WATER_STARLY
+    RemoveObject LOCALID_STARLY_SOUTH
+    RemoveObject LOCALID_STARLY_EAST
+    ClearFlag FLAG_MAP_LOCAL
     End
     End
 
-_006F:
+LakeVerityLowWater_OnFrameCyrus:
     LockAll
     ClearHasPartner
-    ApplyMovement 5, _0298
-    ApplyMovement LOCALID_PLAYER, _0368
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalEnter
+    ApplyMovement LOCALID_PLAYER, LakeVerityLowWater_Movement_PlayerEnter
     WaitMovement
     BufferRivalName 0
-    Message 0
+    Message LakeVerityLowWater_Text_WhatsGoingOn
     CloseMessage
-    ScrCmd_066 46, 53
-    ApplyMovement 241, _01B4
+    AddFreeCamera 46, 53
+    ApplyFreeCameraMovement LakeVerityLowWater_Movement_PanToCyrus
     WaitMovement
-    WaitTime 15, 0x800C
-    Message 1
+    WaitTime 15, VAR_RESULT
+    Message LakeVerityLowWater_Text_IWillMakeTimeAndSpaceMine
     CloseMessage
-    WaitTime 30, 0x800C
-    ApplyMovement 4, _01E0
-    ApplyMovement 241, _01C0
+    WaitTime 30, VAR_RESULT
+    ApplyMovement LOCALID_CYRUS, LakeVerityLowWater_Movement_CyrusWalkToPlayer
+    ApplyFreeCameraMovement LakeVerityLowWater_Movement_PanBackToPlayer
     WaitMovement
-    ScrCmd_067
-    Message 2
+    RestoreCamera
+    Message LakeVerityLowWater_Text_AllowMeToPass
     CloseMessage
-    ApplyMovement 5, _02A0
-    ApplyMovement LOCALID_PLAYER, _0370
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalMoveAwayForCyrus
+    ApplyMovement LOCALID_PLAYER, LakeVerityLowWater_Movement_PlayerWatchRivalMoveAwayForCyrus
     WaitMovement
-    ApplyMovement 4, _01F0
+    ApplyMovement LOCALID_CYRUS, LakeVerityLowWater_Movement_CyrusLeave
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    RemoveObject 4
-    WaitTime 50, 0x800C
-    ApplyMovement LOCALID_PLAYER, _0378
-    ApplyMovement 5, _02AC
+    RemoveObject LOCALID_CYRUS
+    WaitTime 50, VAR_RESULT
+    ApplyMovement LOCALID_PLAYER, LakeVerityLowWater_Movement_PlayerLookAtExit
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalWalkToExit
     WaitMovement
     BufferRivalName 0
-    Message 3
+    Message LakeVerityLowWater_Text_WhatWasThatAbout
     CloseMessage
-    ApplyMovement 5, _02B8
-    ApplyMovement LOCALID_PLAYER, _0380
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalFacePlayer
+    ApplyMovement LOCALID_PLAYER, LakeVerityLowWater_Movement_PlayerFaceRival
     WaitMovement
-    WaitTime 30, 0x800C
+    WaitTime 30, VAR_RESULT
     BufferPlayerName 1
-    Message 4
+    Message LakeVerityLowWater_Text_LetsCatchThatLegendaryPokemon
     PlayCry SPECIES_MESPRIT
-    Message 5
-    ScrCmd_04D
+    Message LakeVerityLowWater_Text_LegendaryCry
+    WaitCry
     CloseMessage
-    ApplyMovement 5, _02C0
-    ApplyMovement LOCALID_PLAYER, _0388
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalNoticeAndLookForLegendary
+    ApplyMovement LOCALID_PLAYER, LakeVerityLowWater_Movement_PlayerWatchRivalLookForLegendary
     WaitMovement
-    WaitTime 15, 0x800C
-    ApplyMovement 5, _02F0
+    WaitTime 15, VAR_RESULT
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalWalkOnSpotWest
     WaitMovement
     BufferRivalName 0
     BufferPlayerName 1
-    Message 6
+    Message LakeVerityLowWater_Text_ThatWasTheLegendaryPokemonCrying
     CloseMessage
-    ApplyMovement 5, _02E8
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalExclamationMark
     WaitMovement
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     BufferPlayerName 1
-    Message 7
+    Message LakeVerityLowWater_Text_WaitWeDontHavePokeballs
     CloseMessage
-    ApplyMovement 5, _02F8
-    ApplyMovement LOCALID_PLAYER, _039C
+    ApplyMovement LOCALID_RIVAL, LakeVerityLowWater_Movement_RivalLeave
+    ApplyMovement LOCALID_PLAYER, LakeVerityLowWater_Movement_PlayerWatchRivalLeave
     WaitMovement
-    SetFlag 0x196
-    RemoveObject 5
+    SetFlag FLAG_HIDE_LAKE_VERITY_LOW_WATER_RIVAL
+    RemoveObject LOCALID_RIVAL
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    GoTo _01A1
+    GoTo LakeVerityLowWater_EndRivalFollower
     End
 
-_01A1:
-    SetVar 0x4086, 4
-    SetVar 0x4095, 1
+LakeVerityLowWater_EndRivalFollower:
+    SetVar VAR_FOLLOWER_RIVAL_STATE, 4
+    SetVar VAR_VISITED_LAKE_VERITY_WITH_RIVAL, 1
     ReleaseAll
     End
 
     .balign 4, 0
-_01B4:
-    MoveAction_063
-    MoveAction_012 9
+LakeVerityLowWater_Movement_PanToCyrus:
+    Delay8
+    WalkNormalNorth 9
     EndMovement
 
     .balign 4, 0
-_01C0:
-    MoveAction_013 9
+LakeVerityLowWater_Movement_PanBackToPlayer:
+    WalkNormalSouth 9
     EndMovement
 
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+LakeVerityLowWater_UnusedMovement:
+    WalkOnSpotNormalEast
+    EndMovement
 
-    .balign 4, 0
-_01E0:
-    MoveAction_013 5
-    MoveAction_014
-    MoveAction_013 4
+LakeVerityLowWater_UnusedMovement2:
+    WalkOnSpotNormalSouth
+    Delay8 2
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
-_01F0:
-    MoveAction_013 3
-    MoveAction_069
-    EndMovement
-
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 5
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 5
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 3
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 62
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 39
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 62
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 38
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 3
-    .byte 0
-    .byte 69
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 12
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 15
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 12
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 39
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 62
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-
-    .balign 4, 0
-_0298:
-    MoveAction_016
+LakeVerityLowWater_Movement_CyrusWalkToPlayer:
+    WalkNormalSouth 5
+    WalkNormalWest
+    WalkNormalSouth 4
     EndMovement
 
     .balign 4, 0
-_02A0:
-    MoveAction_015
-    MoveAction_034
+LakeVerityLowWater_Movement_CyrusLeave:
+    WalkNormalSouth 3
+    SetInvisible
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement3:
+    Delay8
+    WalkOnSpotNormalWest
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement4:
+    WalkOnSpotNormalWest
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement5:
+    WalkNormalSouth 4
+    WalkNormalWest 2
+    WalkNormalSouth 5
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement6:
+    WalkNormalWest
+    WalkNormalSouth 5
+    WalkNormalWest
+    WalkNormalSouth 3
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement7:
+    WalkNormalSouth
+    WalkOnSpotNormalWest
+    Delay4
+    WalkOnSpotFastEast
+    Delay4
+    WalkOnSpotFastWest
+    Delay8
+    WalkOnSpotNormalSouth
+    Delay8
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement8:
+    WalkNormalSouth 3
+    SetInvisible
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement9:
+    WalkNormalNorth 4
+    WalkNormalEast 2
+    WalkNormalNorth 4
+    WalkOnSpotNormalWest
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement10:
+    WalkOnSpotNormalSouth
+    Delay8
+    WalkOnSpotFastEast
+    Delay8
+    WalkOnSpotNormalSouth
+    Delay4
     EndMovement
 
     .balign 4, 0
-_02AC:
-    MoveAction_014
-    MoveAction_033
+LakeVerityLowWater_Movement_RivalEnter:
+    WalkFastNorth
     EndMovement
 
     .balign 4, 0
-_02B8:
-    MoveAction_038
+LakeVerityLowWater_Movement_RivalMoveAwayForCyrus:
+    WalkNormalEast
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
-_02C0:
-    MoveAction_075
-    MoveAction_016 3
-    MoveAction_063 3
-    MoveAction_038
-    MoveAction_063
-    MoveAction_036
-    MoveAction_063 2
-    MoveAction_017 3
-    MoveAction_038
+LakeVerityLowWater_Movement_RivalWalkToExit:
+    WalkNormalWest
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
-_02E8:
-    MoveAction_075
+LakeVerityLowWater_Movement_RivalFacePlayer:
+    WalkOnSpotFastWest
     EndMovement
 
     .balign 4, 0
-_02F0:
-    MoveAction_038 4
+LakeVerityLowWater_Movement_RivalNoticeAndLookForLegendary:
+    EmoteExclamationMark
+    WalkFastNorth 3
+    Delay8 3
+    WalkOnSpotFastWest
+    Delay8
+    WalkOnSpotFastNorth
+    Delay8 2
+    WalkFastSouth 3
+    WalkOnSpotFastWest
     EndMovement
 
     .balign 4, 0
-_02F8:
-    MoveAction_017 2
-    EndMovement
-
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 39
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 7
-    .byte 0
-    .byte 15
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 62
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 37
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 3
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 6
-    .byte 0
-    .byte 69
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-
-    .balign 4, 0
-_0368:
-    MoveAction_012
+LakeVerityLowWater_Movement_RivalExclamationMark:
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
-_0370:
-    MoveAction_035
+LakeVerityLowWater_Movement_RivalWalkOnSpotWest:
+    WalkOnSpotFastWest 4
     EndMovement
 
     .balign 4, 0
-_0378:
-    MoveAction_033
+LakeVerityLowWater_Movement_RivalLeave:
+    WalkFastSouth 2
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement11:
+    WalkOnSpotNormalEast
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement12:
+    WalkOnSpotFastEast
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement13:
+    WalkOnSpotNormalSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement14:
+    Delay8 7
+    WalkNormalEast
+    WalkOnSpotNormalWest
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement15:
+    Delay4
+    WalkOnSpotNormalSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement16:
+    WalkNormalWest
+    WalkNormalSouth
+    WalkOnSpotNormalWest
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement17:
+    WalkOnSpotFastSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement18:
+    WalkNormalSouth
+    WalkNormalWest
+    WalkNormalSouth 3
+    WalkNormalWest
+    WalkNormalSouth 6
+    SetInvisible
     EndMovement
 
     .balign 4, 0
-_0380:
-    MoveAction_035
+LakeVerityLowWater_Movement_PlayerEnter:
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
-_0388:
-    MoveAction_063 4
-    MoveAction_032
-    MoveAction_063 9
-    MoveAction_035
+LakeVerityLowWater_Movement_PlayerWatchRivalMoveAwayForCyrus:
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
-_039C:
-    MoveAction_033
+LakeVerityLowWater_Movement_PlayerLookAtExit:
+    WalkOnSpotNormalSouth
     EndMovement
 
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 5
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 32
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 32
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 13
-    .byte 0
-    .byte 6
-    .byte 0
-    .byte 69
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 16
-    .byte 0
-    .byte 6
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 18
-    .byte 0
-    .byte 7
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0
+LakeVerityLowWater_Movement_PlayerFaceRival:
+    WalkOnSpotNormalEast
+    EndMovement
 
-_0418:
+    .balign 4, 0
+LakeVerityLowWater_Movement_PlayerWatchRivalLookForLegendary:
+    Delay8 4
+    WalkOnSpotNormalNorth
+    Delay8 9
+    WalkOnSpotNormalEast
+    EndMovement
+
+    .balign 4, 0
+LakeVerityLowWater_Movement_PlayerWatchRivalLeave:
+    WalkOnSpotNormalSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement19:
+    WalkOnSpotNormalSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement20:
+    Delay8 5
+    WalkOnSpotNormalSouth
+    Delay8 2
+    WalkOnSpotNormalEast
+    WalkOnSpotNormalNorth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement21:
+    WalkOnSpotNormalSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement22:
+    Delay8
+    WalkOnSpotNormalSouth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement23:
+    Delay8
+    WalkOnSpotNormalEast
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement24:
+    WalkOnSpotNormalNorth
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement25:
+    Delay8
+    WalkOnSpotNormalSouth
+    WalkNormalSouth 4
+    WalkNormalWest
+    WalkNormalSouth 6
+    SetInvisible
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement26:
+    WalkFastNorth 6
+    EndMovement
+
+LakeVerityLowWater_UnusedMovement27:
+    WalkFastWest 7
+    EndMovement
+
+LakeVerityLowWater_ProfRowan:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 184, _043D
-    SetFlag 184
+    GoToIfSet FLAG_TALKED_TO_LAKE_VERITY_LOW_WATER_PROF_ROWAN, LakeVerityLowWater_RowanHowWasLakeValor
+    SetFlag FLAG_TALKED_TO_LAKE_VERITY_LOW_WATER_PROF_ROWAN
     BufferPlayerName 0
-    Message 8
+    Message LakeVerityLowWater_Text_RowanNoLegendaryPokemonHowWasLakeValor
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_043D:
+LakeVerityLowWater_RowanHowWasLakeValor:
     BufferPlayerName 0
-    Message 9
+    Message LakeVerityLowWater_Text_RowanHowWasLakeValor
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_044B:
+LakeVerityLowWater_Counterpart:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _046A
-    GoTo _0476
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, LakeVerityLowWater_DawnHowWasLakeValor
+    GoTo LakeVerityLowWater_LucasHowsLakeValor
 
-_046A:
+LakeVerityLowWater_DawnHowWasLakeValor:
     BufferPlayerName 0
-    Message 10
-    GoTo _0482
+    Message LakeVerityLowWater_Text_DawnHowHasLakeValor
+    GoTo LakeVerityLowWater_CloseMessage
 
-_0476:
+LakeVerityLowWater_LucasHowsLakeValor:
     BufferPlayerName 0
-    Message 11
-    GoTo _0482
+    Message LakeVerityLowWater_Text_LucasHowsLakeValor
+    GoTo LakeVerityLowWater_CloseMessage
 
-_0482:
+LakeVerityLowWater_CloseMessage:
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -677,5 +427,4 @@ _048A:
 _048C:
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

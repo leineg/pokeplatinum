@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/iron_island.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0014
@@ -9,28 +8,28 @@
     ScriptEntryEnd
 
 _000E:
-    SetFlag 0x9DA
+    SetFlag FLAG_FIRST_ARRIVAL_IRON_ISLAND_EXTERIOR
     End
 
 _0014:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerDir 0x8004
+    GetPlayerDir VAR_0x8004
     FacePlayer
     Message 3
-    ShowYesNoMenu 0x800C
+    ShowYesNoMenu VAR_RESULT
     CloseMessage
-    GoToIfEq 0x800C, MENU_YES, _003E
+    GoToIfEq VAR_RESULT, MENU_YES, _003E
     GoTo _0071
 
 _003E:
     Message 4
     CloseMessage
     Call _007C
-    CallIfEq 0x8004, 1, _0096
-    CallIfEq 0x8004, 2, _00B0
-    ScrCmd_23D 0, 2, 33, 44, 0x2EE
+    CallIfEq VAR_0x8004, 1, _0096
+    CallIfEq VAR_0x8004, 2, _00B0
+    TakeShipToCanalave
     ReleaseAll
     End
 
@@ -67,26 +66,26 @@ _00B0:
 
     .balign 4, 0
 _00CC:
-    MoveAction_002
-    MoveAction_064
+    FaceWest
+    Delay15
     EndMovement
 
     .balign 4, 0
 _00D8:
-    MoveAction_069
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _00E0:
-    MoveAction_013
-    MoveAction_002
-    MoveAction_064
+    WalkNormalSouth
+    FaceWest
+    Delay15
     EndMovement
 
     .balign 4, 0
 _00F0:
-    MoveAction_014
-    MoveAction_064
+    WalkNormalWest
+    Delay15
     EndMovement
 
 _00FC:
@@ -95,11 +94,11 @@ _00FC:
     FacePlayer
     BufferPlayerName 0
     Message 0
-    SetVar 0x8004, 0x1A7
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
-    CheckBadgeAcquired BADGE_ID_MINE, 0x800C
-    GoToIfEq 0x800C, 0, _0140
+    SetVar VAR_0x8004, ITEM_HM04
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
+    CheckBadgeAcquired BADGE_ID_MINE, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _0140
     GoTo _0135
     End
 
@@ -125,5 +124,5 @@ _014B:
 
     .balign 4, 0
 _0168:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement

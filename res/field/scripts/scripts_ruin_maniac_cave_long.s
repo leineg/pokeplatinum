@@ -1,22 +1,21 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/ruin_maniac_cave_long.h"
 
-    .data
 
     ScriptEntry _0010
     ScriptEntry _000A
     ScriptEntryEnd
 
 _000A:
-    SetFlag 0x9D8
+    SetFlag FLAG_FIRST_ARRIVAL_RUIN_MANIAC_CAVE
     End
 
 _0010:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_284 0x800C
-    GoToIfGe 0x800C, 26, _0034
+    GetUnownFormsSeenCount VAR_RESULT
+    GoToIfGe VAR_RESULT, 26, _0034
     Message 0
     WaitABXPadPress
     CloseMessage
@@ -30,4 +29,4 @@ _0034:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

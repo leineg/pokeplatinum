@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/narc.h"
+
 #include "struct_decls/struct_02012744_decl.h"
 #include "struct_defs/struct_020127E8.h"
 
@@ -21,16 +23,16 @@
 #include "font.h"
 #include "message.h"
 #include "pltt_transfer.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_transfer.h"
 #include "sprite_util.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "text.h"
 #include "touch_screen.h"
-#include "unk_02005474.h"
+#include "touch_screen_actions.h"
 #include "unk_02012744.h"
-#include "unk_02023FCC.h"
 
 static void ov22_02259D94(UnkStruct_ov22_02259C58 *param0, void *param1);
 static void ov22_0225A0E4(UnkStruct_ov22_02259C58 *param0, int param1, UnkStruct_ov22_0225A0E4 *param2, int param3, int param4, int param5, int param6);
@@ -38,14 +40,14 @@ static void ov22_0225A154(UnkStruct_ov22_0225A154 *param0, int param1, UnkStruct
 static void ov22_0225A200(TouchScreenHitTable *hitTable, int param1, int param2, int param3, int param4, int param5);
 static void ov22_0225A218(UnkStruct_ov22_0225A0E4 *param0);
 static void ov22_0225A2A8(UnkStruct_ov22_0225A0E4 *param0);
-static Window *ov22_0225A348(UnkStruct_ov22_0225A0E4 *param0, u32 param1, u32 param2, u32 param3, int param4, int param5);
+static Window *ov22_0225A348(UnkStruct_ov22_0225A0E4 *param0, enum NarcID narcID, u32 param2, u32 param3, int param4, int param5);
 static void ov22_0225A3D0(Window *param0);
 static void ov22_0225A2D0(UnkStruct_ov22_02259C58 *param0, int param1);
 static void ov22_0225A338(UnkStruct_ov22_02259C58 *param0, int param1, int param2, int param3);
 static void ov22_0225A2F4(UnkStruct_ov22_0225A154 *param0, int param1);
 static void ov22_0225A3DC(UnkStruct_ov22_02259C58 *param0, int param1, int param2);
 static void ov22_0225A418(UnkStruct_ov22_0225A154 *param0, int param1, int param2);
-static void ov22_0225A02C(u32 param0, u32 param1, void *param2);
+static void ov22_0225A02C(u32 param0, enum TouchScreenButtonState param1, void *param2);
 
 void ov22_02259C58(UnkStruct_ov22_02259C58 *param0, UnkStruct_ov22_02259C58_1 *param1)
 {
@@ -82,7 +84,7 @@ void ov22_02259C9C(UnkStruct_ov22_0225A154 *param0, UnkStruct_ov22_02259C9C *par
     v0.unk_20 = 0;
     v0.unk_24 = 0;
     v0.unk_28 = param1->unk_00.unk_00->vramType;
-    v0.unk_2C = param1->unk_00.unk_00->heapID;
+    v0.heapID = param1->unk_00.unk_00->heapID;
 
     param0->unk_10 = sub_020127E8(&v0);
 }
@@ -121,7 +123,7 @@ void ov22_02259D2C(UnkStruct_ov22_02259D2C *param0, int param1, int param2)
             if (param2 == 0) {
                 ov22_02259DB0(v1);
 
-                Sound_PlayEffect(1661);
+                Sound_PlayEffect(SEQ_SE_DP_PASO);
             } else if (param2 == 2) {
                 ov22_02259D98(v1);
             } else {
@@ -164,7 +166,7 @@ void ov22_02259DBC(UnkStruct_ov22_02259D2C *param0, UnkStruct_ov22_0225A0E4 *par
 {
     Window *v0;
 
-    param0->unk_64 = sub_02012744(1, 13);
+    param0->unk_64 = sub_02012744(1, HEAP_ID_13);
 
     ov22_0225A218(param1);
 
@@ -180,7 +182,7 @@ void ov22_02259DBC(UnkStruct_ov22_02259D2C *param0, UnkStruct_ov22_0225A0E4 *par
     ov22_0225A0E4(&param0->unk_00[3], 3, param1, 136, 144, 40, 42);
     ov22_0225A200(param0->unk_6C, 3, 136, 144 + 12, 40, 42 - 8);
 
-    Font_InitManager(FONT_SUBSCREEN, 14);
+    Font_InitManager(FONT_SUBSCREEN, HEAP_ID_14);
 
     v0 = ov22_0225A348(param1, 26, 385, 0, 72 / 8, 42 / 8);
 
@@ -195,7 +197,7 @@ void ov22_02259DBC(UnkStruct_ov22_02259D2C *param0, UnkStruct_ov22_0225A0E4 *par
     ov22_0225A2A8(param1);
     ov22_02259D98(&param0->unk_00[2]);
 
-    param0->unk_68 = sub_02023FCC(param0->unk_6C, 5, ov22_0225A02C, param0, 13);
+    param0->unk_68 = TouchScreenActions_RegisterHandler(param0->unk_6C, 5, ov22_0225A02C, param0, HEAP_ID_13);
 }
 
 void ov22_02259F24(UnkStruct_ov22_02259D2C *param0, UnkStruct_ov22_0225A0E4 *param1)
@@ -218,7 +220,7 @@ void ov22_02259F24(UnkStruct_ov22_02259D2C *param0, UnkStruct_ov22_0225A0E4 *par
     CharTransfer_ClearRange(&param0->unk_40.unk_14);
     ov22_02259D00(&param0->unk_40);
     sub_020127BC(param0->unk_64);
-    sub_02024034(param0->unk_68);
+    TouchScreenActions_Free(param0->unk_68);
 
     param0->unk_68 = NULL;
 }
@@ -226,7 +228,7 @@ void ov22_02259F24(UnkStruct_ov22_02259D2C *param0, UnkStruct_ov22_0225A0E4 *par
 void ov22_02259F88(UnkStruct_ov22_02259D2C *param0)
 {
     GF_ASSERT(param0->unk_68);
-    sub_0202404C(param0->unk_68);
+    TouchScreenActions_HandleAction(param0->unk_68);
 }
 
 void ov22_02259FA0(UnkStruct_ov22_02259D2C *param0)
@@ -260,7 +262,7 @@ void ov22_02259FF4(UnkStruct_ov22_02259D2C *param0, int param1, UnkFuncPtr_ov22_
     }
 }
 
-static void ov22_0225A02C(u32 param0, u32 param1, void *param2)
+static void ov22_0225A02C(u32 param0, enum TouchScreenButtonState param1, void *param2)
 {
     UnkStruct_ov22_02259D2C *v0 = param2;
 
@@ -309,7 +311,7 @@ static void ov22_0225A0E4(UnkStruct_ov22_02259C58 *param0, int param1, UnkStruct
     v2.position.z = 0;
     v2.priority = 2;
     v2.vramType = NNS_G2D_VRAM_TYPE_2DMAIN;
-    v2.heapID = 14;
+    v2.heapID = HEAP_ID_14;
 
     v0.unk_00 = &v2;
     v0.unk_04 = NULL;
@@ -335,7 +337,7 @@ static void ov22_0225A154(UnkStruct_ov22_0225A154 *param0, int param1, UnkStruct
     v2.position.z = 0;
     v2.priority = 2;
     v2.vramType = NNS_G2D_VRAM_TYPE_2DMAIN;
-    v2.heapID = 14;
+    v2.heapID = HEAP_ID_14;
 
     v0.unk_00.unk_00 = &v2;
     v0.unk_00.unk_04 = NULL;
@@ -349,7 +351,7 @@ static void ov22_0225A154(UnkStruct_ov22_0225A154 *param0, int param1, UnkStruct
     v3 = SpriteResourceCollection_Find(param2->unk_48[1], 1);
     v0.unk_18 = SpriteTransfer_GetPaletteProxy(v3, NULL);
 
-    GF_ASSERT(CharTransfer_AllocRange(sub_02012898(param4, NNS_G2D_VRAM_TYPE_2DMAIN, 13), 1, NNS_G2D_VRAM_TYPE_2DMAIN, &param0->unk_14));
+    GF_ASSERT(CharTransfer_AllocRange(sub_02012898(param4, NNS_G2D_VRAM_TYPE_2DMAIN, HEAP_ID_13), 1, NNS_G2D_VRAM_TYPE_2DMAIN, &param0->unk_14));
 
     v0.unk_24 = param0->unk_14.offset;
 
@@ -404,15 +406,15 @@ static void ov22_0225A2D0(UnkStruct_ov22_02259C58 *param0, int param1)
 static void ov22_0225A2F4(UnkStruct_ov22_0225A154 *param0, int param1)
 {
     if (param1 == 0) {
-        sub_020128C4(param0->unk_10, 0, 15);
+        FontOAM_SetXY(param0->unk_10, 0, 15);
         sub_02012A60(param0->unk_10, 4);
     } else {
         if (param1 == 1) {
-            sub_020128C4(param0->unk_10, 0, 19);
+            FontOAM_SetXY(param0->unk_10, 0, 19);
         }
 
         if (param1 == 3) {
-            sub_020128C4(param0->unk_10, 0, 19);
+            FontOAM_SetXY(param0->unk_10, 0, 19);
             sub_02012A60(param0->unk_10, 3);
         }
     }
@@ -425,17 +427,17 @@ static void ov22_0225A338(UnkStruct_ov22_02259C58 *param0, int param1, int param
     }
 }
 
-static Window *ov22_0225A348(UnkStruct_ov22_0225A0E4 *param0, u32 param1, u32 param2, u32 param3, int param4, int param5)
+static Window *ov22_0225A348(UnkStruct_ov22_0225A0E4 *param0, enum NarcID narcID, u32 bankID, u32 param3, int param4, int param5)
 {
     MessageLoader *v0;
-    Strbuf *v1;
+    String *v1;
     Window *v2;
 
-    v0 = MessageLoader_Init(0, param1, param2, 13);
+    v0 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, narcID, bankID, HEAP_ID_13);
     GF_ASSERT(v0);
-    v1 = MessageLoader_GetNewStrbuf(v0, param3);
+    v1 = MessageLoader_GetNewString(v0, param3);
 
-    v2 = Window_New(14, 1);
+    v2 = Window_New(HEAP_ID_14, 1);
     Window_Init(v2);
     Window_AddToTopLeftCorner(param0->unk_40, v2, param4, param5, 0, 0);
 
@@ -444,7 +446,7 @@ static Window *ov22_0225A348(UnkStruct_ov22_0225A0E4 *param0, u32 param1, u32 pa
         Text_AddPrinterWithParamsAndColor(v2, FONT_SUBSCREEN, v1, v3, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 3), NULL);
     }
 
-    Strbuf_Free(v1);
+    String_Free(v1);
     MessageLoader_Free(v0);
 
     return v2;

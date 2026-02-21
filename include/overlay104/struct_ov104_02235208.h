@@ -5,12 +5,12 @@
 #include "savedata.h"
 
 typedef struct {
-    SaveData *unk_00;
+    SaveData *saveData;
     u8 unk_04;
     u8 unk_05;
     u16 unk_06;
     u8 *unk_08;
-    Party *unk_0C;
+    Party *party;
     void *unk_10;
     u16 *unk_14;
     u16 unk_18;

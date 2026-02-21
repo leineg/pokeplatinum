@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/jubilife_tv_3f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0054
@@ -17,7 +16,7 @@ _0012:
     WaitMovement
     Message 0
     CloseMessage
-    WaitTime 8, 0x800C
+    WaitTime 8, VAR_RESULT
     ApplyMovement 0, _004C
     WaitMovement
     Message 1
@@ -28,12 +27,12 @@ _0012:
 
     .balign 4, 0
 _0044:
-    MoveAction_003
+    FaceEast
     EndMovement
 
     .balign 4, 0
 _004C:
-    MoveAction_002
+    FaceWest
     EndMovement
 
 _0054:
@@ -61,36 +60,36 @@ _007A:
     LockAll
     FacePlayer
     Message 4
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _009C
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _009C
     GoTo _015B
 
 _009C:
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     CloseMessage
-    ScrCmd_244 0, 0x800C, 0x8000, 0x8001
+    ScrCmd_244 0, VAR_RESULT, VAR_0x8000, VAR_0x8001
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    GoToIfEq 0x800C, 0, _015B
+    GoToIfEq VAR_RESULT, 0, _015B
     Message 5
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     CloseMessage
-    ScrCmd_244 0, 0x800C, 0x8002, 0x8003
+    ScrCmd_244 0, VAR_RESULT, VAR_0x8002, VAR_0x8003
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    GoToIfEq 0x800C, 0, _015B
-    ScrCmd_249 0x800C, 0x8000, 0x8001, 0x8002, 0x8003
-    GoToIfEq 0x800C, 0xFF, _0131
-    GoToIfEq 0x800C, 0, _0131
+    GoToIfEq VAR_RESULT, 0, _015B
+    ScrCmd_249 VAR_RESULT, VAR_0x8000, VAR_0x8001, VAR_0x8002, VAR_0x8003
+    GoToIfEq VAR_RESULT, 0xFF, _0131
+    GoToIfEq VAR_RESULT, 0, _0131
     GoTo _0166
 
 _0131:
-    ScrCmd_2AA 0x800C, 0x8000, 0x8001, 0x8002, 0x8003
-    GoToIfEq 0x800C, 0, _0150
+    ScrCmd_2AA VAR_RESULT, VAR_0x8000, VAR_0x8001, VAR_0x8002, VAR_0x8003
+    GoToIfEq VAR_RESULT, 0, _0150
     GoTo _0171
 
 _0150:
@@ -117,10 +116,9 @@ _0166:
 _0171:
     Message 9
     WaitABXPadPress
-    ScrCmd_2AC
+    UnlockMysteryGift
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

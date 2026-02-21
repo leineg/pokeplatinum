@@ -1,7 +1,10 @@
 #ifndef POKEPLATINUM_MAP_HEADER_H
 #define POKEPLATINUM_MAP_HEADER_H
 
+#include "generated/battle_backgrounds.h"
 #include "generated/evolution_methods.h"
+
+#define ENCOUNTERS_NONE 0xFFFF
 
 typedef struct {
     u8 areaDataArchiveID;
@@ -42,7 +45,7 @@ u32 MapHeader_GetMapLabelTextID(u32 headerID);
 u8 MapHeader_GetMapLabelWindowID(u32 headerID);
 u32 MapHeader_GetWeatherType(u32 headerID);
 u32 MapHeader_GetCameraType(u32 headerID);
-u32 MapHeader_GetBattleBG(u32 headerID);
+enum BattleBackground MapHeader_GetBattleBG(u32 headerID);
 BOOL MapHeader_IsEscapeRopeAllowed(u32 headerID);
 BOOL MapHeader_IsFlyAllowed(u32 headerID);
 BOOL MapHeader_IsBikeAllowed(u32 headerID);
@@ -53,7 +56,7 @@ BOOL MapHeader_IsPokemonCenter(u32 headerID);
 BOOL MapHeader_IsCave(u32 headerID);
 BOOL MapHeader_IsBuilding(u32 headerID);
 BOOL MapHeader_IsOutdoors(u32 headerID);
-BOOL sub_0203A2C8(u32 headerID);
+BOOL MapHeader_IsPokemonCenter2(u32 headerID);
 BOOL MapHeader_IsUnionRoom(const u32 headerID);
 BOOL MapHeader_HasFeebasTiles(const u32 headerID);
 BOOL MapHeader_IsTrophyGarden(const u32 headerID);

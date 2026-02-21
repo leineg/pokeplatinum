@@ -9,11 +9,29 @@
 
 #include "field_task.h"
 
-void ov9_02249960(FieldSystem *fieldSystem);
-void ov9_02249A60(FieldSystem *fieldSystem);
-BOOL ov9_02249E50(FieldSystem *fieldSystem, const int param1, const int param2, const fx32 param3, BOOL *param4);
-void ov9_02249F9C(FieldSystem *fieldSystem);
-void ov9_02249FD0(FieldSystem *fieldSystem);
+#define GHOST_PROP_GROUP_MAX_COUNT 24
+
+#define DIST_WORLD_PERSISTED_DATA_CURRENT_FLOATING_PLATFORM_SIZE 4
+#define DIST_WORLD_PERSISTED_DATA_CURRENT_FLOATING_PLATFORM_MAX  (1 << DIST_WORLD_PERSISTED_DATA_CURRENT_FLOATING_PLATFORM_SIZE)
+
+typedef struct DistWorldPersistedData {
+    u32 valid : 1;
+    u32 hiddenGhostPropGroups : GHOST_PROP_GROUP_MAX_COUNT;
+    u32 currentFloatingPlatformIndex : DIST_WORLD_PERSISTED_DATA_CURRENT_FLOATING_PLATFORM_SIZE;
+    u32 padding : 3;
+    u16 cameraAngleX;
+    u16 cameraAngleY;
+    u16 cameraAngleZ;
+    u16 unk_0A;
+    u32 unk_0C;
+    u8 reserved_10[16];
+} DistWorldPersistedData;
+
+void DistWorld_DynamicMapFeaturesInit(FieldSystem *fieldSystem);
+void DistWorld_DynamicMapFeaturesFree(FieldSystem *fieldSystem);
+BOOL DistWorld_DynamicMapFeaturesCheckCollision(FieldSystem *fieldSystem, const int tileX, const int tileZ, const fx32 height, BOOL *isColliding);
+void DistWorld_UpdateCameraAngle(FieldSystem *fieldSystem);
+void DistWorld_ResetPersistedCameraAngles(FieldSystem *fieldSystem);
 int ov9_0224A520(FieldSystem *fieldSystem, MapObject *param1);
 void ov9_0224A558(FieldSystem *fieldSystem, UnkStruct_020216E0 *param1, int param2);
 void ov9_0224A564(FieldSystem *fieldSystem, const UnkStruct_020216E0 *param1);
@@ -23,8 +41,8 @@ BOOL ov9_0224A71C(FieldSystem *fieldSystem);
 BOOL ov9_0224A800(FieldSystem *fieldSystem, int param1);
 void ov9_0224CA50(FieldSystem *fieldSystem);
 void ov9_0224CA5C(FieldSystem *fieldSystem);
-void ov9_0224E884(FieldSystem *fieldSystem, u16 param1);
-void ov9_0224E8A8(FieldSystem *fieldSystem);
+void DistWorld_StartGiratinaShadowEvent(FieldSystem *fieldSystem, u16 eventIndex);
+void DistWorld_FinishGiratinaShadowEvent(FieldSystem *fieldSystem);
 void ov9_0224F158(FieldSystem *fieldSystem, u16 param1);
 void ov9_0224F16C(FieldSystem *fieldSystem, u16 param1);
 BOOL ov9_0224F240(const MapObject *param0, int param1);
@@ -33,11 +51,11 @@ UnkStruct_ov9_0224F6EC *ov9_0224F2BC(FieldSystem *fieldSystem, FieldTask *param1
 BOOL ov9_0224F6EC(UnkStruct_ov9_0224F6EC *param0);
 void ov9_02250780(FieldSystem *fieldSystem);
 BOOL ov9_02250F74(FieldSystem *fieldSystem);
-BOOL ov9_02250F90(FieldSystem *fieldSystem, int param1, int param2, int param3);
-BOOL ov9_02250FBC(FieldSystem *fieldSystem, int param1, int param2, int param3);
+BOOL DistWorld_CheckCollisionOnCurrentFloatingPlatform(FieldSystem *fieldSystem, int tileX, int tileY, int tileZ);
+BOOL DistWorld_IsValidTileOnCurrentFloatingPlatform(FieldSystem *fieldSystem, int tileX, int tileY, int tileZ);
 BOOL ov9_02250FD8(FieldSystem *fieldSystem, int param1, int param2, int param3);
 void ov9_02251000(FieldSystem *fieldSystem, int param1, int param2, int param3);
-BOOL ov9_02251044(FieldSystem *fieldSystem, int param1, int param2, int param3, u32 *param4);
+BOOL DistWorld_GetTileBehaviorOnCurrentFloatingPlatform(FieldSystem *fieldSystem, int tileX, int tileY, int tileZ, u32 *tileBehavior);
 void ov9_02251094(int param0, int *param1, int *param2, int *param3);
 BOOL ov9_022511A0(FieldSystem *fieldSystem, int param1, int param2, int param3);
 

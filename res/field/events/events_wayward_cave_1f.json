@@ -6,7 +6,7 @@
             "x": 72,
             "z": 15,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8009,
@@ -14,7 +14,7 @@
             "x": 74,
             "z": 34,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8008,
@@ -22,7 +22,7 @@
             "x": 17,
             "z": 43,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8162,
@@ -30,7 +30,7 @@
             "x": 43,
             "z": 29,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8208,
@@ -38,7 +38,7 @@
             "x": 55,
             "z": 41,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8209,
@@ -46,15 +46,16 @@
             "x": 92,
             "z": 51,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1052,
+            "id": "WAYWARD_CAVE_1F_POKEBALL_0",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x041C",
             "script": 7038,
             "initial_dir": 0,
             "data": [],
@@ -65,10 +66,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1048,
+            "id": "WAYWARD_CAVE_1F_POKEBALL_1",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0418",
             "script": 7034,
             "initial_dir": 0,
             "data": [],
@@ -79,10 +81,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1049,
+            "id": "WAYWARD_CAVE_1F_POKEBALL_2",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0419",
             "script": 7035,
             "initial_dir": 0,
             "data": [],
@@ -93,10 +96,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1050,
+            "id": "WAYWARD_CAVE_1F_POKEBALL_3",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x041A",
             "script": 7036,
             "initial_dir": 0,
             "data": [],
@@ -107,10 +111,11 @@
             "y": 0
         },
         {
-            "graphics_id": 145,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 484,
+            "id": "WAYWARD_CAVE_1F_MIRA_4",
+            "graphics_id": "OBJ_EVENT_GFX_MIRA",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x01E4",
             "script": 2,
             "initial_dir": 0,
             "data": [],
@@ -121,11 +126,12 @@
             "y": 0
         },
         {
-            "graphics_id": 52,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3378,
+            "id": "WAYWARD_CAVE_1F_CAMPER_DIEGO",
+            "graphics_id": "OBJ_EVENT_GFX_CAMPER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_CAMPER_DIEGO",
             "initial_dir": 3,
             "data": [
                 2
@@ -137,11 +143,12 @@
             "y": 0
         },
         {
-            "graphics_id": 53,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3457,
+            "id": "WAYWARD_CAVE_1F_PICNICKER_TORI",
+            "graphics_id": "OBJ_EVENT_GFX_PICNICKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_PICNICKER_TORI",
             "initial_dir": 2,
             "data": [
                 2
@@ -153,11 +160,12 @@
             "y": 0
         },
         {
-            "graphics_id": 6,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3449,
+            "id": "WAYWARD_CAVE_1F_LASS_CASSIDY",
+            "graphics_id": "OBJ_EVENT_GFX_LASS",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_LASS_CASSIDY",
             "initial_dir": 3,
             "data": [
                 2
@@ -169,11 +177,12 @@
             "y": 0
         },
         {
-            "graphics_id": 4,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3495,
+            "id": "WAYWARD_CAVE_1F_YOUNGSTER_WAYNE",
+            "graphics_id": "OBJ_EVENT_GFX_YOUNGSTER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_YOUNGSTER_WAYNE",
             "initial_dir": 2,
             "data": [
                 2
@@ -185,11 +194,12 @@
             "y": 0
         },
         {
-            "graphics_id": 20,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3453,
+            "id": "WAYWARD_CAVE_1F_HIKER_REGINALD",
+            "graphics_id": "OBJ_EVENT_GFX_HIKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_HIKER_REGINALD",
             "initial_dir": 3,
             "data": [
                 2
@@ -201,11 +211,12 @@
             "y": 0
         },
         {
-            "graphics_id": 19,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3382,
+            "id": "WAYWARD_CAVE_1F_COLLECTOR_TERRY",
+            "graphics_id": "OBJ_EVENT_GFX_COLLECTOR",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_COLLECTOR_TERRY",
             "initial_dir": 3,
             "data": [
                 1
@@ -217,11 +228,12 @@
             "y": 0
         },
         {
-            "graphics_id": 53,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3458,
+            "id": "WAYWARD_CAVE_1F_PICNICKER_ANA",
+            "graphics_id": "OBJ_EVENT_GFX_PICNICKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_PICNICKER_ANA",
             "initial_dir": 3,
             "data": [
                 3
@@ -233,11 +245,12 @@
             "y": 0
         },
         {
-            "graphics_id": 52,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3379,
+            "id": "WAYWARD_CAVE_1F_CAMPER_PARKER",
+            "graphics_id": "OBJ_EVENT_GFX_CAMPER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_CAMPER_PARKER",
             "initial_dir": 2,
             "data": [
                 3
@@ -249,11 +262,12 @@
             "y": 0
         },
         {
-            "graphics_id": 50,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3442,
+            "id": "WAYWARD_CAVE_1F_RUIN_MANIAC_GERALD",
+            "graphics_id": "OBJ_EVENT_GFX_RUIN_MANIAC",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_RUIN_MANIAC_GERALD",
             "initial_dir": 2,
             "data": [
                 1
@@ -265,11 +279,12 @@
             "y": 0
         },
         {
-            "graphics_id": 20,
-            "movement_type": 16,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3454,
+            "id": "WAYWARD_CAVE_1F_HIKER_LORENZO",
+            "graphics_id": "OBJ_EVENT_GFX_HIKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_HIKER_LORENZO",
             "initial_dir": 2,
             "data": [
                 2
@@ -281,10 +296,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 32,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_15",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0020",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -295,10 +311,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 33,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_16",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0021",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -309,10 +326,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 34,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_17",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0022",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -323,10 +341,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 35,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_18",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0023",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -337,10 +356,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 36,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_19",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0024",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -351,10 +371,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 37,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_20",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0025",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -365,10 +386,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 38,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_21",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0026",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -379,10 +401,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 39,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_22",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0027",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -393,10 +416,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 40,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_23",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0028",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -407,10 +431,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 41,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_24",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0029",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -421,10 +446,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 42,
+            "id": "WAYWARD_CAVE_1F_ROCK_SMASH_25",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x002A",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -439,25 +465,25 @@
         {
             "x": 30,
             "z": 55,
-            "dest_header_id": 350,
+            "dest_header_id": "MAP_HEADER_ROUTE_206",
             "dest_warp_id": 12
         },
         {
             "x": 41,
             "z": 53,
-            "dest_header_id": 350,
+            "dest_header_id": "MAP_HEADER_ROUTE_206",
             "dest_warp_id": 13
         },
         {
             "x": 28,
             "z": 54,
-            "dest_header_id": 285,
+            "dest_header_id": "MAP_HEADER_WAYWARD_CAVE_B1F",
             "dest_warp_id": 1
         },
         {
             "x": 55,
             "z": 54,
-            "dest_header_id": 285,
+            "dest_header_id": "MAP_HEADER_WAYWARD_CAVE_B1F",
             "dest_warp_id": 0
         }
     ],
@@ -469,7 +495,7 @@
             "y": 0,
             "width": 1,
             "length": 1,
-            "var": 16529,
+            "var": "VAR_UNK_0x4091",
             "value": 1
         }
     ]

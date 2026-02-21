@@ -1,6 +1,5 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0020
@@ -10,14 +9,13 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_147 1
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartCommon
     ReleaseAll
     End
 
 _0020:
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

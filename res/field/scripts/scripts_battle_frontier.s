@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/battle_frontier.h"
 
-    .data
 
     ScriptEntry _0460
     ScriptEntry _00DB
@@ -44,18 +43,18 @@
     ScriptEntryEnd
 
 _009A:
-    SetFlag 0x2CB
-    ScrCmd_238 19, 0x4000
-    GoToIfEq 0x4000, 0, _00D5
-    ScrCmd_329 0x4001, 0x4002, 0x4003, 0x4004
-    SetObjectEventPos 29, 0x4001, 0x4002
-    ScrCmd_189 29, 0x4003
-    ScrCmd_188 29, 0x4004
-    ClearFlag 0x2C3
+    SetFlag FLAG_UNK_0x02CB
+    CheckTVInterviewEligible TV_PROGRAM_SEGMENT_BATTLE_FRONTIER_FRONTLINE_NEWS_MULTI, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _00D5
+    ScrCmd_329 VAR_MAP_LOCAL_1, VAR_MAP_LOCAL_2, VAR_MAP_LOCAL_3, VAR_MAP_LOCAL_4
+    SetObjectEventPos 29, VAR_MAP_LOCAL_1, VAR_MAP_LOCAL_2
+    SetObjectEventDir 29, VAR_MAP_LOCAL_3
+    SetObjectEventMovementType 29, VAR_MAP_LOCAL_4
+    ClearFlag FLAG_UNK_0x02C3
     End
 
 _00D5:
-    SetFlag 0x2C3
+    SetFlag FLAG_UNK_0x02C3
     End
 
 _00DB:
@@ -273,8 +272,8 @@ _026A:
     LockAll
     FacePlayer
     Message 21
-    ScrCmd_035
-    ScrCmd_2D8 1
+    CloseMessageWithoutErasing
+    PokeMartFrontier MART_FRONTIER_ID_EXCHANGE_SERVICE_CORNER_DOWN
     ReleaseAll
     End
 
@@ -282,11 +281,11 @@ _027E:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     ScrCmd_2E2
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     ReleaseAll
     End
@@ -296,49 +295,29 @@ _02A6:
     LockAll
     FacePlayer
     Message 23
-    ScrCmd_035
-    ScrCmd_2D8 0
+    CloseMessageWithoutErasing
+    PokeMartFrontier MART_FRONTIER_ID_EXCHANGE_SERVICE_CORNER_UP
     ReleaseAll
     End
 
 _02BA:
-    ScrCmd_036 24, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 24
     End
 
 _02D1:
-    ScrCmd_036 25, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 25
     End
 
 _02E8:
-    ScrCmd_036 26, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 26
     End
 
 _02FF:
-    ScrCmd_036 27, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 27
     End
 
 _0316:
-    ScrCmd_036 28, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 28
     End
 
 _032D:
@@ -373,16 +352,16 @@ _0360:
     ApplyMovement LOCALID_PLAYER, _0398
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_BATTLE_HALL, 0, 25, 9, 2
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
     .balign 4, 0
 _0398:
-    MoveAction_018 5
+    WalkFastWest 5
     EndMovement
 
 _03A0:
@@ -390,16 +369,16 @@ _03A0:
     ApplyMovement LOCALID_PLAYER, _03D8
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_BATTLE_CASTLE, 0, 21, 9, 2
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
     .balign 4, 0
 _03D8:
-    MoveAction_018 6
+    WalkFastWest 6
     EndMovement
 
 _03E0:
@@ -407,16 +386,16 @@ _03E0:
     ApplyMovement LOCALID_PLAYER, _0418
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_BATTLE_ARCADE, 0, 1, 6, 3
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
     .balign 4, 0
 _0418:
-    MoveAction_019 5
+    WalkFastEast 5
     EndMovement
 
 _0420:
@@ -424,20 +403,19 @@ _0420:
     ApplyMovement LOCALID_PLAYER, _0458
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_BATTLE_FACTORY, 0, 1, 7, 3
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
     .balign 4, 0
 _0458:
-    MoveAction_019 6
+    WalkFastEast 6
     EndMovement
 
 _0460:
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

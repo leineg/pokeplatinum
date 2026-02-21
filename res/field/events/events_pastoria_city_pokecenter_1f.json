@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 26,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "PASTORIA_CITY_POKECENTER_1F_POKECENTER_NURSE_0",
+            "graphics_id": "OBJ_EVENT_GFX_POKECENTER_NURSE",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 1,
             "initial_dir": 1,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 51,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "PASTORIA_CITY_POKECENTER_1F_BLACK_BELT_1",
+            "graphics_id": "OBJ_EVENT_GFX_BLACK_BELT",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -30,10 +32,11 @@
             "y": 0
         },
         {
-            "graphics_id": 8,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "PASTORIA_CITY_POKECENTER_1F_SCHOOL_KID_F_2",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_F",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 1,
             "data": [],
@@ -44,10 +47,11 @@
             "y": 0
         },
         {
-            "graphics_id": 111,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 387,
+            "id": "PASTORIA_CITY_POKECENTER_1F_UNK_111_3",
+            "graphics_id": "OBJ_EVENT_GFX_UNK_111",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0183",
             "script": 10401,
             "initial_dir": 1,
             "data": [],
@@ -58,10 +62,11 @@
             "y": 0
         },
         {
-            "graphics_id": 112,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 388,
+            "id": "PASTORIA_CITY_POKECENTER_1F_UNK_112_4",
+            "graphics_id": "OBJ_EVENT_GFX_UNK_112",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0184",
             "script": 10402,
             "initial_dir": 1,
             "data": [],
@@ -76,19 +81,19 @@
         {
             "x": 8,
             "z": 12,
-            "dest_header_id": 120,
+            "dest_header_id": "MAP_HEADER_PASTORIA_CITY",
             "dest_warp_id": 9
         },
         {
             "x": 2,
             "z": 10,
-            "dest_header_id": 124,
+            "dest_header_id": "MAP_HEADER_PASTORIA_CITY_POKECENTER_2F",
             "dest_warp_id": 0
         },
         {
             "x": 14,
             "z": 10,
-            "dest_header_id": 479,
+            "dest_header_id": "MAP_HEADER_PASTORIA_CITY_POKECENTER_B1F",
             "dest_warp_id": 0
         }
     ],

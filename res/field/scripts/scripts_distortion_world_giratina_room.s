@@ -2,7 +2,6 @@
 #include "generated/hidden_locations.h"
 #include "res/text/bank/distortion_world_giratina_room.h"
 
-    .data
 
     ScriptEntry _0022
     ScriptEntry _0026
@@ -15,16 +14,16 @@
     ScriptEntryEnd
 
 _0022:
-    ScrCmd_2F2
+    InitPersistedMapFeaturesForDistortionWorld
     End
 
 _0026:
-    GoToIfSet 142, _0033
+    GoToIfSet FLAG_MAP_LOCAL, _0033
     End
 
 _0033:
-    ScrCmd_31F
-    SetVar 0x4055, 14
+    ResetDistortionWorldPersistedCameraAngles
+    SetVar VAR_DISTORTION_WORLD_PROGRESS, 14
     RemoveObject 128
     End
 
@@ -32,8 +31,8 @@ _0041:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 13
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0061
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0061
     CloseMessage
     ReleaseAll
     End
@@ -43,20 +42,20 @@ _0061:
     Message 14
     CloseMessage
     EnableHiddenLocation HIDDEN_LOCATION_SPRING_PATH
-    SetVar 0x40AA, 1
+    SetVar VAR_EXITED_DISTORTION_WORLD_STATE, 1
     PlayFanfare SEQ_SE_PL_SYUWA
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_SENDOFF_SPRING, 0, 32, 17, 1
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
 _009E:
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_DISTORTION_WORLD_B7F, 0, 89, 57, 1
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -65,18 +64,18 @@ _00C4:
     LockAll
     PlayCry SPECIES_GIRATINA
     Message 2
-    ScrCmd_04D
+    WaitCry
     CloseMessage
-    SetFlag 142
+    SetFlag FLAG_MAP_LOCAL
     StartGiratinaOriginBattle SPECIES_GIRATINA, 47
-    ClearFlag 142
-    CheckWonBattle 0x800C
-    ScrCmd_314 0x800C
-    GoToIfEq 0x800C, 2, _0204
-    GoToIfEq 0x800C, 3, _0204
-    GoToIfEq 0x800C, 5, _014E
-    GoToIfEq 0x800C, 6, _014E
-    GoToIfEq 0x800C, 4, _016E
+    ClearFlag FLAG_MAP_LOCAL
+    CheckWonBattle VAR_RESULT
+    GetBattleResult VAR_RESULT
+    GoToIfEq VAR_RESULT, BATTLE_RESULT_LOSE, _0204
+    GoToIfEq VAR_RESULT, BATTLE_RESULT_DRAW, _0204
+    GoToIfEq VAR_RESULT, BATTLE_RESULT_PLAYER_FLED, _014E
+    GoToIfEq VAR_RESULT, BATTLE_RESULT_ENEMY_FLED, _014E
+    GoToIfEq VAR_RESULT, BATTLE_RESULT_CAPTURED_MON, _016E
     ScrCmd_311 130
     ScrCmd_311 129
     ApplyMovement 129, _0250
@@ -97,9 +96,9 @@ _014E:
     GoTo _0194
 
 _016E:
-    SetFlag 0x121
-    SetFlag 0x250
-    ClearFlag 0x278
+    SetFlag FLAG_CAUGHT_GIRATINA
+    SetFlag FLAG_HIDE_TURNBACK_CAVE_GIRATINA_ROOM_GIRATINA
+    ClearFlag FLAG_UNK_0x0278
     ScrCmd_311 130
     ScrCmd_311 129
     ApplyMovement 129, _0250
@@ -109,9 +108,9 @@ _016E:
     Message 5
 _0194:
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    ScrCmd_066 0x8004, 0x8005
-    ApplyMovement 241, _0280
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    AddFreeCamera VAR_0x8004, VAR_0x8005
+    ApplyFreeCameraMovement _0280
     ApplyMovement 130, _026C
     ApplyMovement 129, _0258
     ApplyMovement LOCALID_PLAYER, _0244
@@ -124,9 +123,9 @@ _0194:
     ApplyMovement 130, _0274
     WaitMovement
     ScrCmd_312 130
-    ApplyMovement 241, _0288
+    ApplyFreeCameraMovement _0288
     WaitMovement
-    ScrCmd_067
+    RestoreCamera
     Message 11
     ApplyMovement 129, _0264
     WaitMovement
@@ -155,7 +154,7 @@ _021D:
     LockAll
     PlayCry SPECIES_GIRATINA
     Message 0
-    ScrCmd_04D
+    WaitCry
     WaitABPadPress
     CloseMessage
     ReleaseAll
@@ -172,8 +171,8 @@ _0232:
 
     .balign 4, 0
 _0244:
-    MoveAction_033
-    MoveAction_075
+    WalkOnSpotNormalSouth
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
@@ -183,13 +182,13 @@ _0250:
 
     .balign 4, 0
 _0258:
-    MoveAction_033
-    MoveAction_075
+    WalkOnSpotNormalSouth
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _0264:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
@@ -200,15 +199,15 @@ _026C:
     .balign 4, 0
 _0274:
     MoveAction_118
-    MoveAction_013 5
+    WalkNormalSouth 5
     EndMovement
 
     .balign 4, 0
 _0280:
-    MoveAction_013 5
+    WalkNormalSouth 5
     EndMovement
 
     .balign 4, 0
 _0288:
-    MoveAction_012 5
+    WalkNormalNorth 5
     EndMovement

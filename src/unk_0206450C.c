@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "generated/movement_actions.h"
+
 #include "struct_decls/struct_0205E884_decl.h"
 #include "struct_decls/struct_02061AB4_decl.h"
 
@@ -10,7 +12,7 @@
 
 #include "map_object.h"
 #include "map_object_move.h"
-#include "math.h"
+#include "math_util.h"
 #include "player_avatar.h"
 #include "unk_0205F180.h"
 #include "unk_020655F4.h"
@@ -158,9 +160,7 @@ const int Unk_020EEAD0[];
 
 static void sub_0206450C(MapObject *mapObj, int param1)
 {
-    UnkStruct_0206450C *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_0206450C)));
+    UnkStruct_0206450C *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_0206450C)));
     v0->unk_02 = sub_0206530C(Unk_020EEA88, -1);
     v0->unk_04 = param1;
 
@@ -272,9 +272,7 @@ void sub_02064658(MapObject *mapObj)
 
 static void sub_02064668(MapObject *mapObj, int param1, int param2, int param3)
 {
-    UnkStruct_02064668 *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_02064668)));
+    UnkStruct_02064668 *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_02064668)));
 
     v0->unk_04 = param3;
     v0->unk_08 = param1;
@@ -287,9 +285,7 @@ static void sub_02064668(MapObject *mapObj, int param1, int param2, int param3)
 void sub_02064690(MapObject *mapObj)
 {
     int v0;
-    UnkStruct_02064668 *v1;
-
-    v1 = sub_02062A78(mapObj);
+    UnkStruct_02064668 *v1 = sub_02062A78(mapObj);
 
     switch (v1->unk_00) {
     case 0:
@@ -297,7 +293,7 @@ void sub_02064690(MapObject *mapObj)
         MapObject_SetEndMovementOff(mapObj);
 
         v0 = MapObject_GetFacingDir(mapObj);
-        v0 = sub_02065838(v0, 0x0);
+        v0 = MovementAction_TurnActionTowardsDir(v0, MOVEMENT_ACTION_FACE_NORTH);
 
         sub_02065668(mapObj, v0);
 
@@ -345,7 +341,7 @@ void sub_02064690(MapObject *mapObj)
             }
         }
 
-        v0 = sub_02065838(v0, v1->unk_08);
+        v0 = MovementAction_TurnActionTowardsDir(v0, v1->unk_08);
 
         sub_02065668(mapObj, v0);
         sub_02062D04(mapObj);
@@ -448,9 +444,7 @@ static int sub_0206489C(MapObject *mapObj, int param1)
 
 static void sub_020648F4(MapObject *mapObj, int param1)
 {
-    UnkStruct_020648F4 *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_020648F4)));
+    UnkStruct_020648F4 *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_020648F4)));
     v0->unk_00 = param1;
 
     sub_02062A0C(mapObj, 0x0);
@@ -460,9 +454,7 @@ static void sub_020648F4(MapObject *mapObj, int param1)
 
 void sub_02064918(MapObject *mapObj)
 {
-    UnkStruct_020648F4 *v0;
-
-    v0 = sub_02062A78(mapObj);
+    UnkStruct_020648F4 *v0 = sub_02062A78(mapObj);
 
     switch (v0->unk_04) {
     case 0:
@@ -496,9 +488,7 @@ void sub_02064960(MapObject *mapObj)
 
 static void sub_0206496C(MapObject *mapObj, int param1)
 {
-    UnkStruct_0206496C *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_0206496C)));
+    UnkStruct_0206496C *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_0206496C)));
     v0->unk_00 = param1;
 
     sub_02062A0C(mapObj, 0x0);
@@ -518,9 +508,7 @@ void sub_0206499C(MapObject *mapObj)
 
 void sub_020649A8(MapObject *mapObj)
 {
-    UnkStruct_0206496C *v0;
-
-    v0 = sub_02062A78(mapObj);
+    UnkStruct_0206496C *v0 = sub_02062A78(mapObj);
 
     while (Unk_020EE900[v0->unk_02](mapObj, v0) == 1) {
         (void)0;
@@ -535,7 +523,7 @@ static int sub_020649CC(MapObject *mapObj, UnkStruct_0206496C *param1)
         v0 = MapObject_GetFacingDir(mapObj);
     }
 
-    v0 = sub_02065838(v0, 0x0);
+    v0 = MovementAction_TurnActionTowardsDir(v0, MOVEMENT_ACTION_FACE_NORTH);
     sub_02065668(mapObj, v0);
     param1->unk_02 = 1;
 
@@ -623,9 +611,7 @@ void sub_02064AF0(MapObject *mapObj)
 
 void sub_02064AFC(MapObject *mapObj)
 {
-    UnkStruct_0206496C *v0;
-
-    v0 = sub_02062A78(mapObj);
+    UnkStruct_0206496C *v0 = sub_02062A78(mapObj);
 
     while (Unk_020EE870[v0->unk_02](mapObj, v0) == 1) {
         (void)0;
@@ -636,7 +622,7 @@ static int sub_02064B20(MapObject *mapObj, UnkStruct_0206496C *param1)
 {
     int v0 = MapObject_GetFacingDir(mapObj);
 
-    v0 = sub_02065838(v0, 0x0);
+    v0 = MovementAction_TurnActionTowardsDir(v0, MOVEMENT_ACTION_FACE_NORTH);
     sub_02065668(mapObj, v0);
     param1->unk_02 = 1;
 
@@ -721,9 +707,7 @@ static int (*const Unk_020EE870[])(MapObject *, UnkStruct_0206496C *) = {
 
 void sub_02064C28(MapObject *mapObj)
 {
-    UnkStruct_02064C28 *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_02064C28)));
+    UnkStruct_02064C28 *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_02064C28)));
 
     if (sub_0206553C(mapObj) == 1) {
         sub_02065550(mapObj, &v0->unk_04);
@@ -741,9 +725,7 @@ void sub_02064C48(MapObject *mapObj)
 
 static int sub_02064C6C(MapObject *mapObj, UnkStruct_02064C28 *param1)
 {
-    int v0;
-
-    v0 = MapObject_GetInitialDir(mapObj);
+    int v0 = MapObject_GetInitialDir(mapObj);
 
     if (param1->unk_02 == 1) {
         v0 = Direction_GetOpposite(v0);
@@ -801,7 +783,7 @@ static int sub_02064CA8(MapObject *mapObj, UnkStruct_02064C28 *param1)
             v6 = 0x20;
         }
 
-        v6 = sub_02065838(v5, v6);
+        v6 = MovementAction_TurnActionTowardsDir(v5, v6);
         sub_02065668(mapObj, v6);
 
         if (sub_0206553C(mapObj) == 1) {
@@ -838,9 +820,7 @@ static int (*const Unk_020EE814[])(MapObject *, UnkStruct_02064C28 *) = {
 
 static void sub_02064D98(MapObject *mapObj, int param1, int param2, int param3)
 {
-    UnkStruct_02064D98 *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_02064D98)));
+    UnkStruct_02064D98 *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_02064D98)));
     v0->unk_02 = param1;
     v0->unk_03 = param2;
     v0->unk_04 = param3;
@@ -932,9 +912,7 @@ void sub_02064EB8(MapObject *mapObj)
 
 void sub_02064EC8(MapObject *mapObj)
 {
-    UnkStruct_02064D98 *v0;
-
-    v0 = sub_02062A78(mapObj);
+    UnkStruct_02064D98 *v0 = sub_02062A78(mapObj);
 
     while (Unk_020EE7AC[v0->unk_00](mapObj, v0) == 1) {
         (void)0;
@@ -1007,7 +985,7 @@ static int sub_02064EEC(MapObject *mapObj, UnkStruct_02064D98 *param1)
             v10 = 0x20;
         }
 
-        v10 = sub_02065838(v9, v10);
+        v10 = MovementAction_TurnActionTowardsDir(v9, v10);
         sub_02065668(mapObj, v10);
 
         if (sub_0206553C(mapObj) == 1) {
@@ -1043,9 +1021,7 @@ static int (*const Unk_020EE7AC[])(MapObject *, UnkStruct_02064D98 *) = {
 
 static void sub_0206502C(MapObject *mapObj, int param1, int param2, int param3)
 {
-    UnkStruct_0206502C *v0;
-
-    v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_0206502C)));
+    UnkStruct_0206502C *v0 = sub_02062A54(mapObj, (sizeof(UnkStruct_0206502C)));
 
     v0->unk_02 = param1;
     v0->unk_03 = param2;
@@ -1122,13 +1098,13 @@ static int sub_02065124(MapObject *mapObj, UnkStruct_0206502C *param1)
 {
     if (MapObject_GetTrainerType(mapObj) == 0xa) {
         FieldSystem *fieldSystem = MapObject_FieldSystem(mapObj);
-        PlayerAvatar *playerAvatar = sub_0205EF3C(fieldSystem);
+        PlayerAvatar *playerAvatar = FieldSystem_GetPlayerAvatar(fieldSystem);
         int v2 = MapObject_GetFacingDir(mapObj);
         int v3 = MapObject_GetDataAt(mapObj, 0);
         int v4 = sub_02067D58(mapObj, playerAvatar, v2, v3);
 
         if (v4 != -1) {
-            int v5 = sub_02065838(v2, 0x30);
+            int v5 = MovementAction_TurnActionTowardsDir(v2, MOVEMENT_ACTION_JUMP_ON_SPOT_FAST_NORTH);
 
             sub_02065668(mapObj, v4);
             sub_02062D04(mapObj);
@@ -1218,7 +1194,7 @@ static int sub_020651A4(MapObject *mapObj, UnkStruct_0206502C *param1)
             v10 = 0x20;
         }
 
-        v10 = sub_02065838(v9, v10);
+        v10 = MovementAction_TurnActionTowardsDir(v9, v10);
         sub_02065668(mapObj, v10);
 
         if (sub_0206553C(mapObj) == 1) {
@@ -1303,7 +1279,7 @@ static int sub_0206537C(MapObject *mapObj)
 
     {
         FieldSystem *fieldSystem = MapObject_FieldSystem(mapObj);
-        PlayerAvatar *playerAvatar = sub_0205EF3C(fieldSystem);
+        PlayerAvatar *playerAvatar = FieldSystem_GetPlayerAvatar(fieldSystem);
 
         if (sub_0206140C(playerAvatar) == 0) {
             return -1;
@@ -1393,7 +1369,7 @@ static int sub_02065448(MapObject *mapObj, int param1, int param2)
                 int v6 = MapObject_GetX(mapObj);
                 int v7 = MapObject_GetZ(mapObj);
                 FieldSystem *fieldSystem = MapObject_FieldSystem(mapObj);
-                PlayerAvatar *playerAvatar = sub_0205EF3C(fieldSystem);
+                PlayerAvatar *playerAvatar = FieldSystem_GetPlayerAvatar(fieldSystem);
                 int v10 = Player_GetXPos(playerAvatar);
                 int v11 = Player_GetZPos(playerAvatar);
 

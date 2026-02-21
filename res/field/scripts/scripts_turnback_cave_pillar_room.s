@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/turnback_cave_pillar_room.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0026
@@ -9,27 +8,25 @@
 
 _000A:
     Call _0018
-    ScrCmd_285 0x410B, 0x410C
+    InitTurnbackCave VAR_TURNBACK_CAVE_PILLARS_SEEN, VAR_TURNBACK_CAVE_ROOMS_VISITED
     End
 
 _0018:
-    AddVar 0x410B, 1
-    AddVar 0x410C, 1
+    AddVar VAR_TURNBACK_CAVE_PILLARS_SEEN, 1
+    AddVar VAR_TURNBACK_CAVE_ROOMS_VISITED, 1
     Return
 
 _0026:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    SetVar 0x8004, 0x410B
-    SetVar 0x8005, 0x410C
-    BufferNumber 0, 0x8004
-    BufferNumber 1, 0x8005
+    SetVar VAR_0x8004, VAR_TURNBACK_CAVE_PILLARS_SEEN
+    SetVar VAR_0x8005, VAR_TURNBACK_CAVE_ROOMS_VISITED
+    BufferNumber 0, VAR_0x8004
+    BufferNumber 1, VAR_0x8005
     Message 0
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

@@ -20,7 +20,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_THUNDER_WAVE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -34,8 +34,21 @@
                 "MOVE_SMOG",
                 "MOVE_WILL_O_WISP"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "We’ll come at you with our hearts\n",
+                "ablaze!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Your heart burns as hot as mine!\n"
         }
     ]
 }

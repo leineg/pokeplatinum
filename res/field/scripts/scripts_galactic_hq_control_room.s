@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/galactic_hq_control_room.h"
 
-    .data
 
     ScriptEntry _003E
     ScriptEntry _0055
@@ -21,7 +20,7 @@
     ScriptEntryEnd
 
 _003E:
-    GoToIfSet 0x97D, _004B
+    GoToIfSet FLAG_FREED_GALACTIC_HQ_POKEMON, _004B
     End
 
 _004B:
@@ -36,22 +35,22 @@ _0059:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0x97D, _0109
-    GoToIfSet 173, _0114
+    GoToIfSet FLAG_FREED_GALACTIC_HQ_POKEMON, _0109
+    GoToIfSet FLAG_UNK_0x00AD, _0114
     Message 0
     CloseMessage
     StartTrainerBattle TRAINER_COMMANDER_SATURN_GALACTIC_HQ
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _011F
-    SetFlag 173
-    SetVar 0x410D, 1
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _011F
+    SetFlag FLAG_UNK_0x00AD
+    SetVar VAR_UNK_0x410D, 1
     Message 1
     CloseMessage
-    GetPlayerDir 0x8004
-    SetVar 0x4002, 0x8004
-    GoToIfEq 0x8004, 0, _00D5
-    GoToIfEq 0x8004, 2, _00E5
-    GoToIfEq 0x8004, 3, _00F5
+    GetPlayerDir VAR_0x8004
+    SetVar VAR_MAP_LOCAL_2, VAR_0x8004
+    GoToIfEq VAR_0x8004, 0, _00D5
+    GoToIfEq VAR_0x8004, 2, _00E5
+    GoToIfEq VAR_0x8004, 3, _00F5
     End
 
 _00D5:
@@ -94,26 +93,26 @@ _011F:
 
     .balign 4, 0
 _0128:
-    MoveAction_015
-    MoveAction_033
+    WalkNormalEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0134:
-    MoveAction_013
-    MoveAction_032
+    WalkNormalSouth
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0140:
-    MoveAction_015
-    MoveAction_034
+    WalkNormalEast
+    WalkOnSpotNormalWest
     EndMovement
 
 _014C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 0x97D, _0168
+    GoToIfSet FLAG_FREED_GALACTIC_HQ_POKEMON, _0168
     Message 13
     WaitABXPadPress
     CloseMessage
@@ -130,7 +129,7 @@ _0168:
 _0173:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 0x97D, _018F
+    GoToIfSet FLAG_FREED_GALACTIC_HQ_POKEMON, _018F
     Message 14
     WaitABXPadPress
     CloseMessage
@@ -147,7 +146,7 @@ _018F:
 _019A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 0x97D, _01B6
+    GoToIfSet FLAG_FREED_GALACTIC_HQ_POKEMON, _01B6
     Message 15
     WaitABXPadPress
     CloseMessage
@@ -173,23 +172,23 @@ _01C5:
 _01C7:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 0x97D, _0347
+    GoToIfSet FLAG_FREED_GALACTIC_HQ_POKEMON, _0347
     Message 10
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _01FB
-    GoToIfEq 0x800C, MENU_NO, _0341
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _01FB
+    GoToIfEq VAR_RESULT, MENU_NO, _0341
     End
 
 _01FB:
-    SetVar 0x410D, 0
+    SetVar VAR_UNK_0x410D, 0
     PlayFanfare SEQ_SE_DP_BUTTON3
     BufferPlayerName 0
     Message 11
     CloseMessage
-    ClearFlag 0x295
-    SetFlag 0x97D
+    ClearFlag FLAG_UNK_0x0295
+    SetFlag FLAG_FREED_GALACTIC_HQ_POKEMON
     ScrCmd_25F
-    WaitTime 30, 0x800C
+    WaitTime 30, VAR_RESULT
     ApplyMovement 2, _036C
     ApplyMovement 1, _0374
     ApplyMovement 3, _037C
@@ -203,21 +202,21 @@ _01FB:
     RemoveObject 2
     RemoveObject 1
     RemoveObject 3
-    GoToIfEq 0x4002, 0, _02C0
-    GoToIfEq 0x4002, 2, _02DA
-    GoToIfEq 0x4002, 3, _02F4
+    GoToIfEq VAR_MAP_LOCAL_2, 0, _02C0
+    GoToIfEq VAR_MAP_LOCAL_2, 2, _02DA
+    GoToIfEq VAR_MAP_LOCAL_2, 3, _02F4
     End
 
 _0296:
     RemoveObject 2
     RemoveObject 1
     RemoveObject 3
-    WaitTime 2, 0x800C
-    ClearFlag 0x236
+    WaitTime 2, VAR_RESULT
+    ClearFlag FLAG_UNK_0x0236
     AddObject 2
     AddObject 1
     AddObject 3
-    WaitTime 2, 0x800C
+    WaitTime 2, VAR_RESULT
     Return
 
 _02C0:
@@ -244,14 +243,14 @@ _02F4:
 _030E:
     Message 3
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     RemoveObject 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    SetFlag 0x235
-    ClearFlag 0x182
-    SetVar 0x40A9, 1
+    SetFlag FLAG_UNK_0x0235
+    ClearFlag FLAG_UNK_0x0182
+    SetVar VAR_UNK_0x40A9, 1
     ReleaseAll
     End
 
@@ -269,39 +268,39 @@ _0347:
 
     .balign 4, 0
 _0354:
-    MoveAction_063
-    MoveAction_034
+    Delay8
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0360:
-    MoveAction_063
-    MoveAction_032
+    Delay8
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _036C:
-    MoveAction_013 2
+    WalkNormalSouth 2
     EndMovement
 
     .balign 4, 0
 _0374:
-    MoveAction_013 2
+    WalkNormalSouth 2
     EndMovement
 
     .balign 4, 0
 _037C:
-    MoveAction_013 2
+    WalkNormalSouth 2
     EndMovement
 
     .balign 4, 0
 _0384:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _038C:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
 _0394:
@@ -317,12 +316,12 @@ _0394:
 
     .balign 4, 0
 _03B4:
-    MoveAction_012
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
 _03BC:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
 _03C4:
@@ -358,18 +357,18 @@ _03EA:
 _03FD:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 173, _0450
+    GoToIfSet FLAG_UNK_0x00AD, _0450
     ApplyMovement 4, _0470
     WaitMovement
     Message 5
     CloseMessage
     ApplyMovement 0, _0460
     WaitMovement
-    WaitTime 20, 0x800C
+    WaitTime 20, VAR_RESULT
     Message 6
     Message 7
     CloseMessage
-    WaitTime 20, 0x800C
+    WaitTime 20, VAR_RESULT
     ApplyMovement 0, _0468
     WaitMovement
     Message 8
@@ -388,15 +387,15 @@ _0450:
 
     .balign 4, 0
 _0460:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0468:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0470:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement

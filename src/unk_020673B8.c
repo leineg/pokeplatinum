@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "generated/movement_actions.h"
+
 #include "struct_decls/struct_02061AB4_decl.h"
 
 #include "map_header_data.h"
@@ -144,17 +146,13 @@ static int sub_020674A8(MapObject *param0)
 
 static void sub_020674AC(MapObject *param0)
 {
-    UnkStruct_020674AC *v0;
-
-    v0 = sub_02062A7C(param0, (sizeof(UnkStruct_020674AC)));
+    UnkStruct_020674AC *v0 = sub_02062A7C(param0, (sizeof(UnkStruct_020674AC)));
     v0->unk_03 = MapObject_GetDataAt(param0, 1);
 }
 
 static int sub_020674C4(MapObject *param0)
 {
-    UnkStruct_020674AC *v0;
-
-    v0 = sub_02062AA0(param0);
+    UnkStruct_020674AC *v0 = sub_02062AA0(param0);
 
     switch (v0->unk_00) {
     case 0:
@@ -192,9 +190,7 @@ static int sub_020674C4(MapObject *param0)
 
 static int sub_02067540(MapObject *param0)
 {
-    UnkStruct_020674AC *v0;
-
-    v0 = sub_02062AA0(param0);
+    UnkStruct_020674AC *v0 = sub_02062AA0(param0);
 
     switch (v0->unk_01) {
     case 0: {
@@ -211,7 +207,7 @@ static int sub_02067540(MapObject *param0)
             { 0, 1 },
         };
         int v4 = v3[v0->unk_05][v0->unk_06];
-        int v5 = sub_02065838(v4, 0x0);
+        int v5 = MovementAction_TurnActionTowardsDir(v4, MOVEMENT_ACTION_FACE_NORTH);
 
         sub_02065668(param0, v5);
         v0->unk_01++;
@@ -253,9 +249,7 @@ static int sub_02067540(MapObject *param0)
 static void sub_0206762C(MapObject *param0)
 {
     int v0;
-    UnkStruct_0206762C *v1;
-
-    v1 = sub_02062A7C(param0, (sizeof(UnkStruct_0206762C)));
+    UnkStruct_0206762C *v1 = sub_02062A7C(param0, (sizeof(UnkStruct_0206762C)));
     v1->unk_03 = MapObject_GetDataAt(param0, 1);
 
     v0 = MapObject_GetTrainerType(param0);
@@ -271,9 +265,7 @@ static void sub_0206762C(MapObject *param0)
 
 static int sub_02067658(MapObject *param0)
 {
-    UnkStruct_0206762C *v0;
-
-    v0 = sub_02062AA0(param0);
+    UnkStruct_0206762C *v0 = sub_02062AA0(param0);
 
     switch (v0->unk_00) {
     case 0:
@@ -336,7 +328,7 @@ static int sub_020676D4(MapObject *param0)
     }
     case 1: {
         int v4 = v1[v0->unk_05][v0->unk_06];
-        int v5 = sub_02065838(v4, 0x0);
+        int v5 = MovementAction_TurnActionTowardsDir(v4, MOVEMENT_ACTION_FACE_NORTH);
 
         sub_02065668(param0, v5);
         v0->unk_01++;

@@ -16,39 +16,6 @@
 #include "special_encounter.h"
 #include "trainer_info.h"
 
-enum RoamerRouteIndex {
-    RI_ROUTE_201 = 0,
-    RI_ROUTE_202,
-    RI_ROUTE_203,
-    RI_ROUTE_204_SOUTH,
-    RI_ROUTE_204_NORTH,
-    RI_ROUTE_205_SOUTH,
-    RI_ROUTE_205_NORTH,
-    RI_ROUTE_206,
-    RI_ROUTE_207,
-    RI_ROUTE_208,
-    RI_ROUTE_209,
-    RI_ROUTE_210_SOUTH,
-    RI_ROUTE_210_NORTH,
-    RI_ROUTE_211_WEST,
-    RI_ROUTE_211_EAST,
-    RI_ROUTE_212_NORTH,
-    RI_ROUTE_212_SOUTH,
-    RI_ROUTE_213,
-    RI_ROUTE_214,
-    RI_ROUTE_215,
-    RI_ROUTE_216,
-    RI_ROUTE_217,
-    RI_ROUTE_218,
-    RI_ROUTE_219,
-    RI_ROUTE_220,
-    RI_ROUTE_221,
-    RI_ROUTE_222,
-    RI_VALLEY_WINDWORKS_OUTSIDE,
-    RI_FUEGO_IRONWORKS_OUTSIDE,
-    RI_MAX,
-};
-
 typedef struct NearbyRoutes {
     u16 numPossibilities;
     u16 adjacentRouteIndexes[5];
@@ -318,7 +285,7 @@ void RoamingPokemon_ActivateSlot(SaveData *saveData, const u8 slot)
     Roamer_SetData(newRoamer, ROAMER_DATA_LEVEL, level);
 
     trainer = SaveData_GetTrainerInfo(saveData);
-    roamerMonData = Pokemon_New(4);
+    roamerMonData = Pokemon_New(HEAP_ID_FIELD1);
 
     Pokemon_Init(roamerMonData);
     Pokemon_InitWith(roamerMonData, species, level, INIT_IVS_RANDOM, FALSE, 0, OTID_SET, TrainerInfo_ID_LowHalf(trainer));
@@ -327,7 +294,7 @@ void RoamingPokemon_ActivateSlot(SaveData *saveData, const u8 slot)
     Roamer_SetData(newRoamer, ROAMER_DATA_IVS, Pokemon_GetValue(roamerMonData, MON_DATA_COMBINED_IVS, NULL));
     Roamer_SetData(newRoamer, ROAMER_DATA_PERSONALITY, Pokemon_GetValue(roamerMonData, MON_DATA_PERSONALITY, NULL));
     Roamer_SetData(newRoamer, ROAMER_DATA_CURRENT_HP, Pokemon_GetValue(roamerMonData, MON_DATA_MAX_HP, NULL));
-    Heap_FreeToHeap(roamerMonData);
+    Heap_Free(roamerMonData);
 
     previouslyVisitedMap = SpecialEncounter_GetPlayerPreviousMap(speEnc);
     MoveRoamerRandom(speEnc, slot, previouslyVisitedMap);
@@ -387,9 +354,7 @@ static void MoveRoamerNearby(SpecialEncounter *specialEncounter, const u8 roamer
 
 static void SetNewMapLocation(SpecialEncounter *specialEncounter, const u8 roamerSlot, const u8 newMapIndex, const int newMapId)
 {
-    Roamer *roamer;
-
-    roamer = SpecialEncounter_GetRoamer(specialEncounter, roamerSlot);
+    Roamer *roamer = SpecialEncounter_GetRoamer(specialEncounter, roamerSlot);
 
     SpecialEncounter_SetRoamerRouteIndex(specialEncounter, roamerSlot, newMapIndex);
     Roamer_SetData(roamer, ROAMER_DATA_MAP_ID, newMapId);

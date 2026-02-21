@@ -5,23 +5,23 @@
 
 #include "constants/moves.h"
 
-#include "struct_decls/pokemon_animation_sys_decl.h"
-#include "struct_decls/struct_0200C440_decl.h"
-#include "struct_defs/archived_poke_sprite_data.h"
 #include "struct_defs/chatot_cry.h"
-#include "struct_defs/pokemon_sprite.h"
+#include "struct_defs/species_sprite_data.h"
 #include "struct_defs/sprite_animation_frame.h"
 
 #include "bg_window.h"
 #include "camera.h"
+#include "font_special_chars.h"
 #include "game_options.h"
 #include "message.h"
 #include "narc.h"
 #include "pokemon.h"
+#include "pokemon_anim.h"
+#include "pokemon_sprite.h"
 #include "savedata.h"
 #include "sprite.h"
 #include "sprite_system.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "text.h"
 #include "trainer_info.h"
@@ -354,9 +354,9 @@ typedef struct PokemonSummary {
 } PokemonSummary;
 
 typedef struct PokemonSummaryMonData {
-    Strbuf *speciesName;
-    Strbuf *nickname;
-    Strbuf *OTName;
+    String *speciesName;
+    String *nickname;
+    String *OTName;
 
     u16 species;
     u16 heldItem;
@@ -410,8 +410,8 @@ typedef struct PokemonSummaryMonData {
 typedef struct PokemonSummaryMonSpriteData {
     Camera *camera;
     void *spriteManager;
-    SpriteAnimationFrame frames[MAX_ANIMATION_FRAMES];
-    PokemonAnimationSys *animationSys;
+    SpriteAnimFrame frames[MAX_ANIMATION_FRAMES];
+    PokemonAnimManager *monAnimMan;
     PokemonSprite *sprite;
     BOOL flip;
 } PokemonSummaryMonSpriteData;
@@ -436,12 +436,12 @@ typedef struct PokemonSummaryScreen {
     Sprite *sprites[SUMMARY_SPRITE_MAX];
     ManagedSprite *managedSprites[SUMMARY_SPRITE_MAX];
 
-    UnkStruct_0200C440 *unk_684;
+    FontSpecialCharsContext *unk_684;
     MessageLoader *msgLoader;
     MessageLoader *ribbonLoader;
     StringTemplate *strFormatter;
-    Strbuf *strbuf;
-    Strbuf *playerName;
+    String *string;
+    String *playerName;
     MessageLoader *moveNameLoader;
     NARC *narcPlPokeData;
 
@@ -465,7 +465,7 @@ typedef struct PokemonSummaryScreen {
     u8 ribbonCol;
     u8 ribbonRow;
     u8 ribbonMax;
-    u8 ribbonNum;
+    u8 ribbonID;
 } PokemonSummaryScreen;
 
 BOOL PokemonSummaryScreen_ShowContestData(SaveData *saveData);
@@ -473,7 +473,7 @@ void PokemonSummaryScreen_FlagVisiblePages(PokemonSummary *summary, const u8 *pa
 u8 PokemonSummaryScreen_PageIsVisble(PokemonSummaryScreen *summaryScreen, u32 page);
 u8 PokemonSummaryScreen_CountVisiblePages(PokemonSummaryScreen *summaryScreen);
 void *PokemonSummaryScreen_MonData(PokemonSummaryScreen *summaryScreen);
-u8 PokemonSummaryScreen_RibbonNumAt(PokemonSummaryScreen *summaryScreen, u8 col);
+u8 PokemonSummaryScreen_RibbonIDAt(PokemonSummaryScreen *summaryScreen, u8 col);
 void PokemonSummaryScreen_SetPlayerProfile(PokemonSummary *summary, const TrainerInfo *trainerInfo);
 u32 PokemonSummaryScreen_StatusIconChar(void);
 u32 PokemonSummaryScreen_StatusIconPltt(void);

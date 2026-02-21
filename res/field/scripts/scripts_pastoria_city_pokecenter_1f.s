@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pastoria_city_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _001A
@@ -9,8 +8,7 @@
     ScriptEntryEnd
 
 _000E:
-    SetVar 0x8007, 0
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 0
     End
 
 _001A:

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/poketch_co_2f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0025
@@ -36,7 +35,7 @@ _0038:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_CLEFAIRY
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -49,11 +48,10 @@ _0057:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PACHIRISU
     Message 3
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

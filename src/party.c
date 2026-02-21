@@ -19,9 +19,9 @@ int Party_SaveSize(void)
     return sizeof(Party);
 }
 
-Party *Party_New(u32 heapID)
+Party *Party_New(enum HeapID heapID)
 {
-    Party *party = Heap_AllocFromHeap(heapID, sizeof(Party));
+    Party *party = Heap_Alloc(heapID, sizeof(Party));
     Party_Init(party);
 
     return party;
@@ -47,13 +47,13 @@ void Party_InitWithCapacity(Party *party, int capacity)
     }
 }
 
-BOOL Party_AddPokemon(Party *party, Pokemon *pokemon)
+BOOL Party_AddPokemon(Party *party, Pokemon *mon)
 {
     if (party->currentCount >= party->capacity) {
         return FALSE;
     }
 
-    party->pokemon[party->currentCount] = *pokemon;
+    party->pokemon[party->currentCount] = *mon;
     party->currentCount++;
 
     return TRUE;
@@ -92,15 +92,14 @@ Pokemon *Party_GetPokemonBySlotIndex(const Party *party, int slot)
     return (Pokemon *)&party->pokemon[slot];
 }
 
-void sub_0207A128(Party *party, int slot, Pokemon *pokemon)
+void Party_AddPokemonBySlotIndex(Party *party, int slot, Pokemon *mon)
 {
-    int v0;
 
     PARTY_ASSERT_SLOT(party, slot);
 
-    v0 = Pokemon_GetValue(&(party->pokemon[slot]), MON_DATA_SPECIES_EXISTS, NULL) - Pokemon_GetValue(pokemon, MON_DATA_SPECIES_EXISTS, NULL);
-    party->pokemon[slot] = *pokemon;
-    party->currentCount += v0;
+    int addOrRemoveSlots = Pokemon_GetValue(&(party->pokemon[slot]), MON_DATA_SPECIES_EXISTS, NULL) - Pokemon_GetValue(mon, MON_DATA_SPECIES_EXISTS, NULL);
+    party->pokemon[slot] = *mon;
+    party->currentCount += addOrRemoveSlots;
 }
 
 BOOL Party_SwapSlots(Party *party, int slotA, int slotB)
@@ -110,13 +109,13 @@ BOOL Party_SwapSlots(Party *party, int slotA, int slotB)
     PARTY_ASSERT_SLOT(party, slotA);
     PARTY_ASSERT_SLOT(party, slotB);
 
-    tempPokemon = Heap_AllocFromHeap(0, sizeof(Pokemon));
+    tempPokemon = Heap_Alloc(HEAP_ID_SYSTEM, sizeof(Pokemon));
     *tempPokemon = party->pokemon[slotA];
 
     party->pokemon[slotA] = party->pokemon[slotB];
     party->pokemon[slotB] = *tempPokemon;
 
-    Heap_FreeToHeap(tempPokemon);
+    Heap_Free(tempPokemon);
 
     return FALSE;
 }
@@ -139,7 +138,7 @@ BOOL Party_HasSpecies(const Party *party, int species)
     return i != party->currentCount;
 }
 
-Party *Party_GetFromSavedata(SaveData *saveData)
+Party *SaveData_GetParty(SaveData *saveData)
 {
     return SaveData_SaveTable(saveData, SAVE_TABLE_ENTRY_PARTY);
 }

@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 138,
-            "movement_type": 16,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_CYNTHIA",
+            "graphics_id": "OBJ_EVENT_GFX_CYNTHIA",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 0,
             "initial_dir": 2,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 99,
-            "movement_type": 17,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_PROF_ROWAN",
+            "graphics_id": "OBJ_EVENT_GFX_PROF_ROWAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 0,
             "initial_dir": 3,
             "data": [],
@@ -34,7 +36,7 @@
         {
             "x": 8,
             "z": 15,
-            "dest_header_id": 186,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE_HALLWAY_TO_HALL_OF_FAME",
             "dest_warp_id": 0
         }
     ],

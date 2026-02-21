@@ -20,12 +20,12 @@
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_util.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_list.h"
 #include "trainer_info.h"
 
 struct UnkStruct_ov65_0222EBE0_t {
-    UnkStruct_0202B370 *unk_00;
+    WiFiList *unk_00;
     UnkStruct_0207DFAC *unk_04;
     int unk_08;
     u8 unk_0C[32];
@@ -37,14 +37,14 @@ struct UnkStruct_ov65_0222EBE0_t {
     StringList *unk_154;
     ListMenu *unk_158;
     BgConfig *unk_15C;
-    SaveData *unk_160;
+    SaveData *saveData;
     StringTemplate *unk_164;
     MessageLoader *unk_168;
     MessageLoader *unk_16C;
-    Strbuf *unk_170;
-    Strbuf *unk_174;
-    Strbuf *unk_178;
-    Strbuf *unk_17C;
+    String *unk_170;
+    String *unk_174;
+    String *unk_178;
+    String *unk_17C;
     int unk_180;
     Menu *unk_184;
     void *unk_188;
@@ -71,7 +71,7 @@ struct UnkStruct_ov65_0222EBE0_t {
     u8 unk_3C4;
     u8 unk_3C5;
     BOOL unk_3C8;
-    OverlayManager *unk_3CC;
+    ApplicationManager *appMan;
     int unk_3D0;
     u16 unk_3D4;
     u16 unk_3D6[3];

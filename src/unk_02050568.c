@@ -9,7 +9,6 @@
 
 #include "field/field_system.h"
 #include "field/field_system_sub2_t.h"
-#include "overlay115/camera_angle.h"
 
 #include "camera.h"
 #include "field_map_change.h"
@@ -20,9 +19,9 @@
 #include "location.h"
 #include "map_object.h"
 #include "player_avatar.h"
+#include "sound_playback.h"
 #include "system.h"
 #include "system_flags.h"
-#include "unk_02005474.h"
 #include "unk_02056B30.h"
 #include "unk_02070428.h"
 #include "vars_flags.h"
@@ -41,7 +40,7 @@ static void sub_0205075C(FieldSystem *fieldSystem);
 
 void sub_02050568(FieldSystem *fieldSystem)
 {
-    UnkStruct_02050568 *v0 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_02050568));
+    UnkStruct_02050568 *v0 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_02050568));
 
     memset(v0, 0, sizeof(UnkStruct_02050568));
     FieldTask_InitCall(fieldSystem->task, sub_020505A0, v0);
@@ -83,8 +82,8 @@ static BOOL sub_020505A0(FieldTask *taskMan)
     case 4:
         sub_0205074C(fieldSystem->playerAvatar, 1);
         sub_0205075C(fieldSystem);
-        sub_02056B30(taskMan, 3, 17, 0xffff, 0x0, 6, 1, 11);
-        Sound_PlayEffect(1657);
+        sub_02056B30(taskMan, 3, 17, 0xffff, 0x0, 6, 1, HEAP_ID_FIELD2);
+        Sound_PlayEffect(SEQ_SE_DP_KASYA);
         v1->unk_08++;
         break;
     case 5:
@@ -93,8 +92,8 @@ static BOOL sub_020505A0(FieldTask *taskMan)
         }
         break;
     case 6:
-        sub_02056B30(taskMan, 3, 16, 0xffff, 0x0, 6, 1, 11);
-        Sound_PlayEffect(1657);
+        sub_02056B30(taskMan, 3, 16, 0xffff, 0x0, 6, 1, HEAP_ID_FIELD2);
+        Sound_PlayEffect(SEQ_SE_DP_KASYA);
         v1->unk_08++;
         break;
     case 7:
@@ -122,7 +121,7 @@ static BOOL sub_020505A0(FieldTask *taskMan)
         v1->unk_08++;
         break;
     case 11:
-        Heap_FreeToHeap(v1);
+        Heap_Free(v1);
         sub_02070428(fieldSystem, 0);
         return 1;
     }

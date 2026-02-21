@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pokemon_mansion.h"
 
-    .data
 
     ScriptEntry _001A
     ScriptEntry _004D
@@ -12,16 +11,16 @@
     ScriptEntryEnd
 
 _001A:
-    SetFlag 0x9EB
-    SetFlag 0x257
-    SetFlag 0x258
-    GoToIfUnset 0xAB6, _0033
+    SetFlag FLAG_FIRST_ARRIVAL_POKEMON_MANSION
+    SetFlag FLAG_UNK_0x0257
+    SetFlag FLAG_UNK_0x0258
+    GoToIfUnset FLAG_UNK_0x0AB6, _0033
     End
 
 _0033:
-    ScrCmd_1B7 0x404C, 5
-    AddVar 0x404C, 5
-    SetFlag 0xAB6
+    GetRandom VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET, 5
+    AddVar VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET, 5
+    SetFlag FLAG_UNK_0x0AB6
     ClearTrainerFlag TRAINER_RICH_BOY_LIAM
     ClearTrainerFlag TRAINER_LADY_CELESTE
     End
@@ -56,9 +55,9 @@ _0087:
     FacePlayer
     GoToIfDefeated 0x37C, _0396
     GoToIfDefeated 0x37D, _0396
-    GetPlayerDir 0x800C
-    GoToIfEq 0x800C, 0, _00CB
-    GoToIfEq 0x800C, 1, _00E5
+    GetPlayerDir VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _00CB
+    GoToIfEq VAR_RESULT, 1, _00E5
     GoTo _00FF
     End
 
@@ -77,29 +76,29 @@ _00E5:
     End
 
 _00FF:
-    CallIfUnset 0x166, _045A
-    CallIfSet 0x166, _0467
-    SetFlag 0x166
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0471
+    CallIfUnset FLAG_UNK_0x0166, _045A
+    CallIfSet FLAG_UNK_0x0166, _0467
+    SetFlag FLAG_UNK_0x0166
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0471
     SetTrainerFlag TRAINER_RICH_BOY_LIAM
     SetTrainerFlag TRAINER_LADY_CELESTE
     Message 5
     CloseMessage
     ApplyMovement 2, _03FC
     WaitMovement
-    SetVar 0x404D, 0
-    SetVar 0x8005, 0
-    ClearFlag 0x257
+    SetVar VAR_TOTAL_TURNS_LAST_BATTLE, 0
+    SetVar VAR_0x8005, 0
+    ClearFlag FLAG_UNK_0x0257
     AddObject 5
     ApplyMovement 5, _0420
     WaitMovement
     Message 15
     CloseMessage
     StartTrainerBattle TRAINER_MAID_BELINDA
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0484
-    AddVar 0x8005, 0x404D
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0484
+    AddVar VAR_0x8005, 0x404D
     Message 16
     CloseMessage
     ApplyMovement 5, _0414
@@ -109,9 +108,9 @@ _00FF:
     Message 17
     CloseMessage
     StartTrainerBattle TRAINER_MAID_SOPHIE
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0484
-    AddVar 0x8005, 0x404D
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0484
+    AddVar VAR_0x8005, 0x404D
     Message 18
     CloseMessage
     ApplyMovement 5, _0414
@@ -121,9 +120,9 @@ _00FF:
     Message 19
     CloseMessage
     StartTrainerBattle TRAINER_MAID_EMILY
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0484
-    AddVar 0x8005, 0x404D
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0484
+    AddVar VAR_0x8005, 0x404D
     Message 20
     CloseMessage
     ApplyMovement 5, _0414
@@ -133,17 +132,17 @@ _00FF:
     Message 21
     CloseMessage
     StartTrainerBattle TRAINER_MAID_ELENA
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0484
-    AddVar 0x8005, 0x404D
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0484
+    AddVar VAR_0x8005, 0x404D
     Message 22
     CloseMessage
     ApplyMovement 5, _0414
     WaitMovement
     ApplyMovement 2, _0408
     WaitMovement
-    BufferNumber 0, 0x404C
-    BufferNumber 1, 0x8005
+    BufferNumber 0, VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET
+    BufferNumber 1, VAR_0x8005
     Message 6
     CloseMessage
     ApplyMovement 2, _03FC
@@ -153,9 +152,9 @@ _00FF:
     Message 23
     CloseMessage
     StartTrainerBattle TRAINER_MAID_CLARE
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0484
-    AddVar 0x8005, 0x404D
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0484
+    AddVar VAR_0x8005, 0x404D
     Message 24
     CloseMessage
     ApplyMovement 5, _0414
@@ -163,38 +162,38 @@ _00FF:
     RemoveObject 5
     ApplyMovement 2, _0408
     WaitMovement
-    BufferNumber 0, 0x404C
-    BufferNumber 1, 0x8005
+    BufferNumber 0, VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET
+    BufferNumber 1, VAR_0x8005
     Message 7
-    GoToIfNe 0x8005, 0x404C, _044C
-    ScrCmd_1B7 0x8006, 2
-    CallIfEq 0x8006, 0, _03A1
-    CallIfEq 0x8006, 1, _03B7
+    GoToIfNe VAR_0x8005, VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET, _044C
+    GetRandom VAR_0x8006, 2
+    CallIfEq VAR_0x8006, 0, _03A1
+    CallIfEq VAR_0x8006, 1, _03B7
     CloseMessage
     ApplyMovement 2, _03FC
     WaitMovement
-    ClearFlag 0x258
+    ClearFlag FLAG_UNK_0x0258
     AddObject 4
     ApplyMovement 4, _0420
     WaitMovement
-    CallIfEq 0x8006, 0, _03CD
-    CallIfEq 0x8006, 1, _03D2
+    CallIfEq VAR_0x8006, 0, _03CD
+    CallIfEq VAR_0x8006, 1, _03D2
     CloseMessage
-    StartTrainerBattle 0x8007
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0484
+    StartTrainerBattle VAR_0x8007
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0484
     SetTrainerFlag TRAINER_RICH_BOY_LIAM
     SetTrainerFlag TRAINER_LADY_CELESTE
-    CallIfEq 0x8006, 0, _03D7
-    CallIfEq 0x8006, 1, _03DC
+    CallIfEq VAR_0x8006, 0, _03D7
+    CallIfEq VAR_0x8006, 1, _03DC
     CloseMessage
     ApplyMovement 4, _0414
     WaitMovement
     RemoveObject 4
     ApplyMovement 2, _0408
     WaitMovement
-    CallIfEq 0x8006, 0, _03E1
-    CallIfEq 0x8006, 1, _03E6
+    CallIfEq VAR_0x8006, 0, _03E1
+    CallIfEq VAR_0x8006, 1, _03E6
     GoTo _0396
     End
 
@@ -204,16 +203,16 @@ _0396:
     End
 
 _03A1:
-    SetVar 0x8007, TRAINER_RICH_BOY_LIAM
-    SetVar 0x4020, 62
-    ScrCmd_2F3 2, 0x8007
+    SetVar VAR_0x8007, TRAINER_RICH_BOY_LIAM
+    SetVar VAR_OBJ_GFX_ID_0, 62
+    BufferTrainerName 2, VAR_0x8007
     Message 8
     Return
 
 _03B7:
-    SetVar 0x8007, TRAINER_LADY_CELESTE
-    SetVar 0x4020, 63
-    ScrCmd_2F3 2, 0x8007
+    SetVar VAR_0x8007, TRAINER_LADY_CELESTE
+    SetVar VAR_OBJ_GFX_ID_0, 63
+    BufferTrainerName 2, VAR_0x8007
     Message 9
     Return
 
@@ -243,50 +242,50 @@ _03E6:
 
     .balign 4, 0
 _03EC:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _03F4:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _03FC:
-    MoveAction_012
-    MoveAction_033
+    WalkNormalNorth
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0408:
-    MoveAction_013
-    MoveAction_035
+    WalkNormalSouth
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0414:
-    MoveAction_034
-    MoveAction_069
+    WalkOnSpotNormalWest
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _0420:
-    MoveAction_070
-    MoveAction_035
+    SetVisible
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _042C:
-    MoveAction_015
-    MoveAction_012
-    MoveAction_034
+    WalkNormalEast
+    WalkNormalNorth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _043C:
-    MoveAction_015
-    MoveAction_013
-    MoveAction_034
+    WalkNormalEast
+    WalkNormalSouth
+    WalkOnSpotNormalWest
     EndMovement
 
 _044C:
@@ -297,12 +296,12 @@ _044C:
 
 _045A:
     Message 2
-    BufferNumber 0, 0x404C
+    BufferNumber 0, VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET
     Message 3
     Return
 
 _0467:
-    BufferNumber 0, 0x404C
+    BufferNumber 0, VAR_FIVE_MAID_KNOCKOUT_TURN_TARGET
     Message 3
     Return
 
@@ -336,26 +335,21 @@ _048A:
 
     .balign 4, 0
 _04A8:
-    MoveAction_001
+    FaceSouth
     EndMovement
 
     .balign 4, 0
 _04B0:
-    MoveAction_001
+    FaceSouth
     EndMovement
 
-    .byte 3
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+PokemonMansion_UnusedMovement:
+    FaceEast
+    EndMovement
 
     .balign 4, 0
 _04C0:
-    MoveAction_002
+    FaceWest
     EndMovement
 
 _04C8:
@@ -368,4 +362,4 @@ _04C8:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

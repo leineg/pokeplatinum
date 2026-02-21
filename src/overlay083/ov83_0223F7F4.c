@@ -19,7 +19,7 @@
 #include "berry_data.h"
 #include "heap.h"
 #include "int_distance.h"
-#include "math.h"
+#include "math_util.h"
 #include "poffin.h"
 #include "system.h"
 
@@ -35,7 +35,7 @@ s32 ov83_0223F7F4(int param0, int param1, int param2, int param3, int param4, in
     param2 -= param4;
     param3 -= param5;
 
-    v3 = CalcDotProduct2D(param2, param3, param0, param1, 0);
+    v3 = ApproximateArcLength(param2, param3, param0, param1, 0);
     v3 = ((v3) * 160);
 
     return v3;
@@ -102,9 +102,7 @@ static u32 ov83_0223F8AC(UnkStruct_ov83_0223F8AC *param0, int param1, int param2
     fx32 v0;
     u32 v1;
     u32 v2;
-    u32 v3;
-
-    v3 = CalcDistance2D(
+    u32 v3 = CalcDistance2D(
         param1, param2, 128, 96);
 
     if (param0->unk_0C >= 0) {
@@ -302,9 +300,7 @@ fx32 ov83_0223FB68(u16 param0, int param1)
 {
     fx32 v0;
     fx32 v1;
-    s32 v2;
-
-    v2 = param0 - 910;
+    s32 v2 = param0 - 910;
 
     if (v2 < 0) {
         v2 = 0;
@@ -504,9 +500,7 @@ void ov83_0223FDB0(UnkStruct_ov83_0223FDB0 *param0)
 BOOL ov83_0223FDD8(UnkStruct_ov83_0223FDB0 *param0, const UnkStruct_ov83_0223FE50 *param1, u32 param2)
 {
     s32 v0;
-    BOOL v1;
-
-    v1 = ov83_0223FC58(&param0->unk_4C, &param0->unk_1C);
+    BOOL v1 = ov83_0223FC58(&param0->unk_4C, &param0->unk_1C);
 
     if (v1 == 1) {
         return 1;
@@ -653,9 +647,7 @@ static const u8 Unk_ov83_02240598[4] = {
 
 static int ov83_0223FFA8(u32 param0, u32 param1)
 {
-    int v0;
-
-    v0 = ((param0 / 6) * Unk_ov83_02240598[param1 - 1]) / 10;
+    int v0 = ((param0 / 6) * Unk_ov83_02240598[param1 - 1]) / 10;
 
     if (v0 > 9999) {
         v0 = 9999;
@@ -710,7 +702,7 @@ void ov83_0223FFD4(UnkStruct_ov83_0223FDB0 *param0, Poffin *param1, const UnkStr
 
         v5 += BerryData_GetAttribute(v0, 10);
 
-        Heap_FreeToHeap(v0);
+        Heap_Free(v0);
     }
 
     if ((v9 >= 2) && (param3 > 1)) {
@@ -780,7 +772,7 @@ void ov83_0223FFD4(UnkStruct_ov83_0223FDB0 *param0, Poffin *param1, const UnkStr
         v16[v1] = v6[v1];
     }
 
-    param0->unk_04 = sub_0202A9E4(param1, v16, v7, v10);
+    param0->unk_04 = Poffin_MakePoffin(param1, v16, v7, v10);
     param0->unk_08 = Poffin_CalcLevel(param1);
 }
 

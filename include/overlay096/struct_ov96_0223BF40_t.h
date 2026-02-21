@@ -9,8 +9,8 @@
 #include "overlay061/struct_ov61_0222C3B0.h"
 #include "overlay096/struct_ov96_0223B450.h"
 #include "overlay096/struct_ov96_0223B450_sub1.h"
-#include "overlay096/struct_ov96_0223B574.h"
-#include "overlay096/struct_ov96_0223B574_1.h"
+#include "overlay096/struct_world_exchange_trainer.h"
+#include "overlay096/struct_world_exchange_trainer_error.h"
 
 #include "bg_window.h"
 #include "menu.h"
@@ -19,7 +19,7 @@
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_util.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "string_template.h"
 
 struct UnkStruct_ov96_0223BF40_t {
@@ -52,11 +52,11 @@ struct UnkStruct_ov96_0223BF40_t {
     MessageLoader *unk_BD0;
     MessageLoader *unk_BD4;
     MessageLoader *unk_BD8;
-    Strbuf *unk_BDC;
-    Strbuf *unk_BE0;
-    Strbuf *unk_BE4;
-    Strbuf *unk_BE8;
-    Strbuf *unk_BEC;
+    String *unk_BDC;
+    String *unk_BE0;
+    String *unk_BE4;
+    String *unk_BE8;
+    String *unk_BEC;
     int unk_BF0;
     SpriteList *unk_BF4;
     G2dRenderer unk_BF8;
@@ -80,8 +80,8 @@ struct UnkStruct_ov96_0223BF40_t {
     int unk_F78;
     int unk_F7C;
     int unk_F80;
-    UnkStruct_ov96_0223B574 unk_F84;
-    UnkStruct_ov96_0223B574_1 unk_FE8;
+    WorldExchangeTrainer unk_F84;
+    WorldExchangeTrainerError unk_FE8;
     s16 unk_FF0;
     s16 unk_FF2;
     int unk_FF4;

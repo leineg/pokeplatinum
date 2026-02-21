@@ -2,7 +2,7 @@
 #define POKEPLATINUM_NPC_TRADE_H
 
 #include "field/field_system_decl.h"
-#include "overlay006/struct_ov6_02246254.h"
+#include "overlay006/struct_npc_trade_animation_template.h"
 
 #include "pokemon.h"
 
@@ -34,14 +34,14 @@ typedef struct NpcTradeData {
     Pokemon *mon;
     TrainerInfo *trainerInfo;
     u32 npcTradeID;
-    u32 heapID;
+    enum HeapID heapID;
 } NpcTradeData;
 
-NpcTradeData *NpcTrade_Init(u32 heapID, u32 entryID);
+NpcTradeData *NpcTrade_Init(enum HeapID heapID, u32 entryID);
 void NpcTrade_Free(NpcTradeData *data);
 u32 NpcTrade_GetSpecies(const NpcTradeData *data);
 u32 NpcTrade_GetRequestedSpecies(const NpcTradeData *data);
 void NpcTrade_ReceiveMon(FieldSystem *fieldSystem, NpcTradeData *data, int slot);
-void ov6_02246254(FieldSystem *fieldSystem, NpcTradeData *data, int slot, UnkStruct_ov6_02246254 *param3, Pokemon *givingMon, Pokemon *receivingMon);
+void ov6_02246254(FieldSystem *fieldSystem, NpcTradeData *data, int slot, TradeAnimationTemplate *param3, Pokemon *givingMon, Pokemon *receivingMon);
 
 #endif // POKEPLATINUM_NPC_TRADE_H

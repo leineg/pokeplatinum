@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "field/field_system.h"
-#include "overlay006/ov6_02243258.h"
+#include "overlay006/hm_cut_in.h"
 
 #include "field_map_change.h"
 #include "field_task.h"
@@ -12,61 +12,61 @@
 #include "location.h"
 #include "player_avatar.h"
 #include "pokemon.h"
+#include "spawn_locations.h"
 #include "sys_task_manager.h"
-#include "unk_0203A7D8.h"
 
 typedef struct {
     FieldSystem *fieldSystem;
-    int unk_04;
-    u16 unk_08;
+    int state;
+    u16 mapID;
     s16 unk_0A;
     s16 unk_0C;
-    Pokemon *unk_10;
-    SysTask *unk_14;
-} UnkStruct_0207064C;
+    Pokemon *partyPokemon;
+    SysTask *cutInTask;
+} FlyTaskEnv;
 
-void *sub_0207064C(u32 param0, FieldSystem *fieldSystem, Pokemon *param2, u16 param3, s16 param4, s16 param5)
+void *sub_0207064C(enum HeapID heapID, FieldSystem *fieldSystem, Pokemon *mon, u16 mapID, s16 param4, s16 param5)
 {
-    UnkStruct_0207064C *v0 = Heap_AllocFromHeapAtEnd(param0, (sizeof(UnkStruct_0207064C)));
+    FlyTaskEnv *v0 = Heap_AllocAtEnd(heapID, sizeof(FlyTaskEnv));
 
-    memset(v0, 0, (sizeof(UnkStruct_0207064C)));
+    memset(v0, 0, sizeof(FlyTaskEnv));
 
     v0->fieldSystem = fieldSystem;
-    v0->unk_10 = param2;
-    v0->unk_08 = param3;
+    v0->partyPokemon = mon;
+    v0->mapID = mapID;
     v0->unk_0A = param4;
     v0->unk_0C = param5;
 
     return v0;
 }
 
-BOOL sub_02070680(FieldTask *param0)
+BOOL sub_02070680(FieldTask *task)
 {
-    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_0207064C *v1 = FieldTask_GetEnv(param0);
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
+    FlyTaskEnv *taskEnv = FieldTask_GetEnv(task);
 
-    switch (v1->unk_04) {
+    switch (taskEnv->state) {
     case 0:
-        v1->unk_14 = ov6_02243F88(v1->fieldSystem, 1, v1->unk_10, PlayerAvatar_Gender(v1->fieldSystem->playerAvatar));
-        v1->unk_04++;
+        taskEnv->cutInTask = SysTask_HMCutIn_New(taskEnv->fieldSystem, 1, taskEnv->partyPokemon, PlayerAvatar_Gender(taskEnv->fieldSystem->playerAvatar));
+        taskEnv->state++;
         break;
     case 1:
-        if (ov6_02243FBC(v1->unk_14) == 0) {
+        if (CheckHMCutInFinished(taskEnv->cutInTask) == FALSE) {
             break;
         }
 
-        ov6_02243FC8(v1->unk_14);
+        SysTask_HMCutIn_SetTaskDone(taskEnv->cutInTask);
 
-        u16 v2;
-        Location v3;
+        u16 destination;
+        Location location;
 
-        v2 = sub_0203A8A0(v1->unk_08, v1->unk_0A, v1->unk_0C);
-        GF_ASSERT(v2 != 0);
+        destination = GetSpawnIdByMapAndCoords(taskEnv->mapID, taskEnv->unk_0A, taskEnv->unk_0C);
+        GF_ASSERT(destination != 0);
 
-        sub_0203A7F0(v2, &v3);
-        FieldTask_ChangeMapChangeFly(param0, v3.mapId, -1, v3.x, v3.z, 1);
+        Location_InitFly(destination, &location);
+        FieldTask_ChangeMapChangeFly(task, location.mapId, -1, location.x, location.z, FACE_DOWN);
 
-        Heap_FreeToHeap(v1);
+        Heap_Free(taskEnv);
     }
 
     return 0;

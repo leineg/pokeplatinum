@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/survival_area_mart.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0028
@@ -13,9 +12,9 @@ _0012:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_147 1
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartCommon
     ReleaseAll
     End
 

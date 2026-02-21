@@ -15,7 +15,7 @@
             "level": 60,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -24,8 +24,21 @@
             "level": 60,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "My dragon Pokémon chose to remain\n",
+                "here to become powerful.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Your battle style...\n"
         }
     ]
 }

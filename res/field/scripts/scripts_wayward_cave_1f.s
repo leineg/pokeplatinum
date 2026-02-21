@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/wayward_cave_1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _002B
@@ -10,12 +9,12 @@
     ScriptEntryEnd
 
 _0012:
-    SetFlag 0x9D7
-    GoToIfUnset 228, _0023
+    SetFlag FLAG_FIRST_ARRIVAL_WAYWARD_CAVE
+    GoToIfUnset FLAG_TRAVELED_WITH_MIRA, _0023
     End
 
 _0023:
-    SetVar 0x4091, 0
+    SetVar VAR_UNK_0x4091, 0
     End
 
 _002B:
@@ -23,22 +22,22 @@ _002B:
     LockAll
     FacePlayer
     SetPlayerBike FALSE
-    GoToIfGe 0x4091, 1, _0095
+    GoToIfGe VAR_UNK_0x4091, 1, _0095
     BufferPlayerName 0
-    CallIfUnset 224, _008B
-    CallIfSet 224, _0090
+    CallIfUnset FLAG_UNK_0x00E0, _008B
+    CallIfSet FLAG_UNK_0x00E0, _0090
     BufferPlayerName 0
     PlaySound SEQ_GONIN
     Message 1
     WaitSound
-    SetFlag 224
-    SetVar 0x4091, 1
+    SetFlag FLAG_UNK_0x00E0
+    SetVar VAR_UNK_0x4091, 1
     Message 2
     WaitABXPadPress
     CloseMessage
     SetVar VAR_PARTNER_TRAINER_ID, TRAINER_MIRA_WAYWARD_CAVE
     SetHasPartner
-    ScrCmd_06D 4, 48
+    SetMovementType 4, 48
     ReleaseAll
     End
 
@@ -51,8 +50,8 @@ _0090:
     Return
 
 _0095:
-    GoToIfGe 0x40E2, 2, _00C4
-    GoToIfEq 0x40E2, 1, _00BB
+    GoToIfGe VAR_FOLLOWER_MIRA_TIMES_TALKED, 2, _00C4
+    GoToIfEq VAR_FOLLOWER_MIRA_TIMES_TALKED, 1, _00BB
     BufferPlayerName 0
     Message 9
     GoTo _00D2
@@ -70,7 +69,7 @@ _00C4:
     End
 
 _00D2:
-    AddVar 0x40E2, 1
+    AddVar VAR_FOLLOWER_MIRA_TIMES_TALKED, 1
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -82,9 +81,9 @@ _00E0:
 _00E2:
     LockAll
     ClearHasPartner
-    ScrCmd_06D 4, 16
-    GetPlayerDir 0x800C
-    GoToIfEq 0x800C, 2, _0103
+    SetMovementType 4, 16
+    GetPlayerDir VAR_RESULT
+    GoToIfEq VAR_RESULT, 2, _0103
     GoTo _011B
 
 _0103:
@@ -103,8 +102,8 @@ _0133:
     BufferPlayerName 0
     Message 5
     CloseMessage
-    GetPlayerDir 0x800C
-    GoToIfEq 0x800C, 3, _0152
+    GetPlayerDir VAR_RESULT
+    GoToIfEq VAR_RESULT, 3, _0152
     GoTo _016A
 
 _0152:
@@ -121,84 +120,66 @@ _016A:
 
 _0182:
     RemoveObject 4
-    SetFlag 228
-    SetVar 0x4091, 2
+    SetFlag FLAG_TRAVELED_WITH_MIRA
+    SetVar VAR_UNK_0x4091, 2
     ReleaseAll
     End
 
     .balign 4, 0
 _0194:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _019C:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _01A4:
-    MoveAction_012
-    MoveAction_033
+    WalkNormalNorth
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01B0:
-    MoveAction_015
-    MoveAction_034
+    WalkNormalEast
+    WalkOnSpotNormalWest
     EndMovement
 
-    .byte 63
-    .byte 0
-    .byte 5
-    .byte 0
-    .byte 14
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 5
-    .byte 0
-    .byte 12
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+WaywardCave1F_UnusedMovement:
+    Delay8 5
+    WalkNormalWest
+    EndMovement
+
+WaywardCave1F_UnusedMovement2:
+    Delay8 5
+    WalkNormalNorth
+    WalkOnSpotNormalWest
+    EndMovement
 
     .balign 4, 0
 _01D8:
-    MoveAction_034
-    MoveAction_075
+    WalkOnSpotNormalWest
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _01E4:
-    MoveAction_033
-    MoveAction_075
+    WalkOnSpotNormalSouth
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _01F0:
-    MoveAction_063 3
-    MoveAction_014
-    MoveAction_033
+    Delay8 3
+    WalkNormalWest
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0200:
-    MoveAction_063 3
-    MoveAction_013
-    MoveAction_033
+    Delay8 3
+    WalkNormalSouth
+    WalkOnSpotNormalSouth
     EndMovement

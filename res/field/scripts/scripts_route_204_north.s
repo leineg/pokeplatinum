@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_204_north.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0021
@@ -22,14 +21,13 @@ _0021:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 197, _0066
+    GoToIfSet FLAG_UNK_0x00C5, _0066
     Message 1
-    SetVar 0x8004, 0x195
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0071
-    CallCommonScript 0x7FC
-    SetFlag 197
+    SetVar VAR_0x8004, ITEM_TM78
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0071
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x00C5
     GoTo _0066
 
 _0066:
@@ -40,18 +38,13 @@ _0066:
     End
 
 _0071:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
 _007B:
-    ScrCmd_036 3, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 3
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/jubilife_city_condominiums_1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0025
@@ -26,7 +25,7 @@ _0025:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PIKACHU
     Message 1
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -39,7 +38,7 @@ _0044:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PACHIRISU
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -49,21 +48,20 @@ _0063:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 191, _00B7
-    BufferItemName 0, 217
+    GoToIfSet FLAG_UNK_0x00BF, _00B7
+    BufferItemName 0, ITEM_QUICK_CLAW
     Message 3
-    SetVar 0x8004, 217
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _00AD
-    SetFlag 191
-    CallCommonScript 0x7E0
+    SetVar VAR_0x8004, ITEM_QUICK_CLAW
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _00AD
+    SetFlag FLAG_UNK_0x00BF
+    Common_GiveItemQuantityNoLineFeed
     CloseMessage
     ReleaseAll
     End
 
 _00AD:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
@@ -75,5 +73,4 @@ _00B7:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

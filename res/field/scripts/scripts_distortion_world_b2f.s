@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/distortion_world_b2f.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0012
@@ -9,15 +8,15 @@
     ScriptEntryEnd
 
 _000E:
-    ScrCmd_2F2
+    InitPersistedMapFeaturesForDistortionWorld
     End
 
 _0012:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfEq 0x4055, 5, _0084
-    GetPlayer3DPos 0x8004, 0x8005, 0x8006
-    GoToIfEq 0x8005, 232, _0059
+    GoToIfEq VAR_DISTORTION_WORLD_PROGRESS, 5, _0084
+    GetPlayer3DPos VAR_0x8004, VAR_0x8005, VAR_0x8006
+    GoToIfEq VAR_0x8005, 232, _0059
     ApplyMovement 128, _00DC
     WaitMovement
     Message 0
@@ -35,14 +34,14 @@ _0059:
     ApplyMovement LOCALID_PLAYER, _011C
     WaitMovement
 _007A:
-    SetVar 0x4055, 5
+    SetVar VAR_DISTORTION_WORLD_PROGRESS, 5
     ReleaseAll
     End
 
 _0084:
-    GetPlayer3DPos 0x8004, 0x8005, 0x8006
-    GoToIfEq 0x8005, 231, _00B6
-    GoToIfEq 0x8005, 232, _00C6
+    GetPlayer3DPos VAR_0x8004, VAR_0x8005, VAR_0x8006
+    GoToIfEq VAR_0x8005, 231, _00B6
+    GoToIfEq VAR_0x8005, 232, _00C6
     ApplyMovement 128, _0104
     WaitMovement
     GoTo _00D0
@@ -64,43 +63,43 @@ _00D0:
 
     .balign 4, 0
 _00DC:
-    MoveAction_001
+    FaceSouth
     EndMovement
 
     .balign 4, 0
 _00E4:
     MoveAction_106
-    MoveAction_002
+    FaceWest
     EndMovement
 
     .balign 4, 0
 _00F0:
-    MoveAction_003
+    FaceEast
     EndMovement
 
     .balign 4, 0
 _00F8:
     MoveAction_106
-    MoveAction_002
+    FaceWest
     EndMovement
 
     .balign 4, 0
 _0104:
-    MoveAction_002
+    FaceWest
     EndMovement
 
     .balign 4, 0
 _010C:
-    MoveAction_003
+    FaceEast
     EndMovement
 
     .balign 4, 0
 _0114:
-    MoveAction_001
+    FaceSouth
     EndMovement
 
     .balign 4, 0
 _011C:
     MoveAction_107
-    MoveAction_000
+    FaceNorth
     EndMovement

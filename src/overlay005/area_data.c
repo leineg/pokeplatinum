@@ -3,7 +3,7 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "constants/gx_colors.h"
+#include "constants/graphics.h"
 #include "constants/heap.h"
 
 #include "overlay005/map_prop_animation.h"
@@ -40,14 +40,14 @@ static void AreaData_StripTextureData(void *resourceFile, NNSG3dResTex *texture)
     u8 *textureData = (u8 *)texture + texture->texInfo.ofsTex;
     u32 strippedTextureDataSize = (u32)(textureData - (u8 *)resourceFile);
 
-    Heap_ReallocFromHeap(resourceFile, strippedTextureDataSize);
+    Heap_Realloc(resourceFile, strippedTextureDataSize);
 }
 
 AreaDataManager *AreaDataManager_Alloc(const int areaDataArchiveID, MapPropAnimationManager *mapPropAnimMan)
 {
-    AreaDataManager *areaDataManager = Heap_AllocFromHeap(HEAP_ID_FIELD, sizeof(AreaDataManager));
+    AreaDataManager *areaDataManager = Heap_Alloc(HEAP_ID_FIELD1, sizeof(AreaDataManager));
 
-    areaDataManager->loadData = Heap_AllocFromHeapAtEnd(HEAP_ID_FIELD, sizeof(AreaDataManagerLoadData));
+    areaDataManager->loadData = Heap_AllocAtEnd(HEAP_ID_FIELD1, sizeof(AreaDataManagerLoadData));
     areaDataManager->loadData->areaDataArchiveID = areaDataArchiveID;
     areaDataManager->loadData->mapPropAnimMan = mapPropAnimMan;
     areaDataManager->loadData->dummy0C = 0;
@@ -57,19 +57,18 @@ AreaDataManager *AreaDataManager_Alloc(const int areaDataArchiveID, MapPropAnima
 
 void AreaDataManager_Load(AreaDataManager *areaDataManager)
 {
-    NARC *narc;
     AreaDataManagerLoadData *loadData = areaDataManager->loadData;
 
     NARC_ReadWholeMemberByIndexPair(&areaDataManager->areaData, NARC_INDEX_FIELDDATA__AREADATA__AREA_DATA, loadData->areaDataArchiveID);
 
-    areaDataManager->mapPropModelIDs = NARC_AllocAndReadWholeMemberByIndexPair(NARC_INDEX_FIELDDATA__AREADATA__AREA_BUILD_MODEL__AREA_BUILD, areaDataManager->areaData.mapPropArchivesID, HEAP_ID_FIELD);
+    areaDataManager->mapPropModelIDs = NARC_AllocAndReadWholeMemberByIndexPair(NARC_INDEX_FIELDDATA__AREADATA__AREA_BUILD_MODEL__AREA_BUILD, areaDataManager->areaData.mapPropArchivesID, HEAP_ID_FIELD1);
     loadData->mapPropModelIDsCount = areaDataManager->mapPropModelIDs[0];
 
     GF_ASSERT(loadData->mapPropModelIDsCount < MAX_MAP_PROP_MODEL_FILES);
 
     areaDataManager->mapTexture = NULL;
-    areaDataManager->mapTextureFile = NARC_AllocAndReadWholeMemberByIndexPair(NARC_INDEX_FIELDDATA__AREADATA__AREA_MAP_TEX__MAP_TEX_SET, areaDataManager->areaData.mapTextureArchiveID, HEAP_ID_FIELD);
-    areaDataManager->mapPropTextureFile = NARC_AllocAndReadWholeMemberByIndexPair(NARC_INDEX_FIELDDATA__AREADATA__AREA_BUILD_MODEL__AREABM_TEXSET, areaDataManager->areaData.mapPropArchivesID, HEAP_ID_FIELD);
+    areaDataManager->mapTextureFile = NARC_AllocAndReadWholeMemberByIndexPair(NARC_INDEX_FIELDDATA__AREADATA__AREA_MAP_TEX__MAP_TEX_SET, areaDataManager->areaData.mapTextureArchiveID, HEAP_ID_FIELD1);
+    areaDataManager->mapPropTextureFile = NARC_AllocAndReadWholeMemberByIndexPair(NARC_INDEX_FIELDDATA__AREADATA__AREA_BUILD_MODEL__AREABM_TEXSET, areaDataManager->areaData.mapPropArchivesID, HEAP_ID_FIELD1);
     areaDataManager->mapTexture = NNS_G3dGetTex((NNSG3dResFileHeader *)areaDataManager->mapTextureFile);
 
     if (loadData->mapPropModelIDsCount != 0) {
@@ -96,17 +95,16 @@ void AreaDataManager_Load(AreaDataManager *areaDataManager)
 
     areaDataManager->mapPropMatShp = NULL;
 
-    narc = NARC_ctor(NARC_INDEX_FIELDDATA__BUILD_MODEL__BUILD_MODEL, HEAP_ID_FIELD);
+    NARC *narc = NARC_ctor(NARC_INDEX_FIELDDATA__BUILD_MODEL__BUILD_MODEL, HEAP_ID_FIELD1);
 
     int i;
-    u16 mapPropModelID;
     int mapPropModelAnimeListNARCFileCount = MapPropAnimationManager_GetAnimeListNARCFileCount(loadData->mapPropAnimMan);
 
     for (i = 0; i < loadData->mapPropModelIDsCount; i++) {
-        mapPropModelID = areaDataManager->mapPropModelIDs[i + 1];
+        u16 mapPropModelID = areaDataManager->mapPropModelIDs[i + 1];
 
         GF_ASSERT(areaDataManager->mapPropModelFiles[mapPropModelID] == NULL);
-        areaDataManager->mapPropModelFiles[mapPropModelID] = NARC_AllocAndReadWholeMember(narc, mapPropModelID, HEAP_ID_FIELD);
+        areaDataManager->mapPropModelFiles[mapPropModelID] = NARC_AllocAndReadWholeMember(narc, mapPropModelID, HEAP_ID_FIELD1);
 
         if (mapPropModelID < mapPropModelAnimeListNARCFileCount) {
             NNSG3dResMdl *mapPropModel = NNS_G3dGetMdlByIdx(NNS_G3dGetMdlSet(areaDataManager->mapPropModelFiles[mapPropModelID]), 0);
@@ -119,14 +117,11 @@ void AreaDataManager_Load(AreaDataManager *areaDataManager)
 
     // Make sure the dummy box ("dmybox00") model is always loaded
     if (areaDataManager->mapPropModelFiles[0] == NULL) {
-        BOOL res;
-        NNSG3dResTex *texture;
-
-        areaDataManager->mapPropModelFiles[0] = NARC_AllocAndReadWholeMember(narc, 0, HEAP_ID_FIELD);
-        texture = NNS_G3dGetTex(areaDataManager->mapPropModelFiles[0]);
+        areaDataManager->mapPropModelFiles[0] = NARC_AllocAndReadWholeMember(narc, 0, HEAP_ID_FIELD1);
+        NNSG3dResTex *texture = NNS_G3dGetTex(areaDataManager->mapPropModelFiles[0]);
 
         if (texture != NULL) {
-            res = Easy3D_UploadTextureToVRAM(texture);
+            BOOL res = Easy3D_UploadTextureToVRAM(texture);
             GF_ASSERT(res);
 
             res = Easy3D_BindTextureToResource(areaDataManager->mapPropModelFiles[0], texture);
@@ -149,7 +144,7 @@ void AreaDataManager_Load(AreaDataManager *areaDataManager)
     sprintf(mapPropMaterialShapeFilePath, "fielddata/build_model/build_model_matshp.dat");
     MapPropMaterialShape_Load(mapPropMaterialShapeFilePath, areaDataManager->mapPropMatShp);
 
-    Heap_FreeToHeap(areaDataManager->loadData);
+    Heap_Free(areaDataManager->loadData);
     areaDataManager->loadData = NULL;
 }
 
@@ -174,18 +169,18 @@ void AreaDataManager_Free(AreaDataManager **areaDataManager)
 
     for (int i = 0; i < MAX_MAP_PROP_MODEL_FILES; i++) {
         if ((*areaDataManager)->mapPropModelFiles[i] != NULL) {
-            Heap_FreeToHeap((*areaDataManager)->mapPropModelFiles[i]);
+            Heap_Free((*areaDataManager)->mapPropModelFiles[i]);
         }
     }
 
-    Heap_FreeToHeap((*areaDataManager)->mapPropModelIDs);
-    Heap_FreeToHeap((*areaDataManager)->mapTextureFile);
+    Heap_Free((*areaDataManager)->mapPropModelIDs);
+    Heap_Free((*areaDataManager)->mapTextureFile);
 
     (*areaDataManager)->mapTextureFile = NULL;
-    Heap_FreeToHeap((*areaDataManager)->mapPropTextureFile);
+    Heap_Free((*areaDataManager)->mapPropTextureFile);
 
     (*areaDataManager)->mapPropTextureFile = NULL;
-    Heap_FreeToHeap(*areaDataManager);
+    Heap_Free(*areaDataManager);
 
     (*areaDataManager) = NULL;
 }

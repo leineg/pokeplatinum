@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/trainers_school.h"
 
-    .data
 
     ScriptEntry _0032
     ScriptEntry _0154
@@ -28,20 +27,20 @@ _0032:
     BufferPlayerName 0
     Message 1
     WaitSound
-    RemoveItem ITEM_PARCEL, 1, 0x800C
+    RemoveItem ITEM_PARCEL, 1, VAR_RESULT
     BufferPlayerName 0
     BufferRivalName 1
     Message 2
-    SetVar 0x8004, 0x1BA
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
+    SetVar VAR_0x8004, ITEM_TOWN_MAP
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
     BufferRivalName 1
     Message 3
     CloseMessage
-    GetPlayerDir 0x800C
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _00A4
-    GoToIfEq 0x8008, 2, _00BE
+    GetPlayerDir VAR_RESULT
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, _00A4
+    GoToIfEq VAR_0x8008, 2, _00BE
     GoTo _00D8
     End
 
@@ -70,39 +69,39 @@ _00F2:
     PlayFanfare SEQ_SE_DP_KAIDAN2
     RemoveObject 1
     WaitFanfare SEQ_SE_DP_KAIDAN2
-    SetVar 0x40E7, 1
-    SetFlag 241
-    ClearFlag 0x1F6
-    ClearFlag 0x1F5
+    SetVar VAR_POKETCH_CAMPAIGN_STATE, 1
+    SetFlag FLAG_TALKED_TO_TRAINERS_SCHOOL_RIVAL
+    ClearFlag FLAG_HIDE_JUBILIFE_CITY_POKETCH_CO_PRESIDENT
+    ClearFlag FLAG_HIDE_JUBILIFE_CITY_CLOWNS_1_AND_2
     ReleaseAll
     End
 
     .balign 4, 0
 _0114:
-    MoveAction_019
-    MoveAction_017 8
-    MoveAction_037
+    WalkFastEast
+    WalkFastSouth 8
+    WalkOnSpotFastSouth
     EndMovement
 
     .balign 4, 0
 _0124:
-    MoveAction_017 4
-    MoveAction_019
-    MoveAction_017 4
-    MoveAction_037
+    WalkFastSouth 4
+    WalkFastEast
+    WalkFastSouth 4
+    WalkOnSpotFastSouth
     EndMovement
 
     .balign 4, 0
 _0138:
-    MoveAction_063
-    MoveAction_035
-    MoveAction_033
+    Delay8
+    WalkOnSpotNormalEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0148:
-    MoveAction_063
-    MoveAction_033
+    Delay8
+    WalkOnSpotNormalSouth
     EndMovement
 
 _0154:
@@ -158,20 +157,20 @@ _01A6:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0x112, _02A8
-    GoToIfSet 0x10C, _02BD
+    GoToIfSet FLAG_UNK_0x0112, _02A8
+    GoToIfSet FLAG_UNK_0x010C, _02BD
     Message 9
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _01E7
-    GoToIfEq 0x800C, MENU_NO, _02D3
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _01E7
+    GoToIfEq VAR_RESULT, MENU_NO, _02D3
     End
 
 _01E7:
     Message 10
     CloseMessage
-    GetPlayerStarterSpecies 0x800C
-    GoToIfEq 0x800C, SPECIES_TURTWIG, _0220
-    GoToIfEq 0x800C, SPECIES_CHIMCHAR, _022E
+    GetPlayerStarterSpecies VAR_RESULT
+    GoToIfEq VAR_RESULT, SPECIES_TURTWIG, _0220
+    GoToIfEq VAR_RESULT, SPECIES_CHIMCHAR, _022E
     GoTo _0212
     End
 
@@ -191,11 +190,11 @@ _022E:
     End
 
 _023C:
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _02DE
-    SetFlag 0x10C
-    GoToIfSet 0x10D, _0274
-    GoToIfUnset 0x10D, _0269
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _02DE
+    SetFlag FLAG_UNK_0x010C
+    GoToIfSet FLAG_UNK_0x010D, _0274
+    GoToIfUnset FLAG_UNK_0x010D, _0269
     End
 
 _0269:
@@ -207,12 +206,11 @@ _0269:
 
 _0274:
     Message 13
-    SetVar 0x8004, 17
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _02B3
-    CallCommonScript 0x7FC
-    SetFlag 0x112
+    SetVar VAR_0x8004, ITEM_POTION
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _02B3
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x0112
     GoTo _02A8
     End
 
@@ -224,13 +222,13 @@ _02A8:
     End
 
 _02B3:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
 _02BD:
-    GoToIfSet 0x10D, _0274
+    GoToIfSet FLAG_UNK_0x010D, _0274
     Message 12
     WaitABXPadPress
     CloseMessage
@@ -253,19 +251,19 @@ _02E4:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0x10D, _039C
+    GoToIfSet FLAG_UNK_0x010D, _039C
     Message 15
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _031A
-    GoToIfEq 0x800C, MENU_NO, _03A7
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _031A
+    GoToIfEq VAR_RESULT, MENU_NO, _03A7
     End
 
 _031A:
     Message 16
     CloseMessage
-    GetPlayerStarterSpecies 0x800C
-    GoToIfEq 0x800C, SPECIES_TURTWIG, _0353
-    GoToIfEq 0x800C, SPECIES_CHIMCHAR, _0361
+    GetPlayerStarterSpecies VAR_RESULT
+    GoToIfEq VAR_RESULT, SPECIES_TURTWIG, _0353
+    GoToIfEq VAR_RESULT, SPECIES_CHIMCHAR, _0361
     GoTo _0345
     End
 
@@ -285,11 +283,11 @@ _0361:
     End
 
 _036F:
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _03D3
-    SetFlag 0x10D
-    GoToIfSet 0x10C, _03BD
-    GoToIfUnset 0x10C, _03B2
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _03D3
+    SetFlag FLAG_UNK_0x010D
+    GoToIfSet FLAG_UNK_0x010C, _03BD
+    GoToIfUnset FLAG_UNK_0x010C, _03B2
     End
 
 _039C:
@@ -314,7 +312,7 @@ _03B2:
     End
 
 _03BD:
-    GoToIfSet 0x112, _03B2
+    GoToIfSet FLAG_UNK_0x0112, _03B2
     Message 19
     WaitABXPadPress
     CloseMessage
@@ -335,20 +333,20 @@ _03D9:
 
 _03EA:
     Message 21
-    ScrCmd_040 7, 2, 0, 1, 0x800C
-    ScrCmd_042 0, 0
-    ScrCmd_042 1, 1
-    ScrCmd_042 2, 2
-    ScrCmd_042 3, 3
-    ScrCmd_042 4, 4
-    ScrCmd_042 5, 5
-    ScrCmd_048 2
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _045F
-    GoToIfEq 0x8008, 1, _046A
-    GoToIfEq 0x8008, 2, _0475
-    GoToIfEq 0x8008, 3, _0480
-    GoToIfEq 0x8008, 4, _048B
+    InitGlobalTextMenu 7, 2, 0, VAR_RESULT
+    AddMenuEntryImm 0, 0
+    AddMenuEntryImm 1, 1
+    AddMenuEntryImm 2, 2
+    AddMenuEntryImm 3, 3
+    AddMenuEntryImm 4, 4
+    AddMenuEntryImm 5, 5
+    ShowMenuMultiColumn 2
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, _045F
+    GoToIfEq VAR_0x8008, 1, _046A
+    GoToIfEq VAR_0x8008, 2, _0475
+    GoToIfEq VAR_0x8008, 3, _0480
+    GoToIfEq VAR_0x8008, 4, _048B
     GoTo _0496
     End
 
@@ -391,6 +389,4 @@ _049C:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

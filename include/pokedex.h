@@ -3,11 +3,12 @@
 
 #include "struct_decls/pokedexdata_decl.h"
 
+#include "heap.h"
 #include "pokemon.h"
 #include "savedata.h"
 
 int Pokedex_SaveSize(void);
-Pokedex *Pokedex_New(u32 heapID);
+Pokedex *Pokedex_New(enum HeapID heapID);
 void Pokedex_Copy(const Pokedex *src, Pokedex *dest);
 void Pokedex_Init(Pokedex *pokedex);
 u16 Pokedex_CountCaught_National(const Pokedex *pokedex);
@@ -35,8 +36,8 @@ u32 Pokedex_GetForm_Wormadam(const Pokedex *pokedex, int formIndex);
 u32 Pokedex_NumFormsSeen_Wormadam(const Pokedex *pokedex);
 u32 Pokedex_GetForm_Deoxys(const Pokedex *pokedex, int formIndex);
 u32 Pokedex_NumFormsSeen_Deoxys(const Pokedex *pokedex);
-void Pokedex_Encounter(Pokedex *pokedex, Pokemon *pokemon);
-void Pokedex_Capture(Pokedex *pokedex, Pokemon *pokemon);
+void Pokedex_Encounter(Pokedex *pokedex, Pokemon *mon);
+void Pokedex_Capture(Pokedex *pokedex, Pokemon *mon);
 void Pokedex_ObtainNationalDex(Pokedex *pokedex);
 BOOL Pokedex_IsNationalDexObtained(const Pokedex *pokedex);
 BOOL Pokedex_CanDetectForms(const Pokedex *pokedex);

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pastoria_city_east_house.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0125
@@ -11,17 +10,17 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_33C 4, 93
-    GoToIfUnset 233, _003D
-    CheckItem ITEM_HEART_SCALE, 1, 0x800C
-    GoToIfEq 0x800C, 0, _005F
+    BufferItemNameWithArticle 4, ITEM_HEART_SCALE
+    GoToIfUnset FLAG_UNK_0x00E9, _003D
+    CheckItem ITEM_HEART_SCALE, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _005F
     GoTo _006A
 
 _003D:
-    SetFlag 233
+    SetFlag FLAG_UNK_0x00E9
     Message 0
-    CheckItem ITEM_HEART_SCALE, 1, 0x800C
-    GoToIfEq 0x800C, 0, _005F
+    CheckItem ITEM_HEART_SCALE, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _005F
     GoTo _006A
 
 _005F:
@@ -35,29 +34,29 @@ _006A:
     Message 1
     Message 3
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    ScrCmd_191
-    ScrCmd_193 0x8005
+    SelectMoveTutorPokemon
+    GetSelectedPartySlot VAR_0x8005
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    GoToIfEq 0x8005, 0xFF, _005F
-    ScrCmd_198 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _011A
-    ScrCmd_21F 0x800C, 0x8005
-    GoToIfEq 0x800C, 0, _010F
+    GoToIfEq VAR_0x8005, 0xFF, _005F
+    GetPartyMonSpecies VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _011A
+    CheckHasLearnableReminderMoves VAR_RESULT, VAR_0x8005
+    GoToIfEq VAR_RESULT, FALSE, _010F
     Message 4
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    ScrCmd_221 0x8005
-    ScrCmd_223 0x800C
+    OpenMoveReminderMenu VAR_0x8005
+    CheckLearnedReminderMove VAR_RESULT
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    GoToIfEq 0x800C, 0xFF, _005F
-    RemoveItem ITEM_HEART_SCALE, 1, 0x800C
+    GoToIfEq VAR_RESULT, 0xFF, _005F
+    RemoveItem ITEM_HEART_SCALE, 1, VAR_RESULT
     BufferPlayerName 3
     Message 16
     WaitABXPadPress

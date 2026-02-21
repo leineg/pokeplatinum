@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_222_west_house.h"
 
-    .data
 
     ScriptEntry _001E
     ScriptEntry _0024
@@ -13,7 +12,7 @@
     ScriptEntryEnd
 
 _001E:
-    SetFlag 0x9EF
+    SetFlag FLAG_FIRST_ARRIVAL_PIKACHU_FAN_CLUB
     End
 
 _0024:
@@ -23,7 +22,7 @@ _0024:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PIKACHU
     Message 0
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -36,7 +35,7 @@ _0043:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PIKACHU
     Message 1
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -49,7 +48,7 @@ _0062:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PIKACHU
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -62,7 +61,7 @@ _0081:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PIKACHU
     Message 3
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -75,7 +74,7 @@ _00A0:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PIKACHU
     Message 4
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -91,5 +90,4 @@ _00BF:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

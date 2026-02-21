@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
 #include "narc.h"
 #include "palette.h"
 #include "sprite_system.h"
@@ -28,7 +28,6 @@ typedef struct UnkStruct_ov16_0226DEEC_t {
 
 void ov16_0226DE44(SpriteSystem *param0, SpriteManager *param1, u32 param2, PaletteData *param3, u32 param4, u32 param5, u32 param6, u32 param7);
 void ov16_0226DEC4(SpriteManager *param0, u32 param1, u32 param2, u32 param3, u32 param4);
-UnkStruct_ov16_0226DEEC *ov16_0226DEEC(SpriteSystem *param0, SpriteManager *param1, int param2, u32 param3, u32 param4, u32 param5, u32 param6, u32 param7, u32 param8);
 void ov16_0226DF68(UnkStruct_ov16_0226DEEC *param0);
 void ov16_0226DFB0(UnkStruct_ov16_0226DEEC *param0, int param1, int param2);
 void ov16_0226DFBC(UnkStruct_ov16_0226DEEC *param0);
@@ -48,9 +47,9 @@ static const SpriteTemplate Unk_ov16_02270AD8 = {
     0x0
 };
 
-void ov16_0226DE44(SpriteSystem *param0, SpriteManager *param1, u32 param2, PaletteData *param3, u32 param4, u32 param5, u32 param6, u32 param7)
+void ov16_0226DE44(SpriteSystem *param0, SpriteManager *param1, u32 heapID, PaletteData *param3, u32 param4, u32 param5, u32 param6, u32 param7)
 {
-    NARC *v0 = NARC_ctor(NARC_INDEX_GRAPHIC__EV_POKESELECT, param2);
+    NARC *v0 = NARC_ctor(NARC_INDEX_GRAPHIC__EV_POKESELECT, heapID);
 
     SpriteSystem_LoadPaletteBufferFromOpenNarc(param3, PLTTBUF_SUB_OBJ, param0, param1, v0, 11, FALSE, 1, NNS_G2D_VRAM_TYPE_2DSUB, param5);
     SpriteSystem_LoadCharResObjFromOpenNarc(param0, param1, v0, 10, FALSE, NNS_G2D_VRAM_TYPE_2DSUB, param4);
@@ -67,7 +66,7 @@ void ov16_0226DEC4(SpriteManager *param0, u32 param1, u32 param2, u32 param3, u3
     SpriteManager_UnloadAnimObjById(param0, param4);
 }
 
-UnkStruct_ov16_0226DEEC *ov16_0226DEEC(SpriteSystem *param0, SpriteManager *param1, int param2, u32 param3, u32 param4, u32 param5, u32 param6, u32 param7, u32 param8)
+UnkStruct_ov16_0226DEEC *ov16_0226DEEC(SpriteSystem *param0, SpriteManager *param1, enum HeapID heapID, u32 param3, u32 param4, u32 param5, u32 param6, u32 param7, u32 param8)
 {
     UnkStruct_ov16_0226DEEC *v0;
     SpriteTemplate v1;
@@ -81,7 +80,7 @@ UnkStruct_ov16_0226DEEC *ov16_0226DEEC(SpriteSystem *param0, SpriteManager *para
     v1.priority = param7;
     v1.bgPriority = param8;
 
-    v0 = Heap_AllocFromHeap(param2, sizeof(UnkStruct_ov16_0226DEEC));
+    v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov16_0226DEEC));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov16_0226DEEC));
 
     v0->unk_00 = SpriteSystem_NewSprite(param0, param1, &v1);
@@ -97,7 +96,7 @@ void ov16_0226DF68(UnkStruct_ov16_0226DEEC *param0)
 {
     Sprite_DeleteAndFreeResources(param0->unk_00);
     SysTask_Done(param0->unk_04);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov16_0226DF80(UnkStruct_ov16_0226DEEC *param0, int param1, int param2, fx32 param3)
@@ -109,7 +108,7 @@ void ov16_0226DF80(UnkStruct_ov16_0226DEEC *param0, int param1, int param2, fx32
     param0->unk_14 = param3;
 
     ManagedSprite_SetPositionXYWithSubscreenOffset(param0->unk_00, param1, param2, param3);
-    ManagedSprite_SetDrawFlag(param0->unk_00, 1);
+    ManagedSprite_SetDrawFlag(param0->unk_00, TRUE);
 }
 
 void ov16_0226DFB0(UnkStruct_ov16_0226DEEC *param0, int param1, int param2)
@@ -119,7 +118,7 @@ void ov16_0226DFB0(UnkStruct_ov16_0226DEEC *param0, int param1, int param2)
 
 void ov16_0226DFBC(UnkStruct_ov16_0226DEEC *param0)
 {
-    ManagedSprite_SetDrawFlag(param0->unk_00, 0);
+    ManagedSprite_SetDrawFlag(param0->unk_00, FALSE);
     ov16_0226E13C(param0);
 }
 

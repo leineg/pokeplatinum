@@ -21,25 +21,25 @@
 #include "message.h"
 #include "narc.h"
 #include "render_window.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_transfer.h"
 #include "sprite_util.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "sys_task.h"
 #include "text.h"
-#include "unk_02005474.h"
 #include "unk_02095AF0.h"
 
 static void ov22_0225A6E0(UnkStruct_ov22_022597BC *param0, BgConfig *param1);
-static void ov22_0225A718(BgConfig *param0, const Options *param1);
+static void ov22_0225A718(BgConfig *param0, const Options *options);
 static void ov22_0225A748(Window **param0, BgConfig *param1, int param2, int param3, int param4, int param5, int param6, BOOL param7);
 static void ov22_0225A7B8(UnkStruct_ov22_022597BC *param0);
 static void ov22_0225A7C0(Window *param0);
 static s32 ov22_0225A7CC(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6);
-static s32 ov22_0225A814(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6, Strbuf **param7);
-static s32 ov22_0225A860(Window *param0, int param1, int param2, int param3, int param4, int param5, TextColor param6, u32 param7);
-static s32 ov22_0225A8B4(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6, u32 param7, Strbuf **param8);
+static s32 ov22_0225A814(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6, String **param7);
+static s32 ov22_0225A860(Window *param0, enum NarcID narcID, int param2, int param3, int param4, int param5, TextColor param6, u32 param7);
+static s32 ov22_0225A8B4(Window *param0, enum NarcID narcID, int param2, int param3, int param4, int param5, u32 param6, u32 param7, String **param8);
 static void ov22_0225A914(UnkStruct_ov22_0225A914 *param0, SpriteList *param1, SpriteResourceCollection **param2, int param3, NARC *param4);
 static void ov22_0225A9C8(UnkStruct_ov22_0225A914 *param0, int param1);
 static void ov22_0225AA10(UnkStruct_ov22_0225A914 *param0, SpriteResourceCollection **param1);
@@ -91,10 +91,10 @@ void ov22_0225A428(UnkStruct_ov22_0225A428 *param0, UnkStruct_ov22_02256BAC *par
     param0->unk_30 = param1->unk_04;
     param0->unk_34 = param1->unk_08;
 
-    ov22_0225A718(param1->unk_00, param1->unk_0C);
+    ov22_0225A718(param1->unk_00, param1->options);
 
-    param0->unk_13C = Options_Frame(param1->unk_0C);
-    param0->unk_140 = Options_TextFrameDelay(param1->unk_0C);
+    param0->unk_13C = Options_Frame(param1->options);
+    param0->unk_140 = Options_TextFrameDelay(param1->options);
     param0->unk_138 |= param2;
 }
 
@@ -149,7 +149,7 @@ s32 ov22_0225A660(UnkStruct_ov22_0225A428 *param0, int param1, int param2, int p
 
 void ov22_0225A6A0(UnkStruct_ov22_0225A428 *param0)
 {
-    Strbuf_Free(param0->unk_144);
+    String_Free(param0->unk_144);
     param0->unk_144 = NULL;
 }
 
@@ -178,7 +178,7 @@ static void ov22_0225A6E0(UnkStruct_ov22_022597BC *param0, BgConfig *param1)
     UnkStruct_ov22_022599A0 v0;
 
     v0.unk_00 = param1;
-    v0.unk_04 = 25;
+    v0.narcID = NARC_INDEX_GRAPHIC__IMAGECLIP;
     v0.unk_08 = 224;
     v0.unk_0C = 225;
     v0.unk_10 = 226;
@@ -188,22 +188,22 @@ static void ov22_0225A6E0(UnkStruct_ov22_022597BC *param0, BgConfig *param1)
     v0.unk_20 = 1;
     v0.unk_24 = 0;
     v0.unk_28 = 0;
-    v0.unk_2C = 14;
+    v0.heapID = HEAP_ID_14;
 
     ov22_022597BC(param0, &v0);
 }
 
-static void ov22_0225A718(BgConfig *param0, const Options *param1)
+static void ov22_0225A718(BgConfig *param0, const Options *options)
 {
-    int v0 = Options_Frame(param1);
+    int frame = Options_Frame(options);
 
-    LoadMessageBoxGraphics(param0, 5, 1, 1, v0, 14);
-    Font_LoadScreenIndicatorsPalette(4, 2 * 32, 14);
+    LoadMessageBoxGraphics(param0, BG_LAYER_SUB_1, 1, 1, frame, HEAP_ID_14);
+    Font_LoadScreenIndicatorsPalette(4, 2 * 32, HEAP_ID_14);
 }
 
 static void ov22_0225A748(Window **param0, BgConfig *param1, int param2, int param3, int param4, int param5, int param6, BOOL param7)
 {
-    *param0 = Window_New(14, 1);
+    *param0 = Window_New(HEAP_ID_14, 1);
 
     Window_Init(*param0);
     Window_Add(param1, *param0, 5, param2, param3, param4, param5, 2, param6);
@@ -237,7 +237,7 @@ static s32 ov22_0225A7CC(Window *param0, int param1, int param2, int param3, int
     return v0;
 }
 
-static s32 ov22_0225A814(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6, Strbuf **param7)
+static s32 ov22_0225A814(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6, String **param7)
 {
     s32 v0;
 
@@ -248,35 +248,28 @@ static s32 ov22_0225A814(Window *param0, int param1, int param2, int param3, int
     return v0;
 }
 
-static s32 ov22_0225A860(Window *param0, int param1, int param2, int param3, int param4, int param5, TextColor param6, u32 param7)
+static s32 ov22_0225A860(Window *window, enum NarcID narcID, int bankID, int param3, int param4, int param5, TextColor param6, u32 param7)
 {
-    MessageLoader *v0;
-    Strbuf *v1;
-    s32 v2;
+    MessageLoader *msgLoader = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, narcID, bankID, HEAP_ID_13);
+    GF_ASSERT(msgLoader);
 
-    v0 = MessageLoader_Init(0, param1, param2, 13);
-    GF_ASSERT(v0);
+    String *v1 = MessageLoader_GetNewString(msgLoader, param3);
+    s32 v2 = Text_AddPrinterWithParamsAndColor(window, FONT_MESSAGE, v1, param4, param5, param7, param6, NULL);
 
-    v1 = MessageLoader_GetNewStrbuf(v0, param3);
-    v2 = Text_AddPrinterWithParamsAndColor(param0, FONT_MESSAGE, v1, param4, param5, param7, param6, NULL);
-
-    Strbuf_Free(v1);
-    MessageLoader_Free(v0);
+    String_Free(v1);
+    MessageLoader_Free(msgLoader);
 
     return v2;
 }
 
-static s32 ov22_0225A8B4(Window *param0, int param1, int param2, int param3, int param4, int param5, u32 param6, u32 param7, Strbuf **param8)
+static s32 ov22_0225A8B4(Window *param0, enum NarcID narcID, int bankID, int param3, int param4, int param5, u32 param6, u32 param7, String **param8)
 {
-    MessageLoader *v0;
-    s32 v1;
-
     GF_ASSERT(*param8 == NULL);
 
-    v0 = MessageLoader_Init(0, param1, param2, 13);
+    MessageLoader *v0 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, narcID, bankID, HEAP_ID_13);
     GF_ASSERT(v0);
-    *param8 = MessageLoader_GetNewStrbuf(v0, param3);
-    v1 = Text_AddPrinterWithParamsAndColor(param0, FONT_MESSAGE, *param8, param4, param5, param7, param6, NULL);
+    *param8 = MessageLoader_GetNewString(v0, param3);
+    s32 v1 = Text_AddPrinterWithParamsAndColor(param0, FONT_MESSAGE, *param8, param4, param5, param7, param6, NULL);
 
     MessageLoader_Free(v0);
 
@@ -296,7 +289,7 @@ static void ov22_0225A914(UnkStruct_ov22_0225A914 *param0, SpriteList *param1, S
     v1.resourceData = &v0;
     v1.vramType = NNS_G2D_VRAM_TYPE_2DSUB;
     v1.priority = 0;
-    v1.heapID = 14;
+    v1.heapID = HEAP_ID_14;
 
     for (v2 = 0; v2 < (20 / 10); v2++) {
         v1.position.y = 104 + (18 * v2);
@@ -311,7 +304,7 @@ static void ov22_0225A914(UnkStruct_ov22_0225A914 *param0, SpriteList *param1, S
             Sprite_SetAnim(param0->unk_10[(v2 * 10) + v3], 1);
 
             if (((v2 * 10) + v3) >= param3) {
-                Sprite_SetDrawFlag(param0->unk_10[(v2 * 10) + v3], 0);
+                Sprite_SetDrawFlag(param0->unk_10[(v2 * 10) + v3], FALSE);
             }
         }
     }
@@ -389,7 +382,7 @@ static void ov22_0225AB54(UnkStruct_ov22_0225AB54 *param0, SpriteList *param1, S
     v1.resourceData = &v0;
     v1.vramType = NNS_G2D_VRAM_TYPE_2DSUB;
     v1.priority = 0;
-    v1.heapID = 14;
+    v1.heapID = HEAP_ID_14;
     v1.position.y = 58 * FX32_ONE;
     v1.position.y += (512 * FX32_ONE);
 
@@ -453,7 +446,7 @@ static void ov22_0225ACBC(UnkStruct_ov22_0225AB54 *param0)
 
         if (param0->unk_1C <= 10) {
             ov22_0225ADC0(param0, &param0->unk_30);
-            Sound_PlayEffect(1667);
+            Sound_PlayEffect(SEQ_SE_DP_HYUN2);
         }
     }
 }
@@ -463,9 +456,7 @@ static void ov22_0225ACE4(UnkStruct_ov22_0225AB54 *param0)
     int v0;
     int v1;
     int v2 = param0->unk_1C;
-    int v3;
-
-    v3 = 1;
+    int v3 = 1;
 
     for (v0 = 1; v0 < 2; v0++) {
         v3 *= 10;

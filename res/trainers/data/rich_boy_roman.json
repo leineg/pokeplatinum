@@ -15,8 +15,17 @@
             "level": 26,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "I never thought I’d lose at\n",
+                "Papa’s restaurant...\n"
+            ]
         }
     ]
 }

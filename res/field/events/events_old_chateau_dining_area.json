@@ -6,15 +6,16 @@
             "x": 2,
             "z": 11,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 164,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 635,
+            "id": "OLD_CHATEAU_DINING_AREA_OLD_MAN_0",
+            "graphics_id": "OBJ_EVENT_GFX_OLD_MAN",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x027B",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -25,10 +26,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1281,
+            "id": "OLD_CHATEAU_DINING_AREA_POKEBALL_1",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0501",
             "script": 7266,
             "initial_dir": 0,
             "data": [],
@@ -39,10 +41,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1282,
+            "id": "OLD_CHATEAU_DINING_AREA_POKEBALL_2",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0502",
             "script": 7267,
             "initial_dir": 0,
             "data": [],
@@ -57,7 +60,7 @@
         {
             "x": 19,
             "z": 11,
-            "dest_header_id": 295,
+            "dest_header_id": "MAP_HEADER_OLD_CHATEAU",
             "dest_warp_id": 2
         }
     ],

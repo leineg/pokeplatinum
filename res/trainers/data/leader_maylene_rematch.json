@@ -20,7 +20,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_FAKE_OUT"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -34,7 +34,7 @@
                 "MOVE_THUNDER_PUNCH",
                 "MOVE_HI_JUMP_KICK"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -48,7 +48,7 @@
                 "MOVE_MACH_PUNCH",
                 "MOVE_SEED_BOMB"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -62,7 +62,7 @@
                 "MOVE_EARTHQUAKE",
                 "MOVE_STONE_EDGE"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -76,8 +76,24 @@
                 "MOVE_EXTREME_SPEED",
                 "MOVE_BONE_RUSH"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_LAST_BATTLER_HALF_HP",
+            "en_US": [
+                "This is like back at the Gym, isn’t it?\n",
+                "I’m in a bit of a bind, aren’t I?\n"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "I’m forced to admit defeat again...\n",
+                "You are much too strong.\n"
+            ]
         }
     ]
 }

@@ -14,7 +14,7 @@
             "level": 51,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -23,7 +23,7 @@
             "level": 53,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -32,8 +32,31 @@
             "level": 55,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I trained all of my gnarly Pokémon\n",
+                "at the Fighting Dojo in Kanto!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "D  n     i\n",
+                "  o  e     n...\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "We’re gonna go ahead and leave...\n",
+                "You know, go train elsewhere.\n"
+            ]
         }
     ]
 }

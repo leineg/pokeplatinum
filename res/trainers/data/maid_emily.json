@@ -18,8 +18,14 @@
                 "MOVE_METEOR_MASH",
                 "MOVE_ENDURE"
             ],
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "You’re so strong!!!\n"
         }
     ]
 }

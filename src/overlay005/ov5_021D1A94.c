@@ -16,7 +16,7 @@
 
 struct UnkStruct_ov5_021D1A94_t {
     FieldSystem *fieldSystem;
-    int unk_04;
+    enum HeapID heapID;
     int unk_08;
     UnkStruct_ov5_021D1BEC *unk_0C;
     SysTaskManager *unk_10;
@@ -30,23 +30,23 @@ struct UnkStruct_ov5_021D1BEC_t {
     void *unk_10;
 };
 
-UnkStruct_ov5_021D1A94 *ov5_021D1A94(FieldSystem *fieldSystem, int param1, int param2)
+UnkStruct_ov5_021D1A94 *ov5_021D1A94(FieldSystem *fieldSystem, enum HeapID heapID, int param2)
 {
     UnkStruct_ov5_021D1A94 *v0;
     u32 v1;
 
-    v0 = Heap_AllocFromHeap(param1, sizeof(UnkStruct_ov5_021D1A94));
+    v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov5_021D1A94));
 
     v0->fieldSystem = fieldSystem;
-    v0->unk_04 = param1;
+    v0->heapID = heapID;
     v0->unk_08 = param2;
-    v0->unk_0C = Heap_AllocFromHeap(param1, sizeof(UnkStruct_ov5_021D1BEC) * param2);
+    v0->unk_0C = Heap_Alloc(heapID, sizeof(UnkStruct_ov5_021D1BEC) * param2);
 
     MI_CpuClear32(v0->unk_0C, sizeof(UnkStruct_ov5_021D1BEC) * param2);
 
     v1 = SysTaskManager_GetRequiredSize(param2);
 
-    v0->unk_10 = Heap_AllocFromHeap(param1, v1);
+    v0->unk_10 = Heap_Alloc(heapID, v1);
     v0->unk_10 = SysTaskManager_Init(param2, v0->unk_10);
 
     return v0;
@@ -60,9 +60,9 @@ void ov5_021D1AE4(UnkStruct_ov5_021D1A94 *param0)
         ov5_021D1BEC(&param0->unk_0C[v0]);
     }
 
-    Heap_FreeToHeap(param0->unk_0C);
-    Heap_FreeToHeap(param0->unk_10);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0->unk_0C);
+    Heap_Free(param0->unk_10);
+    Heap_Free(param0);
 }
 
 void ov5_021D1B18(UnkStruct_ov5_021D1A94 *param0)
@@ -108,7 +108,7 @@ UnkStruct_ov5_021D1BEC *ov5_021D1B6C(UnkStruct_ov5_021D1A94 *param0, const UnkSt
             GF_ASSERT(v1->unk_08 != NULL);
 
             if (param1->unk_04 != 0) {
-                v1->unk_10 = Heap_AllocFromHeap(param0->unk_04, param1->unk_04);
+                v1->unk_10 = Heap_Alloc(param0->heapID, param1->unk_04);
             }
 
             if (param1->unk_08) {
@@ -134,7 +134,7 @@ void ov5_021D1BEC(UnkStruct_ov5_021D1BEC *param0)
     }
 
     if (param0->unk_0C->unk_04 != 0) {
-        Heap_FreeToHeap(param0->unk_10);
+        Heap_Free(param0->unk_10);
     }
 
     SysTask_Done(param0->unk_04);

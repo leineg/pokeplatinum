@@ -1,6 +1,5 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _0032
     ScriptEntry _0075
@@ -9,17 +8,17 @@
     ScriptEntryEnd
 
 _0012:
-    ScrCmd_32B 0x4004
-    GoToIfEq 0x4004, 0, _0061
-    GoToIfEq 0x4004, 1, _006B
+    CheckPartyHasFatefulEncounterRegigigas VAR_MAP_LOCAL_4
+    GoToIfEq VAR_MAP_LOCAL_4, 0, _0061
+    GoToIfEq VAR_MAP_LOCAL_4, 1, _006B
     End
 
 _0032:
-    ScrCmd_25B
-    CallIfNe 0x4069, 0x122, _0079
-    ScrCmd_32B 0x4004
-    GoToIfEq 0x4004, 0, _0061
-    GoToIfEq 0x4004, 1, _006B
+    InitPersistedMapFeaturesForPlatformLift
+    CallIfNe VAR_UNK_0x4069, 0x122, _0079
+    CheckPartyHasFatefulEncounterRegigigas VAR_MAP_LOCAL_4
+    GoToIfEq VAR_MAP_LOCAL_4, 0, _0061
+    GoToIfEq VAR_MAP_LOCAL_4, 1, _006B
     End
 
 _0061:
@@ -31,14 +30,14 @@ _006B:
     End
 
 _0075:
-    ScrCmd_25C
+    TriggerPlatformLift
     End
 
 _0079:
-    SetVar 0x4069, 0
+    SetVar VAR_UNK_0x4069, 0
     Return
 
 _0081:
     End
 
-    .byte 0
+    .balign 4, 0

@@ -20,7 +20,7 @@
 #include "palette.h"
 #include "render_window.h"
 #include "sprite_system.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "text.h"
 #include "trainer_info.h"
 #include "unk_0202419C.h"
@@ -57,7 +57,7 @@ static inline void inline_ov116_02261940_2(UnkStruct_ov116_0226501C *wk, UnkStru
 
 static inline void inline_ov116_02261940_1(void)
 {
-    VecFx32 v0 = { 0, (-FX32_ONE), (-FX32_ONE) };
+    VecFx32 v0 = { 0, -FX32_ONE, -FX32_ONE };
 
     VEC_Normalize(&v0, &v0);
 
@@ -69,13 +69,13 @@ static inline void inline_ov116_02261940_1(void)
 
 void ov116_022618A8(UnkStruct_ov116_0226501C *param0, NARC *param1, int param2)
 {
-    Easy3DModel_LoadFrom(&param0->unk_78, param1, param2, 106);
+    Easy3DModel_LoadFrom(&param0->unk_78, param1, param2, HEAP_ID_106);
 }
 
 void ov116_022618B4(UnkStruct_ov116_0226501C *param0, int param1)
 {
     Easy3DObject_Init(&param0->unk_00, &param0->unk_78);
-    Easy3DObject_SetPosition(&param0->unk_00, (0 * FX32_ONE), (-20 * FX32_ONE), (0 * FX32_ONE));
+    Easy3DObject_SetPosition(&param0->unk_00, 0 * FX32_ONE, -20 * FX32_ONE, 0 * FX32_ONE );
 
     if (param1 == 0) {
         Easy3DObject_SetScale(&param0->unk_00, FX32_CONST(1.00f), FX32_CONST(1.00f), FX32_CONST(1.00f));
@@ -83,7 +83,7 @@ void ov116_022618B4(UnkStruct_ov116_0226501C *param0, int param1)
         Easy3DObject_SetScale(&param0->unk_00, FX32_CONST(1.50f), FX32_CONST(1.50f), FX32_CONST(1.50f));
     }
 
-    Easy3DObject_SetVisibility(&param0->unk_00, 1);
+    Easy3DObject_SetVisible(&param0->unk_00, 1);
 
     param0->unk_1E0.x = (0 * FX32_ONE);
     param0->unk_1E0.y = (-20 * FX32_ONE);
@@ -102,7 +102,7 @@ void ov116_0226192C(UnkStruct_ov116_0226501C *param0)
 
 void ov116_02261940(UnkStruct_ov116_0226139C *param0)
 {
-    sub_020241B4();
+    G3_ResetG3X();
     Camera_ComputeViewMatrix();
 
     inline_ov116_02261940_1();
@@ -118,21 +118,21 @@ void ov116_02261940(UnkStruct_ov116_0226139C *param0)
 
     switch (param0->unk_04->unk_F8) {
     case 0:
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[0].unk_00, 1);
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[1].unk_00, 0);
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[2].unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[0].unk_00, 1);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[1].unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[2].unk_00, 0);
         Easy3DAnim_UpdateLooped(&param0->unk_04->unk_308[0].unk_88[param0->unk_04->unk_308[0].unk_1F4], FX32_CONST(1));
         break;
     case 1:
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[0].unk_00, 0);
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[1].unk_00, 1);
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[2].unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[0].unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[1].unk_00, 1);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[2].unk_00, 0);
         Easy3DAnim_Update(&param0->unk_04->unk_308[1].unk_88[0], FX32_CONST(1));
         break;
     case 2:
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[0].unk_00, 0);
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[1].unk_00, 0);
-        Easy3DObject_SetVisibility(&param0->unk_04->unk_308[2].unk_00, 1);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[0].unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[1].unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_04->unk_308[2].unk_00, 1);
         Easy3DAnim_Update(&param0->unk_04->unk_308[2].unk_88[0], FX32_CONST(1));
         break;
     }
@@ -183,10 +183,10 @@ void ov116_02261C48(UnkStruct_ov116_02262A8C *param0, int param1)
 void ov116_02261C88(UnkStruct_ov116_0226139C *param0)
 {
     VecFx32 v0 = { 0, 0, 0 };
-    VecFx32 v1 = { 0, 0, (FX32_ONE * 160) };
+    VecFx32 v1 = { 0, 0, FX32_ONE * 160 };
 
     Camera_InitWithTargetAndPosition(&v0, &v1, 0xb60, 0, 0, param0->unk_48.camera);
-    Camera_SetClipping((FX32_ONE * -1000), (FX32_ONE * 1000), param0->unk_48.camera);
+    Camera_SetClipping(FX32_ONE * -1000, FX32_ONE * 1000, param0->unk_48.camera);
     Camera_SetAsActive(param0->unk_48.camera);
 }
 
@@ -244,7 +244,7 @@ void ov116_02261D70(UnkStruct_ov116_02262A8C *param0)
     s16 v5[] = { 72, 180, 24, 232 };
 
     for (v4 = 0; v4 < 4; v4++) {
-        ov116_02261CD8(&v0, v5[v4], (192 + 32), 1, 1, 9004);
+        ov116_02261CD8(&v0, v5[v4], 192 + 32, 1, 1, 9004);
 
         v0.bgPriority = 0;
         v0.priority = 1;
@@ -393,13 +393,13 @@ void ov116_02261F70(UnkStruct_ov116_02262A8C *param0)
 
     {
         MessageLoader *v0;
-        Strbuf *v1;
+        String *v1;
 
-        v0 = MessageLoader_Init(0, 26, 410, 106);
-        v1 = MessageLoader_GetNewStrbuf(v0, 0);
+        v0 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_UNK_0410, HEAP_ID_106);
+        v1 = MessageLoader_GetNewString(v0, 0);
 
         Text_AddPrinterWithParams(&param0->unk_1FC8, FONT_SYSTEM, v1, 0, 0, TEXT_SPEED_INSTANT, NULL);
-        Strbuf_Free(v1);
+        String_Free(v1);
         MessageLoader_Free(v0);
     }
 
@@ -455,9 +455,9 @@ void ov116_02262034(UnkStruct_ov116_0226139C *param0, int param1)
     }
 }
 
-static int ov116_0226208C(Window *param0, Strbuf *param1)
+static int ov116_0226208C(Window *param0, String *param1)
 {
-    int v0 = Font_CalcStrbufWidth(FONT_SYSTEM, param1, 0);
+    int v0 = Font_CalcStringWidth(FONT_SYSTEM, param1, 0);
     int v1 = (Window_GetWidth(param0) * 8 - v0) / 2;
 
     return v1;
@@ -492,13 +492,13 @@ void ov116_022620AC(UnkStruct_ov116_0226139C *param0, UnkStruct_ov116_02262A8C *
 
     switch (param1->unk_04) {
     case 2:
-        Graphics_LoadTilemapToBgLayerFromOpenNARC(param1->unk_14->unk_00, 79, param1->unk_14->unk_10, 7, 0, 0, 0, 106);
+        Graphics_LoadTilemapToBgLayerFromOpenNARC(param1->unk_14->unk_00, 79, param1->unk_14->unk_10, 7, 0, 0, 0, HEAP_ID_106);
         break;
     case 3:
-        Graphics_LoadTilemapToBgLayerFromOpenNARC(param1->unk_14->unk_00, 80, param1->unk_14->unk_10, 7, 0, 0, 0, 106);
+        Graphics_LoadTilemapToBgLayerFromOpenNARC(param1->unk_14->unk_00, 80, param1->unk_14->unk_10, 7, 0, 0, 0, HEAP_ID_106);
         break;
     case 4:
-        Graphics_LoadTilemapToBgLayerFromOpenNARC(param1->unk_14->unk_00, 81, param1->unk_14->unk_10, 7, 0, 0, 0, 106);
+        Graphics_LoadTilemapToBgLayerFromOpenNARC(param1->unk_14->unk_00, 81, param1->unk_14->unk_10, 7, 0, 0, 0, HEAP_ID_106);
         break;
     default:
         GF_ASSERT(0);
@@ -525,10 +525,10 @@ void ov116_022620AC(UnkStruct_ov116_0226139C *param0, UnkStruct_ov116_02262A8C *
         Window_FillTilemap(v3, 0xFF);
 
         {
-            Strbuf *v11;
+            String *v11;
             int v12;
 
-            v11 = TrainerInfo_NameNewStrbuf(v9, 106);
+            v11 = TrainerInfo_NameNewString(v9, 106);
             v12 = ov116_0226208C(v3, v11);
 
             if (v10) {
@@ -537,7 +537,7 @@ void ov116_022620AC(UnkStruct_ov116_0226139C *param0, UnkStruct_ov116_02262A8C *
                 Text_AddPrinterWithParamsColorAndSpacing(v3, FONT_SYSTEM, v11, v12, 0, TEXT_SPEED_INSTANT, TEXT_COLOR(1, 2, 15), 0, 0, NULL);
             }
 
-            Strbuf_Free(v11);
+            String_Free(v11);
         }
 
         Window_CopyToVRAM(v3);
@@ -565,7 +565,7 @@ void ov116_02262264(UnkStruct_ov116_02262A8C *param0)
         v1++;
     }
 
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(param0->unk_14->unk_00, 78, param0->unk_14->unk_10, 7, 0, 0, 0, 106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(param0->unk_14->unk_00, 78, param0->unk_14->unk_10, 7, 0, 0, 0, HEAP_ID_106);
 }
 
 void ov116_022622C8(UnkStruct_ov116_0226139C *param0)
@@ -658,7 +658,7 @@ void ov116_022622C8(UnkStruct_ov116_0226139C *param0)
     SpriteSystem_LoadPaletteBufferFromOpenNarc(v5, PLTTBUF_MAIN_OBJ, v3, v4, v6, v10, FALSE, v12, NNS_G2D_VRAM_TYPE_2DMAIN, v11);
 
     {
-        NARC *v13 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__WIFI_LOBBY_MINIGAME__WLMNGM_TOOL, 106);
+        NARC *v13 = NARC_ctor(NARC_INDEX_RESOURCE__ENG__WIFI_LOBBY_MINIGAME__WLMNGM_TOOL, HEAP_ID_106);
 
         v7 = 23;
         v8 = 22;
@@ -691,16 +691,16 @@ void ov116_022625A8(UnkStruct_ov116_0226139C *param0, UnkStruct_ov116_02262A8C *
         }
 
         param1->unk_DC[v4] = v5;
-        ov116_02261CD8(&v0, Unk_ov116_02267A78[param1->unk_04 - 1][v5] + 0, (176 + 64), 2, 0, 9000);
+        ov116_02261CD8(&v0, Unk_ov116_02267A78[param1->unk_04 - 1][v5] + 0, 176 + 64, 2, 0, 9000);
         v0.priority = 1;
 
         param1->unk_1C[v5] = SpriteSystem_NewSprite(v1, v2, &v0);
-        ov116_02261CD8(&v0, Unk_ov116_02267A78[param1->unk_04 - 1][v5] + 0, ((176 + 64) + 0), 2, 0, 9000);
+        ov116_02261CD8(&v0, Unk_ov116_02267A78[param1->unk_04 - 1][v5] + 0, (176 + 64) + 0, 2, 0, 9000);
         v0.priority = 2;
 
         param1->unk_20[v5] = SpriteSystem_NewSprite(v1, v2, &v0);
         ManagedSprite_SetExplicitPaletteOffset(param1->unk_20[v5], 0 + ov116_02264680(param0, v4));
-        ov116_02261CD8(&v0, Unk_ov116_02267A78[param1->unk_04 - 1][v5] + 0, ((176 + 64) + 0), 2, 0, 9000);
+        ov116_02261CD8(&v0, Unk_ov116_02267A78[param1->unk_04 - 1][v5] + 0, (176 + 64) + 0, 2, 0, 9000);
         v0.priority = 3;
 
         param1->unk_24[v5] = SpriteSystem_NewSprite(v1, v2, &v0);
@@ -816,20 +816,20 @@ void ov116_022628B8(UnkStruct_ov116_0226139C *param0)
     PaletteData *v5 = param0->unk_48.unk_14;
     NARC *v6 = v0;
 
-    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 72, v2, 4, 0, 0, 0, 106);
-    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 75, v2, 5, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 74, v2, 4, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 76, v2, 5, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 77, v2, 6, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 78, v2, 7, 0, 0, 0, 106);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 72, v2, 4, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 75, v2, 5, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 74, v2, 4, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 76, v2, 5, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 77, v2, 6, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 78, v2, 7, 0, 0, 0, HEAP_ID_106);
     PaletteData_LoadBufferFromFileStart(v5, 164, 73, 106, 1, 0x20 * 5, 0);
-    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 5, v2, 3, 0, 0, 0, 106);
-    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 8, v2, 1, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 7, v2, 3, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 9, v2, 1, 0, 0, 0, 106);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 10, v2, 2, 0, 0, 0, 106);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 5, v2, 3, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(v6, 8, v2, 1, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 7, v2, 3, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 9, v2, 1, 0, 0, 0, HEAP_ID_106);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(v6, 10, v2, 2, 0, 0, 0, HEAP_ID_106);
     PaletteData_LoadBufferFromFileStart(v5, 164, 6, 106, 0, 0x20, 0);
     PaletteData_LoadBufferFromFileStart(v5, 14, 7, 106, 1, 0x20, 14 * 16);
     PaletteData_LoadBufferFromFileStart(v5, 38, GetStandardWindowPaletteNARCMember(), 106, 1, 0x20, 13 * 16);
-    LoadStandardWindowGraphics(v2, 7, 180, 13, 0, 106);
+    LoadStandardWindowGraphics(v2, BG_LAYER_SUB_3, 180, 13, 0, HEAP_ID_106);
 }

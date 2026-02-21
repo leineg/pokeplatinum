@@ -12,8 +12,8 @@
 #include "field_task.h"
 #include "heap.h"
 #include "savedata_misc.h"
+#include "screen_fade.h"
 #include "string_template.h"
-#include "unk_0200F174.h"
 #include "unk_02014A84.h"
 #include "unk_0203D1B8.h"
 #include "unk_0209747C.h"
@@ -35,11 +35,11 @@ static BOOL sub_0209B3C4(FieldTask *param0);
 void sub_0209B344(FieldTask *param0, u16 *param1)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_0209B3AC *v1 = Heap_AllocFromHeap(HEAP_ID_FIELD_TASK, sizeof(UnkStruct_0209B3AC));
+    UnkStruct_0209B3AC *v1 = Heap_Alloc(HEAP_ID_FIELD3, sizeof(UnkStruct_0209B3AC));
 
     v1->fieldSystem = fieldSystem;
-    v1->unk_04 = StringTemplate_Default(32);
-    v1->unk_10 = sub_0209747C(2, 0, v1->fieldSystem->saveData, 32);
+    v1->unk_04 = StringTemplate_Default(HEAP_ID_FIELD3);
+    v1->unk_10 = sub_0209747C(2, 0, v1->fieldSystem->saveData, HEAP_ID_FIELD3);
     v1->unk_14 = SaveData_MiscSaveBlock(fieldSystem->saveData);
     v1->unk_20 = param1;
 
@@ -57,7 +57,7 @@ static void sub_0209B3AC(UnkStruct_0209B3AC *param0)
 {
     sub_020974EC(param0->unk_10);
     StringTemplate_Free(param0->unk_04);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static BOOL sub_0209B3C4(FieldTask *param0)
@@ -79,12 +79,12 @@ static BOOL sub_0209B3C4(FieldTask *param0)
         break;
     case 2:
         if (FieldSystem_IsRunningFieldMap(v0->fieldSystem)) {
-            ov5_021D1744(1);
+            FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_IN);
             v0->unk_18 = 3;
         }
         break;
     case 3:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             if (sub_02097528(v0->unk_10)) {
                 *v0->unk_20 = 0;
                 v0->unk_18 = 4;

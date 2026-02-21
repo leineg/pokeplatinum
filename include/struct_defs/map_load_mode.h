@@ -3,12 +3,12 @@
 
 typedef struct MapLoadMode {
     u32 fieldBottomScreen : 4;
-    u32 unk_00_4 : 4;
-    u32 unk_00_8 : 4;
+    u32 skipMapAttributes : 4;
+    u32 useSimpleTerrainCollisions : 4;
     u32 unk_00_12 : 4;
-    u32 unk_00_16 : 4;
+    u32 useSeparateTerrainAttributes : 4;
     u32 unk_00_20 : 4;
-    u32 unk_00_24 : 8;
+    u32 separateTerrainAttributesBlockCount : 8;
     u32 unk_04;
 } MapLoadMode;
 

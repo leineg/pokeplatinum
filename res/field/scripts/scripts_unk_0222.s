@@ -1,15 +1,14 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
 
 _0006:
-    SetFlag 0x9C6
+    SetFlag FLAG_FIRST_ARRIVAL_MYSTERY_ZONE_D05
     End
 
-    .byte 2
-    .byte 0
-    .byte 0
-    .byte 0
+Unk222_Unused:
+    End
+
+    .balign 4, 0

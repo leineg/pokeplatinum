@@ -13,9 +13,9 @@
 #include "inlines.h"
 #include "narc.h"
 #include "palette.h"
+#include "sound_playback.h"
 #include "sprite_system.h"
 #include "system.h"
-#include "unk_02005474.h"
 
 typedef struct {
     fx32 unk_00;
@@ -158,9 +158,7 @@ inline void inline_ov117_02262EAC(int param0)
 
 UnkStruct_ov117_022626B0 *ov117_022626B0(UnkStruct_ov117_02261280 *param0)
 {
-    UnkStruct_ov117_022626B0 *v0;
-
-    v0 = Heap_AllocFromHeap(110, sizeof(UnkStruct_ov117_022626B0));
+    UnkStruct_ov117_022626B0 *v0 = Heap_Alloc(HEAP_ID_110, sizeof(UnkStruct_ov117_022626B0));
     MI_CpuClear8(v0, sizeof(UnkStruct_ov117_022626B0));
     v0->unk_270 = param0->unk_00->unk_34;
 
@@ -200,10 +198,10 @@ void ov117_02262760(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_022626B0 *
     ov117_02263AE4(param1->unk_234);
     ov117_022639BC(param0);
 
-    Heap_FreeToHeap(param1->unk_00);
-    Heap_FreeToHeap(param1->unk_24C);
-    Heap_FreeToHeap(param1->unk_250);
-    Heap_FreeToHeap(param1);
+    Heap_Free(param1->unk_00);
+    Heap_Free(param1->unk_24C);
+    Heap_Free(param1->unk_250);
+    Heap_Free(param1);
 }
 
 void ov117_02262798(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_022626B0 *param1)
@@ -262,7 +260,7 @@ void ov117_02262798(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_022626B0 *
                 if (v1 == 1) {
                     param1->unk_268 = 8;
                     param1->unk_275 = 0;
-                    Sound_PlayEffect(1398);
+                    Sound_PlayEffect(SEQ_SE_PL_BALLOON01);
                 }
             } else {
                 ov117_02262CE8(param1);
@@ -327,16 +325,16 @@ static void ov117_022629E0(UnkStruct_ov117_02261280 *param0, UnkStruct_ov117_022
 {
     if ((param3 == 1) && (param1->unk_244 >= 98)) {
         ov117_02261600(param0, 0);
-        Sound_PlayEffect(1402);
+        Sound_PlayEffect(SEQ_SE_PL_BALLOON04);
     } else if (param1->unk_244 >= 98) {
         (void)0;
     } else {
         if (param1->unk_0C[0].unk_00.unk_04 < param1->unk_0C[0].unk_10.unk_04) {
             ov117_02261600(param0, 2);
-            Sound_PlayEffect(1400);
+            Sound_PlayEffect(SEQ_SE_PL_BALLOON03);
         } else if (param1->unk_0C[0].unk_00.unk_04 > param1->unk_0C[0].unk_10.unk_04) {
             ov117_02261600(param0, 1);
-            Sound_PlayEffect(1400);
+            Sound_PlayEffect(SEQ_SE_PL_BALLOON03);
         }
     }
 }
@@ -418,8 +416,8 @@ static void ov117_02262B98(UnkStruct_ov117_022626B0 *param0)
 
         GF_ASSERT(param0->unk_24C == NULL);
 
-        param0->unk_24C = Heap_AllocFromHeap(110, v0);
-        param0->unk_250 = Heap_AllocFromHeap(110, v0);
+        param0->unk_24C = Heap_Alloc(HEAP_ID_110, v0);
+        param0->unk_250 = Heap_Alloc(HEAP_ID_110, v0);
 
         MI_CpuCopy8(v1, param0->unk_24C, v0);
         MI_CpuCopy8(v1, param0->unk_250, v0);
@@ -439,7 +437,7 @@ static void ov117_02262B98(UnkStruct_ov117_022626B0 *param0)
         v3 = (u8 *)param0->unk_04 + param0->unk_04->texInfo.ofsTex;
         v4 = (u32)(v3 - (u8 *)param0->unk_00);
 
-        Heap_ReallocFromHeap(param0->unk_00, v4);
+        Heap_Realloc(param0->unk_00, v4);
     }
 }
 
@@ -452,9 +450,7 @@ static void ov117_02262C3C(UnkStruct_ov117_022626B0 *param0)
 
 static void ov117_02262C60(UnkStruct_ov117_022626B0 *param0, int param1)
 {
-    int v0;
-
-    v0 = (12 << 8) * param1 / 800;
+    int v0 = (12 << 8) * param1 / 800;
     v0 = (v0 + 0x80) >> 8;
 
     if (v0 > 16) {
@@ -677,7 +673,7 @@ static int ov117_0226334C(UnkStruct_ov117_022626B0 *param0)
         }
 
         if ((param0->unk_23C != -1) && (param0->unk_210 > param0->unk_23C) && (Sound_IsEffectPlaying(1399) == 0)) {
-            Sound_PlayEffect(1399);
+            Sound_PlayEffect(SEQ_SE_PL_BALLOON02);
             param0->unk_274 = 1;
         }
 
@@ -912,9 +908,7 @@ static int ov117_022638AC(UnkStruct_ov117_022626B0 *param0)
 
 static void ov117_022638D8(UnkStruct_ov117_02261280 *param0)
 {
-    NARC *v0;
-
-    v0 = NARC_ctor(NARC_INDEX_APPLICATION__BALLOON__GRAPHIC__BALLOON_GRA, 110);
+    NARC *v0 = NARC_ctor(NARC_INDEX_APPLICATION__BALLOON__GRAPHIC__BALLOON_GRA, HEAP_ID_110);
 
     SpriteSystem_LoadPaletteBufferFromOpenNarc(param0->unk_8C, PLTTBUF_MAIN_OBJ, param0->unk_24, param0->unk_28, v0, 58, FALSE, 1, NNS_G2D_VRAM_TYPE_2DMAIN, 10005);
     SpriteSystem_LoadCharResObjFromOpenNarc(param0->unk_24, param0->unk_28, v0, 55, FALSE, NNS_G2D_VRAM_TYPE_2DMAIN, 10003);

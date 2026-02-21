@@ -4,10 +4,10 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/graphics.h"
 #include "constants/heap.h"
 
 #include "heap.h"
-#include "palette.h"
 #include "vram_transfer.h"
 
 #define NUM_VRAM_PALETTES     16
@@ -63,14 +63,14 @@ static void ResetBothTransferRanges(PlttTransferTaskManager *task);
 
 static PlttTransferTaskManager *sTaskManager = NULL;
 
-void PlttTransfer_Init(int capacity, enum HeapId heapID)
+void PlttTransfer_Init(int capacity, enum HeapID heapID)
 {
     if (sTaskManager == NULL) {
-        sTaskManager = Heap_AllocFromHeap(heapID, sizeof(PlttTransferTaskManager));
+        sTaskManager = Heap_Alloc(heapID, sizeof(PlttTransferTaskManager));
         MI_CpuClear32(sTaskManager, sizeof(PlttTransferTaskManager));
 
         sTaskManager->capacity = capacity;
-        sTaskManager->tasks = Heap_AllocFromHeap(heapID, sizeof(PlttTransferTask) * capacity);
+        sTaskManager->tasks = Heap_Alloc(heapID, sizeof(PlttTransferTask) * capacity);
 
         for (int i = 0; i < capacity; i++) {
             InitTransferTask(sTaskManager->tasks + i);
@@ -91,8 +91,8 @@ void PlttTransfer_Free(void)
 {
     if (sTaskManager != NULL) {
         PlttTransfer_ResetAllTasks();
-        Heap_FreeToHeap(sTaskManager->tasks);
-        Heap_FreeToHeap(sTaskManager);
+        Heap_Free(sTaskManager->tasks);
+        Heap_Free(sTaskManager);
         sTaskManager = NULL;
     }
 }

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/celestic_town_north_house.h"
 
-    .data
 
     ScriptEntry _001C
     ScriptEntry _0056
@@ -19,8 +18,8 @@ _001C:
     LockAll
     FacePlayer
     Message 0
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0043
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0043
     Message 1
     GoTo _004E
     End
@@ -40,14 +39,14 @@ _0056:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0x964, _007F
-    GoToIfSet 0x9B8, _008E
+    GoToIfSet FLAG_GAME_COMPLETED, _007F
+    GoToIfSet FLAG_FIRST_ARRIVAL_CANALAVE_CITY, _008E
     Message 3
     GoTo _0099
     End
 
 _007F:
-    SetFlag 0x145
+    SetFlag FLAG_UNK_0x0145
     Message 5
     GoTo _0099
     End
@@ -93,4 +92,4 @@ _00C5:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

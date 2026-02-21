@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/galactic_hq_4f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _012C
@@ -19,9 +18,9 @@ _0012:
     WaitMovement
     Message 1
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8004, 8, _0054
-    GoToIfEq 0x8004, 9, _0064
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8004, 8, _0054
+    GoToIfEq VAR_0x8004, 9, _0064
     End
 
 _0054:
@@ -36,13 +35,13 @@ _0064:
 
 _0074:
     StartTrainerBattle TRAINER_GALACTIC_BOSS_CYRUS_GALACTIC_HQ
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _00E1
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _00E1
     Message 2
-    SetVar 0x8004, 1
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    CallIfEq 0x800C, 1, _00DB
+    SetVar VAR_0x8004, ITEM_MASTER_BALL
+    SetVar VAR_0x8005, 1
+    CanFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT
+    CallIfEq VAR_RESULT, 1, _00DB
     Message 3
     CloseMessage
     ApplyMovement 0, _0110
@@ -52,12 +51,12 @@ _0074:
     ApplyMovement 0, _0124
     WaitMovement
     RemoveObject 0
-    SetVar 0x40D6, 1
+    SetVar VAR_UNK_0x40D6, 1
     ReleaseAll
     End
 
 _00DB:
-    CallCommonScript 0x7FC
+    Common_GiveItemQuantity
     Return
 
 _00E1:
@@ -67,45 +66,45 @@ _00E1:
 
     .balign 4, 0
 _00E8:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _00F0:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _00F8:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _0100:
-    MoveAction_013
-    MoveAction_015
-    MoveAction_033
+    WalkNormalSouth
+    WalkNormalEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0110:
-    MoveAction_012
-    MoveAction_015 4
-    MoveAction_012 3
-    MoveAction_033
+    WalkNormalNorth
+    WalkNormalEast 4
+    WalkNormalNorth 3
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0124:
-    MoveAction_015 7
+    WalkNormalEast 7
     EndMovement
 
 _012C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckItem ITEM_GALACTIC_KEY, 1, 0x800C
-    GoToIfEq 0x800C, 1, _0154
+    CheckItem ITEM_GALACTIC_KEY, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _0154
     Message 5
     WaitABXPadPress
     CloseMessage
@@ -114,9 +113,9 @@ _012C:
 
 _0154:
     Message 6
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0177
-    GoToIfEq 0x800C, MENU_NO, _01AB
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0177
+    GoToIfEq VAR_RESULT, MENU_NO, _01AB
     End
 
 _0177:
@@ -128,7 +127,7 @@ _0177:
     ApplyMovement 1, _01B4
     ApplyMovement 2, _01BC
     WaitMovement
-    SetFlag 0x226
+    SetFlag FLAG_UNK_0x0226
     RemoveObject 1
     RemoveObject 2
     CloseMessage
@@ -142,12 +141,12 @@ _01AB:
 
     .balign 4, 0
 _01B4:
-    MoveAction_018
+    WalkFastWest
     EndMovement
 
     .balign 4, 0
 _01BC:
-    MoveAction_019
+    WalkFastEast
     EndMovement
 
 _01C4:
@@ -168,16 +167,16 @@ _01D5:
 
 _01E6:
     Message 10
-    ScrCmd_040 1, 1, 0, 1, 0x800C
-    ScrCmd_29D 0x10C, 0
-    ScrCmd_29D 0x10D, 1
-    ScrCmd_29D 0x10E, 2
-    ScrCmd_29D 0x10F, 3
-    ScrCmd_043
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _0240
-    GoToIfEq 0x8008, 1, _024B
-    GoToIfEq 0x8008, 2, _0256
+    InitGlobalTextMenu 1, 1, 0, VAR_RESULT
+    AddMenuEntry 0x10C, 0
+    AddMenuEntry 0x10D, 1
+    AddMenuEntry 0x10E, 2
+    AddMenuEntry 0x10F, 3
+    ShowMenu
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, _0240
+    GoToIfEq VAR_0x8008, 1, _024B
+    GoToIfEq VAR_0x8008, 2, _0256
     GoTo _0261
     End
 
@@ -201,4 +200,4 @@ _0261:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

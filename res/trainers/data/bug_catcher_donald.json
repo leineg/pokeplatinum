@@ -13,7 +13,7 @@
             "level": 14,
             "item": null,
             "moves": null,
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,28 @@
             "level": 14,
             "item": null,
             "moves": null,
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "My senses tingle...\n",
+                "I’ve spotted a rare Pokémon!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Awawawawah...\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "I thought it was a rare Pokémon, but\n",
+                "it turned out to be just a Trainer!\n"
+            ]
         }
     ]
 }

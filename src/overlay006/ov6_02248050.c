@@ -19,7 +19,7 @@
 #include "map_object.h"
 #include "narc.h"
 #include "player_avatar.h"
-#include "unk_02005474.h"
+#include "sound_playback.h"
 
 typedef struct {
     Easy3DObject unk_00;
@@ -70,9 +70,7 @@ static void ov6_02248050(MapObjectManager *param0, u32 param1, Easy3DObject *par
     int v0;
     int v1, v2;
     VecFx32 v3;
-    MapObject *v4;
-
-    v4 = MapObjMan_LocalMapObjByIndex(param0, param1);
+    MapObject *v4 = MapObjMan_LocalMapObjByIndex(param0, param1);
 
     MapObject_GetPosPtr(v4, &v3);
 
@@ -148,7 +146,7 @@ static void ov6_02248140(UnkStruct_ov6_02248140 *param0, NARC *param1, u32 param
 
     memset(param0, 0, sizeof(UnkStruct_ov6_02248140));
 
-    Easy3DModel_LoadFrom(&param0->unk_78, param1, param2, 4);
+    Easy3DModel_LoadFrom(&param0->unk_78, param1, param2, HEAP_ID_FIELD1);
     Easy3DObject_Init(&param0->unk_00, &param0->unk_78);
 
     param0->unk_D8 = param4;
@@ -173,9 +171,7 @@ static void ov6_022481BC(UnkStruct_ov6_02248140 *param0, NNSFndAllocator *param1
 static BOOL ov6_022481F0(UnkStruct_ov6_02248140 *param0)
 {
     int v0;
-    BOOL v1;
-
-    v1 = 1;
+    BOOL v1 = 1;
 
     for (v0 = 0; v0 < param0->unk_D8; v0++) {
         v1 &= Easy3DAnim_Update(&param0->unk_88[v0], FX32_ONE);
@@ -205,15 +201,15 @@ static void ov6_0224825C(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     NARC *v2;
 
     memset(v0, 0, sizeof(UnkStruct_ov6_0224825C));
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_DC, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_DC, HEAP_ID_FIELD1, 32);
 
-    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, 4);
+    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, HEAP_ID_FIELD1);
 
     ov6_02248140(&v0->unk_00, v2, 3, 0, 3, &v0->unk_DC);
     NARC_dtor(v2);
 
     ov6_022480BC(fieldSystem->playerAvatar, &v0->unk_00.unk_00);
-    Sound_PlayEffect(1611);
+    Sound_PlayEffect(SEQ_SE_DP_FW015);
 
     v0->unk_EC = 0;
 }
@@ -235,7 +231,7 @@ static void ov6_022482CC(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
         v2 = ov6_022481F0(&v0->unk_00);
 
         if (v2 == 1) {
-            Easy3DObject_SetVisibility(&v0->unk_00.unk_00, 0);
+            Easy3DObject_SetVisible(&v0->unk_00.unk_00, 0);
             v0->unk_EC++;
         }
         break;
@@ -257,9 +253,7 @@ UnkStruct_ov5_021D1BEC *ov6_0224830C(FieldSystem *fieldSystem)
     static const UnkStruct_ov6_0223E6EC v0 = {
         1024, sizeof(UnkStruct_ov6_0224825C), ov6_0224825C, ov6_022482BC, ov6_022482CC, ov6_02248300
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -286,15 +280,15 @@ static void ov6_02248340(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     NARC *v2;
 
     memset(v0, 0, sizeof(UnkStruct_ov6_02248340));
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_DC, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_DC, HEAP_ID_FIELD1, 32);
 
-    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, 4);
+    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, HEAP_ID_FIELD1);
 
     ov6_02248140(&v0->unk_00, v2, 8, 4, 4, &v0->unk_DC);
     NARC_dtor(v2);
 
     ov6_022480BC(fieldSystem->playerAvatar, &v0->unk_00.unk_00);
-    Sound_PlayEffect(1610);
+    Sound_PlayEffect(SEQ_SE_DP_FW088);
 
     v0->unk_EC = 0;
 }
@@ -306,14 +300,14 @@ static void ov6_022483A0(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     NARC *v2;
 
     memset(v0, 0, sizeof(UnkStruct_ov6_02248340));
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_DC, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_DC, HEAP_ID_FIELD1, 32);
 
-    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, 4);
+    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, HEAP_ID_FIELD1);
 
     ov6_02248140(&v0->unk_00, v2, 8, 4, 4, &v0->unk_DC);
     ov6_02248050(fieldSystem->mapObjMan, 0, &v0->unk_00.unk_00);
 
-    Sound_PlayEffect(1610);
+    Sound_PlayEffect(SEQ_SE_DP_FW088);
     NARC_dtor(v2);
 
     v0->unk_EC = 0;
@@ -336,7 +330,7 @@ static void ov6_02248410(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
         v2 = ov6_022481F0(&v0->unk_00);
 
         if (v2 == 1) {
-            Easy3DObject_SetVisibility(&v0->unk_00.unk_00, 0);
+            Easy3DObject_SetVisible(&v0->unk_00.unk_00, 0);
             v0->unk_EC++;
         }
         break;
@@ -363,9 +357,7 @@ UnkStruct_ov5_021D1BEC *ov6_02248450(FieldSystem *fieldSystem)
         ov6_02248410,
         ov6_02248444
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -379,9 +371,7 @@ UnkStruct_ov5_021D1BEC *ov6_02248464(FieldSystem *fieldSystem)
         ov6_02248410,
         ov6_02248444
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -408,15 +398,15 @@ static void ov6_02248498(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     NARC *v2;
 
     memset(v0, 0, sizeof(UnkStruct_ov6_02248498));
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_1B8, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_1B8, HEAP_ID_FIELD1, 32);
 
-    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, 4);
+    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, HEAP_ID_FIELD1);
 
     ov6_02248140(&v0->unk_00[0], v2, 14, 12, 2, &v0->unk_1B8);
     ov6_02248124(fieldSystem->playerAvatar, &v0->unk_00[0].unk_00);
 
     NARC_dtor(v2);
-    Sound_PlayEffect(1613);
+    Sound_PlayEffect(SEQ_SE_DP_FW463);
 
     v0->unk_1C8 = 0;
 }
@@ -439,19 +429,19 @@ static void ov6_02248520(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 
     switch (v0->unk_1C8) {
     case 0:
-        v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, 4);
+        v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, HEAP_ID_FIELD1);
         ov6_02248140(&v0->unk_00[1], v2, 11, 9, 2, &v0->unk_1B8);
         NARC_dtor(v2);
         ov6_02248124(fieldSystem->playerAvatar, &v0->unk_00[1].unk_00);
-        Easy3DObject_SetVisibility(&v0->unk_00[1].unk_00, 0);
+        Easy3DObject_SetVisible(&v0->unk_00[1].unk_00, 0);
         v0->unk_1C8++;
     case 1:
         v1 = ov6_022481F0(&v0->unk_00[0]);
         ov6_02248124(fieldSystem->playerAvatar, &v0->unk_00[0].unk_00);
 
         if (v1 == 1) {
-            Easy3DObject_SetVisibility(&v0->unk_00[1].unk_00, 1);
-            Easy3DObject_SetVisibility(&v0->unk_00[0].unk_00, 0);
+            Easy3DObject_SetVisible(&v0->unk_00[1].unk_00, 1);
+            Easy3DObject_SetVisible(&v0->unk_00[0].unk_00, 0);
             ov6_02248124(fieldSystem->playerAvatar, &v0->unk_00[1].unk_00);
             v0->unk_1C8++;
         }
@@ -485,9 +475,7 @@ UnkStruct_ov5_021D1BEC *ov6_022485F4(FieldSystem *fieldSystem)
         ov6_02248520,
         ov6_022485DC
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -512,8 +500,8 @@ static void ov6_02248610(UnkStruct_ov6_022486B4 *param0, PlayerAvatar *const pla
         Easy3DAnim_SetFrame(&param0->unk_78[v1], 0);
     }
 
-    Easy3DObject_SetVisibility(&param0->unk_00, 1);
-    Sound_PlayEffect(1575);
+    Easy3DObject_SetVisible(&param0->unk_00, 1);
+    Sound_PlayEffect(SEQ_SE_DP_UG_023);
 }
 
 static void ov6_02248678(UnkStruct_ov6_022486B4 *param0)
@@ -533,7 +521,7 @@ static void ov6_02248678(UnkStruct_ov6_022486B4 *param0)
 
     if (v1 == 1) {
         param0->unk_C8 = 0;
-        Easy3DObject_SetVisibility(&param0->unk_00, 0);
+        Easy3DObject_SetVisible(&param0->unk_00, 0);
     }
 }
 
@@ -549,7 +537,7 @@ static void ov6_022486B4(UnkStruct_ov6_022486B4 *param0, Easy3DModel *param1, NN
         Easy3DObject_AddAnim(&param0->unk_00, &param0->unk_78[v0]);
     }
 
-    Easy3DObject_SetVisibility(&param0->unk_00, 0);
+    Easy3DObject_SetVisible(&param0->unk_00, 0);
 }
 
 static void ov6_02248700(UnkStruct_ov6_022486B4 *param0, NNSFndAllocator *param1)
@@ -612,14 +600,14 @@ static void ov6_022487F8(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     NARC *v2;
 
     memset(v0, 0, sizeof(UnkStruct_ov6_022487F8));
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_CFC, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_CFC, HEAP_ID_FIELD1, 32);
 
-    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, 4);
+    v2 = NARC_ctor(NARC_INDEX_GRAPHIC__HIDEN_EFFECT, HEAP_ID_FIELD1);
 
-    Easy3DModel_LoadFrom(&v0->unk_00, v2, 8, 4);
+    Easy3DModel_LoadFrom(&v0->unk_00, v2, 8, HEAP_ID_FIELD1);
 
     for (v1 = 0; v1 < 4; v1++) {
-        v0->unk_CD0[v1] = LoadMemberFromOpenNARC(v2, 4 + v1, 0, 4, 0);
+        v0->unk_CD0[v1] = LoadMemberFromOpenNARC(v2, 4 + v1, 0, HEAP_ID_FIELD1, 0);
     }
 
     for (v1 = 0; v1 < 16; v1++) {
@@ -645,7 +633,7 @@ static void ov6_0224889C(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     Easy3DModel_Release(&v0->unk_00);
 
     for (v1 = 0; v1 < 4; v1++) {
-        Heap_FreeToHeap(v0->unk_CD0[v1]);
+        Heap_Free(v0->unk_CD0[v1]);
     }
 }
 
@@ -689,9 +677,7 @@ UnkStruct_ov5_021D1BEC *ov6_0224892C(FieldSystem *fieldSystem)
         ov6_022488D8,
         ov6_02248914
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 

@@ -15,7 +15,7 @@
             "level": 53,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -24,8 +24,38 @@
             "level": 55,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "See the potential of dragon Pokémon!\n",
+                "The Championship is within my sights!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Potential doesn’t mean I can win...\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "A Dragon Tamer Champion...\r",
+                "I’ll need to train so much more to\n",
+                "even come close to coming close...\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I’ve cranked up my dragon Pokémon’s\n",
+                "potential!\r",
+                "I’ve been looking forward to seeing\n",
+                "you again!\r"
+            ]
         }
     ]
 }

@@ -1,37 +1,35 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/canalave_city_gym.h"
 
-    .data
 
-    ScriptEntry _0012
-    ScriptEntry _0016
-    ScriptEntry _0126
-    ScriptEntry _015A
+    ScriptEntry CanalaveGym_Init
+    ScriptEntry CanalaveGym_Byron
+    ScriptEntry CanalaveGym_GymGuide
+    ScriptEntry CanalaveGym_GymStatue
     ScriptEntryEnd
 
-_0012:
-    ScrCmd_173
+CanalaveGym_Init:
+    InitPersistedMapFeaturesForCanalaveGym
     End
 
-_0016:
+CanalaveGym_Byron:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_MINE, 0x800C
-    GoToIfEq 0x800C, 1, _0107
+    GoToIfBadgeAcquired BADGE_ID_MINE, CanalaveGym_ByronAfterBadge
     CreateJournalEvent LOCATION_EVENT_GYM_WAS_TOO_TOUGH, 35, 0, 0, 0
-    Message 0
+    Message CanalaveGym_Text_ByronIntro
     CloseMessage
     StartTrainerBattle TRAINER_LEADER_BYRON
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0120
-    Message 1
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, CanalaveGym_Lostbattle
+    Message CanalaveGym_Text_BeatByron
     BufferPlayerName 0
-    Message 2
+    Message CanalaveGym_Text_ByronReceiveMineBadge
     PlaySound SEQ_BADGE
     WaitSound
     GiveBadge BADGE_ID_MINE
-    ScrCmd_260 23
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_BADGE_EARNED
     SetTrainerFlag TRAINER_BLACK_BELT_DAVID
     SetTrainerFlag TRAINER_WORKER_JACKSON
     SetTrainerFlag TRAINER_WORKER_GARY
@@ -40,89 +38,86 @@ _0016:
     SetTrainerFlag TRAINER_BLACK_BELT_RICKY
     SetTrainerFlag TRAINER_WORKER_GERARDO
     CreateJournalEvent LOCATION_EVENT_BEAT_GYM_LEADER, 35, TRAINER_LEADER_BYRON, 0, 0
-    ClearFlag 0x1B2
-    ClearFlag 0x2CC
-    ClearFlag 0x1B8
-    ClearFlag 0x1B6
-    ClearFlag 0x1B7
-    SetVar 0x4078, 2
-    SetFlag 0x198
-    Message 3
-    GoTo _00BF
+    ClearFlag FLAG_HIDE_CANALAVE_RIVAL
+    ClearFlag FLAG_HIDE_CANALAVE_CITY_RIVAL
+    ClearFlag FLAG_HIDE_CANALAVE_LIBRARY_RIVAL
+    ClearFlag FLAG_HIDE_CANALAVE_LIBRARY_COUNTERPART
+    ClearFlag FLAG_HIDE_CANALAVE_LIBRARY_ROWAN
+    SetVar VAR_CANALAVE_STATE, 2
+    SetFlag FLAG_HIDE_SANDGEM_TOWN_LAB_PROF_ROWAN
+    Message CanalaveGym_Text_ByronExplainMineBadge
+    GoTo CanalaveGym_ByronTryGiveTM91
 
-_00BF:
-    SetVar 0x8004, 0x1A2
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _00FD
-    CallCommonScript 0x7FC
-    SetFlag 146
-    BufferItemName 0, 0x8004
-    BufferTMHMMoveName 1, 0x8004
-    Message 4
+CanalaveGym_ByronTryGiveTM91:
+    SetVar VAR_0x8004, ITEM_TM91
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, CanalaveGym_ByronCannotGiveTM91
+    Common_GiveItemQuantity
+    SetFlag FLAG_OBTAINED_BYRON_TM91
+    BufferItemName 0, VAR_0x8004
+    BufferTMHMMoveName 1, VAR_0x8004
+    Message CanalaveGym_Text_ByronExplainTM91
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00FD:
-    CallCommonScript 0x7E1
+CanalaveGym_ByronCannotGiveTM91:
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
-_0107:
-    GoToIfUnset 146, _00BF
+CanalaveGym_ByronAfterBadge:
+    GoToIfUnset FLAG_OBTAINED_BYRON_TM91, CanalaveGym_ByronTryGiveTM91
     BufferRivalName 1
-    Message 5
+    Message CanalaveGym_Text_ByronAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0120:
+CanalaveGym_Lostbattle:
     BlackOutFromBattle
     ReleaseAll
     End
 
-_0126:
+CanalaveGym_GymGuide:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_MINE, 0x800C
-    GoToIfEq 0x800C, 1, _014C
-    Message 6
+    GoToIfBadgeAcquired BADGE_ID_MINE, CanalaveGym_GymGuideAfterBadge
+    Message CanalaveGym_Text_GymGuideBeforeBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_014C:
+CanalaveGym_GymGuideAfterBadge:
     BufferPlayerName 0
-    Message 7
+    Message CanalaveGym_Text_GymGuideAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_015A:
+CanalaveGym_GymStatue:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    CheckBadgeAcquired BADGE_ID_MINE, 0x800C
-    GoToIfEq 0x800C, 1, _0184
+    GoToIfBadgeAcquired BADGE_ID_MINE, CanalaveGym_GymStatueAfterBadge
     BufferRivalName 0
     BufferRivalName 1
-    Message 8
+    Message CanalaveGym_Text_GymStatueBeforeBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0184:
+CanalaveGym_GymStatueAfterBadge:
     BufferRivalName 0
     BufferPlayerName 1
     BufferRivalName 2
-    Message 9
+    Message CanalaveGym_Text_GymStatueAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll

@@ -11,9 +11,9 @@
 #include "render_text.h"
 #include "text.h"
 
-static void FontManager_Init(FontManager *fontManager, u32 narcID, u32 arcFileIdx, BOOL isMonospace, u32 heapID);
+static void FontManager_Init(FontManager *fontManager, enum NarcID narcID, u32 arcFileIdx, BOOL isMonospace, enum HeapID heapID);
 static void FontManager_FreeWidthsAndNARC(FontManager *fontManager);
-static void FontManager_LoadGlyphs(FontManager *fontManager, enum GlyphAccessMode glyphAccessMode, u32 heapID);
+static void FontManager_LoadGlyphs(FontManager *fontManager, enum GlyphAccessMode glyphAccessMode, enum HeapID heapID);
 static void FontManager_LoadGlyphImmediate(FontManager *fontManager, u32 heapID);
 static void FontManager_LoadGlyphLazy(FontManager *fontManager, u32 heapID);
 static void FontManager_FreeGlyphs(FontManager *fontManager);
@@ -45,9 +45,9 @@ static void (*const sFreeGlyphFuncs[])(FontManager *fontManager) = {
     [GLYPH_ACCESS_MODE_LAZY] = FontManager_FreeGlyphLazy
 };
 
-FontManager *FontManager_New(u32 narcID, u32 arcFileIdx, enum GlyphAccessMode glyphAccessMode, BOOL isMonospace, u32 heapID)
+FontManager *FontManager_New(enum NarcID narcID, u32 arcFileIdx, enum GlyphAccessMode glyphAccessMode, BOOL isMonospace, enum HeapID heapID)
 {
-    FontManager *fontManager = Heap_AllocFromHeap(heapID, sizeof(FontManager));
+    FontManager *fontManager = Heap_Alloc(heapID, sizeof(FontManager));
 
     if (fontManager) {
         FontManager_Init(fontManager, narcID, arcFileIdx, isMonospace, heapID);
@@ -61,7 +61,7 @@ void FontManager_Delete(FontManager *fontManager)
 {
     FontManager_FreeGlyphs(fontManager);
     FontManager_FreeWidthsAndNARC(fontManager);
-    Heap_FreeToHeap(fontManager);
+    Heap_Free(fontManager);
 }
 
 void FontManager_SwitchGlyphAccessMode(FontManager *fontManager, enum GlyphAccessMode glyphAccessMode, u32 heapID)
@@ -72,7 +72,7 @@ void FontManager_SwitchGlyphAccessMode(FontManager *fontManager, enum GlyphAcces
     }
 }
 
-static void FontManager_Init(FontManager *fontManager, u32 narcID, u32 arcFileIdx, BOOL isMonospace, u32 heapID)
+static void FontManager_Init(FontManager *fontManager, enum NarcID narcID, u32 arcFileIdx, BOOL isMonospace, enum HeapID heapID)
 {
     fontManager->narc = NARC_ctor(narcID, heapID);
 
@@ -90,7 +90,7 @@ static void FontManager_Init(FontManager *fontManager, u32 narcID, u32 arcFileId
     } else {
         GF_ASSERT(fontManager->header.widthTableOffset);
 
-        fontManager->glyphWidths = Heap_AllocFromHeap(heapID, fontManager->header.numGlyphs);
+        fontManager->glyphWidths = Heap_Alloc(heapID, fontManager->header.numGlyphs);
         fontManager->glyphWidthFunc = GlyphWidthFunc_VariableWidth;
 
         NARC_ReadFromMember(fontManager->narc, arcFileIdx, fontManager->header.widthTableOffset, fontManager->header.numGlyphs, fontManager->glyphWidths);
@@ -107,7 +107,7 @@ static void FontManager_Init(FontManager *fontManager, u32 narcID, u32 arcFileId
 static void FontManager_FreeWidthsAndNARC(FontManager *fontManager)
 {
     if (fontManager->glyphWidths) {
-        Heap_FreeToHeap(fontManager->glyphWidths);
+        Heap_Free(fontManager->glyphWidths);
     }
 
     if (fontManager->narc) {
@@ -115,7 +115,7 @@ static void FontManager_FreeWidthsAndNARC(FontManager *fontManager)
     }
 }
 
-static void FontManager_LoadGlyphs(FontManager *fontManager, enum GlyphAccessMode glyphAccessMode, u32 heapID)
+static void FontManager_LoadGlyphs(FontManager *fontManager, enum GlyphAccessMode glyphAccessMode, enum HeapID heapID)
 {
     fontManager->glyphAccessMode = glyphAccessMode;
     sLoadGlyphFuncs[glyphAccessMode](fontManager, heapID);
@@ -125,7 +125,7 @@ static void FontManager_LoadGlyphImmediate(FontManager *fontManager, u32 heapID)
 {
     u32 size = fontManager->glyphSize * fontManager->header.numGlyphs;
 
-    fontManager->narcBuf = Heap_AllocFromHeap(heapID, size);
+    fontManager->narcBuf = Heap_Alloc(heapID, size);
     fontManager->glyphBitmapFunc = DecompressGlyph_FromRAM;
 
     NARC_ReadFromMember(fontManager->narc, fontManager->arcFileIdx, fontManager->header.size, size, fontManager->narcBuf);
@@ -143,7 +143,7 @@ static void FontManager_FreeGlyphs(FontManager *fontManager)
 
 static void FontManager_FreeGlyphImmediate(FontManager *fontManager)
 {
-    Heap_FreeToHeap(fontManager->narcBuf);
+    Heap_Free(fontManager->narcBuf);
     fontManager->narcBuf = NULL;
 }
 

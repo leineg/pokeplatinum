@@ -16,8 +16,17 @@
             "level": 6,
             "item": null,
             "moves": null,
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "I like to study a lot...\n",
+                "I thought I could win...\n"
+            ]
         }
     ]
 }

@@ -3,16 +3,14 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/field/map_prop.h"
 #include "constants/map_object.h"
-#include "constants/map_prop.h"
 #include "generated/map_headers.h"
 
-#include "struct_defs/struct_02055130.h"
-
 #include "field/field_system.h"
+#include "overlay005/land_data.h"
 #include "overlay005/map_prop.h"
 #include "overlay005/map_prop_animation.h"
-#include "overlay005/ov5_021E779C.h"
 
 #include "heap.h"
 #include "inlines.h"
@@ -21,8 +19,8 @@
 #include "player_avatar.h"
 #include "save_player.h"
 #include "special_encounter.h"
+#include "terrain_collision_manager.h"
 #include "trainer_info.h"
-#include "unk_02054D00.h"
 
 #define TREE_GROUP_NO_ENCOUNTER 0
 #define TREE_GROUP_A            1
@@ -79,7 +77,7 @@ static const int sEncounterTableIndexes_P_Unused[] = {
 
 HoneyTreeShakeList *HoneyTree_ShakeDataInit(void)
 {
-    HoneyTreeShakeList *data = Heap_AllocFromHeap(HEAP_ID_FIELD, sizeof(HoneyTreeShakeList));
+    HoneyTreeShakeList *data = Heap_Alloc(HEAP_ID_FIELD1, sizeof(HoneyTreeShakeList));
 
     for (u8 i = 0; i < NUM_HONEY_TREES; i++) {
         data->trees[i].shakeValue = 0;
@@ -91,24 +89,24 @@ HoneyTreeShakeList *HoneyTree_ShakeDataInit(void)
 
 void HoneyTree_FreeShakeData(HoneyTreeShakeList **data)
 {
-    Heap_FreeToHeap(*data);
+    Heap_Free(*data);
     *data = NULL;
 }
 
 BOOL HoneyTree_TryInteract(FieldSystem *fieldSystem, int *eventId)
 {
-    UnkStruct_02055130 v0;
+    TerrainCollisionHitbox v0;
     int x, z;
     BOOL isFacingHoneyTree;
 
-    *eventId = 2008; // Loads script index 8 from scripts_unk_0211.s, which is the common Honey Tree script.
+    *eventId = SCRIPT_ID(COMMON_SCRIPTS, 8);
 
     x = Player_GetXPos(fieldSystem->playerAvatar);
     z = Player_GetZPos(fieldSystem->playerAvatar);
 
     if (PlayerAvatar_GetDir(fieldSystem->playerAvatar) == DIR_NORTH) { // Honey Trees can only be interacted with from below.
-        sub_020550F4(x, z, 0, -1, 1, 1, &v0);
-        isFacingHoneyTree = sub_02055178(fieldSystem, MAP_PROP_MODEL_HONEY_TREE, &v0, NULL);
+        TerrainCollisionHitbox_Init(x, z, 0, -1, 1, 1, &v0);
+        isFacingHoneyTree = FieldSystem_FindCollidingLoadedMapPropByModelID(fieldSystem, MAP_PROP_MODEL_HONEY_TREE, &v0, NULL);
     } else {
         isFacingHoneyTree = FALSE;
     }
@@ -192,9 +190,9 @@ void HoneyTree_StopShaking(FieldSystem *fieldSystem)
         MapPropManager *v3;
         NNSG3dRenderObj *v4;
 
-        v1 = ov5_021E9354(fieldSystem->unk_28);
+        v1 = LandDataManager_GetTrackedTargetLoadedMapsQuadrant(fieldSystem->landDataMan);
 
-        ov5_021E9340(v1, fieldSystem->unk_28, &v3);
+        LandDataManager_GetLoadedMapPropManager(v1, fieldSystem->landDataMan, &v3);
 
         v2 = MapPropManager_FindLoadedPropByModelID(v3, MAP_PROP_MODEL_HONEY_TREE);
         v4 = MapProp_GetRenderObj(v2);
@@ -450,20 +448,17 @@ int HoneyTree_GetSpecies(FieldSystem *fieldSystem)
 
     int *narcData;
     int species;
-    PlayerHoneyTreeStates *treeDat;
-    HoneyTree *tree;
+    PlayerHoneyTreeStates *treeDat = SpecialEncounter_GetPlayerHoneyTreeStates(SaveData_GetSpecialEncounters(fieldSystem->saveData));
+    HoneyTree *tree = SpecialEncounter_GetHoneyTree(treeId, treeDat);
 
-    treeDat = SpecialEncounter_GetPlayerHoneyTreeStates(SaveData_GetSpecialEncounters(fieldSystem->saveData));
-    tree = SpecialEncounter_GetHoneyTree(treeId, treeDat);
-
-    if ((GAME_VERSION == DIAMOND) || (GAME_VERSION == PLATINUM)) {
-        narcData = NARC_AllocAtEndAndReadWholeMemberByIndexPair(NARC_INDEX_ARC__ENCDATA_EX, sEncounterTableIndexes_DPt[tree->encounterTableIndex], HEAP_ID_FIELD);
+    if ((GAME_VERSION == VERSION_DIAMOND) || (GAME_VERSION == VERSION_PLATINUM)) {
+        narcData = NARC_AllocAtEndAndReadWholeMemberByIndexPair(NARC_INDEX_ARC__ENCDATA_EX, sEncounterTableIndexes_DPt[tree->encounterTableIndex], HEAP_ID_FIELD1);
     } else {
-        narcData = NARC_AllocAtEndAndReadWholeMemberByIndexPair(NARC_INDEX_ARC__ENCDATA_EX, sEncounterTableIndexes_P_Unused[tree->encounterTableIndex], HEAP_ID_FIELD);
+        narcData = NARC_AllocAtEndAndReadWholeMemberByIndexPair(NARC_INDEX_ARC__ENCDATA_EX, sEncounterTableIndexes_P_Unused[tree->encounterTableIndex], HEAP_ID_FIELD1);
     }
 
     species = narcData[tree->encounterSlot];
-    Heap_FreeToHeap(narcData);
+    Heap_Free(narcData);
 
     return species;
 }

@@ -10,7 +10,7 @@
 #include "struct_defs/struct_020322F8.h"
 #include "struct_defs/struct_0203233C.h"
 
-#include "overlay004/ov4_021D0D80.h"
+#include "nintendo_wfc/main.h"
 
 #include "comm_ring.h"
 #include "communication_information.h"
@@ -27,11 +27,17 @@
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 
-enum {
+enum TransmissionType {
     TRANSMISSION_TYPE_SERVER_CLIENT,
     TRANSMISSION_TYPE_PARALLEL,
     TRANSMISSION_TYPE_SWITCH_TO_SERVER_CLIENT,
     TRANSMISSION_TYPE_SWITCH_TO_PARALLEL
+};
+
+enum MovementState {
+    MOVEMENT_STATE_NORMAL = 0,
+    MOVEMENT_STATE_RANDOM,
+    MOVEMENT_STATE_REVERSE,
 };
 
 typedef struct {
@@ -55,7 +61,7 @@ typedef struct {
 typedef struct {
     u8 sendBuffer[2][64];
     u8 sendBufferServer[2][192];
-    u8 sendBufferCommRing[264];
+    u8 sendBufferCommRing[COMM_RING_BUFFER_SIZE];
     u8 sendBufferCommRingServer[384];
     u8 *unk_488;
     u8 *recvBufferRingServer;
@@ -77,9 +83,9 @@ typedef struct {
     u16 sendHeldKeys;
     u8 unk_656;
     u8 sendSpeed;
-    u8 unk_658;
-    s8 unk_659;
-    u16 unk_65A;
+    u8 playerMovementState;
+    s8 randomPadKeyTimer;
+    u16 randomPadKey;
     BOOL unk_65C;
     volatile int unk_660;
     volatile int unk_664[8];
@@ -121,7 +127,7 @@ static void sub_020353B0(BOOL param0);
 static void sub_020350A4(u16 param0, u16 *param1, u16 param2);
 static void sub_02035200(u16 param0, u16 *param1, u16 param2);
 static BOOL CommSys_CheckRecvLimit(void);
-static void sub_02035534(void);
+static void CommSys_ApplyMovementModifiers(void);
 static void sub_020353CC(void);
 static void CommSys_RecvData(void);
 static void CommSys_RecvDataServer(void);
@@ -155,7 +161,7 @@ static BOOL CommSys_Init(BOOL shouldAlloc, int maxPacketSize)
 
         CommTool_Init(HEAP_ID_COMMUNICATION);
 
-        Unk_021C07C8 = (u32)Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sizeof(CommunicationSystem) + 32);
+        Unk_021C07C8 = (u32)Heap_Alloc(HEAP_ID_COMMUNICATION, sizeof(CommunicationSystem) + 32);
         sCommunicationSystem = (CommunicationSystem *)(32 - (Unk_021C07C8 % 32) + Unk_021C07C8);
 
         MI_CpuClear8(sCommunicationSystem, sizeof(CommunicationSystem));
@@ -169,10 +175,10 @@ static BOOL CommSys_Init(BOOL shouldAlloc, int maxPacketSize)
         sCommunicationSystem->allocSize = sCommunicationSystem->maxPacketSize * maxMachines;
         sCommunicationSystem->transmissionType = TRANSMISSION_TYPE_SERVER_CLIENT;
         sCommunicationSystem->unk_6A6 = 38;
-        sCommunicationSystem->recvBufferRing = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sCommunicationSystem->maxPacketSize * 2);
-        sCommunicationSystem->tempBuffer = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sCommunicationSystem->maxPacketSize);
-        sCommunicationSystem->recvBufferRingServer = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sCommunicationSystem->allocSize);
-        sCommunicationSystem->unk_488 = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sCommunicationSystem->allocSize);
+        sCommunicationSystem->recvBufferRing = Heap_Alloc(HEAP_ID_COMMUNICATION, sCommunicationSystem->maxPacketSize * 2);
+        sCommunicationSystem->tempBuffer = Heap_Alloc(HEAP_ID_COMMUNICATION, sCommunicationSystem->maxPacketSize);
+        sCommunicationSystem->recvBufferRingServer = Heap_Alloc(HEAP_ID_COMMUNICATION, sCommunicationSystem->allocSize);
+        sCommunicationSystem->unk_488 = Heap_Alloc(HEAP_ID_COMMUNICATION, sCommunicationSystem->allocSize);
 
         if (sub_0203895C() == 10) {
             CommQueueMan_Init(&sCommunicationSystem->commQueueManSend, 100, &sCommunicationSystem->sendRing);
@@ -211,8 +217,8 @@ static void CommSys_ClearData(void)
     int netId, size;
     int maxMachines = CommLocal_MaxMachines(sub_0203895C()) + 1;
 
-    sCommunicationSystem->unk_658 = 0;
-    sCommunicationSystem->unk_659 = 0;
+    sCommunicationSystem->playerMovementState = MOVEMENT_STATE_NORMAL;
+    sCommunicationSystem->randomPadKeyTimer = 0;
 
     MI_CpuClear8(sCommunicationSystem->recvBufferRingServer, sCommunicationSystem->allocSize);
     MI_CpuClear8(sCommunicationSystem->sendRingClient, sizeof(CommRing) * (7 + 1));
@@ -435,7 +441,7 @@ void CommSys_Delete(void)
 
     if (sCommunicationSystem) {
         if (CommLocal_IsWifiGroup(sub_0203895C())) {
-            ov4_021D2184();
+            NintendoWFC_Stop();
             v0 = 1;
         } else {
             if (sub_02033768()) {
@@ -452,13 +458,13 @@ void CommSys_Delete(void)
         SysTask_Done(sCommunicationSystem->unk_57C);
         sCommunicationSystem->unk_57C = NULL;
 
-        Heap_FreeToHeap(sCommunicationSystem->recvBufferRing);
-        Heap_FreeToHeap(sCommunicationSystem->tempBuffer);
-        Heap_FreeToHeap(sCommunicationSystem->recvBufferRingServer);
-        Heap_FreeToHeap(sCommunicationSystem->unk_488);
+        Heap_Free(sCommunicationSystem->recvBufferRing);
+        Heap_Free(sCommunicationSystem->tempBuffer);
+        Heap_Free(sCommunicationSystem->recvBufferRingServer);
+        Heap_Free(sCommunicationSystem->unk_488);
         CommQueueMan_Delete(&sCommunicationSystem->commQueueManSendServer);
         CommQueueMan_Delete(&sCommunicationSystem->commQueueManSend);
-        Heap_FreeToHeap((void *)Unk_021C07C8);
+        Heap_Free((void *)Unk_021C07C8);
 
         sCommunicationSystem = NULL;
         Unk_021C07C8 = 0;
@@ -510,7 +516,7 @@ BOOL CommSys_Update(void)
             Unk_021C07C5 = 0;
             CommSys_UpdateTransitionType();
             sCommunicationSystem->sendHeldKeys |= (gSystem.heldKeys & 0x7fff);
-            sub_02035534();
+            CommSys_ApplyMovementModifiers();
             sub_02034B50();
             sCommunicationSystem->sendHeldKeys &= 0x8000;
 
@@ -614,7 +620,7 @@ static void sub_02034B50(void)
                 return;
             }
 
-            if (ov4_021D1590(sCommunicationSystem->sendBuffer[0], 38)) {
+            if (NintendoWFC_SendData(sCommunicationSystem->sendBuffer[0], 38)) {
                 int i;
                 int v1 = CommLocal_MaxMachines(sub_0203895C()) + 1;
 
@@ -652,7 +658,7 @@ static void sub_02034B50(void)
                 return;
             }
 
-            if (ov4_021D142C(sCommunicationSystem->sendBuffer[0], 38)) {
+            if (NintendoWFC_SendData_Server(sCommunicationSystem->sendBuffer[0], 38)) {
                 Unk_02100A1D = 4;
                 sCommunicationSystem->unk_660++;
             }
@@ -803,7 +809,7 @@ static void sub_02034F68(void)
                 Unk_02100A1C = 2;
             }
 
-            if (ov4_021D14D4(sCommunicationSystem->sendBufferServer[0], 192)) {
+            if (NintendoWFC_SendData_Client(sCommunicationSystem->sendBufferServer[0], 192)) {
                 Unk_02100A1C = 4;
 
                 for (i = 0; i < v1; i++) {
@@ -1071,11 +1077,11 @@ static void sub_020353CC(void)
     }
 }
 
-static void sub_02035534(void)
+static void CommSys_ApplyMovementModifiers(void)
 {
-    u16 v0 = 0;
+    u16 newHeldKeys = 0;
 
-    if (sCommunicationSystem->unk_658 == 0) {
+    if (sCommunicationSystem->playerMovementState == MOVEMENT_STATE_NORMAL) {
         return;
     }
 
@@ -1083,68 +1089,68 @@ static void sub_02035534(void)
         return;
     }
 
-    if (sCommunicationSystem->unk_658 == 2) {
+    if (sCommunicationSystem->playerMovementState == MOVEMENT_STATE_REVERSE) {
         if (sCommunicationSystem->sendHeldKeys & PAD_KEY_LEFT) {
-            v0 |= PAD_KEY_RIGHT;
+            newHeldKeys |= PAD_KEY_RIGHT;
         }
 
         if (sCommunicationSystem->sendHeldKeys & PAD_KEY_RIGHT) {
-            v0 |= PAD_KEY_LEFT;
+            newHeldKeys |= PAD_KEY_LEFT;
         }
 
         if (sCommunicationSystem->sendHeldKeys & PAD_KEY_UP) {
-            v0 |= PAD_KEY_DOWN;
+            newHeldKeys |= PAD_KEY_DOWN;
         }
 
         if (sCommunicationSystem->sendHeldKeys & PAD_KEY_DOWN) {
-            v0 |= PAD_KEY_UP;
+            newHeldKeys |= PAD_KEY_UP;
         }
     } else {
-        if (sCommunicationSystem->unk_65A) {
-            v0 = sCommunicationSystem->unk_65A;
-            sCommunicationSystem->unk_659--;
+        if (sCommunicationSystem->randomPadKey) {
+            newHeldKeys = sCommunicationSystem->randomPadKey;
+            sCommunicationSystem->randomPadKeyTimer--;
 
-            if (sCommunicationSystem->unk_659 < 0) {
-                sCommunicationSystem->unk_65A = 0;
+            if (sCommunicationSystem->randomPadKeyTimer < 0) {
+                sCommunicationSystem->randomPadKey = 0;
             }
         } else {
             switch (MATH_Rand32(&sCommunicationSystem->rand, 4)) {
             case 0:
-                v0 = PAD_KEY_LEFT;
+                newHeldKeys = PAD_KEY_LEFT;
                 break;
             case 1:
-                v0 = PAD_KEY_RIGHT;
+                newHeldKeys = PAD_KEY_RIGHT;
                 break;
             case 2:
-                v0 = PAD_KEY_UP;
+                newHeldKeys = PAD_KEY_UP;
                 break;
             case 3:
-                v0 = PAD_KEY_DOWN;
+                newHeldKeys = PAD_KEY_DOWN;
                 break;
             }
 
-            sCommunicationSystem->unk_659 = MATH_Rand32(&sCommunicationSystem->rand, 16);
-            sCommunicationSystem->unk_65A = v0;
+            sCommunicationSystem->randomPadKeyTimer = MATH_Rand32(&sCommunicationSystem->rand, 16);
+            sCommunicationSystem->randomPadKey = newHeldKeys;
         }
     }
 
     sCommunicationSystem->sendHeldKeys &= ~(PAD_KEY_LEFT | PAD_KEY_RIGHT | PAD_KEY_UP | PAD_KEY_DOWN);
-    sCommunicationSystem->sendHeldKeys += v0;
+    sCommunicationSystem->sendHeldKeys += newHeldKeys;
 }
 
-void sub_02035664(void)
+void CommSys_RandomizePlayerMovement(void)
 {
-    sCommunicationSystem->unk_658 = 1;
+    sCommunicationSystem->playerMovementState = MOVEMENT_STATE_RANDOM;
 }
 
-void sub_02035678(void)
+void CommSys_ReversePlayerMovement(void)
 {
-    sCommunicationSystem->unk_658 = 2;
+    sCommunicationSystem->playerMovementState = MOVEMENT_STATE_REVERSE;
 }
 
-void sub_0203568C(void)
+void CommSys_RevertPlayerMovementToNormal(void)
 {
-    sCommunicationSystem->unk_658 = 0;
+    sCommunicationSystem->playerMovementState = MOVEMENT_STATE_NORMAL;
 }
 
 static BOOL sub_020356A0(u8 *param0, int param1)
@@ -1172,7 +1178,7 @@ static BOOL sub_020356A0(u8 *param0, int param1)
     return TRUE;
 }
 
-void sub_0203572C(void)
+void CommSys_Dummy(void)
 {
     return;
 }
@@ -1299,13 +1305,13 @@ static BOOL sub_0203594C(void)
     return FALSE;
 }
 
-BOOL CommSys_SendDataHuge(int cmd, const void *data, int param2)
+BOOL CommSys_SendDataHuge(int cmd, const void *data, int size)
 {
     if (!CommSys_IsPlayerConnected(CommSys_CurNetId()) && !CommSys_IsAlone()) {
         return FALSE;
     }
 
-    if (CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, param2, 1, 0)) {
+    if (CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, size, 1, 0)) {
         return TRUE;
     }
 
@@ -1316,13 +1322,13 @@ BOOL CommSys_SendDataHuge(int cmd, const void *data, int param2)
     return FALSE;
 }
 
-BOOL CommSys_SendData(int cmd, const void *data, int param2)
+BOOL CommSys_SendData(int cmd, const void *data, int size)
 {
     if (!CommSys_IsPlayerConnected(CommSys_CurNetId()) && !CommSys_IsAlone()) {
         return FALSE;
     }
 
-    if (CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, param2, 1, 1)) {
+    if (CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, size, 1, 1)) {
         return TRUE;
     }
 
@@ -1333,7 +1339,7 @@ BOOL CommSys_SendData(int cmd, const void *data, int param2)
     return FALSE;
 }
 
-BOOL sub_02035A3C(int cmd, const void *data, int param2)
+BOOL CommSys_SendDataHugeServer(int cmd, const void *data, int size)
 {
     if (CommSys_CurNetId() != 0) {
         GF_ASSERT(FALSE);
@@ -1345,10 +1351,10 @@ BOOL sub_02035A3C(int cmd, const void *data, int param2)
     }
 
     if (CommSys_TransmissionType() == 1) {
-        return CommSys_SendDataHuge(cmd, data, param2);
+        return CommSys_SendDataHuge(cmd, data, size);
     }
 
-    if (CommQueue_Write(&sCommunicationSystem->commQueueManSendServer, cmd, (u8 *)data, param2, 1, 0)) {
+    if (CommQueue_Write(&sCommunicationSystem->commQueueManSendServer, cmd, (u8 *)data, size, 1, 0)) {
         return TRUE;
     }
 
@@ -1359,7 +1365,7 @@ BOOL sub_02035A3C(int cmd, const void *data, int param2)
     return FALSE;
 }
 
-BOOL CommSys_SendDataServer(int cmd, const void *data, int param2)
+BOOL CommSys_SendDataServer(int cmd, const void *data, int size)
 {
     if (CommSys_CurNetId() != 0) {
         sub_020363BC();
@@ -1372,10 +1378,10 @@ BOOL CommSys_SendDataServer(int cmd, const void *data, int param2)
     }
 
     if (CommSys_TransmissionType() == 1) {
-        return CommSys_SendData(cmd, data, param2);
+        return CommSys_SendData(cmd, data, size);
     }
 
-    if (CommQueue_Write(&sCommunicationSystem->commQueueManSendServer, cmd, (u8 *)data, param2, 1, 1)) {
+    if (CommQueue_Write(&sCommunicationSystem->commQueueManSendServer, cmd, (u8 *)data, size, 1, 1)) {
         return TRUE;
     }
 
@@ -1386,7 +1392,7 @@ BOOL CommSys_SendDataServer(int cmd, const void *data, int param2)
     return FALSE;
 }
 
-BOOL sub_02035B48(int cmd, const void *data)
+BOOL CommSys_SendDataFixedSizeServer(int cmd, const void *data)
 {
     return CommSys_SendDataServer(cmd, data, 0);
 }
@@ -1437,7 +1443,7 @@ static void CommSys_RecvDataSingle(CommRing *ring, int netId, u8 *buffer, CommRe
                 return;
             }
 
-            if (0xffff == size) {
+            if (size == PACKET_SIZE_VARIABLE) {
                 if (CommRing_DataSize(ring) < 1) {
                     ring->startIndex = v2;
                     break;
@@ -1641,18 +1647,18 @@ BOOL CommSys_IsSendingMovementData(void)
     return TRUE;
 }
 
-BOOL CommSys_WriteToQueueServer(int cmd, const void *data, int param2)
+BOOL CommSys_WriteToQueueServer(int cmd, const void *data, int size)
 {
     if (CommSys_TransmissionType() == 1) {
-        return CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, param2, 1, 0);
+        return CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, size, 1, 0);
     } else {
-        return CommQueue_Write(&sCommunicationSystem->commQueueManSendServer, cmd, (u8 *)data, param2, 1, 0);
+        return CommQueue_Write(&sCommunicationSystem->commQueueManSendServer, cmd, (u8 *)data, size, 1, 0);
     }
 }
 
-BOOL CommSys_WriteToQueue(int cmd, const void *data, int param2)
+BOOL CommSys_WriteToQueue(int cmd, const void *data, int size)
 {
-    return CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, param2, 0, 0);
+    return CommQueue_Write(&sCommunicationSystem->commQueueManSend, cmd, (u8 *)data, size, 0, 0);
 }
 
 static void CommSys_Transmission(void)
@@ -1726,7 +1732,7 @@ u16 CommSys_CurNetId(void)
 {
     if (sCommunicationSystem) {
         if (CommLocal_IsWifiGroup(sub_0203895C())) {
-            int netId = ov4_021D1E30();
+            int netId = NintendoWFC_GetNetID();
 
             if (netId != -1) {
                 return netId;
@@ -1746,12 +1752,12 @@ BOOL CommSys_SendDataFixedSize(int cmd, const void *data)
     return CommSys_SendData(cmd, data, 0);
 }
 
-BOOL Link_Message(int cmd)
+BOOL CommSys_SendMessage(int cmd)
 {
     return CommSys_SendData(cmd, NULL, 0);
 }
 
-BOOL sub_020360E8(void)
+BOOL CommSys_IsClientConnecting(void)
 {
     return CommServerClient_IsClientConnecting();
 }
@@ -1814,7 +1820,7 @@ void sub_0203619C(int param0, int param1, void *param2, void *param3)
     u8 v0;
 
     if (!sub_0203406C() && CommSys_CurNetId() == 0) {
-        sub_02035B48(2, &v0);
+        CommSys_SendDataFixedSizeServer(2, &v0);
     }
 
     sub_0203408C();
@@ -1831,14 +1837,14 @@ void CommSys_Seed(MATHRandContext32 *rand)
     MATH_InitRand32(rand, seed);
 }
 
-BOOL sub_02036254(int param0)
+BOOL CommSys_IsCmdQueuedServer(int cmd)
 {
-    return CommQueue_CompareCmd(&sCommunicationSystem->commQueueManSendServer, param0);
+    return CommQueueMan_IsCmdInQueue(&sCommunicationSystem->commQueueManSendServer, cmd);
 }
 
-BOOL sub_0203626C(int param0)
+BOOL CommSys_IsCmdQueued(int cmd)
 {
-    return CommQueue_CompareCmd(&sCommunicationSystem->commQueueManSend, param0);
+    return CommQueueMan_IsCmdInQueue(&sCommunicationSystem->commQueueManSend, cmd);
 }
 
 BOOL sub_02036284(void)
@@ -1883,7 +1889,7 @@ BOOL sub_02036314(void)
         return FALSE;
     }
 
-    return ov4_021D254C();
+    return NintendoWFC_GetVoiceChatEnabled();
 }
 
 void sub_0203632C(BOOL param0)
@@ -1913,9 +1919,9 @@ void sub_02036378(BOOL param0)
 
     if (CommLocal_IsWifiGroup(sub_0203895C())) {
         if (param0) {
-            ov4_021D2598(0);
+            NintendoWFC_SetVoiceChatEnabled_Battle(0);
         } else {
-            ov4_021D2598(1);
+            NintendoWFC_SetVoiceChatEnabled_Battle(1);
         }
     }
 }

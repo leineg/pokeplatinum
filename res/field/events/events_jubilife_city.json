@@ -6,15 +6,16 @@
             "x": 168,
             "z": 795,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 14,
-            "movement_type": 5,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ACE_TRAINER_F",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_F",
+            "movement_type": "MOVEMENT_TYPE_WANDER_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 8,
             "initial_dir": 3,
             "data": [],
@@ -25,10 +26,11 @@
             "y": 0
         },
         {
-            "graphics_id": 11,
-            "movement_type": 5,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ACE_TRAINER_M_1",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_M",
+            "movement_type": "MOVEMENT_TYPE_WANDER_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 10,
             "initial_dir": 2,
             "data": [],
@@ -39,10 +41,11 @@
             "y": 1
         },
         {
-            "graphics_id": 3,
-            "movement_type": 2,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SCHOOL_KID_M_1",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 6,
             "initial_dir": 0,
             "data": [],
@@ -53,10 +56,11 @@
             "y": 1
         },
         {
-            "graphics_id": 2,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_TWIN",
+            "graphics_id": "OBJ_EVENT_GFX_TWIN",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 7,
             "initial_dir": 1,
             "data": [],
@@ -67,10 +71,11 @@
             "y": 1
         },
         {
-            "graphics_id": 17,
-            "movement_type": 2,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_EXPERT_M_1",
+            "graphics_id": "OBJ_EVENT_GFX_EXPERT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 11,
             "initial_dir": 1,
             "data": [],
@@ -81,10 +86,11 @@
             "y": 1
         },
         {
-            "graphics_id": 3,
-            "movement_type": 4,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SCHOOL_KID_M_2",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_WANDER_NORTH_AND_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 9,
             "initial_dir": 1,
             "data": [],
@@ -95,10 +101,11 @@
             "y": 1
         },
         {
-            "graphics_id": 17,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_EXPERT_M_2",
+            "graphics_id": "OBJ_EVENT_GFX_EXPERT_M",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 12,
             "initial_dir": 2,
             "data": [],
@@ -109,10 +116,11 @@
             "y": 1
         },
         {
-            "graphics_id": 101,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 378,
+            "id": "LOCALID_COUNTERPART",
+            "graphics_id": "OBJ_EVENT_GFX_COUNTERPART",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_COUNTERPART",
             "script": 0,
             "initial_dir": 1,
             "data": [],
@@ -123,10 +131,11 @@
             "y": 1
         },
         {
-            "graphics_id": 91,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_MAP_SIGNPOST_1",
+            "graphics_id": "OBJ_EVENT_GFX_MAP_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 22,
             "initial_dir": 0,
             "data": [
@@ -139,10 +148,11 @@
             "y": 0
         },
         {
-            "graphics_id": 91,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_MAP_SIGNPOST_2",
+            "graphics_id": "OBJ_EVENT_GFX_MAP_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 22,
             "initial_dir": 0,
             "data": [
@@ -155,10 +165,11 @@
             "y": 0
         },
         {
-            "graphics_id": 91,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_MAP_SIGNPOST_3",
+            "graphics_id": "OBJ_EVENT_GFX_MAP_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 22,
             "initial_dir": 0,
             "data": [
@@ -171,10 +182,11 @@
             "y": 0
         },
         {
-            "graphics_id": 91,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_MAP_SIGNPOST_4",
+            "graphics_id": "OBJ_EVENT_GFX_MAP_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 22,
             "initial_dir": 0,
             "data": [
@@ -187,10 +199,11 @@
             "y": 0
         },
         {
-            "graphics_id": 93,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SIGNBOARD_JUBILIFE_CONDOMINIUMS",
+            "graphics_id": "OBJ_EVENT_GFX_SIGNBOARD",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 23,
             "initial_dir": 0,
             "data": [],
@@ -201,10 +214,11 @@
             "y": 0
         },
         {
-            "graphics_id": 93,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SIGNBOARD_POKETCH_COMPANY",
+            "graphics_id": "OBJ_EVENT_GFX_SIGNBOARD",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 24,
             "initial_dir": 0,
             "data": [],
@@ -215,10 +229,11 @@
             "y": 0
         },
         {
-            "graphics_id": 93,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SIGNBOARD_JUBILIFE_TV",
+            "graphics_id": "OBJ_EVENT_GFX_SIGNBOARD",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 26,
             "initial_dir": 0,
             "data": [],
@@ -229,10 +244,11 @@
             "y": 0
         },
         {
-            "graphics_id": 93,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SIGNBOARD_TRAINERS_SCHOOL",
+            "graphics_id": "OBJ_EVENT_GFX_SIGNBOARD",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 25,
             "initial_dir": 0,
             "data": [],
@@ -243,10 +259,11 @@
             "y": 0
         },
         {
-            "graphics_id": 99,
-            "movement_type": 16,
-            "trainer_type": 0,
-            "flag": 413,
+            "id": "LOCALID_PROF_ROWAN",
+            "graphics_id": "OBJ_EVENT_GFX_PROF_ROWAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_WEST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_ROWAN",
             "script": 0,
             "initial_dir": 2,
             "data": [],
@@ -257,10 +274,11 @@
             "y": 1
         },
         {
-            "graphics_id": 124,
-            "movement_type": 17,
-            "trainer_type": 0,
-            "flag": 412,
+            "id": "LOCALID_GRUNT_M_1",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_GALACTIC_GRUNTS",
             "script": 0,
             "initial_dir": 3,
             "data": [],
@@ -271,10 +289,11 @@
             "y": 1
         },
         {
-            "graphics_id": 124,
-            "movement_type": 17,
-            "trainer_type": 0,
-            "flag": 412,
+            "id": "LOCALID_GRUNT_M_2",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_GALACTIC_GRUNTS",
             "script": 0,
             "initial_dir": 3,
             "data": [],
@@ -285,11 +304,12 @@
             "y": 1
         },
         {
-            "local_id": 5,
-            "graphics_id": 94,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 343,
+            "id": "LOCALID_ARROW_SIGNPOST_ROUTE_202",
+            "clone_id": 5,
+            "graphics_id": "OBJ_EVENT_GFX_ARROW_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "MAP_HEADER_ROUTE_202",
             "script": 65535,
             "initial_dir": 0,
             "data": [
@@ -302,11 +322,12 @@
             "y": 0
         },
         {
-            "local_id": 6,
-            "graphics_id": 94,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 344,
+            "id": "LOCALID_ARROW_SIGNPOST_ROUTE_203",
+            "clone_id": 6,
+            "graphics_id": "OBJ_EVENT_GFX_ARROW_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "MAP_HEADER_ROUTE_203",
             "script": 65535,
             "initial_dir": 0,
             "data": [
@@ -319,10 +340,11 @@
             "y": 0
         },
         {
-            "graphics_id": 11,
-            "movement_type": 12,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ACE_TRAINER_M_2",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 9300,
             "initial_dir": 0,
             "data": [],
@@ -333,10 +355,11 @@
             "y": 1
         },
         {
-            "graphics_id": 93,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_SIGNBOARD_GLOBAL_TERMINAL",
+            "graphics_id": "OBJ_EVENT_GFX_SIGNBOARD",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 27,
             "initial_dir": 0,
             "data": [],
@@ -347,10 +370,11 @@
             "y": 0
         },
         {
-            "graphics_id": 82,
-            "movement_type": 13,
-            "trainer_type": 0,
-            "flag": 502,
+            "id": "LOCALID_POKETCH_CO_PRESIDENT",
+            "graphics_id": "OBJ_EVENT_GFX_MIDDLE_AGED_MAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_POKETCH_CO_PRESIDENT",
             "script": 18,
             "initial_dir": 2,
             "data": [],
@@ -361,10 +385,11 @@
             "y": 1
         },
         {
-            "graphics_id": 43,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 501,
+            "id": "LOCALID_CLOWN_1",
+            "graphics_id": "OBJ_EVENT_GFX_CLOWN",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_CLOWNS_1_AND_2",
             "script": 14,
             "initial_dir": 1,
             "data": [],
@@ -375,10 +400,11 @@
             "y": 1
         },
         {
-            "graphics_id": 43,
-            "movement_type": 3,
-            "trainer_type": 0,
-            "flag": 501,
+            "id": "LOCALID_CLOWN_2",
+            "graphics_id": "OBJ_EVENT_GFX_CLOWN",
+            "movement_type": "MOVEMENT_TYPE_WANDER_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_CLOWNS_1_AND_2",
             "script": 15,
             "initial_dir": 1,
             "data": [],
@@ -389,10 +415,11 @@
             "y": 1
         },
         {
-            "graphics_id": 11,
-            "movement_type": 9,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ACE_TRAINER_M_3",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 13,
             "initial_dir": 3,
             "data": [],
@@ -403,10 +430,11 @@
             "y": 1
         },
         {
-            "graphics_id": 43,
-            "movement_type": 9,
-            "trainer_type": 0,
-            "flag": 568,
+            "id": "LOCALID_CLOWN_3",
+            "graphics_id": "OBJ_EVENT_GFX_CLOWN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_CLOWN_3",
             "script": 16,
             "initial_dir": 1,
             "data": [],
@@ -417,10 +445,11 @@
             "y": 0
         },
         {
-            "graphics_id": 194,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_KID_WITH_NDS_1",
+            "graphics_id": "OBJ_EVENT_GFX_KID_WITH_NDS",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 20,
             "initial_dir": 3,
             "data": [],
@@ -431,10 +460,11 @@
             "y": 0
         },
         {
-            "graphics_id": 194,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_KID_WITH_NDS_2",
+            "graphics_id": "OBJ_EVENT_GFX_KID_WITH_NDS",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 21,
             "initial_dir": 2,
             "data": [],
@@ -445,10 +475,11 @@
             "y": 0
         },
         {
-            "graphics_id": 19,
-            "movement_type": 14,
-            "trainer_type": 0,
-            "flag": 395,
+            "id": "LOCALID_COLLECTOR",
+            "graphics_id": "OBJ_EVENT_GFX_COLLECTOR",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_COLLECTOR",
             "script": 0,
             "initial_dir": 0,
             "data": [],
@@ -459,10 +490,11 @@
             "y": 0
         },
         {
-            "graphics_id": 213,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 385,
+            "id": "LOCALID_LOOKER",
+            "graphics_id": "OBJ_EVENT_GFX_LOOKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_JUBILIFE_CITY_LOOKER",
             "script": 5,
             "initial_dir": 1,
             "data": [],
@@ -473,10 +505,11 @@
             "y": 1
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1272,
+            "id": "LOCALID_POKEBALL",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_OBTAINED_JUBILIFE_CITY_POTION",
             "script": 7257,
             "initial_dir": 0,
             "data": [],
@@ -491,85 +524,85 @@
         {
             "x": 180,
             "z": 755,
-            "dest_header_id": 24,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_CONDOMINIUMS_1F",
             "dest_warp_id": 0
         },
         {
             "x": 149,
             "z": 778,
-            "dest_header_id": 28,
+            "dest_header_id": "MAP_HEADER_GLOBAL_TERMINAL_1F",
             "dest_warp_id": 0
         },
         {
             "x": 180,
             "z": 776,
-            "dest_header_id": 6,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_POKECENTER_1F",
             "dest_warp_id": 0
         },
         {
             "x": 164,
             "z": 751,
-            "dest_header_id": 11,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_TV_1F",
             "dest_warp_id": 0
         },
         {
             "x": 167,
             "z": 788,
-            "dest_header_id": 19,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_SOUTH_HOUSE_1F",
             "dest_warp_id": 0
         },
         {
             "x": 145,
             "z": 751,
-            "dest_header_id": 8,
+            "dest_header_id": "MAP_HEADER_POKETCH_CO_1F",
             "dest_warp_id": 1
         },
         {
             "x": 179,
             "z": 766,
-            "dest_header_id": 4,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_MART",
             "dest_warp_id": 0
         },
         {
             "x": 168,
             "z": 776,
-            "dest_header_id": 29,
+            "dest_header_id": "MAP_HEADER_TRAINERS_SCHOOL",
             "dest_warp_id": 0
         },
         {
             "x": 141,
             "z": 751,
-            "dest_header_id": 8,
+            "dest_header_id": "MAP_HEADER_POKETCH_CO_1F",
             "dest_warp_id": 0
         },
         {
             "x": 140,
             "z": 788,
-            "dest_header_id": 30,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_SOUTHWEST_HOUSE_1F",
             "dest_warp_id": 0
         },
         {
             "x": 129,
             "z": 736,
-            "dest_header_id": 31,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_UNKNOWN_HOUSE_3",
             "dest_warp_id": 0
         },
         {
             "x": 128,
             "z": 736,
-            "dest_header_id": 32,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_UNKNOWN_HOUSE_4",
             "dest_warp_id": 0
         },
         {
             "x": 128,
             "z": 758,
-            "dest_header_id": 389,
+            "dest_header_id": "MAP_HEADER_ROUTE_218_GATE_TO_JUBILIFE_CITY",
             "dest_warp_id": 1
         },
         {
             "x": 128,
             "z": 759,
-            "dest_header_id": 389,
+            "dest_header_id": "MAP_HEADER_ROUTE_218_GATE_TO_JUBILIFE_CITY",
             "dest_warp_id": 1
         }
     ],
@@ -581,7 +614,7 @@
             "y": 0,
             "width": 4,
             "length": 1,
-            "var": 16503,
+            "var": "VAR_JUBILIFE_CITY_STATE",
             "value": 0
         },
         {
@@ -591,7 +624,7 @@
             "y": 0,
             "width": 3,
             "length": 1,
-            "var": 16503,
+            "var": "VAR_JUBILIFE_CITY_STATE",
             "value": 3
         },
         {
@@ -601,7 +634,7 @@
             "y": 0,
             "width": 1,
             "length": 4,
-            "var": 16503,
+            "var": "VAR_JUBILIFE_CITY_STATE",
             "value": 1
         },
         {
@@ -611,7 +644,7 @@
             "y": 0,
             "width": 1,
             "length": 3,
-            "var": 16624,
+            "var": "VAR_GTS_ACCESS_STATE",
             "value": 0
         },
         {
@@ -621,7 +654,7 @@
             "y": 0,
             "width": 5,
             "length": 1,
-            "var": 16615,
+            "var": "VAR_POKETCH_CAMPAIGN_STATE",
             "value": 1
         },
         {
@@ -631,8 +664,9 @@
             "y": 0,
             "width": 1,
             "length": 4,
-            "var": 16502,
+            "var": "VAR_JUBILIFE_LOOKER_PAL_PAD_STATE",
             "value": 1
         }
     ]
 }
+

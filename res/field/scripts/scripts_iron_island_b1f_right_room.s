@@ -1,18 +1,16 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _000E
     ScriptEntryEnd
 
 _000A:
-    ScrCmd_25B
+    InitPersistedMapFeaturesForPlatformLift
     End
 
 _000E:
-    ScrCmd_25C
+    TriggerPlatformLift
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

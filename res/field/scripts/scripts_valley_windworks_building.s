@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/valley_windworks_building.h"
 
-    .data
 
     ScriptEntry _0022
     ScriptEntry _005F
@@ -14,17 +13,17 @@
     ScriptEntryEnd
 
 _0022:
-    SetFlag 0x9C3
-    GoToIfGe 0x4089, 2, _0035
+    SetFlag FLAG_FIRST_ARRIVAL_VALLEY_WINDWORKS
+    GoToIfGe VAR_UNK_0x4089, 2, _0035
     End
 
 _0035:
     SetObjectEventPos 5, 21, 5
-    ScrCmd_189 5, 2
-    ScrCmd_188 5, 16
+    SetObjectEventDir 5, DIR_WEST
+    SetObjectEventMovementType 5, MOVEMENT_TYPE_LOOK_WEST
     SetObjectEventPos 2, 18, 4
-    ScrCmd_189 2, 1
-    ScrCmd_188 2, 15
+    SetObjectEventDir 2, DIR_SOUTH
+    SetObjectEventMovementType 2, MOVEMENT_TYPE_LOOK_SOUTH
     End
 
 _005F:
@@ -37,24 +36,24 @@ _005F:
     ApplyMovement LOCALID_PLAYER, _00A0
     WaitMovement
     RemoveObject 0
-    SetVar 0x40CF, 1
+    SetVar VAR_UNK_0x40CF, 1
     ReleaseAll
     End
 
     .balign 4, 0
 _0090:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _0098:
-    MoveAction_018 9
+    WalkFastWest 9
     EndMovement
 
     .balign 4, 0
 _00A0:
-    MoveAction_063
-    MoveAction_034
+    Delay8
+    WalkOnSpotNormalWest
     EndMovement
 
 _00AC:
@@ -69,9 +68,9 @@ _00AC:
 
 _00BF:
     LockAll
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 6, _00E3
-    GoToIfEq 0x8005, 7, _00F5
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 6, _00E3
+    GoToIfEq VAR_0x8005, 7, _00F5
     End
 
 _00E3:
@@ -90,13 +89,13 @@ _0107:
     Message 2
     CloseMessage
     StartTrainerBattle TRAINER_COMMANDER_MARS_VALLEY_WINDWORKS
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _02B9
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _02B9
     Message 3
     CloseMessage
     ApplyMovement 7, _0374
     WaitMovement
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     Message 4
     ApplyMovement 1, _0364
     WaitMovement
@@ -105,22 +104,22 @@ _0107:
     WaitMovement
     Message 6
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     RemoveObject 1
     RemoveObject 7
     RemoveObject 6
     RemoveObject 3
     RemoveObject 4
-    SetFlag 0x1A2
-    ClearFlag 0x17F
-    SetVar 0x4089, 2
-    SetFlag 0xAA8
-    FadeScreen 6, 1, 1, 0
+    SetFlag FLAG_UNK_0x01A2
+    ClearFlag FLAG_UNK_0x017F
+    SetVar VAR_UNK_0x4089, 2
+    SetFlag FLAG_UNK_0x0AA8
+    FadeScreenIn
     WaitFadeScreen
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 6, _01B7
-    GoToIfEq 0x8005, 7, _01C9
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 6, _01B7
+    GoToIfEq VAR_0x8005, 7, _01C9
     End
 
 _01B7:
@@ -138,14 +137,14 @@ _01C9:
 _01DB:
     Message 7
     CloseMessage
-    SetFlag 0x1F8
-    ClearFlag 0x1F9
-    ScrCmd_188 5, 16
+    SetFlag FLAG_UNK_0x01F8
+    ClearFlag FLAG_UNK_0x01F9
+    SetObjectEventMovementType 5, MOVEMENT_TYPE_LOOK_WEST
     AddObject 5
-    ScrCmd_062 5
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 6, _0218
-    GoToIfEq 0x8005, 7, _0232
+    LockObject 5
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 6, _0218
+    GoToIfEq VAR_0x8005, 7, _0232
     End
 
 _0218:
@@ -165,9 +164,9 @@ _0232:
 _024C:
     Message 8
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 6, _0273
-    GoToIfEq 0x8005, 7, _0285
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 6, _0273
+    GoToIfEq VAR_0x8005, 7, _0285
     End
 
 _0273:
@@ -187,10 +186,10 @@ _0297:
     Message 10
     WaitABXPadPress
     CloseMessage
-    SetVar 0x411E, 1
-    ClearFlag 0x1FA
-    SetVar 0x40CF, 2
-    SetFlag 0x988
+    SetVar VAR_UNK_0x411E, 1
+    ClearFlag FLAG_UNK_0x01FA
+    SetVar VAR_UNK_0x40CF, 2
+    SetFlag FLAG_ALT_MUSIC_VALLEY_WINDWORKS_BUILDING
     ReleaseAll
     End
 
@@ -201,95 +200,95 @@ _02B9:
 
     .balign 4, 0
 _02C0:
-    MoveAction_019 4
-    MoveAction_016
-    MoveAction_019 6
-    MoveAction_036
+    WalkFastEast 4
+    WalkFastNorth
+    WalkFastEast 6
+    WalkOnSpotFastNorth
     EndMovement
 
     .balign 4, 0
 _02D4:
-    MoveAction_019 4
-    MoveAction_016 2
-    MoveAction_019 6
-    MoveAction_037
+    WalkFastEast 4
+    WalkFastNorth 2
+    WalkFastEast 6
+    WalkOnSpotFastSouth
     EndMovement
 
     .balign 4, 0
 _02E8:
-    MoveAction_013 3
-    MoveAction_014
+    WalkNormalSouth 3
+    WalkNormalWest
     EndMovement
 
     .balign 4, 0
 _02F4:
-    MoveAction_013 4
-    MoveAction_014
+    WalkNormalSouth 4
+    WalkNormalWest
     EndMovement
 
     .balign 4, 0
 _0300:
-    MoveAction_063 6
-    MoveAction_033
+    Delay8 6
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _030C:
-    MoveAction_063 6
-    MoveAction_032
+    Delay8 6
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0318:
-    MoveAction_003
-    MoveAction_063 2
-    MoveAction_002
-    MoveAction_063 2
-    MoveAction_001
+    FaceEast
+    Delay8 2
+    FaceWest
+    Delay8 2
+    FaceSouth
     EndMovement
 
     .balign 4, 0
 _0330:
-    MoveAction_003
-    MoveAction_063 2
-    MoveAction_002
-    MoveAction_063 2
-    MoveAction_000
+    FaceEast
+    Delay8 2
+    FaceWest
+    Delay8 2
+    FaceNorth
     EndMovement
 
     .balign 4, 0
 _0348:
-    MoveAction_075
-    MoveAction_012
-    MoveAction_034
+    EmoteExclamationMark
+    WalkNormalNorth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0358:
-    MoveAction_075
-    MoveAction_034
+    EmoteExclamationMark
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0364:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _036C:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0374:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
 _037C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfGe 0x40CF, 3, _039C
+    GoToIfGe VAR_UNK_0x40CF, 3, _039C
     Message 11
     WaitABXPadPress
     CloseMessage
@@ -307,7 +306,7 @@ _03A7:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfGe 0x40CF, 3, _03C7
+    GoToIfGe VAR_UNK_0x40CF, 3, _03C7
     Message 10
     WaitABXPadPress
     CloseMessage
@@ -332,7 +331,7 @@ _03DA:
 _03E2:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfGe 0x40AA, 2, _0400
+    GoToIfGe VAR_EXITED_DISTORTION_WORLD_STATE, 2, _0400
     Message 14
     GoTo _040B
     End
@@ -348,4 +347,4 @@ _040B:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

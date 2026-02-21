@@ -1,15 +1,14 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/stark_mountain_room_1.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0014
     ScriptEntryEnd
 
 _000A:
-    SetFlag 0x9D2
-    SetFlag 0x28E
+    SetFlag FLAG_FIRST_ARRIVAL_STARK_MOUNTAIN_INTERIOR
+    SetFlag FLAG_UNK_0x028E
     End
 
 _0014:
@@ -21,8 +20,8 @@ _0014:
     ApplyMovement 0, _0160
     WaitMovement
     StartTrainerBattle TRAINER_COMMANDER_MARS_STARK_MOUNTAIN
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0150
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0150
     Message 1
     CloseMessage
     ApplyMovement 0, _0168
@@ -34,11 +33,11 @@ _0014:
     ApplyMovement 4, _01CC
     WaitMovement
     StartTrainerBattle TRAINER_COMMANDER_JUPITER_STARK_MOUNTAIN
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0150
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0150
     Message 3
     CloseMessage
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     ApplyMovement 0, _0174
     ApplyMovement 4, _01F4
     WaitMovement
@@ -79,7 +78,7 @@ _0014:
     RemoveObject 4
     RemoveObject 15
     RemoveObject 16
-    SetVar 0x40AD, 1
+    SetVar VAR_UNK_0x40AD, 1
     ReleaseAll
     End
 
@@ -90,107 +89,107 @@ _0150:
 
     .balign 4, 0
 _0158:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0160:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _0168:
-    MoveAction_012
-    MoveAction_033
+    WalkNormalNorth
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0174:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _017C:
-    MoveAction_032
-    MoveAction_063 2
-    MoveAction_033
-    MoveAction_063 2
+    WalkOnSpotNormalNorth
+    Delay8 2
+    WalkOnSpotNormalSouth
+    Delay8 2
     EndMovement
 
     .balign 4, 0
 _0190:
-    MoveAction_013 2
-    MoveAction_063
-    MoveAction_013
-    MoveAction_069
+    WalkNormalSouth 2
+    Delay8
+    WalkNormalSouth
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _01A4:
-    MoveAction_063 2
-    MoveAction_014
-    MoveAction_035
+    Delay8 2
+    WalkNormalWest
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _01B4:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _01BC:
-    MoveAction_034
-    MoveAction_063 2
-    MoveAction_033
+    WalkOnSpotNormalWest
+    Delay8 2
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01CC:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _01D4:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _01DC:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _01E4:
-    MoveAction_014
-    MoveAction_013 2
-    MoveAction_069
+    WalkNormalWest
+    WalkNormalSouth 2
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _01F4:
-    MoveAction_063
-    MoveAction_032
+    Delay8
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0200:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0208:
-    MoveAction_012 7
+    WalkNormalNorth 7
     EndMovement
 
     .balign 4, 0
 _0210:
-    MoveAction_015
-    MoveAction_012 7
+    WalkNormalEast
+    WalkNormalNorth 7
     EndMovement
 
     .balign 4, 0
 _021C:
-    MoveAction_063
-    MoveAction_014
-    MoveAction_012 7
+    Delay8
+    WalkNormalWest
+    WalkNormalNorth 7
     EndMovement

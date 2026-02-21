@@ -13,7 +13,7 @@
             "level": 17,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,31 @@
             "level": 17,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "We are acquiring Pokémon for a most\n",
+                "astonishing undertaking!\r",
+                "Your meddling won’t be tolerated!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "I feel like I got meddled with...\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Our astonishing undertaking is\n",
+                "most certainly breathtaking.\r",
+                "If you ever hope to see its glorious\n",
+                "unveiling, then don’t meddle with us!\n"
+            ]
         }
     ]
 }

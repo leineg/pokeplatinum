@@ -1,23 +1,17 @@
 #include "menu.h"
 
-#include <nitro.h>
-#include <string.h>
-
-#include "generated/sdat.h"
-#include "generated/text_banks.h"
-
 #include "bg_window.h"
 #include "colored_arrow.h"
 #include "font.h"
 #include "heap.h"
 #include "message.h"
 #include "render_window.h"
+#include "sound_playback.h"
 #include "string_list.h"
 #include "system.h"
 #include "text.h"
-#include "unk_02005474.h"
 
-#include "res/text/bank/common_strings_2.h"
+#include "res/text/bank/menu_entries.h"
 
 static BOOL TryMovingCursorAndPlaySound(Menu *menu, u8 direction, u16 sound);
 static u8 TryMovingCursor(Menu *menu, u8 direction);
@@ -28,7 +22,7 @@ static void CalcCursorDrawCoords(Menu *menu, u8 *outX, u8 *outY, u8 cursorPos);
 
 Menu *Menu_New(const MenuTemplate *template, u8 xOffset, u8 yOffset, u8 cursorStart, u8 heapID, u32 cancelKeys)
 {
-    Menu *menu = Heap_AllocFromHeap(heapID, sizeof(Menu));
+    Menu *menu = Heap_Alloc(heapID, sizeof(Menu));
 
     menu->template = *template;
     menu->cursor = ColoredArrow_New(heapID);
@@ -67,7 +61,7 @@ void Menu_Free(Menu *menu, u8 *outCursorPos)
     }
 
     ColoredArrow_Free(menu->cursor);
-    Heap_FreeToHeapExplicit(menu->heapID, menu);
+    Heap_FreeExplicit(menu->heapID, menu);
 }
 
 u32 Menu_ProcessInput(Menu *menu)
@@ -304,7 +298,7 @@ static u8 CalcMaxEntryWidth(Menu *menu)
 
     u8 width;
     for (u8 i = 0; i < menu->template.xSize * menu->template.ySize; i++) {
-        width = Font_CalcStrbufWidth(menu->template.fontID, menu->template.choices[i].entry, 0);
+        width = Font_CalcStringWidth(menu->template.fontID, menu->template.choices[i].entry, 0);
 
         if (maxWidth < width) {
             maxWidth = width;
@@ -357,11 +351,8 @@ static void CalcCursorDrawCoords(Menu *menu, u8 *outX, u8 *outY, u8 cursorPos)
 Menu *Menu_MakeYesNoChoiceWithCursorAt(BgConfig *bgConfig, const WindowTemplate *winTemplate, u16 borderTileStart, u8 borderPalette, u8 cursorStart, u32 heapID)
 {
     MenuTemplate menuTemplate;
-    MessageLoader *msgLoader;
-    StringList *choices;
-
-    msgLoader = MessageLoader_Init(MESSAGE_LOADER_NARC_HANDLE, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_COMMON_STRINGS_2, heapID);
-    choices = StringList_New(2, heapID);
+    MessageLoader *msgLoader = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_MENU_ENTRIES, heapID);
+    StringList *choices = StringList_New(2, heapID);
 
     StringList_AddFromMessageBank(choices, msgLoader, pl_msg_00000361_00041, 0);
     StringList_AddFromMessageBank(choices, msgLoader, pl_msg_00000361_00042, MENU_CANCELED);
@@ -411,77 +402,12 @@ void Menu_DestroyForExit(Menu *menu, u32 heapID)
 {
     Window_EraseStandardFrame(menu->template.window, 0);
     Window_Remove(menu->template.window);
-    Heap_FreeToHeapExplicit(heapID, menu->template.window);
+    Heap_FreeExplicit(heapID, menu->template.window);
     StringList_Free(menu->template.choices);
     Menu_Free(menu, NULL);
 }
 
-static const u8 sArrowCursorBitmap[] = {
-    0xff,
-    0xff,
-    0xff,
-    0x0,
-    0xff,
-    0xff,
-    0xff,
-    0x0,
-    0x21,
-    0xff,
-    0xff,
-    0x0,
-    0x11,
-    0xf2,
-    0xff,
-    0x0,
-    0x11,
-    0x21,
-    0xff,
-    0x0,
-    0x11,
-    0x11,
-    0xf2,
-    0x0,
-    0x11,
-    0x11,
-    0x21,
-    0x0,
-    0x11,
-    0x11,
-    0x22,
-    0x0,
-    0x11,
-    0x21,
-    0xf2,
-    0x0,
-    0x11,
-    0x22,
-    0xff,
-    0x0,
-    0x21,
-    0xf2,
-    0xff,
-    0x0,
-    0x22,
-    0xff,
-    0xff,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0,
-    0x0
-};
+#include "res/fonts/arrow_cursor.4bpp.h"
 
 void Window_DrawMenuCursor(Window *window, u32 x, u32 y)
 {

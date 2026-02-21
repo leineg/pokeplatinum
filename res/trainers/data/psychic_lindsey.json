@@ -16,8 +16,31 @@
             "moves": [
                 "MOVE_HIDDEN_POWER"
             ],
-            "power": 20,
+            "iv_scale": 20,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I see it...\n",
+                "I see it...\r",
+                "I see you going down in defeat...\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "It is I that has gone down in defeat."
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "The Old Chateau...\n",
+                "There should be none alive in it...\r",
+                "And yet there is a pervasive sense of\n",
+                "a presence..."
+            ]
         }
     ]
 }

@@ -13,8 +13,17 @@
             "level": 23,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 3
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Oh, no, no, no!\n",
+                "Mwahahah?\n"
+            ]
         }
     ]
 }

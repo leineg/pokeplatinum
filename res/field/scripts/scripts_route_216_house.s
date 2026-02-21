@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_216_house.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0071
@@ -13,19 +12,19 @@ _000E:
     LockAll
     FacePlayer
     Message 0
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0039
-    GoToIfEq 0x800C, MENU_NO, _0066
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0039
+    GoToIfEq VAR_RESULT, MENU_NO, _0066
     End
 
 _0039:
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     PlaySound SEQ_ASA
     WaitSound
     HealParty
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     Message 1
     WaitABXPadPress
@@ -54,21 +53,21 @@ _0084:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 4
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _00AD
-    GoToIfEq 0x800C, MENU_NO, _00E3
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _00AD
+    GoToIfEq VAR_RESULT, MENU_NO, _00E3
     End
 
 _00AD:
     BufferPlayerName 0
     Message 5
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     PlaySound SEQ_ASA
     WaitSound
     HealParty
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     BufferPlayerName 0
     Message 6
@@ -82,6 +81,4 @@ _00E3:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

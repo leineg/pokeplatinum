@@ -3,6 +3,10 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/field/dynamic_map_features.h"
+#include "generated/movement_actions.h"
+#include "generated/movement_types.h"
+
 #include "struct_decls/struct_0205E884_decl.h"
 #include "struct_decls/struct_02061830_decl.h"
 #include "struct_decls/struct_02061AB4_decl.h"
@@ -11,18 +15,17 @@
 #include "overlay005/ov5_021ECC20.h"
 #include "overlay005/ov5_021F5A10.h"
 #include "overlay008/ov8_02249960.h"
-#include "overlay101/struct_ov101_021D5D90_decl.h"
 
 #include "heap.h"
 #include "map_object.h"
 #include "map_object_move.h"
+#include "overworld_anim_manager.h"
+#include "persisted_map_features_init.h"
 #include "player_avatar.h"
 #include "script_manager.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "unk_020655F4.h"
-#include "unk_020711EC.h"
-#include "unk_02071B10.h"
 
 typedef struct {
     int unk_00;
@@ -36,14 +39,14 @@ typedef struct {
 typedef struct {
     int unk_00;
     int unk_04;
-    int unk_08;
-    int unk_0C;
+    int direction;
+    int sightRange;
     int unk_10;
     int unk_14;
-    int unk_18;
+    int approachNum;
     int unk_1C;
-    UnkStruct_ov101_021D5D90 *unk_20;
-    MapObject *unk_24;
+    OverworldAnimManager *unk_20;
+    MapObject *mapObj;
     PlayerAvatar *playerAvatar;
     FieldSystem *fieldSystem;
 } UnkStruct_020EF6D0;
@@ -78,7 +81,7 @@ int sub_02067A84(FieldSystem *fieldSystem, BOOL param1)
         MapObject *v3;
         UnkStruct_02067C28 v4;
 
-        ScriptManager_Set(fieldSystem, 3928, v0.unk_14);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(SINGLE_BATTLES, 928), v0.unk_14);
 
         if ((param1 == 0) || (sub_02067BA8(fieldSystem, mapObjMan, playerAvatar, v0.unk_14, &v4) == 0)) {
             ScriptManager_SetApproachingTrainer(fieldSystem, v0.unk_14, v0.unk_00, v0.unk_04, v0.unk_08, v0.unk_0C, 0, 0);
@@ -102,7 +105,7 @@ int sub_02067A84(FieldSystem *fieldSystem, BOOL param1)
         v5 = sub_02067F2C(fieldSystem, mapObjMan, v0.unk_14, v0.unk_0C);
 
         sub_02067C28(&v6, v5, v0.unk_00, v0.unk_04);
-        ScriptManager_Set(fieldSystem, 3928, v0.unk_14);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(SINGLE_BATTLES, 928), v0.unk_14);
         ScriptManager_SetApproachingTrainer(fieldSystem, v0.unk_14, v0.unk_00, v0.unk_04, v0.unk_08, v0.unk_0C, 1, 0);
         ScriptManager_SetApproachingTrainer(fieldSystem, v6.unk_14, v6.unk_00, v6.unk_04, v6.unk_08, v6.unk_0C, 1, 1);
 
@@ -122,7 +125,7 @@ static int sub_02067BA8(FieldSystem *fieldSystem, MapObjectManager *param1, Play
     v3 = NULL;
     v1 = -1;
 
-    while (sub_020625B0(param1, &v3, &v0, (1 << 0))) {
+    while (MapObjectMan_FindObjectWithStatus(param1, &v3, &v0, (1 << 0))) {
         if ((param3 == NULL) || (param3 != v3)) {
             v1 = sub_02067C80(v3, playerAvatar, &v2);
 
@@ -362,7 +365,7 @@ static MapObject *sub_02067F2C(FieldSystem *fieldSystem, MapObjectManager *param
 
     v0 = 0;
 
-    while (sub_020625B0(param1, &v1, &v0, MAP_OBJ_STATUS_0)) {
+    while (MapObjectMan_FindObjectWithStatus(param1, &v1, &v0, MAP_OBJ_STATUS_0)) {
         if (v1 != param2) {
             int v2 = sub_02067C54(v1);
 
@@ -391,9 +394,9 @@ int sub_02067F88(FieldSystem *fieldSystem, MapObject *param1)
     return 0;
 }
 
-SysTask *sub_02067FB8(FieldSystem *fieldSystem, MapObject *param1, PlayerAvatar *playerAvatar, int param3, int param4, int param5, int param6, int param7)
+SysTask *sub_02067FB8(FieldSystem *fieldSystem, MapObject *mapObj, PlayerAvatar *playerAvatar, int direction, int sightRange, int param5, int param6, int approachNum)
 {
-    return sub_02067FF0(fieldSystem, param1, playerAvatar, param3, param4, param5, param6, param7);
+    return sub_02067FF0(fieldSystem, mapObj, playerAvatar, direction, sightRange, param5, param6, approachNum);
 }
 
 int sub_02067FD4(SysTask *task)
@@ -407,54 +410,46 @@ void sub_02067FE8(SysTask *task)
     sub_02068054(task);
 }
 
-static SysTask *sub_02067FF0(FieldSystem *fieldSystem, MapObject *param1, PlayerAvatar *playerAvatar, int param3, int param4, int param5, int param6, int param7)
+static SysTask *sub_02067FF0(FieldSystem *fieldSystem, MapObject *mapObj, PlayerAvatar *playerAvatar, int direction, int sightRange, int param5, int param6, int approachNum)
 {
-    SysTask *v0;
-    UnkStruct_020EF6D0 *v1;
-
-    v1 = Heap_AllocFromHeapAtEnd(4, (sizeof(UnkStruct_020EF6D0)));
+    SysTask *task;
+    UnkStruct_020EF6D0 *v1 = Heap_AllocAtEnd(HEAP_ID_FIELD1, (sizeof(UnkStruct_020EF6D0)));
     GF_ASSERT(v1 != NULL);
 
     memset(v1, 0, (sizeof(UnkStruct_020EF6D0)));
 
-    v1->unk_08 = param3;
-    v1->unk_0C = param4;
+    v1->direction = direction;
+    v1->sightRange = sightRange;
     v1->unk_10 = param5;
     v1->unk_14 = param6;
-    v1->unk_18 = param7;
+    v1->approachNum = approachNum;
     v1->fieldSystem = fieldSystem;
-    v1->unk_24 = param1;
+    v1->mapObj = mapObj;
     v1->playerAvatar = playerAvatar;
 
-    v0 = SysTask_Start(sub_0206806C, v1, 0xff);
-    GF_ASSERT(v0 != NULL);
+    task = SysTask_Start(sub_0206806C, v1, 0xff);
+    GF_ASSERT(task != NULL);
 
-    return v0;
+    return task;
 }
 
 static int sub_02068048(SysTask *task)
 {
-    UnkStruct_020EF6D0 *v0;
-
-    v0 = SysTask_GetParam(task);
+    UnkStruct_020EF6D0 *v0 = SysTask_GetParam(task);
     return v0->unk_04;
 }
 
 static void sub_02068054(SysTask *task)
 {
-    UnkStruct_020EF6D0 *v0;
+    UnkStruct_020EF6D0 *v0 = SysTask_GetParam(task);
 
-    v0 = SysTask_GetParam(task);
-
-    Heap_FreeToHeapExplicit(4, v0);
+    Heap_FreeExplicit(HEAP_ID_FIELD1, v0);
     SysTask_Done(task);
 }
 
 static void sub_0206806C(SysTask *task, void *param1)
 {
-    UnkStruct_020EF6D0 *v0;
-
-    v0 = param1;
+    UnkStruct_020EF6D0 *v0 = param1;
 
     while (Unk_020EF6D0[v0->unk_00](v0) == 1) {
         (void)0;
@@ -463,7 +458,7 @@ static void sub_0206806C(SysTask *task, void *param1)
 
 static int sub_02068088(UnkStruct_020EF6D0 *param0)
 {
-    MapObject *v0 = param0->unk_24;
+    MapObject *v0 = param0->mapObj;
 
     if (MapObject_IsMoving(v0) == 1) {
         MapObject_SetPauseMovementOff(v0);
@@ -475,13 +470,13 @@ static int sub_02068088(UnkStruct_020EF6D0 *param0)
 
 static int sub_020680A4(UnkStruct_020EF6D0 *param0)
 {
-    MapObject *v0 = param0->unk_24;
+    MapObject *v0 = param0->mapObj;
 
     if (MapObject_IsMoving(v0) == 1) {
         return 0;
     }
 
-    ov5_021ECDFC(param0->unk_24, param0->unk_08);
+    ov5_021ECDFC(param0->mapObj, param0->direction);
     MapObject_SetStatusFlagOn(v0, MAP_OBJ_STATUS_PAUSE_MOVEMENT);
 
     param0->unk_00 = 2;
@@ -497,7 +492,7 @@ static int sub_020680D0(UnkStruct_020EF6D0 *param0)
     }
 
     {
-        u32 v1 = MapObject_GetMovementType(param0->unk_24);
+        u32 v1 = MapObject_GetMovementType(param0->mapObj);
 
         switch (v1) {
         case 0x33:
@@ -517,14 +512,14 @@ static int sub_02068118(UnkStruct_020EF6D0 *param0)
 {
     int v0;
 
-    if (LocalMapObj_IsAnimationSet(param0->unk_24) == 0) {
+    if (LocalMapObj_IsAnimationSet(param0->mapObj) == 0) {
         return 0;
     }
 
-    GF_ASSERT(param0->unk_08 != -1);
+    GF_ASSERT(param0->direction != -1);
 
-    v0 = sub_02065838(param0->unk_08, 0x0);
-    LocalMapObj_SetAnimationCode(param0->unk_24, v0);
+    v0 = MovementAction_TurnActionTowardsDir(param0->direction, MOVEMENT_ACTION_FACE_NORTH);
+    LocalMapObj_SetAnimationCode(param0->mapObj, v0);
     param0->unk_00 = 4;
 
     return 0;
@@ -532,7 +527,7 @@ static int sub_02068118(UnkStruct_020EF6D0 *param0)
 
 static int sub_02068150(UnkStruct_020EF6D0 *param0)
 {
-    if (LocalMapObj_CheckAnimationFinished(param0->unk_24) == 0) {
+    if (LocalMapObj_CheckAnimationFinished(param0->mapObj) == 0) {
         return 0;
     }
 
@@ -542,7 +537,7 @@ static int sub_02068150(UnkStruct_020EF6D0 *param0)
 
 static int sub_0206816C(UnkStruct_020EF6D0 *param0)
 {
-    param0->unk_20 = ov5_021F5D8C(param0->unk_24, 0, 0, 0);
+    param0->unk_20 = ov5_021F5D8C(param0->mapObj, 0, 0, 0);
     param0->unk_00 = 6;
 
     return 0;
@@ -551,7 +546,7 @@ static int sub_0206816C(UnkStruct_020EF6D0 *param0)
 static int sub_02068188(UnkStruct_020EF6D0 *param0)
 {
     if (ov5_021F5C4C(param0->unk_20) == 1) {
-        sub_0207136C(param0->unk_20);
+        OverworldAnimManager_Finish(param0->unk_20);
         param0->unk_00 = 9;
     }
 
@@ -560,7 +555,7 @@ static int sub_02068188(UnkStruct_020EF6D0 *param0)
 
 static int sub_020681A4(UnkStruct_020EF6D0 *param0)
 {
-    LocalMapObj_SetAnimationCode(param0->unk_24, 0x65);
+    LocalMapObj_SetAnimationCode(param0->mapObj, MOVEMENT_ACTION_REVEAL_TRAINER);
     param0->unk_00 = 8;
 
     return 0;
@@ -568,7 +563,7 @@ static int sub_020681A4(UnkStruct_020EF6D0 *param0)
 
 static int sub_020681B8(UnkStruct_020EF6D0 *param0)
 {
-    if (LocalMapObj_CheckAnimationFinished(param0->unk_24) == 1) {
+    if (LocalMapObj_CheckAnimationFinished(param0->mapObj) == 1) {
         param0->unk_00 = 9;
     }
 
@@ -589,7 +584,7 @@ static int sub_020681D0(UnkStruct_020EF6D0 *param0)
 
 static int sub_020681E8(UnkStruct_020EF6D0 *param0)
 {
-    if (param0->unk_0C <= 1) {
+    if (param0->sightRange <= 1) {
         param0->unk_00 = 13;
         return 1;
     }
@@ -602,9 +597,9 @@ static int sub_02068200(UnkStruct_020EF6D0 *param0)
 {
     int v0;
 
-    if (LocalMapObj_IsAnimationSet(param0->unk_24) == 1) {
-        v0 = sub_02065838(param0->unk_08, 0xc);
-        LocalMapObj_SetAnimationCode(param0->unk_24, v0);
+    if (LocalMapObj_IsAnimationSet(param0->mapObj) == 1) {
+        v0 = MovementAction_TurnActionTowardsDir(param0->direction, MOVEMENT_ACTION_WALK_NORMAL_NORTH);
+        LocalMapObj_SetAnimationCode(param0->mapObj, v0);
         param0->unk_00 = 12;
     }
 
@@ -613,11 +608,11 @@ static int sub_02068200(UnkStruct_020EF6D0 *param0)
 
 static int sub_02068228(UnkStruct_020EF6D0 *param0)
 {
-    if (LocalMapObj_CheckAnimationFinished(param0->unk_24) == 0) {
+    if (LocalMapObj_CheckAnimationFinished(param0->mapObj) == 0) {
         return 0;
     }
 
-    param0->unk_0C--;
+    param0->sightRange--;
     param0->unk_00 = 10;
 
     return 1;
@@ -640,15 +635,13 @@ static int sub_02068248(UnkStruct_020EF6D0 *param0)
 static int sub_02068264(UnkStruct_020EF6D0 *param0)
 {
     int v0, v1;
-    MapObject *v2;
+    MapObject *v2 = Player_MapObject(param0->playerAvatar);
+    v1 = sub_02064488(MapObject_GetX(v2), MapObject_GetZ(v2), MapObject_GetX(param0->mapObj), MapObject_GetZ(param0->mapObj));
 
-    v2 = Player_MapObject(param0->playerAvatar);
-    v1 = sub_02064488(MapObject_GetX(v2), MapObject_GetZ(v2), MapObject_GetX(param0->unk_24), MapObject_GetZ(param0->unk_24));
-
-    if ((PlayerAvatar_GetDir(param0->playerAvatar) != v1) && ((param0->unk_18 == 0) || (param0->unk_14 == 2))) {
+    if ((PlayerAvatar_GetDir(param0->playerAvatar) != v1) && ((param0->approachNum == 0) || (param0->unk_14 == 2))) {
         if (LocalMapObj_IsAnimationSet(v2) == 1) {
             MapObject_SetStatusFlagOff(v2, MAP_OBJ_STATUS_LOCK_DIR);
-            v0 = sub_02065838(v1, 0x0);
+            v0 = MovementAction_TurnActionTowardsDir(v1, MOVEMENT_ACTION_FACE_NORTH);
             LocalMapObj_SetAnimationCode(v2, v0);
             param0->unk_00 = 15;
         }
@@ -661,9 +654,7 @@ static int sub_02068264(UnkStruct_020EF6D0 *param0)
 
 static int sub_020682E0(UnkStruct_020EF6D0 *param0)
 {
-    MapObject *v0;
-
-    v0 = Player_MapObject(param0->playerAvatar);
+    MapObject *v0 = Player_MapObject(param0->playerAvatar);
 
     if (LocalMapObj_CheckAnimationFinished(v0) == 0) {
         return 0;
@@ -677,10 +668,10 @@ static int sub_020682E0(UnkStruct_020EF6D0 *param0)
 
 static int sub_02068308(UnkStruct_020EF6D0 *param0)
 {
-    sub_020656AC(param0->unk_24);
+    sub_020656AC(param0->mapObj);
 
-    if ((sub_02071CB4(param0->fieldSystem, 2) == 0) || (ov8_0224C5DC(param0->fieldSystem, param0->unk_24) == 0)) {
-        MapObject_SetMoveCode(param0->unk_24, 0x0);
+    if ((PersistedMapFeatures_IsCurrentDynamicMap(param0->fieldSystem, DYNAMIC_MAP_FEATURES_HEARTHOME_GYM) == 0) || (ov8_0224C5DC(param0->fieldSystem, param0->mapObj) == 0)) {
+        MapObject_SwitchMovementType(param0->mapObj, MOVEMENT_TYPE_NONE);
     }
 
     param0->unk_00 = 17;

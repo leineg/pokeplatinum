@@ -5,24 +5,24 @@
 
 #include "struct_decls/battle_system.h"
 
-#include "battle/ov16_0223DF00.h"
+#include "battle/battle_system.h"
 #include "battle/struct_ov16_0225BFFC_decl.h"
 #include "battle/struct_ov16_0225BFFC_t.h"
 
-#include "math.h"
+#include "math_util.h"
+#include "pokemon_sprite.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
-#include "unk_0200762C.h"
 
 static void ov16_02264800(SysTask *param0, void *param1);
 
-void ov16_02264798(BattlerData *param0, BattleSystem *param1)
+void ov16_02264798(BattlerData *param0, BattleSystem *battleSys)
 {
     if (param0->unk_194 != NULL) {
         return;
     }
 
-    if (BattleSystem_BattleType(param1) & (0x20 | 0x200)) {
+    if (BattleSystem_GetBattleType(battleSys) & (BATTLE_TYPE_SAFARI | BATTLE_TYPE_PAL_PARK)) {
         return;
     }
 
@@ -41,7 +41,7 @@ void ov16_022647D8(BattlerData *param0)
     param0->unk_194 = NULL;
     param0->unk_198 = 0;
 
-    sub_02007DEC(param0->unk_20, 4, 0);
+    PokemonSprite_SetAttribute(param0->unk_20, MON_SPRITE_Y_OFFSET, 0);
 }
 
 static void ov16_02264800(SysTask *param0, void *param1)
@@ -56,5 +56,5 @@ static void ov16_02264800(SysTask *param0, void *param1)
     }
 
     v1 = FX_Mul(CalcSineDegrees(v0->unk_198), 0x1800) / FX32_ONE;
-    sub_02007DEC(v0->unk_20, 4, v1);
+    PokemonSprite_SetAttribute(v0->unk_20, MON_SPRITE_Y_OFFSET, v1);
 }

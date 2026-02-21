@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_218_gate_to_jubilife_city.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _001D
@@ -21,21 +20,21 @@ _001D:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    SetVar 0x8004, 0x1BD
-    BufferItemName 0, 0x8004
-    GoToIfSet 132, _005E
+    SetVar VAR_0x8004, ITEM_OLD_ROD
+    BufferItemName 0, VAR_0x8004
+    GoToIfSet FLAG_OLD_ROD_OBTAINED, _005E
     Message 1
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _00A7
-    GoToIfEq 0x800C, MENU_NO, _009C
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, AcceptOldRod
+    GoToIfEq VAR_RESULT, MENU_NO, RefuseOldRod
     End
 
 _005E:
-    BufferItemName 0, 0x8004
+    BufferItemName 0, VAR_0x8004
     Message 3
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0086
-    GoToIfEq 0x800C, MENU_NO, _0091
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0086
+    GoToIfEq VAR_RESULT, MENU_NO, _0091
     End
 
 _0086:
@@ -52,19 +51,19 @@ _0091:
     ReleaseAll
     End
 
-_009C:
+RefuseOldRod:
     Message 4
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00A7:
-    BufferItemName 0, 0x8004
+AcceptOldRod:
+    BufferItemName 0, VAR_0x8004
     Message 2
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
-    SetFlag 132
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
+    SetFlag FLAG_OLD_ROD_OBTAINED
     GoTo _005E
 
-    .byte 0
+    .balign 4, 0

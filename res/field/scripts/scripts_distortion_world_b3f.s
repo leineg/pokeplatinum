@@ -1,14 +1,13 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/distortion_world_b3f.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _000E
     ScriptEntryEnd
 
 _000A:
-    ScrCmd_2F2
+    InitPersistedMapFeaturesForDistortionWorld
     End
 
 _000E:
@@ -17,8 +16,8 @@ _000E:
     ApplyMovement 128, _0060
     WaitMovement
     Message 0
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _003B
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _003B
     Message 1
     GoTo _003E
 
@@ -31,16 +30,16 @@ _003E:
     ApplyMovement 128, _0068
     WaitMovement
     ScrCmd_312 128
-    SetVar 0x4055, 6
+    SetVar VAR_DISTORTION_WORLD_PROGRESS, 6
     ReleaseAll
     End
 
     .balign 4, 0
 _0060:
-    MoveAction_012 7
+    WalkNormalNorth 7
     EndMovement
 
     .balign 4, 0
 _0068:
-    MoveAction_013 7
+    WalkNormalSouth 7
     EndMovement

@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1149,
+            "id": "IRON_ISLAND_B1F_LEFT_ROOM_POKEBALL_0",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x047D",
             "script": 7135,
             "initial_dir": 0,
             "data": [],
@@ -16,11 +17,12 @@
             "y": 0
         },
         {
-            "graphics_id": 52,
-            "movement_type": 9,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3377,
+            "id": "IRON_ISLAND_B1F_LEFT_ROOM_CAMPER_LAWRENCE",
+            "graphics_id": "OBJ_EVENT_GFX_CAMPER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_CAMPER_LAWRENCE",
             "initial_dir": 3,
             "data": [
                 2
@@ -32,10 +34,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1302,
+            "id": "IRON_ISLAND_B1F_LEFT_ROOM_POKEBALL_2",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0516",
             "script": 7287,
             "initial_dir": 0,
             "data": [],
@@ -50,7 +53,7 @@
         {
             "x": 15,
             "z": 3,
-            "dest_header_id": 289,
+            "dest_header_id": "MAP_HEADER_IRON_ISLAND_1F",
             "dest_warp_id": 1
         }
     ],

@@ -20,9 +20,9 @@
 
 #include "enums.h"
 #include "list_menu.h"
-#include "math.h"
-#include "strbuf.h"
-#include "unk_02005474.h"
+#include "math_util.h"
+#include "sound_playback.h"
+#include "string_gf.h"
 
 typedef struct {
     ListMenuTemplate unk_00;
@@ -71,8 +71,8 @@ typedef struct {
 } UnkStruct_ov70_0226DD5C;
 
 static u32 ov70_02268A3C(const UnkStruct_ov66_0222E71C *param0);
-static Strbuf *ov70_02268AAC(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2);
-static Strbuf *ov70_02268AF8(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2);
+static String *ov70_02268AAC(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2);
+static String *ov70_02268AF8(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2);
 static BOOL ov70_02268B50(UnkStruct_ov70_02268BA0 *param0, UnkStruct_ov66_0222DFF8 *param1, u32 param2);
 static void ov70_02268BA0(UnkStruct_ov70_02268BA0 *param0);
 static void ov70_02268BA4(UnkStruct_ov70_02268BA0 *param0, u8 param1, u8 param2, UnkStruct_ov70_02263344 *param3, u8 param4);
@@ -487,7 +487,7 @@ BOOL ov70_02266E9C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
     UnkStruct_ov70_022630A4 *v2;
     u32 v3;
     u32 v4;
-    Strbuf *v5;
+    String *v5;
     const UnkStruct_ov66_0222E71C *v6;
     const UnkStruct_ov66_0222E71C *v7;
 
@@ -568,7 +568,7 @@ BOOL ov70_02266E9C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
             ov70_0225D030(v8, 0);
             ov70_0225D060(v8, v12);
             ov70_02262EEC(v2, v11, 0);
-            Sound_PlayEffect(1508);
+            Sound_PlayEffect(SEQ_SE_DP_BUTTON9);
             ov66_0222E3E4(v1, 9);
 
             if (v13 == 1) {
@@ -823,7 +823,7 @@ BOOL ov70_02266E9C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
         }
         break;
     case 17:
-        Sound_PlayEffect(1448);
+        Sound_PlayEffect(SEQ_SE_PL_EFF03_4);
         ov70_02262E88(param0, 18);
         break;
     case 18:
@@ -1104,7 +1104,7 @@ BOOL ov70_02267A44(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
     UnkStruct_ov66_0222DFF8 *v1;
     u32 v2;
     u32 v3;
-    Strbuf *v4;
+    String *v4;
     const UnkStruct_ov66_0222E71C *v5;
     const UnkStruct_ov66_0222E71C *v6;
 
@@ -1152,7 +1152,7 @@ BOOL ov70_02267A44(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
             v7 = ov66_0222EE1C(v1);
             v8 = ov70_02268B50(v0, v1, v7);
 
-            Sound_PlayEffect(1508);
+            Sound_PlayEffect(SEQ_SE_DP_BUTTON9);
             ov66_0222E3E4(v1, 9);
 
             if (v8 == 1) {
@@ -1329,7 +1329,7 @@ BOOL ov70_02267A44(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
         ov70_02268BA4(v0, 128, 13, param0, 30);
         break;
     case 13:
-        Sound_PlayEffect(1448);
+        Sound_PlayEffect(SEQ_SE_PL_EFF03_4);
         ov70_0225E234(param1, v0->unk_03, 0);
 
         v4 = ov70_02268AAC(param1, v0->unk_03, 514);
@@ -1570,7 +1570,7 @@ BOOL ov70_02267A44(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
 BOOL ov70_02268390(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *param1, u32 param2)
 {
     UnkStruct_ov70_02268390 *v0;
-    Strbuf *v1;
+    String *v1;
     UnkStruct_ov66_0222DFF8 *v2;
 
     v0 = ov70_02262E80(param0);
@@ -1580,7 +1580,7 @@ BOOL ov70_02268390(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
     case 0:
         v0 = ov70_02262E3C(param0, sizeof(UnkStruct_ov70_02268390));
 
-        Sound_PlayEffect(1500);
+        Sound_PlayEffect(SEQ_SE_CONFIRM);
 
         if (ov66_0222E12C(v2) == 1) {
             ov70_02262E88(param0, 2);
@@ -1657,7 +1657,7 @@ BOOL ov70_02268390(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
             v4 = 1;
             break;
         case 0xfffffffe:
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         case 7:
             ov70_02262E88(param0, 22);
             v4 = 1;
@@ -1702,7 +1702,7 @@ BOOL ov70_02268390(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
             v6 = 1;
             break;
         case 0xfffffffe:
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         case 3:
             ov70_02262E88(param0, 4);
             v6 = 1;
@@ -1780,7 +1780,7 @@ BOOL ov70_02268390(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
             v8 = 1;
             break;
         case 0xfffffffe:
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         case 3:
             ov70_02262E88(param0, 4);
             v8 = 1;
@@ -1853,14 +1853,14 @@ BOOL ov70_0226889C(UnkStruct_ov70_02263344 *param0, UnkStruct_ov70_0225DEE8 *par
 {
     UnkStruct_ov70_02268390 *v0;
     UnkStruct_ov66_0222DFF8 *v1;
-    Strbuf *v2;
+    String *v2;
 
     v0 = ov70_02262E80(param0);
     v1 = ov70_0225DEE8(param1);
 
     switch (ov70_02262E84(param0)) {
     case 0:
-        Sound_PlayEffect(1500);
+        Sound_PlayEffect(SEQ_SE_CONFIRM);
 
         if (ov66_0222E12C(v1) == 0) {
             if (ov66_0222E170(v1) == 1) {
@@ -1988,7 +1988,7 @@ static u32 ov70_02268A3C(const UnkStruct_ov66_0222E71C *param0)
     return 1;
 }
 
-static Strbuf *ov70_02268AAC(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2)
+static String *ov70_02268AAC(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2)
 {
     BOOL v0;
     UnkStruct_ov66_0222DFF8 *v1;
@@ -2009,7 +2009,7 @@ static Strbuf *ov70_02268AAC(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 pa
     return ov70_0225E20C(param0, 3, param2);
 }
 
-static Strbuf *ov70_02268AF8(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2)
+static String *ov70_02268AF8(UnkStruct_ov70_0225DEE8 *param0, u32 param1, u32 param2)
 {
     BOOL v0, v1;
     UnkStruct_ov66_0222DFF8 *v2;
@@ -2196,7 +2196,7 @@ static void ov70_02268D38(UnkStruct_ov70_02268BA0 *param0, UnkStruct_ov66_0222DF
 static void ov70_02268D70(UnkStruct_ov70_02268BA0 *param0, UnkStruct_ov70_0225DEE8 *param1)
 {
     UnkStruct_ov66_0222DFF8 *v0;
-    Strbuf *v1;
+    String *v1;
 
     v0 = ov70_0225DEE8(param1);
 
@@ -2225,7 +2225,7 @@ static void ov70_02268DC4(UnkStruct_ov70_02268BA0 *param0)
 
 static void ov70_02268DCC(UnkStruct_ov70_02268BA0 *param0, UnkStruct_ov70_0225DEE8 *param1)
 {
-    Strbuf *v0;
+    String *v0;
 
     if (param0->unk_0D == 1) {
         if (param0->unk_0E == 450) {
@@ -2247,9 +2247,7 @@ static void ov70_02268E08(UnkStruct_ov70_02268BA0 *param0)
 
 static void ov70_02268E20(UnkStruct_ov70_02268BA0 *param0, const UnkStruct_ov66_0222E71C *param1)
 {
-    u32 v0;
-
-    v0 = ov66_0222E7A0(param1);
+    u32 v0 = ov66_0222E7A0(param1);
 
     param0->unk_44 = 1;
     param0->unk_46 = v0;
@@ -2259,7 +2257,7 @@ static void ov70_02268E20(UnkStruct_ov70_02268BA0 *param0, const UnkStruct_ov66_
 static void ov70_02268E44(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DEE8 *param1, u32 param2, u32 param3, u32 param4)
 {
     int v0;
-    const Strbuf *v1;
+    const String *v1;
 
     ov70_0225E00C(param1, param2);
     param0->unk_20 = param2;
@@ -2293,7 +2291,7 @@ static void ov70_02268EEC(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DE
     int v0;
     u32 v1;
     u32 v2;
-    const Strbuf *v3;
+    const String *v3;
     BOOL v4;
 
     ov70_0225E020(param1, param3, param2);
@@ -2334,7 +2332,7 @@ static void ov70_02268EEC(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DE
 static void ov70_02268FB8(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DEE8 *param1)
 {
     int v0;
-    Strbuf *v1;
+    String *v1;
     static const u8 v2[8] = {
         31,
         32,
@@ -2363,7 +2361,7 @@ static void ov70_02268FB8(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DE
 static void ov70_02269018(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DEE8 *param1)
 {
     int v0;
-    Strbuf *v1;
+    String *v1;
 
     ov70_0225E00C(param1, 4);
     param0->unk_20 = 4;
@@ -2387,7 +2385,7 @@ static void ov70_02269018(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DE
 static void ov70_02269090(UnkStruct_ov70_02268E44 *param0, UnkStruct_ov70_0225DEE8 *param1)
 {
     int v0;
-    Strbuf *v1;
+    String *v1;
 
     ov70_0225E00C(param1, 4);
     param0->unk_20 = 4;

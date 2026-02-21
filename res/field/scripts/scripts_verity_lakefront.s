@@ -1,98 +1,86 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/verity_lakefront.h"
 
-    .data
 
-    ScriptEntry _0012
-    ScriptEntry _004E
-    ScriptEntry _0066
-    ScriptEntry _014C
+    ScriptEntry VerityLakefront_OnLoad
+    ScriptEntry VerityLakefront_OnTransition
+    ScriptEntry VerityLakefront_TriggerWereAtTheLake
+    ScriptEntry VerityLakefront_TrainerTipsSignpost
     ScriptEntryEnd
 
-_0012:
-    GoToIfUnset FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, _002A
-    GoToIfSet FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, _003C
+VerityLakefront_OnLoad:
+    GoToIfUnset FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, VerityLakefront_SetWarpsLakeVerityNormal
+    GoToIfSet FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, VerityLakefront_SetWarpsLakeVerityLowWater
     End
 
-_002A:
+VerityLakefront_SetWarpsLakeVerityNormal:
     SetWarpEventPos 2, 80, 0x348
     SetWarpEventPos 3, 81, 0x348
     End
 
-_003C:
+VerityLakefront_SetWarpsLakeVerityLowWater:
     SetWarpEventPos 1, 80, 0x348
     SetWarpEventPos 0, 81, 0x348
     End
 
-_004E:
-    GoToIfUnset FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, _002A
-    GoToIfSet FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, _003C
+VerityLakefront_OnTransition:
+    GoToIfUnset FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, VerityLakefront_SetWarpsLakeVerityNormal
+    GoToIfSet FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN, VerityLakefront_SetWarpsLakeVerityLowWater
     End
 
-_0066:
+VerityLakefront_TriggerWereAtTheLake:
     LockAll
-    ApplyMovement 242, _0124
-    ApplyMovement LOCALID_PLAYER, _0144
+    ApplyMovement LOCALID_FOLLOWER, VerityLakefront_Movement_RivalWalkOnSpotNorth
+    ApplyMovement LOCALID_PLAYER, VerityLakefront_Movement_PlayerFaceRival
     WaitMovement
     BufferRivalName 0
-    Message 0
+    Message VerityLakefront_Text_WereAtTheLake
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8004, 80, _00D8
-    GoToIfEq 0x8004, 81, _00D8
-    GoToIfEq 0x8004, 82, _00D8
-    GoToIfEq 0x8004, 83, _00D8
-    GoToIfEq 0x8004, 84, _00D8
-    GoToIfEq 0x8004, 85, _00D8
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfInRange VAR_0x8004, 80, 85, VerityLakefront_WalkToLakeValor
     End
 
-_00D8:
-    ApplyMovement LOCALID_PLAYER, _0138
-    ApplyMovement 242, _012C
+VerityLakefront_WalkToLakeValor:
+    ApplyMovement LOCALID_PLAYER, VerityLakefront_Movement_PlayerEnterLakeValor
+    ApplyMovement LOCALID_FOLLOWER, VerityLakefront_Movement_RivalEnterLakeValor
     WaitMovement
-    GoTo _00F0
+    GoTo VerityLakefront_WarpToLakeValor
 
-_00F0:
-    SetVar 0x4082, 1
+VerityLakefront_WarpToLakeValor:
+    SetVar VAR_UNK_0x4082, 1
     ReleaseAll
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_LAKE_VERITY_LOW_WATER, 0, 46, 54, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
     .balign 4, 0
-_0124:
-    MoveAction_032
+VerityLakefront_Movement_RivalWalkOnSpotNorth:
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_012C:
-    MoveAction_012 2
-    MoveAction_069
+VerityLakefront_Movement_RivalEnterLakeValor:
+    WalkNormalNorth 2
+    SetInvisible
     EndMovement
 
     .balign 4, 0
-_0138:
-    MoveAction_012
-    MoveAction_069
+VerityLakefront_Movement_PlayerEnterLakeValor:
+    WalkNormalNorth
+    SetInvisible
     EndMovement
 
     .balign 4, 0
-_0144:
-    MoveAction_033
+VerityLakefront_Movement_PlayerFaceRival:
+    WalkOnSpotNormalSouth
     EndMovement
 
-_014C:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 3, 0x800C
-    CallCommonScript 0x7D0
+VerityLakefront_TrainerTipsSignpost:
+    ShowScrollingSign VerityLakefront_Text_LakeVerityAhead
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

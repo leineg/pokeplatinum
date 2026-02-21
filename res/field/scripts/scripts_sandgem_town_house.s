@@ -1,27 +1,26 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/sandgem_town_house.h"
 
-    .data
 
-    ScriptEntry _000A
-    ScriptEntry _001D
+    ScriptEntry SandgemTownHouse_BreederM
+    ScriptEntry SandgemTownHouse_BreederF
     ScriptEntryEnd
 
-_000A:
+SandgemTownHouse_BreederM:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 0
+    Message SandgemTownHouse_Text_PokemonGrowStrongerFromBattlingOtherPokemon
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_001D:
+SandgemTownHouse_BreederF:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 1
+    Message SandgemTownHouse_Text_AGoodTrainerTakesCareToNotLetTheirPokemonFaint
     WaitABXPadPress
     CloseMessage
     ReleaseAll

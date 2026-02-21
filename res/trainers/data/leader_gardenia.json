@@ -23,7 +23,7 @@
                 "MOVE_SUNNY_DAY",
                 "MOVE_REFLECT"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -37,7 +37,7 @@
                 "MOVE_MAGICAL_LEAF",
                 "MOVE_SAFEGUARD"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -51,8 +51,28 @@
                 "MOVE_POISON_STING",
                 "MOVE_STUN_SPORE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_LAST_BATTLER",
+            "en_US": "It’s not the end yet."
+        },
+        {
+            "type": "TRMSG_LAST_BATTLER_HALF_HP",
+            "en_US": [
+                "Are you saying something?\n",
+                "You think you have me cornered?\n"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Amazing!\n",
+                "You’re very good, aren’t you?\n"
+            ]
         }
     ]
 }

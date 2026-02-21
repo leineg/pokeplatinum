@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_211_east.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0088
@@ -12,19 +11,18 @@
 _0012:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 198, _0066
+    GoToIfSet FLAG_UNK_0x00C6, _0066
     Message 0
     CloseMessage
     FacePlayer
-    ApplyMovement 0x800D, _0080
+    ApplyMovement VAR_LAST_TALKED, _0080
     WaitMovement
     Message 1
-    SetVar 0x8004, 0x194
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0073
-    CallCommonScript 0x7FC
-    SetFlag 198
+    SetVar VAR_0x8004, ITEM_TM77
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0073
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x00C6
     GoTo _0066
 
 _0066:
@@ -36,38 +34,26 @@ _0066:
     End
 
 _0073:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
     .balign 4, 0
 _0080:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
 _0088:
-    ScrCmd_036 3, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 3
     End
 
 _009F:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 4, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 4
     End
 
 _00B4:
-    ScrCmd_036 5, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 5
     End
 
-    .byte 0
+    .balign 4, 0

@@ -3,7 +3,6 @@
 
 #define LOCALID_UXIE 0
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry AcuityCavern_CheckShouldUxieBeRemoved
@@ -11,17 +10,17 @@
     ScriptEntryEnd
 
 _000E:
-    SetFlag 0x9E3
+    SetFlag FLAG_FIRST_ARRIVAL_ACUITY_CAVERN
     End
 
 AcuityCavern_CheckShouldUxieBeRemoved:
-    GoToIfSet 142, AcuityCavern_RemoveUxie
+    GoToIfSet FLAG_MAP_LOCAL, AcuityCavern_RemoveUxie
     End
 
 AcuityCavern_RemoveUxie:
     SetFlag FLAG_UXIE_DISAPPEARED
     RemoveObject LOCALID_UXIE
-    ClearFlag 142
+    ClearFlag FLAG_MAP_LOCAL
     End
 
 AcuityCavern_Uxie:
@@ -29,21 +28,21 @@ AcuityCavern_Uxie:
     LockAll
     FacePlayer
     PlayCry SPECIES_UXIE
-    Message acuity_cavern_uxie_battle_intro
+    Message AcuityCavern_Text_UxieCry
     CloseMessage
-    SetFlag 142
+    SetFlag FLAG_MAP_LOCAL
     StartLegendaryBattle SPECIES_UXIE, 50
-    ClearFlag 142
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, AcuityCavern_LostBattle
-    CheckDidNotCapture 0x800C
-    GoToIfEq 0x800C, TRUE, AcuityCavern_UxieDisappeared
-    SetFlag FLAG_UXIE_CAUGHT
+    ClearFlag FLAG_MAP_LOCAL
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, AcuityCavern_LostBattle
+    CheckDidNotCapture VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, AcuityCavern_UxieDisappeared
+    SetFlag FLAG_CAUGHT_UXIE
     ReleaseAll
     End
 
 AcuityCavern_UxieDisappeared:
-    Message acuity_cavern_uxie_disappeared
+    Message AcuityCavern_Text_UxieDisappeared
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -54,4 +53,4 @@ AcuityCavern_LostBattle:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

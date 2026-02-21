@@ -17,16 +17,16 @@ static void MapHeaderData_LoadEvents(MapHeaderData *data, int headerID);
 static void MapHeaderData_ParseEvents(MapHeaderData *data);
 static void MapHeaderData_LoadInitScripts(MapHeaderData *data, int headerID);
 
-void MapHeaderData_Init(FieldSystem *fieldSystem, enum HeapId heapID)
+void MapHeaderData_Init(FieldSystem *fieldSystem, enum HeapID heapID)
 {
     GF_ASSERT(fieldSystem->mapHeaderData == NULL);
-    fieldSystem->mapHeaderData = Heap_AllocFromHeap(heapID, sizeof(MapHeaderData));
+    fieldSystem->mapHeaderData = Heap_Alloc(heapID, sizeof(MapHeaderData));
 }
 
 void MapHeaderData_Free(FieldSystem *fieldSystem)
 {
     GF_ASSERT(fieldSystem->mapHeaderData != NULL);
-    Heap_FreeToHeap(fieldSystem->mapHeaderData);
+    Heap_Free(fieldSystem->mapHeaderData);
 }
 
 void MapHeaderData_Load(FieldSystem *fieldSystem, int headerID)
@@ -217,10 +217,10 @@ void MapHeaderData_LoadWildEncounters(WildEncounters *data, int headerID)
 {
     memset(data, 0, sizeof(WildEncounters));
     if (MapHeader_HasWildEncounters(headerID)) {
-        int narcIndex = (GAME_VERSION == DIAMOND || GAME_VERSION == PLATINUM)
+        enum NarcID narcID = (GAME_VERSION == VERSION_DIAMOND || GAME_VERSION == VERSION_PLATINUM)
             ? NARC_INDEX_FIELDDATA__ENCOUNTDATA__PL_ENC_DATA
             : NARC_INDEX_FIELDDATA__ENCOUNTDATA__P_ENC_DATA;
-        NARC_ReadWholeMemberByIndexPair(data, narcIndex, MapHeader_GetWildEncountersArchiveID(headerID));
+        NARC_ReadWholeMemberByIndexPair(data, narcID, MapHeader_GetWildEncountersArchiveID(headerID));
     }
 }
 
@@ -239,7 +239,7 @@ static void MapHeaderData_LoadInitScripts(MapHeaderData *data, int headerID)
     NARC_ReadWholeMemberByIndexPair(data->initScripts, NARC_INDEX_FIELDDATA__SCRIPT__SCR_SEQ, initScriptsID);
 }
 
-const u8 *MapHeaderData_GetInitScripts(const FieldSystem *fieldSystem)
+const u8 *MapHeaderData_GetInitScriptBytes(const FieldSystem *fieldSystem)
 {
     GF_ASSERT(fieldSystem->mapHeaderData != NULL);
     return (const u8 *)&fieldSystem->mapHeaderData->initScripts;

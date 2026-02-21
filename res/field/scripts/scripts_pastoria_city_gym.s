@@ -1,153 +1,148 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pastoria_city_gym.h"
 
-    .data
 
-    ScriptEntry _001E
-    ScriptEntry _0034
-    ScriptEntry _004A
-    ScriptEntry _0060
-    ScriptEntry _0076
-    ScriptEntry _0171
-    ScriptEntry _01A5
+    ScriptEntry PastoriaGym_Init
+    ScriptEntry PastoriaGym_BlueButton
+    ScriptEntry PastoriaGym_GreenButton
+    ScriptEntry PastoriaGym_YellowButton
+    ScriptEntry PastoriaGym_Wake
+    ScriptEntry PastoriaGym_GymGuide
+    ScriptEntry PastoriaGym_GymStatue
     ScriptEntryEnd
 
-_001E:
-    SetVar 0x4001, 0
-    SetVar 0x4002, 1
-    SetVar 0x4003, 0
-    ScrCmd_16F
+PastoriaGym_Init:
+    SetVar VAR_MAP_LOCAL_1, 0
+    SetVar VAR_MAP_LOCAL_2, 1
+    SetVar VAR_MAP_LOCAL_3, 0
+    InitPersistedMapFeaturesForPastoriaGym
     End
 
-_0034:
-    ScrCmd_170
-    SetVar 0x4001, 1
-    SetVar 0x4002, 0
-    SetVar 0x4003, 0
+PastoriaGym_BlueButton:
+    PressPastoriaGymButton
+    SetVar VAR_MAP_LOCAL_1, 1
+    SetVar VAR_MAP_LOCAL_2, 0
+    SetVar VAR_MAP_LOCAL_3, 0
     End
 
-_004A:
-    ScrCmd_170
-    SetVar 0x4001, 0
-    SetVar 0x4002, 1
-    SetVar 0x4003, 0
+PastoriaGym_GreenButton:
+    PressPastoriaGymButton
+    SetVar VAR_MAP_LOCAL_1, 0
+    SetVar VAR_MAP_LOCAL_2, 1
+    SetVar VAR_MAP_LOCAL_3, 0
     End
 
-_0060:
-    ScrCmd_170
-    SetVar 0x4001, 0
-    SetVar 0x4002, 0
-    SetVar 0x4003, 1
+PastoriaGym_YellowButton:
+    PressPastoriaGymButton
+    SetVar VAR_MAP_LOCAL_1, 0
+    SetVar VAR_MAP_LOCAL_2, 0
+    SetVar VAR_MAP_LOCAL_3, 1
     End
 
-_0076:
+PastoriaGym_Wake:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_FEN, 0x800C
-    GoToIfEq 0x800C, 1, _0155
+    GoToIfBadgeAcquired BADGE_ID_FEN, PastoriaGym_WakeAlreadyHaveFenBadge
     CreateJournalEvent LOCATION_EVENT_GYM_WAS_TOO_TOUGH, 122, 0, 0, 0
-    Message 0
+    Message PastoriaGym_Text_WakeIntro
     CloseMessage
     StartTrainerBattle TRAINER_LEADER_WAKE
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _016B
-    Message 1
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, PastoriaGym_LostBattle
+    Message PastoriaGym_Text_BeatWake
     BufferPlayerName 0
-    Message 2
+    Message PastoriaGym_Text_WakeReveiveFenBadge
     PlaySound SEQ_BADGE
     WaitSound
     GiveBadge BADGE_ID_FEN
-    ScrCmd_260 23
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_BADGE_EARNED
     SetTrainerFlag TRAINER_FISHERMAN_ERICK
     SetTrainerFlag TRAINER_SAILOR_DAMIAN
     SetTrainerFlag TRAINER_FISHERMAN_WALTER
     SetTrainerFlag TRAINER_SAILOR_SAMSON
     SetTrainerFlag TRAINER_TUBER_JACKY
     SetTrainerFlag TRAINER_TUBER_CAITLYN
-    SetVar 0x407C, 3
-    SetFlag 0x20C
-    SetFlag 0x156
+    SetVar VAR_PASTORIA_STATE, 3
+    SetFlag FLAG_UNK_0x020C
+    SetFlag FLAG_UNK_0x0156
     CreateJournalEvent LOCATION_EVENT_BEAT_GYM_LEADER, 122, TRAINER_LEADER_WAKE, 0, 0
-    Message 3
-    GoTo _010D
+    Message PastoriaGym_Text_WakeExplainFenBadge
+    GoTo PastoriaGym_WakeTryGiveTm55
     End
 
-_010D:
-    SetVar 0x8004, 0x17E
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _014B
-    CallCommonScript 0x7FC
-    SetFlag 156
-    BufferItemName 0, 0x8004
-    BufferTMHMMoveName 1, 0x8004
-    Message 4
+PastoriaGym_WakeTryGiveTm55:
+    SetVar VAR_0x8004, ITEM_TM55
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, PastoriaGym_WakeCannotGiveTm55
+    Common_GiveItemQuantity
+    SetFlag FLAG_OBTAINED_WAKE_TM55
+    BufferItemName 0, VAR_0x8004
+    BufferTMHMMoveName 1, VAR_0x8004
+    Message PastoriaGym_Text_WakeExplainTM55
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_014B:
-    CallCommonScript 0x7E1
+PastoriaGym_WakeCannotGiveTm55:
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
-_0155:
-    GoToIfUnset 156, _010D
-    Message 5
+PastoriaGym_WakeAlreadyHaveFenBadge:
+    GoToIfUnset FLAG_OBTAINED_WAKE_TM55, PastoriaGym_WakeTryGiveTm55
+    Message PastoriaGym_Text_WakeAfterbadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_016B:
+PastoriaGym_LostBattle:
     BlackOutFromBattle
     ReleaseAll
     End
 
-_0171:
+PastoriaGym_GymGuide:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_FEN, 0x800C
-    GoToIfEq 0x800C, 1, _0197
-    Message 6
+    GoToIfBadgeAcquired BADGE_ID_FEN, PastoriaGym_GymGuideAfterBadge
+    Message PastoriaGym_Text_GymGuideBeforebadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0197:
+PastoriaGym_GymGuideAfterBadge:
     BufferPlayerName 0
-    Message 7
+    Message PastoriaGym_Text_GymGuideAfterbadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_01A5:
+PastoriaGym_GymStatue:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    CheckBadgeAcquired BADGE_ID_FEN, 0x800C
-    GoToIfEq 0x800C, 1, _01CF
+    GoToIfBadgeAcquired BADGE_ID_FEN, PastoriaGym_GymStatueAfterBadge
     BufferRivalName 0
     BufferRivalName 1
-    Message 8
+    Message PastoriaGym_Text_GymStatueBeforeBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_01CF:
+PastoriaGym_GymStatueAfterBadge:
     BufferRivalName 0
     BufferPlayerName 1
     BufferRivalName 2
-    Message 9
+    Message PastoriaGym_Text_GymStatueAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

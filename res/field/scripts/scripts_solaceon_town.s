@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/solaceon_town.h"
 
-    .data
 
     ScriptEntry _004F
     ScriptEntry _0062
@@ -21,12 +20,12 @@ _0032:
     End
 
 _0034:
-    ScrCmd_1BF 0x4000
-    GoToIfNe 0x4000, 0, _0047
+    CheckDaycareHasEgg VAR_MAP_LOCAL_0
+    GoToIfNe VAR_MAP_LOCAL_0, FALSE, _0047
     End
 
 _0047:
-    ScrCmd_189 3, 3
+    SetObjectEventDir 3, DIR_EAST
     End
 
 _004F:
@@ -43,8 +42,7 @@ _0062:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_RELIC, 0x800C
-    GoToIfEq 0x800C, 1, _0088
+    GoToIfBadgeAcquired BADGE_ID_RELIC, _0088
     Message 4
     WaitABXPadPress
     CloseMessage
@@ -92,13 +90,13 @@ _00CC:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckPoketchAppRegistered POKETCH_APPID_POKEMONHISTORY, 0x800C
-    GoToIfEq 0x800C, 1, _0118
-    ScrCmd_11E 0x800C
-    GoToIfLt 0x800C, 50, _010D
+    CheckPoketchAppRegistered POKETCH_APPID_POKEMONHISTORY, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _0118
+    GetLocalDexSeenCount VAR_RESULT
+    GoToIfLt VAR_RESULT, 50, _010D
     Message 10
-    SetVar 0x8004, 9
-    CallCommonScript 0x7D9
+    SetVar VAR_0x8004, POKETCH_APPID_POKEMONHISTORY
+    Common_GivePoketchApp
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -119,39 +117,27 @@ _0118:
     End
 
 _0123:
-    ScrCmd_036 12, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 12
     End
 
 _013A:
-    ScrCmd_036 13, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 13
     End
 
 _0151:
-    ScrCmd_036 14, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 14
     End
 
 _0168:
     LockAll
     ApplyMovement LOCALID_PLAYER, _0218
     WaitMovement
-    CallCommonScript 0x7FA
-    GetPlayerMapPos 0x8004, 0x8005
-    SetObjectEventPos 18, 0x8004, 0x295
-    ClearFlag 0x21E
+    Common_SetRivalBGM
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    SetObjectEventPos 18, VAR_0x8004, 0x295
+    ClearFlag FLAG_UNK_0x021E
     AddObject 18
-    ScrCmd_062 18
+    LockObject 18
     ApplyMovement LOCALID_PLAYER, _0228
     ApplyMovement 18, _01E8
     WaitMovement
@@ -169,43 +155,43 @@ _0168:
     ApplyMovement 18, _0210
     WaitMovement
     RemoveObject 18
-    CallCommonScript 0x7FB
-    SetVar 0x4073, 1
+    Common_FadeToDefaultMusic2
+    SetVar VAR_UNK_0x4073, 1
     ReleaseAll
     End
 
     .balign 4, 0
 _01E8:
-    MoveAction_017 7
+    WalkFastSouth 7
     EndMovement
 
     .balign 4, 0
 _01F0:
-    MoveAction_038
-    MoveAction_063
-    MoveAction_039
-    MoveAction_063
-    MoveAction_037
+    WalkOnSpotFastWest
+    Delay8
+    WalkOnSpotFastEast
+    Delay8
+    WalkOnSpotFastSouth
     EndMovement
 
     .balign 4, 0
 _0208:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _0210:
-    MoveAction_016 7
+    WalkFastNorth 7
     EndMovement
 
     .balign 4, 0
 _0218:
-    MoveAction_063
-    MoveAction_075
-    MoveAction_063 3
+    Delay8
+    EmoteExclamationMark
+    Delay8 3
     EndMovement
 
     .balign 4, 0
 _0228:
-    MoveAction_000
+    FaceNorth
     EndMovement

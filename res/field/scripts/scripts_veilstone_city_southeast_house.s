@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/veilstone_city_southeast_house.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _018C
@@ -11,15 +10,15 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 188, _00EF
+    GoToIfSet FLAG_UNK_0x00BC, _00EF
     Message 0
     Message 1
     CloseMessage
-    GetPlayerDir 0x800C
-    GoToIfEq 0x800C, 2, _005F
-    GoToIfEq 0x800C, 0, _006F
-    GoToIfEq 0x800C, 3, _007F
-    GoToIfEq 0x800C, 1, _008F
+    GetPlayerDir VAR_RESULT
+    GoToIfEq VAR_RESULT, 2, _005F
+    GoToIfEq VAR_RESULT, 0, _006F
+    GoToIfEq VAR_RESULT, 3, _007F
+    GoToIfEq VAR_RESULT, 1, _008F
     End
 
 _005F:
@@ -44,17 +43,17 @@ _008F:
 
 _009F:
     Message 2
-    ScrCmd_040 1, 1, 0, 0, 0x8000
-    ScrCmd_042 174, 0
-    ScrCmd_042 175, 1
-    ScrCmd_043
-    ScrCmd_1B7 0x800C, 2
-    GoToIfEq 0x800C, 0, _00E4
+    InitGlobalTextMenu 1, 1, 0, VAR_0x8000, NO_EXIT_ON_B
+    AddMenuEntryImm 174, 0
+    AddMenuEntryImm 175, 1
+    ShowMenu
+    GetRandom VAR_RESULT, 2
+    GoToIfEq VAR_RESULT, 0, _00E4
     Message 4
-    SetVar 0x8004, 0x1BC
-    SetVar 0x8005, 1
-    SetFlag 188
-    CallCommonScript 0x7E0
+    SetVar VAR_0x8004, ITEM_COIN_CASE
+    SetVar VAR_0x8005, 1
+    SetFlag FLAG_UNK_0x00BC
+    Common_GiveItemQuantityNoLineFeed
     CloseMessage
     ReleaseAll
     End
@@ -75,50 +74,50 @@ _00EF:
 
     .balign 4, 0
 _00FC:
-    MoveAction_000
-    MoveAction_061
-    MoveAction_003
-    MoveAction_061
-    MoveAction_001
-    MoveAction_061
-    MoveAction_002
-    MoveAction_061
+    FaceNorth
+    Delay2
+    FaceEast
+    Delay2
+    FaceSouth
+    Delay2
+    FaceWest
+    Delay2
     EndMovement
 
     .balign 4, 0
 _0120:
-    MoveAction_003
-    MoveAction_061
-    MoveAction_001
-    MoveAction_061
-    MoveAction_002
-    MoveAction_061
-    MoveAction_000
-    MoveAction_061
+    FaceEast
+    Delay2
+    FaceSouth
+    Delay2
+    FaceWest
+    Delay2
+    FaceNorth
+    Delay2
     EndMovement
 
     .balign 4, 0
 _0144:
-    MoveAction_001
-    MoveAction_061
-    MoveAction_002
-    MoveAction_061
-    MoveAction_000
-    MoveAction_061
-    MoveAction_003
-    MoveAction_061
+    FaceSouth
+    Delay2
+    FaceWest
+    Delay2
+    FaceNorth
+    Delay2
+    FaceEast
+    Delay2
     EndMovement
 
     .balign 4, 0
 _0168:
-    MoveAction_002
-    MoveAction_061
-    MoveAction_000
-    MoveAction_061
-    MoveAction_003
-    MoveAction_061
-    MoveAction_001
-    MoveAction_061
+    FaceWest
+    Delay2
+    FaceNorth
+    Delay2
+    FaceEast
+    Delay2
+    FaceSouth
+    Delay2
     EndMovement
 
 _018C:
@@ -131,4 +130,4 @@ _018C:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

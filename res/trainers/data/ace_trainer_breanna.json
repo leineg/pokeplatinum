@@ -19,7 +19,7 @@
                 "MOVE_EXTRASENSORY",
                 "MOVE_CONFUSE_RAY"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         },
         {
@@ -32,7 +32,7 @@
                 "MOVE_EXTRASENSORY",
                 "MOVE_CONFUSE_RAY"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         },
         {
@@ -45,8 +45,31 @@
                 "MOVE_EXTRASENSORY",
                 "MOVE_CONFUSE_RAY"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "By focusing on only one type, you can\n",
+                "really see the strengths and\f",
+                "weaknesses of that Pokémon.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "My focus was too narrow minded..."
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Start by becoming friendly with your\n",
+                "Pokémon. I mean really friendly.\r",
+                "If you do that, you’ll learn naturally\n",
+                "how you should battle with it.\n"
+            ]
         }
     ]
 }

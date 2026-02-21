@@ -2,14 +2,13 @@
 #include "generated/hidden_locations.h"
 #include "res/text/bank/fullmoon_island.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0015
     ScriptEntryEnd
 
 _000A:
-    SetFlag 0x9D0
+    SetFlag FLAG_FIRST_ARRIVAL_FULLMOON_ISLAND
     EnableHiddenLocation HIDDEN_LOCATION_FULLMOON_ISLAND
     End
 
@@ -17,13 +16,13 @@ _0015:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerDir 0x8004
-    CheckItem ITEM_LUNAR_WING, 1, 0x800C
-    GoToIfEq 0x800C, 1, _0052
+    GetPlayerDir VAR_0x8004
+    CheckItem ITEM_LUNAR_WING, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _0052
     Message 1
-    ShowYesNoMenu 0x800C
+    ShowYesNoMenu VAR_RESULT
     CloseMessage
-    GoToIfEq 0x800C, MENU_YES, _005D
+    GoToIfEq VAR_RESULT, MENU_YES, _005D
     GoTo _0098
 
 _0052:
@@ -33,10 +32,10 @@ _0052:
 
 _005D:
     Call _00A3
-    CallIfEq 0x8004, 1, _00BD
-    CallIfEq 0x8004, 3, _00D7
-    CallIfEq 0x8004, 0, _00F1
-    ScrCmd_23D 0, 2, 33, 44, 0x2EE
+    CallIfEq VAR_0x8004, 1, _00BD
+    CallIfEq VAR_0x8004, 3, _00D7
+    CallIfEq VAR_0x8004, 0, _00F1
+    TakeShipToCanalave
     ReleaseAll
     End
 
@@ -81,31 +80,31 @@ _00F1:
 
     .balign 4, 0
 _010C:
-    MoveAction_015
-    MoveAction_064
+    WalkNormalEast
+    Delay15
     EndMovement
 
     .balign 4, 0
 _0118:
-    MoveAction_069
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _0120:
-    MoveAction_013
-    MoveAction_015 2
-    MoveAction_064
+    WalkNormalSouth
+    WalkNormalEast 2
+    Delay15
     EndMovement
 
     .balign 4, 0
 _0130:
-    MoveAction_015 2
-    MoveAction_064
+    WalkNormalEast 2
+    Delay15
     EndMovement
 
     .balign 4, 0
 _013C:
-    MoveAction_012
-    MoveAction_015 2
-    MoveAction_064
+    WalkNormalNorth
+    WalkNormalEast 2
+    Delay15
     EndMovement

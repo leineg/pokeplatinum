@@ -16,7 +16,7 @@
                 "MOVE_TACKLE",
                 "MOVE_DEFENSE_CURL"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
         },
         {
@@ -29,8 +29,31 @@
                 "MOVE_TACKLE",
                 "MOVE_HARDEN"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Only those who want to win can\n",
+                "challenge a Pokémon Gym!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Gggh...\n",
+                "This is humiliating!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "One day, I’m going to become a tough\n",
+                "Trainer like you.\n"
+            ]
         }
     ]
 }

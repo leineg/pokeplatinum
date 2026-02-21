@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/grand_lake_route_213_lobby.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0014
@@ -18,12 +17,12 @@ _0014:
     FacePlayer
     Message 0
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     PlaySound SEQ_ASA
     WaitSound
     HealParty
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     Message 1
     WaitABXPadPress
@@ -44,8 +43,8 @@ _004C:
 _005F:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 253, _0081
-    SetFlag 253
+    GoToIfSet FLAG_UNK_0x00FD, _0081
+    SetFlag FLAG_UNK_0x00FD
     FacePlayer
     Message 3
     WaitABXPadPress
@@ -66,5 +65,5 @@ _0081:
 
     .balign 4, 0
 _009C:
-    MoveAction_003
+    FaceEast
     EndMovement

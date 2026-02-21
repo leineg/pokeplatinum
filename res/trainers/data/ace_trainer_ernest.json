@@ -20,7 +20,7 @@
                 "MOVE_PURSUIT",
                 "MOVE_QUICK_ATTACK"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -34,7 +34,7 @@
                 "MOVE_MAGNET_BOMB",
                 "MOVE_IRON_DEFENSE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -48,8 +48,38 @@
                 "MOVE_SWAGGER",
                 "MOVE_DOUBLE_TEAM"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "You seem to have a lot of confidence.\n",
+                "Let’s see if it’s justified!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Haha!\n",
+                "A total loss for me!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "You seem to have an abundance of\n",
+                "talent. It’s pretty amazing.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "When I lost to you last time, I was\n",
+                "just unlucky.\r"
+            ]
         }
     ]
 }

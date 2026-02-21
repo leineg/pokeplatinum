@@ -3,8 +3,6 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "generated/sdat.h"
-
 #include "struct_decls/struct_02061AB4_decl.h"
 
 #include "field/field_system.h"
@@ -19,9 +17,9 @@
 #include "location.h"
 #include "map_object.h"
 #include "player_avatar.h"
+#include "sound_playback.h"
 #include "system.h"
 #include "system_flags.h"
-#include "unk_02005474.h"
 #include "unk_02056B30.h"
 #include "unk_02070428.h"
 #include "vars_flags.h"
@@ -40,10 +38,10 @@ static BOOL Task_GreatMarshLookout(FieldTask *taskMan);
 
 void GreatMarshLookout_Init(FieldSystem *fieldSystem)
 {
-    LookoutData *lookout = Heap_AllocFromHeapAtEnd(HEAP_ID_FIELDMAP, sizeof(LookoutData));
+    LookoutData *lookout = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(LookoutData));
 
-    lookout->spriteResources = GreatMarshLookout_AllocSpriteResources(HEAP_ID_FIELDMAP);
-    lookout->binocularsData = GreatMarshBinoculars_InitData(HEAP_ID_FIELDMAP, fieldSystem);
+    lookout->spriteResources = GreatMarshLookout_AllocSpriteResources(HEAP_ID_FIELD2);
+    lookout->binocularsData = GreatMarshBinoculars_InitData(HEAP_ID_FIELD2, fieldSystem);
     lookout->state = 0;
     lookout->numCycles = 0;
 
@@ -98,7 +96,7 @@ static BOOL Task_GreatMarshLookout(FieldTask *taskMan)
             ov6_022427F4(lookout->spriteResources);
             lookout->timer = 0;
             Sound_PlayEffect(SEQ_SE_DP_KASYA); // binoculars switch
-            sub_02056B30(taskMan, 3, 17, 0xffff, 0x0, 6, 1, HEAP_ID_FIELDMAP);
+            sub_02056B30(taskMan, 3, 17, 0xffff, 0x0, 6, 1, HEAP_ID_FIELD2);
             lookout->state = 5;
         } else {
             MapObject_SetHidden(playerAvatar, 0);
@@ -113,7 +111,7 @@ static BOOL Task_GreatMarshLookout(FieldTask *taskMan)
             GreatMarshBinoculars_SetNextLocationWithCoords(lookout->numCycles, lookout->binocularsData);
             lookout->nextLocation = GreatMarshBinoculars_GetLocation(lookout->binocularsData);
             Sound_PlayEffect(SEQ_SE_DP_KASYA);
-            sub_02056B30(taskMan, 3, 16, 0xffff, 0x0, 6, 1, HEAP_ID_FIELDMAP);
+            sub_02056B30(taskMan, 3, 16, 0xffff, 0x0, 6, 1, HEAP_ID_FIELD2);
             lookout->state = 6;
         }
         break;
@@ -131,7 +129,7 @@ static BOOL Task_GreatMarshLookout(FieldTask *taskMan)
         sub_02070428(fieldSystem, 0);
         GreatMarshBinoculars_FreeData(lookout->binocularsData);
         GreatMarshLookout_FreeSpriteResources(lookout->spriteResources);
-        Heap_FreeToHeap(lookout);
+        Heap_Free(lookout);
 
         return 1;
     }

@@ -8,7 +8,7 @@
 #include "constants/heap.h"
 #include "constants/items.h"
 
-#include "overlay005/ov5_021E622C.h"
+#include "overlay005/daycare.h"
 
 #include "heap.h"
 #include "party.h"
@@ -22,14 +22,14 @@
 BOOL Pokemon_CanBattle(Pokemon *mon)
 {
     // this can be simplified further, but it won't match
-    if (Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL) == 0) {
+    if (Pokemon_GetValue(mon, MON_DATA_HP, NULL) == 0) {
         return FALSE;
     }
 
     return !Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL);
 }
 
-BOOL Pokemon_GiveMonFromScript(enum HeapId heapID, SaveData *saveData, u16 species, u8 level, u16 heldItem, int metLocation, int metTerrain)
+BOOL Pokemon_GiveMonFromScript(enum HeapID heapID, SaveData *saveData, u16 species, u8 level, u16 heldItem, int metLocation, int metTerrain)
 {
     BOOL result;
     Pokemon *mon;
@@ -37,7 +37,7 @@ BOOL Pokemon_GiveMonFromScript(enum HeapId heapID, SaveData *saveData, u16 speci
     Party *party;
     TrainerInfo *trainerInfo = SaveData_GetTrainerInfo(saveData);
 
-    party = Party_GetFromSavedata(saveData);
+    party = SaveData_GetParty(saveData);
     mon = Pokemon_New(heapID);
 
     Pokemon_Init(mon);
@@ -49,10 +49,10 @@ BOOL Pokemon_GiveMonFromScript(enum HeapId heapID, SaveData *saveData, u16 speci
     result = Party_AddPokemon(party, mon);
 
     if (result) {
-        sub_0202F180(saveData, mon);
+        SaveData_UpdateCatchRecords(saveData, mon);
     }
 
-    Heap_FreeToHeap(mon);
+    Heap_Free(mon);
 
     return result;
 }
@@ -62,8 +62,8 @@ BOOL sub_02054930(int unused, SaveData *saveData, u16 param2, u8 param3, int par
     int v0;
     BOOL result;
     TrainerInfo *trainerInfo = SaveData_GetTrainerInfo(saveData);
-    Party *party = Party_GetFromSavedata(saveData);
-    Pokemon *mon = Pokemon_New(HEAP_ID_FIELD_TASK);
+    Party *party = SaveData_GetParty(saveData);
+    Pokemon *mon = Pokemon_New(HEAP_ID_FIELD3);
 
     Pokemon_Init(mon);
 
@@ -71,14 +71,14 @@ BOOL sub_02054930(int unused, SaveData *saveData, u16 param2, u8 param3, int par
     Egg_CreateEgg(mon, param2, param3, trainerInfo, 4, v0);
 
     result = Party_AddPokemon(party, mon);
-    Heap_FreeToHeap(mon);
+    Heap_Free(mon);
 
     return result;
 }
 
-void sub_02054988(Party *party, int param1, int param2, u16 param3)
+void Party_ResetMonMoveSlot(Party *party, int partySlot, int moveSlot, u16 moveID)
 {
-    Pokemon_ResetMoveSlot(Party_GetPokemonBySlotIndex(party, param1), param3, param2);
+    Pokemon_ResetMoveSlot(Party_GetPokemonBySlotIndex(party, partySlot), moveID, moveSlot);
 }
 
 // In many of the functions below, C99-style iterator declaration doesn't match
@@ -185,18 +185,18 @@ int Pokemon_DoPoisonDamage(Party *party, u16 mapLabelTextID)
         mon = Party_GetPokemonBySlotIndex(party, i);
 
         if (Pokemon_CanBattle(mon)
-            && (Pokemon_GetValue(mon, MON_DATA_STATUS_CONDITION, NULL) & (MON_CONDITION_TOXIC | MON_CONDITION_POISON))) {
-            u32 hp = Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL);
+            && (Pokemon_GetValue(mon, MON_DATA_STATUS, NULL) & (MON_CONDITION_TOXIC | MON_CONDITION_POISON))) {
+            u32 hp = Pokemon_GetValue(mon, MON_DATA_HP, NULL);
 
             if (hp > 1) {
                 hp--;
             }
 
-            Pokemon_SetValue(mon, MON_DATA_CURRENT_HP, &hp);
+            Pokemon_SetValue(mon, MON_DATA_HP, &hp);
 
             if (hp == 1) {
                 numFainted++;
-                Pokemon_UpdateFriendship(mon, 7, mapLabelTextID);
+                Pokemon_UpdateFriendship(mon, FRIENDSHIP_EVENT_POISON_SURVIVE, mapLabelTextID);
             }
 
             numPoisoned++;
@@ -214,11 +214,11 @@ int Pokemon_DoPoisonDamage(Party *party, u16 mapLabelTextID)
 
 BOOL Pokemon_TrySurvivePoison(Pokemon *mon)
 {
-    if (Pokemon_GetValue(mon, MON_DATA_STATUS_CONDITION, NULL) & (MON_CONDITION_TOXIC | MON_CONDITION_POISON)
-        && Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL) == 1) {
+    if (Pokemon_GetValue(mon, MON_DATA_STATUS, NULL) & (MON_CONDITION_TOXIC | MON_CONDITION_POISON)
+        && Pokemon_GetValue(mon, MON_DATA_HP, NULL) == 1) {
         u32 condition = MON_CONDITION_NONE;
 
-        Pokemon_SetValue(mon, MON_DATA_STATUS_CONDITION, &condition);
+        Pokemon_SetValue(mon, MON_DATA_STATUS, &condition);
         return TRUE;
     }
 

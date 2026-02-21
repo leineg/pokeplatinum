@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/survival_area.h"
 
-    .data
 
     ScriptEntry _005C
     ScriptEntry _006F
@@ -20,12 +19,12 @@ _002A:
     End
 
 _0032:
-    ScrCmd_1B7 0x40C2, 3
-    GoToIfUnset 214, _0052
+    GetRandom VAR_UNK_0x40C2, 3
+    GoToIfUnset FLAG_ARRESTED_CHARON_STARK_MOUNTAIN, _0052
     End
 
 _0045:
-    GoToIfUnset 214, _0052
+    GoToIfUnset FLAG_ARRESTED_CHARON_STARK_MOUNTAIN, _0052
     End
 
 _0052:
@@ -66,7 +65,7 @@ _0095:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 215, _00B3
+    GoToIfSet FLAG_UNK_0x00D7, _00B3
     Message 10
     WaitABXPadPress
     CloseMessage
@@ -81,11 +80,7 @@ _00B3:
     End
 
 _00BE:
-    ScrCmd_036 13, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 13
     End
 
 _00D5:
@@ -97,27 +92,27 @@ _00D5:
     CloseMessage
     ApplyMovement 8, _011C
     WaitMovement
-    ScrCmd_168 20, 10, 12, 18, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
+    LoadDoorAnimation 20, 10, 12, 18, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
     ApplyMovement 8, _0124
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
     RemoveObject 8
     ReleaseAll
     End
 
     .balign 4, 0
 _011C:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0124:
-    MoveAction_012
-    MoveAction_069
+    WalkNormalNorth
+    SetInvisible
     EndMovement
 
 _0130:
@@ -133,14 +128,14 @@ _0141:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetDayOfWeek 0x4000
-    GoToIfEq 0x4000, DAY_OF_WEEK_SUNDAY, _01BE
-    GoToIfEq 0x4000, DAY_OF_WEEK_SATURDAY, _01BE
+    GetDayOfWeek VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, DAY_OF_WEEK_SUNDAY, _01BE
+    GoToIfEq VAR_MAP_LOCAL_0, DAY_OF_WEEK_SATURDAY, _01BE
     BufferRivalName 0
     BufferPlayerName 1
-    SetVar 0x8008, 0x40C2
-    GoToIfEq 0x8008, 0, _0195
-    GoToIfEq 0x8008, 1, _01A0
+    SetVar VAR_0x8008, VAR_UNK_0x40C2
+    GoToIfEq VAR_0x8008, 0, _0195
+    GoToIfEq VAR_0x8008, 1, _01A0
     GoTo _01AB
     End
 
@@ -166,21 +161,21 @@ _01B6:
     End
 
 _01BE:
-    GoToIfSet 0xAB2, _02CB
+    GoToIfSet FLAG_UNK_0x0AB2, _02CB
     BufferRivalName 0
     BufferPlayerName 1
     Message 2
     CloseMessage
-    GetPlayerStarterSpecies 0x800C
-    GoToIfEq 0x800C, SPECIES_TURTWIG, _0236
-    GoToIfEq 0x800C, SPECIES_CHIMCHAR, _0272
+    GetPlayerStarterSpecies VAR_RESULT
+    GoToIfEq VAR_RESULT, SPECIES_TURTWIG, _0236
+    GoToIfEq VAR_RESULT, SPECIES_CHIMCHAR, _0272
     GoTo _01FA
     End
 
 _01FA:
-    ScrCmd_28F 0x800C
-    GoToIfLt 0x800C, 20, _021A
-    GoToIfGe 0x800C, 20, _0228
+    GetLeagueVictories VAR_RESULT
+    GoToIfLt VAR_RESULT, 20, _021A
+    GoToIfGe VAR_RESULT, 20, _0228
     End
 
 _021A:
@@ -194,9 +189,9 @@ _0228:
     End
 
 _0236:
-    ScrCmd_28F 0x800C
-    GoToIfLt 0x800C, 20, _0256
-    GoToIfGe 0x800C, 20, _0264
+    GetLeagueVictories VAR_RESULT
+    GoToIfLt VAR_RESULT, 20, _0256
+    GoToIfGe VAR_RESULT, 20, _0264
     End
 
 _0256:
@@ -210,9 +205,9 @@ _0264:
     End
 
 _0272:
-    ScrCmd_28F 0x800C
-    GoToIfLt 0x800C, 20, _0292
-    GoToIfGe 0x800C, 20, _02A0
+    GetLeagueVictories VAR_RESULT
+    GoToIfLt VAR_RESULT, 20, _0292
+    GoToIfGe VAR_RESULT, 20, _02A0
     End
 
 _0292:
@@ -226,9 +221,9 @@ _02A0:
     End
 
 _02AE:
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _02DC
-    SetFlag 0xAB2
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _02DC
+    SetFlag FLAG_UNK_0x0AB2
     GoTo _02CB
     End
 
@@ -246,5 +241,4 @@ _02DC:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

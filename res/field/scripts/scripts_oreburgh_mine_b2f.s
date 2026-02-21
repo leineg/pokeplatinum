@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/oreburgh_mine_b2f.h"
 
-    .data
 
     ScriptEntry _0016
     ScriptEntry _00FC
@@ -16,22 +15,10 @@ _0016:
     FacePlayer
     GoTo _0034
 
-    .byte 94
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 156
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 95
-    .byte 0
-    .byte 22
-    .byte 0
-    .byte 16
-    .byte 0
-    .byte 0
-    .byte 0
+OreburghMineB2F_Unused:
+    ApplyMovement 0, OreburghMineB2F_UnusedMovement2
+    WaitMovement
+    GoTo _0044
 
 _0034:
     ApplyMovement 0, _00D8
@@ -41,41 +28,22 @@ _0034:
 _0044:
     Message 0
     CloseMessage
-    ScrCmd_29E 2, 0x8005
-    WaitTime 10, 0x800C
+    ScrCmd_29E 2, VAR_0x8005
+    WaitTime 10, VAR_RESULT
     RemoveObject 1
 _0059:
-    WaitTime 1, 0x800C
-    GoToIfEq 0x8005, 0, _0059
+    WaitTime 1, VAR_RESULT
+    GoToIfEq VAR_0x8005, 0, _0059
     FacePlayer
     Message 1
     CloseMessage
     GoTo _0091
 
-    .byte 94
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 51
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 94
-    .byte 0
-    .byte 0xFF
-    .byte 0
-    .byte 95
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 95
-    .byte 0
-    .byte 22
-    .byte 0
-    .byte 16
-    .byte 0
-    .byte 0
-    .byte 0
+OreburghMineB2F_Unused2:
+    ApplyMovement 0, OreburghMineB2F_UnusedMovement
+    ApplyMovement LOCALID_PLAYER, OreburghMineB2F_UnusedMovement3
+    WaitMovement
+    GoTo _00A1
 
 _0091:
     ApplyMovement 0, _00C0
@@ -84,76 +52,41 @@ _0091:
 
 _00A1:
     RemoveObject 0
-    SetFlag 122
-    SetFlag 0x17C
+    SetFlag FLAG_UNK_0x007A
+    SetFlag FLAG_UNK_0x017C
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 12
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 15
-    .byte 0
-    .byte 10
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0
+OreburghMineB2F_UnusedMovement:
+    WalkNormalNorth
+    WalkNormalEast 10
+    EndMovement
 
     .balign 4, 0
 _00C0:
-    MoveAction_015 10
+    WalkNormalEast 10
     EndMovement
 
-    .byte 63
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 32
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+OreburghMineB2F_UnusedMovement2:
+    Delay8 2
+    WalkOnSpotNormalNorth
+    Delay8 4
+    EndMovement
 
     .balign 4, 0
 _00D8:
-    MoveAction_063 2
-    MoveAction_035
-    MoveAction_063 4
+    Delay8 2
+    WalkOnSpotNormalEast
+    Delay8 4
     EndMovement
 
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 32
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 35
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+OreburghMineB2F_UnusedMovement3:
+    Delay8
+    WalkOnSpotNormalNorth
+    Delay8 2
+    WalkOnSpotNormalEast
+    EndMovement
 
 _00FC:
     PlayFanfare SEQ_SE_CONFIRM
@@ -162,7 +95,7 @@ _00FC:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_MACHOP
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -175,7 +108,7 @@ _011B:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_MACHOP
     Message 3
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -188,7 +121,7 @@ _013A:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_MACHOP
     Message 4
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll

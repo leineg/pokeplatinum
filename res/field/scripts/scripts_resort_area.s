@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/resort_area.h"
 
-    .data
 
     ScriptEntry _00DA
     ScriptEntry _00ED
@@ -21,42 +20,42 @@
     ScriptEntryEnd
 
 _003E:
-    SetFlag 0x2AA
-    SetFlag 0x2AD
-    SetFlag 0x2AF
-    SetFlag 0x2B2
-    SetFlag 0x2B5
-    GoToIfEq 0x404E, 0xFF, _00BA
-    GoToIfEq 0x40C8, 0, _00BA
-    GoToIfSet 0x9AB, _00BA
-    CallIfEq 0x404E, 2, _00BC
-    CallIfEq 0x404E, 4, _00C2
-    CallIfEq 0x404E, 5, _00C8
-    CallIfEq 0x404E, 7, _00CE
-    CallIfEq 0x404E, 9, _00D4
+    SetFlag FLAG_UNK_0x02AA
+    SetFlag FLAG_UNK_0x02AD
+    SetFlag FLAG_UNK_0x02AF
+    SetFlag FLAG_UNK_0x02B2
+    SetFlag FLAG_UNK_0x02B5
+    GoToIfEq VAR_RESORT_VILLA_VISITOR, 0xFF, _00BA
+    GoToIfEq VAR_UNK_0x40C8, 0, _00BA
+    GoToIfSet FLAG_VILLA_VISITOR_INSIDE, _00BA
+    CallIfEq VAR_RESORT_VILLA_VISITOR, 2, _00BC
+    CallIfEq VAR_RESORT_VILLA_VISITOR, 4, _00C2
+    CallIfEq VAR_RESORT_VILLA_VISITOR, 5, _00C8
+    CallIfEq VAR_RESORT_VILLA_VISITOR, 7, _00CE
+    CallIfEq VAR_RESORT_VILLA_VISITOR, 9, _00D4
     End
 
 _00BA:
     End
 
 _00BC:
-    ClearFlag 0x2AA
+    ClearFlag FLAG_UNK_0x02AA
     Return
 
 _00C2:
-    ClearFlag 0x2AD
+    ClearFlag FLAG_UNK_0x02AD
     Return
 
 _00C8:
-    ClearFlag 0x2AF
+    ClearFlag FLAG_UNK_0x02AF
     Return
 
 _00CE:
-    ClearFlag 0x2B2
+    ClearFlag FLAG_UNK_0x02B2
     Return
 
 _00D4:
-    ClearFlag 0x2B5
+    ClearFlag FLAG_UNK_0x02B5
     Return
 
 _00DA:
@@ -83,8 +82,8 @@ _0100:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallIfUnset 250, _0126
-    CallIfSet 250, _012B
+    CallIfUnset FLAG_UNK_0x00FA, _0126
+    CallIfSet FLAG_UNK_0x00FA, _012B
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -109,19 +108,11 @@ _0130:
     End
 
 _0143:
-    ScrCmd_036 25, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 25
     End
 
 _015A:
-    ScrCmd_036 26, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 26
     End
 
 _0171:
@@ -136,39 +127,39 @@ _0171:
 
 _0184:
     LockAll
-    GetPlayerMapPos 0x8004, 0x8005
-    CallIfEq 0x8005, 0x1D8, _0266
-    CallIfEq 0x8005, 0x1D9, _0272
-    CallIfEq 0x8005, 0x1DA, _0274
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    CallIfEq VAR_0x8005, 0x1D8, _0266
+    CallIfEq VAR_0x8005, 0x1D9, _0272
+    CallIfEq VAR_0x8005, 0x1DA, _0274
     Message 6
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _02BC
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _02BC
     ScrCmd_30C
     Message 7
     CloseMessage
-    CallIfEq 0x8005, 0x1D8, _0280
-    CallIfEq 0x8005, 0x1D9, _0294
-    CallIfEq 0x8005, 0x1DA, _02A8
+    CallIfEq VAR_0x8005, 0x1D8, _0280
+    CallIfEq VAR_0x8005, 0x1D9, _0294
+    CallIfEq VAR_0x8005, 0x1DA, _02A8
     Message 9
     CloseMessage
     ApplyMovement 13, _0388
     WaitMovement
-    ScrCmd_168 25, 14, 22, 21, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
+    LoadDoorAnimation 25, 14, 22, 21, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
     ApplyMovement 13, _0390
     ApplyMovement LOCALID_PLAYER, _03C0
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
     RemoveObject 13
-    SetVar 0x40C8, 1
-    SetVar 0x404E, 0xFF
-    FadeScreen 6, 1, 0, 0
+    SetVar VAR_UNK_0x40C8, 1
+    SetVar VAR_RESORT_VILLA_VISITOR, 0xFF
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_VILLA, 0, 10, 6, 2
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -206,10 +197,10 @@ _02A8:
 _02BC:
     Message 8
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    CallIfEq 0x8005, 0x1D8, _02F2
-    CallIfEq 0x8005, 0x1D9, _0306
-    CallIfEq 0x8005, 0x1DA, _0312
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    CallIfEq VAR_0x8005, 0x1D8, _02F2
+    CallIfEq VAR_0x8005, 0x1D9, _0306
+    CallIfEq VAR_0x8005, 0x1DA, _0312
     ReleaseAll
     End
 
@@ -232,87 +223,87 @@ _0312:
 
     .balign 4, 0
 _0328:
-    MoveAction_012
-    MoveAction_034
+    WalkNormalNorth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0334:
-    MoveAction_013
-    MoveAction_034
+    WalkNormalSouth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0340:
-    MoveAction_013
-    MoveAction_034
+    WalkNormalSouth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _034C:
-    MoveAction_012
-    MoveAction_034
+    WalkNormalNorth
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0358:
-    MoveAction_015 6
-    MoveAction_012 2
-    MoveAction_033
+    WalkNormalEast 6
+    WalkNormalNorth 2
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0368:
-    MoveAction_015 6
-    MoveAction_012 3
-    MoveAction_033
+    WalkNormalEast 6
+    WalkNormalNorth 3
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0378:
-    MoveAction_015 6
-    MoveAction_012 4
-    MoveAction_033
+    WalkNormalEast 6
+    WalkNormalNorth 4
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0388:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0390:
-    MoveAction_012
-    MoveAction_069
+    WalkNormalNorth
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _039C:
-    MoveAction_015 7
-    MoveAction_012
+    WalkNormalEast 7
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
 _03A8:
-    MoveAction_015 7
-    MoveAction_012 2
+    WalkNormalEast 7
+    WalkNormalNorth 2
     EndMovement
 
     .balign 4, 0
 _03B4:
-    MoveAction_015 7
-    MoveAction_012 3
+    WalkNormalEast 7
+    WalkNormalNorth 3
     EndMovement
 
     .balign 4, 0
 _03C0:
-    MoveAction_012 2
-    MoveAction_069
+    WalkNormalNorth 2
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _03CC:
-    MoveAction_014
+    WalkNormalWest
     EndMovement
 
 _03D4:
@@ -320,17 +311,17 @@ _03D4:
     LockAll
     FacePlayer
     Message 10
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0429
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0429
     Message 11
     CloseMessage
-    SetFlag 0x2AA
-    SetVar 0x404E, 2
-    SetFlag 0x9AB
-    FadeScreen 6, 1, 0, 0
+    SetFlag FLAG_UNK_0x02AA
+    SetVar VAR_RESORT_VILLA_VISITOR, 2
+    SetFlag FLAG_VILLA_VISITOR_INSIDE
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_VILLA, 0, 11, 11, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -350,17 +341,17 @@ _043C:
     LockAll
     FacePlayer
     Message 13
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0491
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0491
     Message 14
     CloseMessage
-    SetFlag 0x2AD
-    SetVar 0x404E, 4
-    SetFlag 0x9AB
-    FadeScreen 6, 1, 0, 0
+    SetFlag FLAG_UNK_0x02AD
+    SetVar VAR_RESORT_VILLA_VISITOR, 4
+    SetFlag FLAG_VILLA_VISITOR_INSIDE
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_VILLA, 0, 11, 11, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -374,17 +365,17 @@ _049C:
     LockAll
     FacePlayer
     Message 16
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _04F1
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _04F1
     Message 17
     CloseMessage
-    SetFlag 0x2AF
-    SetVar 0x404E, 5
-    SetFlag 0x9AB
-    FadeScreen 6, 1, 0, 0
+    SetFlag FLAG_UNK_0x02AF
+    SetVar VAR_RESORT_VILLA_VISITOR, 5
+    SetFlag FLAG_VILLA_VISITOR_INSIDE
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_VILLA, 0, 11, 11, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -398,17 +389,17 @@ _04FC:
     LockAll
     FacePlayer
     Message 19
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0551
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0551
     Message 20
     CloseMessage
-    SetFlag 0x2B2
-    SetVar 0x404E, 7
-    SetFlag 0x9AB
-    FadeScreen 6, 1, 0, 0
+    SetFlag FLAG_UNK_0x02B2
+    SetVar VAR_RESORT_VILLA_VISITOR, 7
+    SetFlag FLAG_VILLA_VISITOR_INSIDE
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_VILLA, 0, 11, 11, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -422,17 +413,17 @@ _055C:
     LockAll
     FacePlayer
     Message 22
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _05B1
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _05B1
     Message 23
     CloseMessage
-    SetFlag 0x2B5
-    SetVar 0x404E, 9
-    SetFlag 0x9AB
-    FadeScreen 6, 1, 0, 0
+    SetFlag FLAG_UNK_0x02B5
+    SetVar VAR_RESORT_VILLA_VISITOR, 9
+    SetFlag FLAG_VILLA_VISITOR_INSIDE
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_VILLA, 0, 11, 11, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
@@ -442,11 +433,7 @@ _05B1:
     End
 
 _05BC:
-    ScrCmd_036 27, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 27
     End
 
-    .byte 0
+    .balign 4, 0

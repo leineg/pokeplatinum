@@ -4,16 +4,14 @@
 #include <nnsys.h>
 #include <string.h>
 
-#include "constants/screen.h"
-
-#include "struct_defs/struct_02099F80.h"
+#include "constants/graphics.h"
 
 #include "system.h"
 
 static int sEngineALayers;
 static int sEngineBLayers;
 
-void GXLayers_SetBanks(const UnkStruct_02099F80 *banks)
+void GXLayers_SetBanks(const GXBanks *banks)
 {
     GX_ResetBankForBG();
     GX_ResetBankForBGExtPltt();

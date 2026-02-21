@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 138,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 672,
+            "id": "SENDOFF_SPRING_CYNTHIA_0",
+            "graphics_id": "OBJ_EVENT_GFX_CYNTHIA",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_SENDOFF_SPRING_CYNTHIA",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -20,19 +21,19 @@
         {
             "x": 12,
             "z": 56,
-            "dest_header_id": 341,
+            "dest_header_id": "MAP_HEADER_SPRING_PATH",
             "dest_warp_id": 0
         },
         {
             "x": 13,
             "z": 56,
-            "dest_header_id": 341,
+            "dest_header_id": "MAP_HEADER_SPRING_PATH",
             "dest_warp_id": 1
         },
         {
             "x": 31,
             "z": 16,
-            "dest_header_id": 268,
+            "dest_header_id": "MAP_HEADER_TURNBACK_CAVE_ENTRANCE",
             "dest_warp_id": 4
         }
     ],

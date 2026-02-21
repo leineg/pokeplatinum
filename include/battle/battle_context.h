@@ -10,7 +10,7 @@
 #include "battle/ai_context.h"
 #include "battle/battle_message.h"
 #include "battle/battle_mon.h"
-#include "overlay012/struct_ball_rotation_decl.h"
+#include "battle_anim/struct_ball_rotation_decl.h"
 
 #include "char_transfer.h"
 #include "sprite_system.h"
@@ -167,11 +167,11 @@ struct BattleContext {
     int sharedExp;
     u32 sideGetExpMask[2];
 
-    int scriptNarc;
+    enum NarcID scriptNarc;
     int scriptFile;
     int scriptCursor;
     int scriptStackPointer;
-    int scriptStackNarc[BATTLE_SCRIPT_STACK_MAX];
+    enum NarcID scriptStackNarc[BATTLE_SCRIPT_STACK_MAX];
     int scriptStackFile[BATTLE_SCRIPT_STACK_MAX];
     int scriptStackCursor[BATTLE_SCRIPT_STACK_MAX];
 

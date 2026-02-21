@@ -15,7 +15,7 @@
             "level": 54,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -24,7 +24,7 @@
             "level": 54,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -33,8 +33,42 @@
             "level": 54,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I work to protect beautiful, natural\n",
+                "environments.\r",
+                "My Pokémon are my constant\n",
+                "companions while I work.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Oh, my gosh!\n",
+                "My poor Pokémon!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Everyone can do their part to keep\n",
+                "nature clean. It doesn’t take much.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I’m on patrol in pristine nature\n",
+                "with my Pokémon like usual.\r",
+                "Come to think of it, you’re always\n",
+                "with Pokémon, too.\r"
+            ]
         }
     ]
 }

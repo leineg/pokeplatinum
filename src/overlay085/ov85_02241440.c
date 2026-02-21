@@ -3,29 +3,25 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_0200C440_decl.h"
 #include "struct_defs/struct_020972FC.h"
-#include "struct_defs/struct_02099F80.h"
-
-#include "overlay115/camera_angle.h"
 
 #include "berry_data.h"
 #include "bg_window.h"
 #include "camera.h"
 #include "font.h"
+#include "font_special_chars.h"
 #include "graphics.h"
 #include "gx_layers.h"
 #include "heap.h"
 #include "message.h"
 #include "narc.h"
 #include "overlay_manager.h"
-#include "strbuf.h"
+#include "screen_fade.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "system.h"
 #include "text.h"
-#include "unk_0200C440.h"
-#include "unk_0200F174.h"
-#include "unk_0201E3D8.h"
+#include "touch_pad.h"
 #include "unk_0202419C.h"
 #include "unk_020393C8.h"
 #include "unk_0208C098.h"
@@ -43,7 +39,7 @@ typedef struct {
     Window unk_04[12];
     MessageLoader *unk_C4;
     StringTemplate *unk_C8;
-    UnkStruct_0200C440 *unk_CC;
+    FontSpecialCharsContext *unk_CC;
     Camera *camera;
     UnkStruct_ov85_022420A8 unk_D4[4];
     UnkStruct_ov85_022420A8 unk_134[4];
@@ -200,7 +196,7 @@ static const UnkStruct_ov85_022423A0 Unk_ov85_02242938[][4] = {
     },
 };
 
-int ov85_02241440(OverlayManager *param0, int *param1)
+int ov85_02241440(ApplicationManager *appMan, int *param1)
 {
     UnkStruct_ov85_022417E4 *v0;
     NARC *v1;
@@ -215,17 +211,17 @@ int ov85_02241440(OverlayManager *param0, int *param1)
     G2_BlendNone();
     G2S_BlendNone();
 
-    Heap_Create(3, 36, 0x20000);
+    Heap_Create(HEAP_ID_APPLICATION, HEAP_ID_36, 0x20000);
 
-    v0 = OverlayManager_NewData(param0, sizeof(UnkStruct_ov85_022417E4), 36);
+    v0 = ApplicationManager_NewData(appMan, sizeof(UnkStruct_ov85_022417E4), HEAP_ID_36);
     memset(v0, 0, sizeof(UnkStruct_ov85_022417E4));
-    v0->unk_1F8 = OverlayManager_Args(param0);
-    v0->unk_00 = BgConfig_New(36);
+    v0->unk_1F8 = ApplicationManager_Args(appMan);
+    v0->unk_00 = BgConfig_New(HEAP_ID_36);
     v0->unk_1FC = BerryData_Load(v0->unk_1F8->unk_08, 36);
 
-    sub_0208C120(0, 36);
+    App_StartScreenFade(FALSE, HEAP_ID_36);
 
-    v1 = NARC_ctor(NARC_INDEX_GRAPHIC__NTAG_GRA, 36);
+    v1 = NARC_ctor(NARC_INDEX_GRAPHIC__NTAG_GRA, HEAP_ID_36);
 
     ov85_02241614();
     ov85_02241634(v0->unk_00);
@@ -234,8 +230,8 @@ int ov85_02241440(OverlayManager *param0, int *param1)
     ov85_022417E4(v0);
 
     SetAutorepeat(4, 8);
-    sub_0201E3D8();
-    sub_0201E450(4);
+    EnableTouchPad();
+    InitializeTouchPad(4);
 
     ov85_02241E60(v0, v1);
     ov85_0224183C(v0);
@@ -244,16 +240,16 @@ int ov85_02241440(OverlayManager *param0, int *param1)
     ov85_02242218(v0);
 
     SetVBlankCallback(ov85_022415F4, v0);
-    DrawWifiConnectionIcon();
+    NetworkIcon_Init();
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
     NARC_dtor(v1);
 
     return 1;
 }
 
-int ov85_0224154C(OverlayManager *param0, int *param1)
+int ov85_0224154C(ApplicationManager *appMan, int *param1)
 {
-    UnkStruct_ov85_022417E4 *v0 = OverlayManager_Data(param0);
+    UnkStruct_ov85_022417E4 *v0 = ApplicationManager_Data(appMan);
 
     switch (*param1) {
     case 0:
@@ -277,22 +273,22 @@ int ov85_0224154C(OverlayManager *param0, int *param1)
     return 0;
 }
 
-int ov85_022415A0(OverlayManager *param0, int *param1)
+int ov85_022415A0(ApplicationManager *appMan, int *param1)
 {
-    UnkStruct_ov85_022417E4 *v0 = OverlayManager_Data(param0);
+    UnkStruct_ov85_022417E4 *v0 = ApplicationManager_Data(appMan);
 
     ov85_02241860(v0->unk_04);
     ov85_022416E8(v0->unk_00);
 
-    sub_0201E530();
+    DisableTouchPad();
 
     ov85_0224181C(v0);
     ov85_0224202C(v0);
 
-    Heap_FreeToHeap(v0->unk_1FC);
-    OverlayManager_FreeData(param0);
+    Heap_Free(v0->unk_1FC);
+    ApplicationManager_FreeData(appMan);
     SetVBlankCallback(NULL, NULL);
-    Heap_Destroy(36);
+    Heap_Destroy(HEAP_ID_36);
 
     G2_BlendNone();
 
@@ -310,7 +306,7 @@ static void ov85_022415F4(void *param0)
 
 static void ov85_02241614(void)
 {
-    UnkStruct_02099F80 v0 = {
+    GXBanks v0 = {
         GX_VRAM_BG_128_A,
         GX_VRAM_BGEXTPLTT_NONE,
         GX_VRAM_SUB_BG_128_C,
@@ -343,101 +339,98 @@ static void ov85_02241634(BgConfig *param0)
 
     {
         BgTemplate v1 = {
-            0,
-            0,
-            0x800,
-            0,
-            1,
-            GX_BG_COLORMODE_16,
-            GX_BG_SCRBASE_0xf800,
-            GX_BG_CHARBASE_0x10000,
-            GX_BG_EXTPLTT_01,
-            2,
-            0,
-            0,
-            0
+            .x = 0,
+            .y = 0,
+            .bufferSize = 0x800,
+            .baseTile = 0,
+            .screenSize = BG_SCREEN_SIZE_256x256,
+            .colorMode = GX_BG_COLORMODE_16,
+            .screenBase = GX_BG_SCRBASE_0xf800,
+            .charBase = GX_BG_CHARBASE_0x10000,
+            .bgExtPltt = GX_BG_EXTPLTT_01,
+            .priority = 2,
+            .areaOver = 0,
+            .mosaic = FALSE,
         };
 
-        Bg_InitFromTemplate(param0, 1, &v1, 0);
-        Bg_ClearTilemap(param0, 1);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_1, &v1, 0);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_1);
     }
 
     {
         BgTemplate v2 = {
-            0,
-            0,
-            0x800,
-            0,
-            1,
-            GX_BG_COLORMODE_16,
-            GX_BG_SCRBASE_0xf000,
-            GX_BG_CHARBASE_0x00000,
-            GX_BG_EXTPLTT_01,
-            3,
-            0,
-            0,
-            0
+            .x = 0,
+            .y = 0,
+            .bufferSize = 0x800,
+            .baseTile = 0,
+            .screenSize = BG_SCREEN_SIZE_256x256,
+            .colorMode = GX_BG_COLORMODE_16,
+            .screenBase = GX_BG_SCRBASE_0xf000,
+            .charBase = GX_BG_CHARBASE_0x00000,
+            .bgExtPltt = GX_BG_EXTPLTT_01,
+            .priority = 3,
+            .areaOver = 0,
+            .mosaic = FALSE,
         };
 
-        Bg_InitFromTemplate(param0, 2, &v2, 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_2, &v2, 0);
         Bg_ScheduleScroll(param0, 2, 3, 8);
     }
 
     {
         BgTemplate v3 = {
-            0,
-            0,
-            0x800,
-            0,
-            1,
-            GX_BG_COLORMODE_16,
-            GX_BG_SCRBASE_0xe800,
-            GX_BG_CHARBASE_0x00000,
-            GX_BG_EXTPLTT_01,
-            1,
-            0,
-            0,
-            0
+            .x = 0,
+            .y = 0,
+            .bufferSize = 0x800,
+            .baseTile = 0,
+            .screenSize = BG_SCREEN_SIZE_256x256,
+            .colorMode = GX_BG_COLORMODE_16,
+            .screenBase = GX_BG_SCRBASE_0xe800,
+            .charBase = GX_BG_CHARBASE_0x00000,
+            .bgExtPltt = GX_BG_EXTPLTT_01,
+            .priority = 1,
+            .areaOver = 0,
+            .mosaic = FALSE,
         };
 
-        Bg_InitFromTemplate(param0, 3, &v3, 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_3, &v3, 0);
     }
 
-    Bg_ClearTilesRange(1, 32, 0, 36);
+    Bg_ClearTilesRange(BG_LAYER_MAIN_1, 32, 0, HEAP_ID_36);
 }
 
 static void ov85_022416E8(BgConfig *param0)
 {
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG0 | GX_PLANEMASK_BG1 | GX_PLANEMASK_BG2 | GX_PLANEMASK_BG3, 0);
-    Bg_FreeTilemapBuffer(param0, 3);
-    Bg_FreeTilemapBuffer(param0, 2);
-    Bg_FreeTilemapBuffer(param0, 1);
-    Heap_FreeToHeapExplicit(36, param0);
+    Bg_FreeTilemapBuffer(param0, BG_LAYER_MAIN_3);
+    Bg_FreeTilemapBuffer(param0, BG_LAYER_MAIN_2);
+    Bg_FreeTilemapBuffer(param0, BG_LAYER_MAIN_1);
+    Heap_FreeExplicit(HEAP_ID_36, param0);
 }
 
 static void ov85_02241718(UnkStruct_ov85_022417E4 *param0, NARC *param1)
 {
-    Graphics_LoadTilesToBgLayerFromOpenNARC(param1, 2, param0->unk_00, 2, 0, 0, 0, 36);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 0, param0->unk_00, 2, 0, 0, 0, 36);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 1, param0->unk_00, 3, 0, 0, 0, 36);
-    Graphics_LoadPaletteFromOpenNARC(param1, 3, 0, 0, 0, 36);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(param1, 2, param0->unk_00, 2, 0, 0, 0, HEAP_ID_36);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 0, param0->unk_00, 2, 0, 0, 0, HEAP_ID_36);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 1, param0->unk_00, 3, 0, 0, 0, HEAP_ID_36);
+    Graphics_LoadPaletteFromOpenNARC(param1, 3, 0, 0, 0, HEAP_ID_36);
 
     {
         u16 *v0;
         u32 v1;
 
-        v0 = (u16 *)Heap_AllocFromHeap(36, 8 * 8 * 2);
+        v0 = (u16 *)Heap_Alloc(HEAP_ID_36, 8 * 8 * 2);
 
         for (v1 = 0; v1 < 8 * 8; v1++) {
             v0[v1] = (3 << 12) + 1 + v1;
         }
 
         Bg_LoadToTilemapRect(param0->unk_00, 1, v0, 2, 5, 8, 8);
-        Heap_FreeToHeap(v0);
+        Heap_Free(v0);
         Bg_CopyTilemapBufferToVRAM(param0->unk_00, 1);
     }
 
-    Font_LoadTextPalette(0, 15 * 0x20, 36);
+    Font_LoadTextPalette(0, 15 * 0x20, HEAP_ID_36);
 }
 
 static void ov85_022417CC(void)
@@ -447,15 +440,15 @@ static void ov85_022417CC(void)
 
 static void ov85_022417E4(UnkStruct_ov85_022417E4 *param0)
 {
-    param0->unk_C4 = MessageLoader_Init(0, 26, 398, 36);
-    param0->unk_CC = sub_0200C440(15, 2, 0, 36);
-    param0->unk_C8 = StringTemplate_Default(36);
+    param0->unk_C4 = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_BERRY_TAGS, HEAP_ID_36);
+    param0->unk_CC = FontSpecialChars_Init(15, 2, 0, HEAP_ID_36);
+    param0->unk_C8 = StringTemplate_Default(HEAP_ID_36);
 }
 
 static void ov85_0224181C(UnkStruct_ov85_022417E4 *param0)
 {
     MessageLoader_Free(param0->unk_C4);
-    sub_0200C560(param0->unk_CC);
+    FontSpecialChars_Free(param0->unk_CC);
     StringTemplate_Free(param0->unk_C8);
 }
 
@@ -480,15 +473,15 @@ static void ov85_02241860(Window *param0)
 static void ov85_02241878(UnkStruct_ov85_022417E4 *param0, u32 param1, u32 param2, u32 param3)
 {
     Window *v0;
-    Strbuf *v1;
+    String *v1;
     u32 v2;
 
     v0 = &param0->unk_04[param1];
-    v1 = MessageLoader_GetNewStrbuf(param0->unk_C4, param2);
-    v2 = Font_CalcStrbufWidth(FONT_SYSTEM, v1, 0);
+    v1 = MessageLoader_GetNewString(param0->unk_C4, param2);
+    v2 = Font_CalcStringWidth(FONT_SYSTEM, v1, 0);
 
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v1, (Window_GetWidth(v0) * 8 - v2) / 2, 0, TEXT_SPEED_NO_TRANSFER, param3, NULL);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_ScheduleCopyToVRAM(v0);
 }
 
@@ -531,34 +524,34 @@ static void ov85_0224196C(UnkStruct_ov85_022417E4 *param0)
 static void ov85_0224198C(UnkStruct_ov85_022417E4 *param0)
 {
     Window *v0;
-    Strbuf *v1;
-    Strbuf *v2;
+    String *v1;
+    String *v2;
 
     v0 = &param0->unk_04[1];
 
     Window_FillTilemap(v0, 0);
-    sub_0200C578(param0->unk_CC, 2, v0, 0, 5);
+    FontSpecialChars_DrawPartyScreenLevelText(param0->unk_CC, 2, v0, 0, 5);
 
-    v1 = MessageLoader_GetNewStrbuf(param0->unk_C4, 6);
-    v2 = Strbuf_Init((2 + 1) * 2, 36);
+    v1 = MessageLoader_GetNewString(param0->unk_C4, 6);
+    v2 = String_Init((2 + 1) * 2, HEAP_ID_36);
 
     StringTemplate_SetNumber(param0->unk_C8, 0, param0->unk_1F8->unk_08 + 1, 2, 2, 1);
     StringTemplate_Format(param0->unk_C8, v2, v1);
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v2, 16, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 2, 0), NULL);
-    Strbuf_Free(v1);
-    Strbuf_Free(v2);
+    String_Free(v1);
+    String_Free(v2);
 
     v1 = BerryData_AllocAndGetName(param0->unk_1F8->unk_08, 36);
 
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v1, 40, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 2, 0), NULL);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_ScheduleCopyToVRAM(v0);
 }
 
 static void ov85_02241A58(UnkStruct_ov85_022417E4 *param0)
 {
     Window *v0;
-    Strbuf *v1;
+    String *v1;
 
     v0 = &param0->unk_04[11];
 
@@ -567,28 +560,28 @@ static void ov85_02241A58(UnkStruct_ov85_022417E4 *param0)
     v1 = BerryData_AllocAndGetDescription(param0->unk_1F8->unk_08, 36);
 
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v1, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 0), NULL);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_ScheduleCopyToVRAM(v0);
 }
 
 static void ov85_02241AA8(UnkStruct_ov85_022417E4 *param0)
 {
     Window *v0;
-    Strbuf *v1;
+    String *v1;
 
     v0 = &param0->unk_04[9];
     Window_FillTilemap(v0, 0);
-    v1 = MessageLoader_GetNewStrbuf(param0->unk_C4, 10);
+    v1 = MessageLoader_GetNewString(param0->unk_C4, 10);
 
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v1, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 2, 0), NULL);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_ScheduleCopyToVRAM(v0);
 }
 
 static void ov85_02241AF4(UnkStruct_ov85_022417E4 *param0)
 {
     Window *v0;
-    Strbuf *v1;
+    String *v1;
     u32 v2;
 
     v0 = &param0->unk_04[10];
@@ -601,32 +594,32 @@ static void ov85_02241AF4(UnkStruct_ov85_022417E4 *param0)
         v2--;
     }
 
-    v1 = MessageLoader_GetNewStrbuf(param0->unk_C4, 11 + v2);
+    v1 = MessageLoader_GetNewString(param0->unk_C4, 11 + v2);
 
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v1, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 2, 0), NULL);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_ScheduleCopyToVRAM(v0);
 }
 
 static void ov85_02241B50(UnkStruct_ov85_022417E4 *param0)
 {
     Window *v0;
-    Strbuf *v1;
+    String *v1;
 
     v0 = &param0->unk_04[7];
     Window_FillTilemap(v0, 0);
-    v1 = MessageLoader_GetNewStrbuf(param0->unk_C4, 8);
+    v1 = MessageLoader_GetNewString(param0->unk_C4, 8);
 
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v1, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 2, 0), NULL);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_ScheduleCopyToVRAM(v0);
 }
 
 static void ov85_02241B9C(UnkStruct_ov85_022417E4 *param0)
 {
     Window *v0;
-    Strbuf *v1;
-    Strbuf *v2;
+    String *v1;
+    String *v2;
     u32 v3;
 
     v0 = &param0->unk_04[8];
@@ -635,15 +628,15 @@ static void ov85_02241B9C(UnkStruct_ov85_022417E4 *param0)
 
     v3 = BerryData_GetAttribute(param0->unk_1FC, 0);
     v3 = (((v3 * 1000) / 254 + 5) / 10);
-    v1 = MessageLoader_GetNewStrbuf(param0->unk_C4, 9);
-    v2 = Strbuf_Init(32, 36);
+    v1 = MessageLoader_GetNewString(param0->unk_C4, 9);
+    v2 = String_Init(32, HEAP_ID_36);
 
     StringTemplate_SetNumber(param0->unk_C8, 0, v3 / 10, 2, 0, 1);
     StringTemplate_SetNumber(param0->unk_C8, 1, v3 % 10, 1, 0, 1);
     StringTemplate_Format(param0->unk_C8, v2, v1);
     Text_AddPrinterWithParamsAndColor(v0, FONT_SYSTEM, v2, 0, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 2, 0), NULL);
-    Strbuf_Free(v1);
-    Strbuf_Free(v2);
+    String_Free(v1);
+    String_Free(v2);
     Window_ScheduleCopyToVRAM(v0);
 }
 
@@ -692,7 +685,7 @@ static void ov85_02241CD0(UnkStruct_ov85_022417E4 *param0)
 
 static int ov85_02241CE8(UnkStruct_ov85_022417E4 *param0)
 {
-    if (IsScreenTransitionDone() == 1) {
+    if (IsScreenFadeDone() == TRUE) {
         G2_SetBlendAlpha(GX_BLEND_PLANEMASK_BG1, GX_BLEND_PLANEMASK_BG2, 16, 0);
         return 1;
     }
@@ -745,7 +738,7 @@ static int ov85_02241D10(UnkStruct_ov85_022417E4 *param0)
     }
 
     if ((gSystem.pressedKeys & PAD_BUTTON_B) || (gSystem.touchPressed)) {
-        sub_0208C120(1, 36);
+        App_StartScreenFade(TRUE, HEAP_ID_36);
         return 3;
     }
 
@@ -754,7 +747,7 @@ static int ov85_02241D10(UnkStruct_ov85_022417E4 *param0)
 
 static u8 ov85_02241DEC(UnkStruct_ov85_022417E4 *param0)
 {
-    return IsScreenTransitionDone();
+    return IsScreenFadeDone();
 }
 
 static int ov85_02241DF8(UnkStruct_ov85_022417E4 *param0)
@@ -786,8 +779,8 @@ static int ov85_02241DF8(UnkStruct_ov85_022417E4 *param0)
 
 static void ov85_02241E60(UnkStruct_ov85_022417E4 *param0, NARC *param1)
 {
-    Graphics_LoadTilesToBgLayerFromOpenNARC(param1, ov85_02241EB0(param0->unk_1F8->unk_08), param0->unk_00, 1, 1, 0, 0, 36);
-    Graphics_LoadPaletteFromOpenNARC(param1, ov85_02241EB4(param0->unk_1F8->unk_08), 0, 3 * 0x20, 0x20, 36);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(param1, ov85_02241EB0(param0->unk_1F8->unk_08), param0->unk_00, 1, 1, 0, 0, HEAP_ID_36);
+    Graphics_LoadPaletteFromOpenNARC(param1, ov85_02241EB4(param0->unk_1F8->unk_08), 0, 3 * 0x20, 0x20, HEAP_ID_36);
 }
 
 u32 ov85_02241EB0(u32 param0)
@@ -851,11 +844,11 @@ static void ov85_02241F0C(UnkStruct_ov85_022417E4 *param0)
 {
     NARC *v0;
 
-    Heap_FreeToHeap(param0->unk_1FC);
+    Heap_Free(param0->unk_1FC);
     param0->unk_1FC = BerryData_Load(param0->unk_1F8->unk_08, 36);
     ov85_02241CD0(param0);
 
-    v0 = NARC_ctor(NARC_INDEX_GRAPHIC__NTAG_GRA, 36);
+    v0 = NARC_ctor(NARC_INDEX_GRAPHIC__NTAG_GRA, HEAP_ID_36);
     ov85_02241E60(param0, v0);
     NARC_dtor(v0);
     ov85_02242578(param0);
@@ -883,7 +876,7 @@ static void ov85_02241F5C(void)
 
 static void ov85_02241FF0(UnkStruct_ov85_022417E4 *param0)
 {
-    sub_020241B4();
+    G3_ResetG3X();
     Camera_ComputeViewMatrix();
 
     G3_MtxMode(GX_MTXMODE_PROJECTION);

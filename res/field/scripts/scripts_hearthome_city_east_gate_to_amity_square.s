@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/hearthome_city_east_gate_to_amity_square.h"
 
-    .data
 
     ScriptEntry _002D
     ScriptEntry _0040
@@ -9,13 +8,13 @@
     ScriptEntryEnd
 
 _000E:
-    ScrCmd_238 13, 0x4000
-    GoToIfEq 0x4000, 0, _0027
-    ClearFlag 0x219
+    CheckTVInterviewEligible TV_PROGRAM_SEGMENT_AMITY_SQUARE_WATCH, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0027
+    ClearFlag FLAG_UNK_0x0219
     End
 
 _0027:
-    SetFlag 0x219
+    SetFlag FLAG_UNK_0x0219
     End
 
 _002D:
@@ -38,4 +37,4 @@ _0040:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

@@ -1,8 +1,8 @@
 #include "macros/scrcmd.inc"
 #include "generated/distribution_events.h"
 #include "res/text/bank/spear_pillar.h"
+#include "generated/versions.h"
 
-    .data
 
     ScriptEntry _0022
     ScriptEntry _0107
@@ -15,33 +15,33 @@
     ScriptEntryEnd
 
 _0022:
-    SetFlag 0x9C7
+    SetFlag FLAG_FIRST_ARRIVAL_SPEAR_PILLAR
     Call _00C7
     Call _0062
-    GetPlayerGender 0x4000
-    GoToIfEq 0x4000, GENDER_MALE, _0052
-    GoToIfEq 0x4000, GENDER_FEMALE, _005A
+    GetPlayerGender VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_MALE, _0052
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_FEMALE, _005A
     End
 
 _0052:
-    SetVar 0x4020, 97
+    SetVar VAR_OBJ_GFX_ID_0, 97
     End
 
 _005A:
-    SetVar 0x4020, 0
+    SetVar VAR_OBJ_GFX_ID_0, 0
     End
 
 _0062:
-    CheckGameCompleted 0x4000
-    GoToIfEq 0x4000, 0, _00C5
-    ScrCmd_22D 2, 0x4000
-    GoToIfEq 0x4000, 0, _00C5
-    CheckItem ITEM_AZURE_FLUTE, 1, 0x4000
-    GoToIfEq 0x4000, FALSE, _00C5
-    CheckDistributionEvent DISTRIBUTION_EVENT_ARCEUS, 0x4000
-    GoToIfEq 0x4000, FALSE, _00C5
-    GoToIfSet 0x11E, _00C5
-    SetVar 0x4118, 1
+    CheckGameCompleted VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _00C5
+    GetNationalDexEnabled VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _00C5
+    CheckItem ITEM_AZURE_FLUTE, 1, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, FALSE, _00C5
+    CheckDistributionEvent DISTRIBUTION_EVENT_ARCEUS, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, FALSE, _00C5
+    GoToIfSet FLAG_UNK_0x011E, _00C5
+    SetVar VAR_UNK_0x4118, 1
     GoTo _00C5
     End
 
@@ -49,68 +49,44 @@ _00C5:
     Return
 
 _00C7:
-    Dummy1F9 0x4098
-    GoToIfEq 0x4098, 0, _0101
-    GoToIfEq 0x4098, 1, _0101
-    GoToIfEq 0x4098, 2, _0101
-    GoToIfEq 0x4098, 3, _0101
+    Dummy1F9 VAR_UNK_0x4098
+    GoToIfEq VAR_UNK_0x4098, 0, _0101
+    GoToIfEq VAR_UNK_0x4098, 1, _0101
+    GoToIfEq VAR_UNK_0x4098, 2, _0101
+    GoToIfEq VAR_UNK_0x4098, 3, _0101
     Return
 
 _0101:
-    SetFlag 0x1C5
+    SetFlag FLAG_UNK_0x01C5
     Return
 
 _0107:
     End
 
 _0109:
-    ScrCmd_246 0x800C
-    SetVar 0x8004, 0x8005
-    GoToIfEq 0x800C, 10, _0133
-    GoToIfEq 0x800C, 12, _0133
-    SetVar 0x8004, 0x8006
+    GetGameVersion VAR_RESULT
+    SetVar VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_RESULT, VERSION_DIAMOND, _0133
+    GoToIfEq VAR_RESULT, VERSION_PLATINUM, _0133
+    SetVar VAR_0x8004, VAR_0x8006
 _0133:
     Return
 
-    .byte 77
-    .byte 1
-    .byte 12
-    .byte 128
-    .byte 41
-    .byte 0
-    .byte 4
-    .byte 128
-    .byte 5
-    .byte 128
-    .byte 17
-    .byte 0
-    .byte 12
-    .byte 128
-    .byte 1
-    .byte 0
-    .byte 28
-    .byte 0
-    .byte 1
-    .byte 6
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 41
-    .byte 0
-    .byte 4
-    .byte 128
-    .byte 6
-    .byte 128
-    .byte 27
-    .byte 0
+SpearPillar_Unused:
+    GetPlayerGender VAR_RESULT
+    SetVar VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SpearPillar_Unused2
+    SetVar VAR_0x8004, VAR_0x8006
+SpearPillar_Unused2:
+    Return
 
 _0154:
     LockAll
     ApplyMovement 0, _01E4
     ApplyMovement 3, _01F4
     WaitMovement
-    CheckHasTwoAliveMons 0x800C
-    GoToIfNe 0x800C, 0, _01A6
+    CheckHasTwoAliveMons VAR_RESULT
+    GoToIfNe VAR_RESULT, 0, _01A6
     GoTo _0181
     End
 
@@ -127,8 +103,8 @@ _0181:
 
 _01A6:
     Call _01CA
-    GoToIfEq 0x800C, FALSE, _01DB
-    SetVar 0x4098, 1
+    GoToIfEq VAR_RESULT, FALSE, _01DB
+    SetVar VAR_UNK_0x4098, 1
     Message 2
     WaitABXPadPress
     CloseMessage
@@ -139,7 +115,7 @@ _01CA:
     Message 0
     CloseMessage
     StartTrainerBattle TRAINER_GALACTIC_GRUNT_SPEAR_PILLAR_1, TRAINER_GALACTIC_GRUNT_SPEAR_PILLAR_2
-    CheckWonBattle 0x800C
+    CheckWonBattle VAR_RESULT
     Return
 
 _01DB:
@@ -149,28 +125,28 @@ _01DB:
 
     .balign 4, 0
 _01E4:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _01EC:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01F4:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _01FC:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0204:
-    MoveAction_062 5
-    MoveAction_013
+    Delay4 5
+    WalkNormalSouth
     EndMovement
 
 _0210:
@@ -217,9 +193,9 @@ _0249:
     Message 9
     CloseMessage
     Call SpearPillar_SetRivalPartnerTeam
-    StartTagBattle 0x8004, TRAINER_COMMANDER_MARS_SPEAR_PILLAR, TRAINER_COMMANDER_JUPITER_SPEAR_PILLAR
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _02D0
+    StartTagBattle VAR_0x8004, TRAINER_COMMANDER_MARS_SPEAR_PILLAR, TRAINER_COMMANDER_JUPITER_SPEAR_PILLAR
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _02D0
     Call _0456
     BufferRivalName 0
     BufferPlayerName 1
@@ -234,23 +210,23 @@ _0249:
     ApplyMovement 5, _0500
     WaitMovement
     RemoveObject 5
-    SetVar 0x4098, 2
+    SetVar VAR_UNK_0x4098, 2
     GoTo _0508
     End
 
 _02D0:
-    SetVar 0x4098, 1
+    SetVar VAR_UNK_0x4098, 1
     BlackOutFromBattle
     ReleaseAll
     End
 
 _02DC:
-    ClearFlag 0x1C5
-    GetPlayerMapPos 0x8004, 0x8005
-    SetVar 0x8008, 0x8004
-    GoToIfEq 0x8008, 30, _0315
-    GoToIfEq 0x8008, 31, _0333
-    GoToIfEq 0x8008, 32, _0351
+    ClearFlag FLAG_UNK_0x01C5
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    SetVar VAR_0x8008, VAR_0x8004
+    GoToIfEq VAR_0x8008, 30, _0315
+    GoToIfEq VAR_0x8008, 31, _0333
+    GoToIfEq VAR_0x8008, 32, _0351
     Return
 
 _0315:
@@ -278,11 +254,11 @@ _0351:
     Return
 
 _036F:
-    GetPlayerMapPos 0x8004, 0x8005
-    SetVar 0x8008, 0x8004
-    GoToIfEq 0x8008, 30, _03A4
-    GoToIfEq 0x8008, 31, _03BE
-    GoToIfEq 0x8008, 32, _03D8
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    SetVar VAR_0x8008, VAR_0x8004
+    GoToIfEq VAR_0x8008, 30, _03A4
+    GoToIfEq VAR_0x8008, 31, _03BE
+    GoToIfEq VAR_0x8008, 32, _03D8
     Return
 
 _03A4:
@@ -308,50 +284,50 @@ _03D8:
 
     .balign 4, 0
 _03F4:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _03FC:
-    MoveAction_014
+    WalkNormalWest
     EndMovement
 
     .balign 4, 0
 _0404:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _040C:
-    MoveAction_014
+    WalkNormalWest
     EndMovement
 
     .balign 4, 0
 _0414:
-    MoveAction_015
+    WalkNormalEast
     EndMovement
 
     .balign 4, 0
 _041C:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
 SpearPillar_SetRivalPartnerTeam:
-    GetPlayerStarterSpecies 0x800C
-    SetVar 0x8004, TRAINER_RIVAL_SPEAR_PILLAR_CHIMCHAR
-    GoToIfEq 0x800C, SPECIES_CHIMCHAR, SpearPillar_Return
-    SetVar 0x8004, TRAINER_RIVAL_SPEAR_PILLAR_TURTWIG
-    GoToIfEq 0x800C, SPECIES_TURTWIG, SpearPillar_Return
-    SetVar 0x8004, TRAINER_RIVAL_SPEAR_PILLAR_PIPLUP
+    GetPlayerStarterSpecies VAR_RESULT
+    SetVar VAR_0x8004, TRAINER_RIVAL_SPEAR_PILLAR_CHIMCHAR
+    GoToIfEq VAR_RESULT, SPECIES_CHIMCHAR, SpearPillar_Return
+    SetVar VAR_0x8004, TRAINER_RIVAL_SPEAR_PILLAR_TURTWIG
+    GoToIfEq VAR_RESULT, SPECIES_TURTWIG, SpearPillar_Return
+    SetVar VAR_0x8004, TRAINER_RIVAL_SPEAR_PILLAR_PIPLUP
 SpearPillar_Return:
     Return
 
 _0456:
-    GetPlayerMapPos 0x8004, 0x8005
-    SetVar 0x8008, 0x8004
-    GoToIfEq 0x8008, 30, _048B
-    GoToIfEq 0x8008, 31, _0499
-    GoToIfEq 0x8008, 32, _04A7
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    SetVar VAR_0x8008, VAR_0x8004
+    GoToIfEq VAR_0x8008, 30, _048B
+    GoToIfEq VAR_0x8008, 31, _0499
+    GoToIfEq VAR_0x8008, 32, _04A7
     Return
 
 _048B:
@@ -369,186 +345,143 @@ _04A7:
     ScrCmd_18C 5, 3
     Return
 
-    .byte 94
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 15
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 94
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 27
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 95
-    .byte 0
-    .byte 27
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 3
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 71
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 10
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 72
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 71
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 11
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 72
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+SpearPillar_Unused3:
+    ApplyMovement 4, SpearPillar_UnusedMovement
+    ApplyMovement 2, SpearPillar_UnusedMovement2
+    WaitMovement
+    Return
+
+    .balign 4, 0
+SpearPillar_UnusedMovement:
+    FaceEast
+    LockDir
+    WalkSlowWest
+    UnlockDir
+    EndMovement
+
+SpearPillar_UnusedMovement2:
+    FaceWest
+    LockDir
+    WalkSlowEast
+    UnlockDir
+    EndMovement
 
     .balign 4, 0
 _04F4:
-    MoveAction_062 2
-    MoveAction_016 8
+    Delay4 2
+    WalkFastNorth 8
     EndMovement
 
     .balign 4, 0
 _0500:
-    MoveAction_017 8
+    WalkFastSouth 8
     EndMovement
 
 _0508:
     ApplyMovement LOCALID_PLAYER, _05B8
     WaitMovement
-    GetPlayerMapPos 0x8000, 0x8001
-    ScrCmd_066 0x8000, 0x8001
+    GetPlayerMapPos VAR_0x8000, VAR_0x8001
+    AddFreeCamera VAR_0x8000, VAR_0x8001
     Call _05C0
     WaitMovement
-    SetVar 0x8005, 13
-    SetVar 0x8006, 68
+    SetVar VAR_0x8005, 13
+    SetVar VAR_0x8006, 68
     Call _0109
-    MessageVar 0x8004
+    MessageVar VAR_0x8004
     CloseMessage
-    FadeOutMusic 0, 30
-    ScrCmd_20D 0, 0x800C
-    WaitTime 10, 0x800C
+    FadeOutBGM 0, 30
+    ScrCmd_20D 0, VAR_RESULT
+    WaitTime 10, VAR_RESULT
     PlayFanfare SEQ_SE_PL_KUSARI
-    WaitTime 20, 0x800C
+    WaitTime 20, VAR_RESULT
     PlayMusic SEQ_THE_EVENT02
-    ScrCmd_05D
+    SetSubScene63
     GoTo _0567
     End
 
 _0567:
-    ScrCmd_20D 1, 0x800C
-    GoToIfEq 0x800C, 0, _0567
+    ScrCmd_20D 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _0567
     ScrCmd_2FB
-    SetFlag 0x1C8
-    SetFlag 0x1C9
-    SetFlag 0x1CA
-    SetVar 0x4098, 3
+    SetFlag FLAG_UNK_0x01C8
+    SetFlag FLAG_UNK_0x01C9
+    SetFlag FLAG_UNK_0x01CA
+    SetVar VAR_UNK_0x4098, 3
     SetFlag FLAG_UNLOCKED_VS_SEEKER_LVL_3
-    ClearFlag 0x1C7
-    SetFlag 0x132
-    SetVar 0x40C3, 1
+    ClearFlag FLAG_UNK_0x01C7
+    SetFlag FLAG_UNK_0x0132
+    SetVar VAR_UNK_0x40C3, 1
     SetSpeciesSeen SPECIES_DIALGA
     SetSpeciesSeen SPECIES_PALKIA
-    ScrCmd_067
+    RestoreCamera
     Warp MAP_HEADER_SPEAR_PILLAR_DISTORTED, 0, 30, 30, 0
     End
 
     .balign 4, 0
 _05B8:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
 _05C0:
-    GetPlayerMapPos 0x8004, 0x8005
-    SetVar 0x8008, 0x8004
-    GoToIfEq 0x8008, 29, _060F
-    GoToIfEq 0x8008, 30, _0619
-    GoToIfEq 0x8008, 31, _0623
-    GoToIfEq 0x8008, 32, _062D
-    GoToIfEq 0x8008, 33, _0637
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    SetVar VAR_0x8008, VAR_0x8004
+    GoToIfEq VAR_0x8008, 29, _060F
+    GoToIfEq VAR_0x8008, 30, _0619
+    GoToIfEq VAR_0x8008, 31, _0623
+    GoToIfEq VAR_0x8008, 32, _062D
+    GoToIfEq VAR_0x8008, 33, _0637
     Return
 
 _060F:
-    ApplyMovement 241, _0644
+    ApplyFreeCameraMovement _0644
     Return
 
 _0619:
-    ApplyMovement 241, _0654
+    ApplyFreeCameraMovement _0654
     Return
 
 _0623:
-    ApplyMovement 241, _0664
+    ApplyFreeCameraMovement _0664
     Return
 
 _062D:
-    ApplyMovement 241, _0670
+    ApplyFreeCameraMovement _0670
     Return
 
 _0637:
-    ApplyMovement 241, _0680
+    ApplyFreeCameraMovement _0680
     Return
 
     .balign 4, 0
 _0644:
-    MoveAction_063
-    MoveAction_012 6
-    MoveAction_015 2
+    Delay8
+    WalkNormalNorth 6
+    WalkNormalEast 2
     EndMovement
 
     .balign 4, 0
 _0654:
-    MoveAction_063
-    MoveAction_012 6
-    MoveAction_015
+    Delay8
+    WalkNormalNorth 6
+    WalkNormalEast
     EndMovement
 
     .balign 4, 0
 _0664:
-    MoveAction_063
-    MoveAction_012 6
+    Delay8
+    WalkNormalNorth 6
     EndMovement
 
     .balign 4, 0
 _0670:
-    MoveAction_063
-    MoveAction_012 6
-    MoveAction_014
+    Delay8
+    WalkNormalNorth 6
+    WalkNormalWest
     EndMovement
 
     .balign 4, 0
 _0680:
-    MoveAction_063
-    MoveAction_012 6
-    MoveAction_014 2
+    Delay8
+    WalkNormalNorth 6
+    WalkNormalWest 2
     EndMovement

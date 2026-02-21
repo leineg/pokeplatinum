@@ -1,74 +1,72 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/twinleaf_town_rival_house_1f.h"
 
-    .data
 
-    ScriptEntry _0006
+    ScriptEntry TwinleafTownRivalHouse1F_RivalsMom
     ScriptEntryEnd
 
-_0006:
+TwinleafTownRivalHouse1F_RivalsMom:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 144, _00B0
-    GoToIfGe 0x4095, 1, _0082
-    GoToIfSet 110, _0090
-    GoToIfSet 234, _009E
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _005C
-    GoToIfEq 0x800C, GENDER_FEMALE, _006B
+    GoToIfSet FLAG_HAS_POKEDEX, TwinleafTownRivalHouse1F_RivalTookOffLikeARocketAsUsual
+    GoToIfGe VAR_VISITED_LAKE_VERITY_WITH_RIVAL, 1, TwinleafTownRivalHouse1F_YouveBecomeFriendsWithAPokemonToo
+    GoToIfSet FLAG_UNK_0x006E, TwinleafTownRivalHouse1F_HeShouldBeOutOnRoute201ByNow
+    GoToIfSet FLAG_RIVAL_LEFT_HOME, TwinleafTownRivalHouse1F_ThatKidRocketedOffAgainLikeUsual
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, TwinleafTownRivalHouse1F_AreYouLookingForRival
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, TwinleafTownRivalHouse1F_DidYouComeCallingOnRival
     End
 
-_005C:
+TwinleafTownRivalHouse1F_AreYouLookingForRival:
     BufferPlayerName 0
     BufferRivalName 1
-    Message 0
-    GoTo _007A
+    Message TwinleafTownRivalHouse1F_Text_AreYouLookingForRival
+    GoTo TwinleafTownRivalHouse1F_Release
 
-_006B:
+TwinleafTownRivalHouse1F_DidYouComeCallingOnRival:
     BufferPlayerName 0
     BufferRivalName 1
-    Message 1
-    GoTo _007A
+    Message TwinleafTownRivalHouse1F_Text_DidYouComeCallingOnRival
+    GoTo TwinleafTownRivalHouse1F_Release
 
-_007A:
+TwinleafTownRivalHouse1F_Release:
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0082:
+TwinleafTownRivalHouse1F_YouveBecomeFriendsWithAPokemonToo:
     BufferRivalName 1
-    Message 4
+    Message TwinleafTownRivalHouse1F_Text_YouveBecomeFriendsWithAPokemonToo
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0090:
+TwinleafTownRivalHouse1F_HeShouldBeOutOnRoute201ByNow:
     BufferRivalName 1
-    Message 3
+    Message TwinleafTownRivalHouse1F_Text_HeShouldBeOutOnRoute201ByNow
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_009E:
-    SetFlag 110
+TwinleafTownRivalHouse1F_ThatKidRocketedOffAgainLikeUsual:
+    SetFlag FLAG_UNK_0x006E
     BufferRivalName 1
-    Message 2
+    Message TwinleafTownRivalHouse1F_Text_ThatKidRocketedOffAgainLikeUsual
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00B0:
+TwinleafTownRivalHouse1F_RivalTookOffLikeARocketAsUsual:
     BufferRivalName 1
-    Message 5
+    Message TwinleafTownRivalHouse1F_Text_RivalTookOffLikeARocketAsUsual
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

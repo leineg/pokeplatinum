@@ -7,12 +7,12 @@
 #include "sys_task.h"
 #include "sys_task_manager.h"
 
-SysTask *SysTask_StartAndAllocateParam(SysTaskFunc callback, int paramSize, u32 priority, const u32 heapID)
+SysTask *SysTask_StartAndAllocateParam(SysTaskFunc callback, int paramSize, u32 priority, const enum HeapID heapID)
 {
     void *param;
 
     if (paramSize) {
-        param = Heap_AllocFromHeap(heapID, paramSize);
+        param = Heap_Alloc(heapID, paramSize);
 
         if (param == NULL) {
             return NULL;
@@ -30,7 +30,7 @@ void SysTask_FinishAndFreeParam(SysTask *task)
 {
     void *param = SysTask_GetParam(task);
     if (param != NULL) {
-        Heap_FreeToHeap(param);
+        Heap_Free(param);
     }
 
     SysTask_Done(task);

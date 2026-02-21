@@ -3,32 +3,29 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_decls/struct_0207CB08_decl.h"
-
+#include "applications/bag/application.h"
 #include "overlay082/ov82_0223B140.h"
 #include "overlay083/struct_ov83_0223C344.h"
-#include "overlay084/const_ov84_02241130.h"
-#include "overlay084/ov84_0223B5A0.h"
 #include "overlay085/ov85_02241440.h"
 
 #include "bag.h"
+#include "bag_context.h"
 #include "heap.h"
 #include "item.h"
 #include "overlay_manager.h"
-#include "unk_0207CB08.h"
 #include "unk_020972FC.h"
 
 FS_EXTERN_OVERLAY(overlay83);
-FS_EXTERN_OVERLAY(overlay84);
+FS_EXTERN_OVERLAY(bag);
 FS_EXTERN_OVERLAY(overlay85);
 
 static int ov82_0223B380(UnkStruct_ov83_0223C344 *param0);
 static int ov82_0223B3DC(UnkStruct_ov83_0223C344 *param0);
 static int ov82_0223B470(UnkStruct_ov83_0223C344 *param0);
 static int ov82_0223B510(UnkStruct_ov83_0223C344 *param0);
-int ov83_0223B5B0(OverlayManager *param0, int *param1);
-int ov83_0223B65C(OverlayManager *param0, int *param1);
-int ov83_0223B710(OverlayManager *param0, int *param1);
+int ov83_0223B5B0(ApplicationManager *appMan, int *param1);
+int ov83_0223B65C(ApplicationManager *appMan, int *param1);
+int ov83_0223B710(ApplicationManager *appMan, int *param1);
 
 int ov82_0223B2E0(UnkStruct_ov83_0223C344 *param0, int *param1)
 {
@@ -58,20 +55,20 @@ int ov82_0223B330(UnkStruct_ov83_0223C344 *param0, int *param1)
 {
     FS_EXTERN_OVERLAY(overlay83);
 
-    const OverlayManagerTemplate v0 = {
+    const ApplicationManagerTemplate v0 = {
         ov83_0223B5B0,
         ov83_0223B65C,
         ov83_0223B710,
         FS_OVERLAY_ID(overlay83)
     };
 
-    param0->unk_1C = OverlayManager_New(&v0, param0, param0->unk_00);
+    param0->appMan = ApplicationManager_New(&v0, param0, param0->heapID);
     return 2;
 }
 
 int ov82_0223B35C(UnkStruct_ov83_0223C344 *param0, int *param1)
 {
-    if (ov82_0223B140(&param0->unk_1C) == 0) {
+    if (ov82_0223B140(&param0->appMan) == 0) {
         return 2;
     }
 
@@ -92,16 +89,16 @@ static int ov82_0223B380(UnkStruct_ov83_0223C344 *param0)
     void *v0;
     u32 v1;
 
-    FS_EXTERN_OVERLAY(overlay84);
+    FS_EXTERN_OVERLAY(bag);
 
-    const OverlayManagerTemplate Unk_ov84_02241130 = {
-        ov84_0223B5A0, ov84_0223B76C, ov84_0223B900, FS_OVERLAY_ID(overlay84)
+    const ApplicationManagerTemplate Unk_ov84_02241130 = {
+        BagApplication_Init, BagApplication_Main, BagApplication_Exit, FS_OVERLAY_ID(bag)
     };
     static const u8 v3[] = {
         4, 0xff
     };
 
-    v0 = sub_0207D824(param0->unk_10->unk_14, v3, param0->unk_00);
+    v0 = BagContext_CreateWithPockets(param0->unk_10->bag, v3, param0->heapID);
 
     if (param0->unk_06_0 == 1) {
         v1 = 5;
@@ -109,9 +106,9 @@ static int ov82_0223B380(UnkStruct_ov83_0223C344 *param0)
         v1 = 4;
     }
 
-    sub_0207CB2C(v0, param0->unk_10->unk_0C, v1, param0->unk_0C);
+    BagContext_Init(v0, param0->unk_10->saveData, v1, param0->unk_0C);
 
-    param0->unk_1C = OverlayManager_New(&Unk_ov84_02241130, v0, param0->unk_00);
+    param0->appMan = ApplicationManager_New(&Unk_ov84_02241130, v0, param0->heapID);
     param0->unk_18 = v0;
 
     return 1;
@@ -119,23 +116,23 @@ static int ov82_0223B380(UnkStruct_ov83_0223C344 *param0)
 
 static int ov82_0223B3DC(UnkStruct_ov83_0223C344 *param0)
 {
-    UnkStruct_0207CB08 *v0 = NULL;
+    BagContext *v0 = NULL;
     BOOL v1;
 
-    if (!ov82_0223B140(&param0->unk_1C)) {
+    if (!ov82_0223B140(&param0->appMan)) {
         return 1;
     }
 
-    v0 = sub_0207CB08(param0->unk_00);
-    memcpy(v0, param0->unk_18, sub_0207CB20());
-    Heap_FreeToHeap(param0->unk_18);
+    v0 = BagContext_New(param0->heapID);
+    memcpy(v0, param0->unk_18, BagContext_GetSize());
+    Heap_Free(param0->unk_18);
 
     param0->unk_18 = NULL;
-    param0->unk_08 = sub_0207CB94(v0);
+    param0->unk_08 = BagContext_GetItem(v0); //
 
-    Heap_FreeToHeap(v0);
+    Heap_Free(v0);
 
-    switch (sub_0207CB9C(v0)) {
+    switch (BagContext_GetExitCode(v0)) {
     case 1:
         return 2;
     case 0:
@@ -151,7 +148,7 @@ static int ov82_0223B3DC(UnkStruct_ov83_0223C344 *param0)
         break;
     }
 
-    v1 = Bag_TryRemoveItem(param0->unk_10->unk_14, param0->unk_08, 1, param0->unk_00);
+    v1 = Bag_TryRemoveItem(param0->unk_10->bag, param0->unk_08, 1, param0->heapID);
     GF_ASSERT(v1);
 
     return 4;
@@ -159,26 +156,26 @@ static int ov82_0223B3DC(UnkStruct_ov83_0223C344 *param0)
 
 static int ov82_0223B470(UnkStruct_ov83_0223C344 *param0)
 {
-    u8 v0;
-    u8 v1, v2, v3, v4;
-    Bag *v5 = param0->unk_10->unk_14;
+    u8 i;
+    u8 v1, v2, v3, item;
+    Bag *bag = param0->unk_10->bag;
 
     FS_EXTERN_OVERLAY(overlay85);
 
-    const OverlayManagerTemplate v6 = {
+    const ApplicationManagerTemplate v6 = {
         ov85_02241440, ov85_0224154C, ov85_022415A0, FS_OVERLAY_ID(overlay85)
     };
 
-    param0->unk_18 = sub_020972FC(param0->unk_00);
+    param0->unk_18 = sub_020972FC(param0->heapID);
     sub_02097320(param0->unk_18, param0->unk_08, 1);
 
     v3 = 0;
 
-    for (v0 = 0; v0 < 64; v0++) {
-        v4 = Item_ForBerryNumber(v0);
+    for (i = 0; i < NUM_BERRIES; i++) {
+        item = Item_ForBerryNumber(i);
 
-        if (Bag_CanRemoveItem(v5, v4, 1, param0->unk_00) == 1) {
-            sub_02097320(param0->unk_18, v4, 0);
+        if (Bag_CanRemoveItem(bag, item, 1, param0->heapID) == TRUE) {
+            sub_02097320(param0->unk_18, item, 0);
             v3++;
         }
     }
@@ -186,7 +183,7 @@ static int ov82_0223B470(UnkStruct_ov83_0223C344 *param0)
     BagCursor_GetFieldPocketPosition(param0->unk_0C, 4, &v2, &v1);
     sub_0209733C(param0->unk_18, v1, v2, v3 + 2);
 
-    param0->unk_1C = OverlayManager_New(&v6, param0->unk_18, param0->unk_00);
+    param0->appMan = ApplicationManager_New(&v6, param0->unk_18, param0->heapID);
     return 3;
 }
 
@@ -194,14 +191,14 @@ static int ov82_0223B510(UnkStruct_ov83_0223C344 *param0)
 {
     u8 v0, v1;
 
-    if (!ov82_0223B140(&param0->unk_1C)) {
+    if (!ov82_0223B140(&param0->appMan)) {
         return 3;
     }
 
     sub_02097390(param0->unk_18, &v0, &v1);
     BagCursor_SetFieldPocketPosition(param0->unk_0C, 4, v1, v0);
 
-    Heap_FreeToHeap(param0->unk_18);
+    Heap_Free(param0->unk_18);
     param0->unk_18 = NULL;
 
     return 0;

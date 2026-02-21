@@ -141,13 +141,13 @@ void sub_02020B14(UnkStruct_020216E0 *param0)
     param0->unk_20 = NULL;
 }
 
-void sub_02020B90(int param0, int param1)
+void sub_02020B90(int param0, enum HeapID heapID)
 {
     int v0;
 
     GF_ASSERT(Unk_021C0774 == NULL);
 
-    Unk_021C0774 = Heap_AllocFromHeap(param1, sizeof(UnkStruct_02020C44) * param0);
+    Unk_021C0774 = Heap_Alloc(heapID, sizeof(UnkStruct_02020C44) * param0);
     Unk_021C0778 = param0;
 
     for (v0 = 0; v0 < param0; v0++) {
@@ -163,7 +163,7 @@ void sub_02020BD0(void)
         sub_02020CCC(Unk_021C0774 + v0);
     }
 
-    Heap_FreeToHeap(Unk_021C0774);
+    Heap_Free(Unk_021C0774);
 
     Unk_021C0774 = NULL;
     Unk_021C0778 = 0;
@@ -186,9 +186,7 @@ void sub_02020C08(void)
 
 UnkStruct_02020C44 *sub_02020C44(const UnkStruct_ov5_021EDDAC *param0)
 {
-    UnkStruct_02020C44 *v0;
-
-    v0 = sub_02020D74();
+    UnkStruct_02020C44 *v0 = sub_02020D74();
 
     if (v0 == NULL) {
         GF_ASSERT(0);
@@ -197,20 +195,20 @@ UnkStruct_02020C44 *sub_02020C44(const UnkStruct_ov5_021EDDAC *param0)
 
     v0->unk_00 = 1;
     v0->unk_01 = 1;
-    v0->unk_04 = Heap_AllocFromHeap(param0->unk_04, sizeof(UnkStruct_020216E0) * param0->unk_00);
+    v0->unk_04 = Heap_Alloc(param0->heapID, sizeof(UnkStruct_020216E0) * param0->unk_00);
     v0->unk_08 = param0->unk_00;
 
     sub_02020B14(&v0->unk_0C);
 
     v0->unk_0C.unk_BC = &v0->unk_0C;
     v0->unk_0C.unk_C0 = &v0->unk_0C;
-    v0->unk_CC = Heap_AllocFromHeap(param0->unk_04, sizeof(UnkStruct_020216E0 *) * param0->unk_00);
+    v0->unk_CC = Heap_Alloc(param0->heapID, sizeof(UnkStruct_020216E0 *) * param0->unk_00);
 
     sub_020216A8(v0);
-    v0->unk_D4 = Heap_AllocFromHeap(param0->unk_04, sizeof(NNSFndAllocator));
+    v0->unk_D4 = Heap_Alloc(param0->heapID, sizeof(NNSFndAllocator));
 
-    Heap_FndInitAllocatorForExpHeap(v0->unk_D4, param0->unk_04, 4);
-    v0->unk_D8 = sub_0201DD00(param0->unk_00, param0->unk_04);
+    HeapExp_FndInitAllocator(v0->unk_D4, param0->heapID, 4);
+    v0->unk_D8 = sub_0201DD00(param0->unk_00, param0->heapID);
 
     return v0;
 }
@@ -224,9 +222,9 @@ BOOL sub_02020CCC(UnkStruct_02020C44 *param0)
 
     if (param0->unk_00 != 0) {
         sub_02020D14(param0);
-        Heap_FreeToHeap(param0->unk_04);
-        Heap_FreeToHeap(param0->unk_CC);
-        Heap_FreeToHeap(param0->unk_D4);
+        Heap_Free(param0->unk_04);
+        Heap_Free(param0->unk_CC);
+        Heap_Free(param0->unk_D4);
         sub_0201DD3C(param0->unk_D8);
         sub_02020AEC(param0);
     }
@@ -332,9 +330,7 @@ static void sub_02020DA8(UnkStruct_02020C44 *param0)
 
 static void sub_02020E28(UnkStruct_020216E0 *param0, const UnkStruct_ov5_021DF84C *param1)
 {
-    UnkStruct_02020C44 *v0;
-
-    v0 = (UnkStruct_02020C44 *)param0->unk_28;
+    UnkStruct_02020C44 *v0 = (UnkStruct_02020C44 *)param0->unk_28;
 
     sub_0202105C(v0, param0);
     sub_02021078(param0, param1);
@@ -379,11 +375,9 @@ static void sub_02020E78(UnkStruct_020216E0 *param0, const UnkStruct_ov5_021DF84
 
 static void sub_02020EF8(const NNSG3dResTex *param0, NNSG3dTexKey *param1, NNSG3dTexKey *param2, NNSG3dPlttKey *param3)
 {
-    u32 v0, v1, v2;
-
-    v0 = NNS_G3dTexGetRequiredSize(param0);
-    v1 = NNS_G3dTex4x4GetRequiredSize(param0);
-    v2 = NNS_G3dPlttGetRequiredSize(param0);
+    u32 v0 = NNS_G3dTexGetRequiredSize(param0);
+    u32 v1 = NNS_G3dTex4x4GetRequiredSize(param0);
+    u32 v2 = NNS_G3dPlttGetRequiredSize(param0);
 
     if (v0 > 0) {
         *param1 = NNS_GfdAllocTexVram(v0, 0, 0);
@@ -870,11 +864,8 @@ static void sub_02021768(UnkStruct_020216E0 *param0)
 
 static NNSG3dResMdlSet *sub_02021788(const UnkStruct_ov5_021DF84C *param0, NNSG3dResMdl **param1, NNSG3dResTex **param2)
 {
-    void *v0;
-    NNSG3dResMdlSet *v1;
-
-    v0 = sub_0202189C(param0, 0);
-    v1 = NNS_G3dGetMdlSet(v0);
+    void *v0 = sub_0202189C(param0, 0);
+    NNSG3dResMdlSet *v1 = NNS_G3dGetMdlSet(v0);
 
     *param1 = NNS_G3dGetMdlByIdx(v1, 0);
 
@@ -887,9 +878,7 @@ static NNSG3dResMdlSet *sub_02021788(const UnkStruct_ov5_021DF84C *param0, NNSG3
 
 static NNSG3dResTex *sub_020217D4(const UnkStruct_ov5_021DF84C *param0)
 {
-    NNSG3dResTex *v0;
-
-    v0 = (NNSG3dResTex *)sub_0202189C(param0, 1);
+    NNSG3dResTex *v0 = (NNSG3dResTex *)sub_0202189C(param0, 1);
     return v0;
 }
 
@@ -904,17 +893,13 @@ static void sub_020217E0(UnkStruct_020216E0 *param0, const UnkStruct_ov5_021DF84
 
 static fx32 sub_020217F4(const UnkStruct_020216E0 *param0, int param1)
 {
-    const UnkStruct_020217F4 *v0;
-
-    v0 = sub_020218B4(param0->unk_2C, param1);
+    const UnkStruct_020217F4 *v0 = sub_020218B4(param0->unk_2C, param1);
     return v0->unk_00 << FX32_SHIFT;
 }
 
 static int sub_02021804(UnkStruct_020216E0 *param0, fx32 param1)
 {
-    const UnkStruct_020217F4 *v0;
-
-    v0 = sub_020218B4(param0->unk_2C, param0->unk_B6);
+    const UnkStruct_020217F4 *v0 = sub_020218B4(param0->unk_2C, param0->unk_B6);
     return sub_02021824(v0, &param0->unk_B8, param1);
 }
 

@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 11,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ACE_TRAINER_M",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 1,
             "initial_dir": 1,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 25,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_CASHIER_F",
+            "graphics_id": "OBJ_EVENT_GFX_CASHIER_F",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -30,10 +32,11 @@
             "y": 0
         },
         {
-            "graphics_id": 24,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_CASHIER_M",
+            "graphics_id": "OBJ_EVENT_GFX_CASHIER_M",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 1,
             "data": [],
@@ -44,10 +47,11 @@
             "y": 0
         },
         {
-            "graphics_id": 26,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_POKECENTER_NURSE",
+            "graphics_id": "OBJ_EVENT_GFX_POKECENTER_NURSE",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 8,
             "initial_dir": 1,
             "data": [],
@@ -58,10 +62,11 @@
             "y": 0
         },
         {
-            "graphics_id": 14,
-            "movement_type": 11,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ACE_TRAINER_F",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_F",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_SOUTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 6,
             "initial_dir": 3,
             "data": [],
@@ -72,10 +77,11 @@
             "y": 0
         },
         {
-            "graphics_id": 148,
-            "movement_type": 14,
-            "trainer_type": 0,
-            "flag": 541,
+            "id": "LOCALID_RIVAL",
+            "graphics_id": "OBJ_EVENT_GFX_BARRY",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_POKEMON_LEAGUE_NORTH_POKECENTER_1F_RIVAL",
             "script": 0,
             "initial_dir": 0,
             "data": [],
@@ -86,10 +92,11 @@
             "y": 0
         },
         {
-            "graphics_id": 10,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_GUITARIST",
+            "graphics_id": "OBJ_EVENT_GFX_GUITARIST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 7,
             "initial_dir": 0,
             "data": [],
@@ -104,25 +111,25 @@
         {
             "x": 11,
             "z": 2,
-            "dest_header_id": 176,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE_ELEVATOR_TO_AARON_ROOM",
             "dest_warp_id": 1
         },
         {
             "x": 11,
             "z": 11,
-            "dest_header_id": 172,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE",
             "dest_warp_id": 1
         },
         {
             "x": 2,
             "z": 12,
-            "dest_header_id": 495,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE_NORTH_POKECENTER_2F",
             "dest_warp_id": 0
         },
         {
             "x": 6,
             "z": 14,
-            "dest_header_id": 496,
+            "dest_header_id": "MAP_HEADER_POKEMON_LEAGUE_NORTH_POKECENTER_B1F",
             "dest_warp_id": 0
         }
     ],
@@ -134,7 +141,7 @@
             "y": 0,
             "width": 3,
             "length": 1,
-            "var": 16623,
+            "var": "VAR_RIVAL_BEAT_SUNYSHORE_GYM",
             "value": 0
         }
     ]

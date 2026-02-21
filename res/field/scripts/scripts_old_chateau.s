@@ -1,14 +1,13 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/old_chateau.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0010
     ScriptEntryEnd
 
 _000A:
-    SetFlag 0x9DC
+    SetFlag FLAG_FIRST_ARRIVAL_OLD_CHATEAU
     End
 
 _0010:
@@ -20,6 +19,4 @@ _0010:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

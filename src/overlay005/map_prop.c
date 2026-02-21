@@ -8,14 +8,13 @@
 #include "overlay005/area_data.h"
 #include "overlay005/map_prop_animation.h"
 #include "overlay005/map_prop_material_shape.h"
-#include "overlay005/ov5_021D5878.h"
-#include "overlay005/struct_ov5_021D5894.h"
+#include "overlay005/model_attributes.h"
 
 #include "easy3d.h"
 #include "fx_util.h"
+#include "gfx_box_test.h"
 #include "heap.h"
 #include "narc.h"
-#include "unk_0201CED8.h"
 
 static void MapPropManager_InitRenderObj(const int modelID, AreaDataManager *const areaDataManager, NNSG3dRenderObj *renderObj, NNSG3dResMdl **model);
 static void MapPropManager_RenderUsing1Mat1Shp(const NNSG3dResMdl *model, VecFx32 *position, MtxFx33 *rotation, VecFx32 *scale, const MapPropMaterialShape *propMatShp, const int modelID);
@@ -28,9 +27,9 @@ typedef struct {
     int dummy28[2];
 } MapPropFile;
 
-MapPropManager *MapPropManager_New(const u8 heapId)
+MapPropManager *MapPropManager_New(const u8 heapID)
 {
-    MapPropManager *mapPropManager = Heap_AllocFromHeap(heapId, sizeof(MapPropManager));
+    MapPropManager *mapPropManager = Heap_Alloc(heapID, sizeof(MapPropManager));
     MapPropManager_Init(mapPropManager);
 
     return mapPropManager;
@@ -38,7 +37,7 @@ MapPropManager *MapPropManager_New(const u8 heapId)
 
 void MapPropManager_Free(MapPropManager *mapPropManager)
 {
-    Heap_FreeToHeap(mapPropManager);
+    Heap_Free(mapPropManager);
     mapPropManager = NULL;
 }
 
@@ -58,7 +57,7 @@ void MapPropManager_Init(MapPropManager *mapPropManager)
     }
 }
 
-void MapPropManager_InitOne(const int index, MapPropManager *mapPropManager)
+void MapPropManager_ClearOne(int index, MapPropManager *mapPropManager)
 {
     GF_ASSERT(index < MAX_LOADED_MAP_PROPS);
     VecFx32 nullVector = { 0, 0, 0 };
@@ -77,17 +76,16 @@ void MapPropManager_Load(NARC *landDataNARC, const int mapPropFilesSize, AreaDat
 {
     MapPropFile *mapPropFiles = NULL;
     u32 mapPropFilesCount;
-    int i;
 
     if (mapPropFilesSize != 0) {
-        mapPropFiles = Heap_AllocFromHeapAtEnd(HEAP_ID_FIELD, mapPropFilesSize);
+        mapPropFiles = Heap_AllocAtEnd(HEAP_ID_FIELD1, mapPropFilesSize);
         NARC_ReadFile(landDataNARC, mapPropFilesSize, mapPropFiles);
         mapPropFilesCount = mapPropFilesSize / sizeof(MapPropFile);
     } else {
         mapPropFilesCount = 0;
     }
 
-    for (i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
+    for (int i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
         MapProp *loadedProp = &mapPropManager->loadedProps[i];
 
         if (i < mapPropFilesCount) {
@@ -118,13 +116,12 @@ void MapPropManager_Load(NARC *landDataNARC, const int mapPropFilesSize, AreaDat
     }
 
     if (mapPropFiles != NULL) {
-        Heap_FreeToHeap(mapPropFiles);
+        Heap_Free(mapPropFiles);
     }
 }
 
-void MapPropManager_Render(const VecFx32 *positionOffset, const AreaDataManager *areaDataManager, const BOOL param2, UnkStruct_ov5_021D5894 *const param3, MapPropManager *mapPropManager)
+void MapPropManager_Render(const VecFx32 *positionOffset, const AreaDataManager *areaDataManager, const BOOL applyAttrsToModel, ModelAttributes *const modelAttrs, MapPropManager *mapPropManager)
 {
-    int i;
     VecFx32 position;
     MtxFx33 rotationMatrix = {
         FX32_ONE,
@@ -135,10 +132,10 @@ void MapPropManager_Render(const VecFx32 *positionOffset, const AreaDataManager 
         0,
         0,
         0,
-        FX32_ONE
+        FX32_ONE,
     };
 
-    for (i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
+    for (int i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
         MapProp *loadedProp = &mapPropManager->loadedProps[i];
 
         if (loadedProp->loaded != FALSE) {
@@ -150,12 +147,15 @@ void MapPropManager_Render(const VecFx32 *positionOffset, const AreaDataManager 
             position.x += positionOffset->x;
             position.z += positionOffset->z;
 
-            if (sub_0201CED8(loadedProp->model, &position, &rotationMatrix, &loadedProp->scale)) {
+            if (GFXBoxTest_IsModelInView(loadedProp->model, &position, &rotationMatrix, &loadedProp->scale)) {
                 const MapPropMaterialShape *propMatShp = AreaDataManager_GetMapPropMaterialShape(areaDataManager);
                 u16 propMatShpIDsCount;
 
-                if (param2 == TRUE) {
-                    ov5_021D5948(param3, loadedProp->model, (1 | 1 << 1 | 1 << 4 | 1 << 5 | 1 << 8 | 1 << 9 | 1 << 10 | 1 << 11));
+                if (applyAttrsToModel == TRUE) {
+                    ModelAttributes_ApplyToModel(
+                        modelAttrs,
+                        loadedProp->model,
+                        MODEL_LIGHT_VECTOR_1 | MODEL_LIGHT_VECTOR_2 | MODEL_LIGHT_COLOR_1 | MODEL_LIGHT_COLOR_2 | MODEL_DIFFUSE_REFLECT_COLOR | MODEL_AMBIENT_REFLECT_COLOR | MODEL_SPECULAR_REFLECT_COLOR | MODEL_EMISSION_COLOR);
                 }
 
                 MapProp_GetMaterialShapeIDsCount(loadedProp->modelID, propMatShp, &propMatShpIDsCount);
@@ -243,22 +243,19 @@ static void MapPropManager_InitRenderObj(const int modelID, AreaDataManager *con
 static void MapPropManager_RenderUsing1Mat1Shp(const NNSG3dResMdl *model, VecFx32 *position, MtxFx33 *rotation, VecFx32 *scale, const MapPropMaterialShape *propMatShp, const int modelID)
 {
     u8 i;
-    u16 propMatShpIDsCount;
-    u16 propMatShpIDsIndex;
-    u8 materialID;
-    BOOL sendMaterial;
-    MapPropMaterialShapeIDs const *propMatShpIDs;
 
     NNS_G3dGlbSetBaseTrans(position);
     NNS_G3dGlbSetBaseRot(rotation);
     NNS_G3dGlbSetBaseScale(scale);
     NNS_G3dGlbFlush();
 
+    u16 propMatShpIDsCount;
+    u16 propMatShpIDsIndex;
     MapProp_GetMaterialShapeIDsLocator(modelID, propMatShp, &propMatShpIDsCount, &propMatShpIDsIndex);
 
-    propMatShpIDs = MapPropMaterialShape_GetMaterialShapeIDsAt(propMatShpIDsIndex, propMatShp);
-    materialID = 0xFF;
-    sendMaterial = TRUE;
+    MapPropMaterialShapeIDs const *propMatShpIDs = MapPropMaterialShape_GetMaterialShapeIDsAt(propMatShpIDsIndex, propMatShp);
+    u8 materialID = 0xFF;
+    BOOL sendMaterial = TRUE;
 
     for (i = 0; i < propMatShpIDsCount; i++) {
         if (materialID != propMatShpIDs[i].materialID) {
@@ -274,10 +271,9 @@ static void MapPropManager_RenderUsing1Mat1Shp(const NNSG3dResMdl *model, VecFx3
 
 u8 MapPropManager_LoadOne(MapPropManager *mapPropManager, AreaDataManager *const areaDataManager, const int modelID, const VecFx32 *position, const VecFx32 *rotation, MapPropAnimationManager *mapPropAnimMan)
 {
-    u8 i;
     VecFx32 scale = { FX32_ONE, FX32_ONE, FX32_ONE };
 
-    for (i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
+    for (u8 i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
         MapProp *loadedProp = &mapPropManager->loadedProps[i];
 
         if (loadedProp->loaded == FALSE) {
@@ -307,7 +303,6 @@ u8 MapPropManager_LoadOne(MapPropManager *mapPropManager, AreaDataManager *const
 
 void MapPropManager_Render2(MapPropManager *mapPropManager, AreaDataManager *const areaDataManager)
 {
-    u8 i;
     MtxFx33 rotationMatrix = {
         FX32_ONE,
         0,
@@ -317,10 +312,10 @@ void MapPropManager_Render2(MapPropManager *mapPropManager, AreaDataManager *con
         0,
         0,
         0,
-        FX32_ONE
+        FX32_ONE,
     };
 
-    for (i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
+    for (u8 i = 0; i < MAX_LOADED_MAP_PROPS; i++) {
         MapProp *loadedProp = &mapPropManager->loadedProps[i];
 
         if (loadedProp->loaded) {

@@ -2,7 +2,7 @@
     "name": "Esteban",
     "class": "TRAINER_CLASS_SCHOOL_KID_MALE",
     "items": [
-        "ITEM_X_SP__DEF"
+        "ITEM_X_SP_DEF"
     ],
     "ai_flags": [
         "AI_FLAG_BASIC",
@@ -21,8 +21,14 @@
                 "MOVE_WATER_GUN",
                 "MOVE_AMNESIA"
             ],
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Wow... You’re out there.\n"
         }
     ]
 }

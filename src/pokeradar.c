@@ -4,32 +4,29 @@
 #include <string.h>
 
 #include "constants/battle.h"
-#include "generated/sdat.h"
 
 #include "struct_defs/radar_chain_records.h"
-#include "struct_defs/struct_0201CFEC.h"
 
 #include "field/field_system.h"
 #include "overlay005/ov5_021F2D20.h"
 #include "overlay006/radar_chain_records.h"
-#include "overlay101/struct_ov101_021D5D90_decl.h"
 
 #include "bag.h"
 #include "field_task.h"
+#include "gfx_box_test.h"
 #include "heap.h"
 #include "inlines.h"
 #include "map_matrix.h"
 #include "map_object.h"
 #include "map_tile_behavior.h"
+#include "overworld_anim_manager.h"
 #include "player_avatar.h"
 #include "scrcmd.h"
 #include "script_manager.h"
+#include "sound_playback.h"
 #include "special_encounter.h"
-#include "unk_02005474.h"
-#include "unk_0201CED8.h"
-#include "unk_02054D00.h"
+#include "terrain_collision_manager.h"
 #include "unk_020553DC.h"
-#include "unk_020711EC.h"
 
 typedef struct {
     int x;
@@ -38,7 +35,7 @@ typedef struct {
     BOOL active;
     BOOL continueChain;
     BOOL shiny;
-    UnkStruct_ov101_021D5D90 *unk_18;
+    OverworldAnimManager *unk_18;
     VecFx32 position;
 } GrassPatch;
 
@@ -51,7 +48,7 @@ typedef struct RadarChain {
     BOOL unk_14;
     BOOL unk_18;
     GrassPatch patch[NUM_GRASS_PATCHES];
-    UnkStruct_0201CFEC unk_BC;
+    GFXTestBox grassPatchVolume;
     u8 unk_D0;
 } RadarChain;
 
@@ -63,16 +60,16 @@ static BOOL CheckPatchContinueChain(const u8 patchRing, const int battleResult);
 static BOOL CheckPatchShiny(const int param0);
 static void IncWithCap(int *param0);
 
-RadarChain *RadarChain_Init(const int heapID)
+RadarChain *RadarChain_Init(const enum HeapID heapID)
 {
-    RadarChain *chain = Heap_AllocFromHeap(heapID, sizeof(RadarChain));
-    sub_0201CFEC(FX32_ONE * 16, FX32_ONE * 8, FX32_ONE * 16, &chain->unk_BC);
+    RadarChain *chain = Heap_Alloc(heapID, sizeof(RadarChain));
+    GFXBoxTest_MakeBox(FX32_ONE * 16, FX32_ONE * 8, FX32_ONE * 16, &chain->grassPatchVolume);
     return chain;
 }
 
 void RadarChain_Free(RadarChain *chain)
 {
-    Heap_FreeToHeap(chain);
+    Heap_Free(chain);
 }
 
 void RadarChain_Clear(RadarChain *chain)
@@ -139,7 +136,7 @@ BOOL RadarSpawnPatches(FieldSystem *fieldSystem, const int param1, const int par
 
     if (v7 == 0) {
         RadarChain_Clear(chain);
-        sub_02055554(fieldSystem, sub_02055428(fieldSystem, fieldSystem->location->mapId), 1);
+        Sound_TryFadeOutToBGM(fieldSystem, Sound_GetOverrideBGM(fieldSystem, fieldSystem->location->mapId), 1);
     } else {
         chain->active = TRUE;
     }
@@ -167,7 +164,7 @@ void SetupGrassPatches(FieldSystem *fieldSystem, const int param1, RadarChain *c
     }
 }
 
-void sub_02069638(FieldSystem *fieldSystem, RadarChain *chain)
+void FieldSystem_CreateShakingRadarPatches(FieldSystem *fieldSystem, RadarChain *chain)
 {
     for (u8 patchRing = 0; patchRing < NUM_GRASS_PATCHES; patchRing++) {
         if (chain->patch[patchRing].active) {
@@ -195,7 +192,7 @@ BOOL sub_02069690(RadarChain *chain)
     for (u8 patchRing = 0; patchRing < NUM_GRASS_PATCHES; patchRing++) {
         if (chain->patch[patchRing].unk_18 != NULL) {
             if (ov5_021F31A8(chain->patch[patchRing].unk_18)) {
-                sub_0207136C(chain->patch[patchRing].unk_18);
+                OverworldAnimManager_Finish(chain->patch[patchRing].unk_18);
                 chain->patch[patchRing].unk_18 = NULL;
                 v0++;
             }
@@ -264,9 +261,9 @@ const BOOL sub_02069798(const RadarChain *chain)
     return chain->unk_18;
 }
 
-void sub_0206979C(FieldSystem *fieldSystem)
+void PokeRadar_ClearIfAllOutOfView(FieldSystem *fieldSystem)
 {
-    BOOL v0;
+    BOOL patchInView;
     GrassPatch *patch;
     int patchRing;
 
@@ -276,23 +273,23 @@ void sub_0206979C(FieldSystem *fieldSystem)
 
     for (patchRing = 0; patchRing < NUM_GRASS_PATCHES; patchRing++) {
         patch = &(fieldSystem->chain->patch[patchRing]);
-        v0 = sub_0201CF7C(&(patch->position), &(fieldSystem->chain->unk_BC));
-        if (patch->active && !v0) {
+        patchInView = GFXBoxTest_IsBoxAtPositionInView(&patch->position, &fieldSystem->chain->grassPatchVolume);
+        if (patch->active && !patchInView) {
             patch->active = FALSE;
         }
     }
 
-    int v3 = 0;
+    int inactiveRadarRings = 0;
     for (patchRing = 0; patchRing < NUM_GRASS_PATCHES; patchRing++) {
         patch = &(fieldSystem->chain->patch[patchRing]);
         if (patch->active == 0) {
-            v3++;
+            inactiveRadarRings++;
         }
     }
 
-    if (v3 == 4) {
+    if (inactiveRadarRings == 4) {
         RadarChain_Clear(fieldSystem->chain);
-        sub_02055554(fieldSystem, sub_02055428(fieldSystem, fieldSystem->location->mapId), 1);
+        Sound_TryFadeOutToBGM(fieldSystem, Sound_GetOverrideBGM(fieldSystem, fieldSystem->location->mapId), 1);
     }
 }
 
@@ -307,13 +304,13 @@ static BOOL CheckTileIsGrass(FieldSystem *fieldSystem, const fx32 param1, const 
     int v1 = (param3 - (9 / 2)) + param5;
     patch->x = v0;
     patch->z = v1;
-    u8 v2 = FieldSystem_GetTileBehavior(fieldSystem, v0, v1);
+    u8 v2 = TerrainCollisionManager_GetTileBehavior(fieldSystem, v0, v1);
 
     if (TileBehavior_IsTallGrass(v2)) {
         u8 v3;
         patch->position.x = FX32_ONE * 16 * v0;
         patch->position.z = FX32_ONE * 16 * v1;
-        patch->position.y = sub_02054FBC(fieldSystem, 0, patch->position.x, patch->position.z, &v3);
+        patch->position.y = TerrainCollisionManager_GetHeight(fieldSystem, 0, patch->position.x, patch->position.z, &v3);
 
         if (param1 != patch->position.y) {
             patch->active = FALSE;
@@ -428,7 +425,7 @@ BOOL RefreshRadarChain(FieldTask *taskMan)
         u8 *v2 = SpecialEncounter_GetRadarCharge(SaveData_GetSpecialEncounters(fieldSystem->saveData));
 
         if (*v2 < RADAR_BATTERY_STEPS) {
-            ScriptManager_Start(taskMan, 8970, NULL, NULL);
+            ScriptManager_Start(taskMan, SCRIPT_ID(POKE_RADAR, 0), NULL, NULL);
             *(u16 *)FieldSystem_GetScriptMemberPtr(fieldSystem, SCRIPT_DATA_PARAMETER_0) = RADAR_BATTERY_STEPS - (*v2);
             *v1 = 4;
         } else {
@@ -438,7 +435,7 @@ BOOL RefreshRadarChain(FieldTask *taskMan)
             RadarSpawnPatches(fieldSystem, v3, v4, fieldSystem->chain);
             if (fieldSystem->chain->active) {
                 SetupGrassPatches(fieldSystem, 0x1, fieldSystem->chain);
-                sub_02069638(fieldSystem, fieldSystem->chain);
+                FieldSystem_CreateShakingRadarPatches(fieldSystem, fieldSystem->chain);
                 *v1 = 1;
             } else {
                 *v1 = 3;
@@ -455,12 +452,12 @@ BOOL RefreshRadarChain(FieldTask *taskMan)
         }
         break;
     case 4:
-        Heap_FreeToHeap(v1);
+        Heap_Free(v1);
         MapObjectMan_UnpauseAllMovement(fieldSystem->mapObjMan);
         return TRUE;
         break;
     case 3:
-        ScriptManager_Start(taskMan, 8971, NULL, NULL);
+        ScriptManager_Start(taskMan, SCRIPT_ID(POKE_RADAR, 1), NULL, NULL);
         *v1 = 4;
         break;
     }
@@ -501,7 +498,7 @@ void RadarChargeStep(FieldSystem *fieldSystem)
 {
     u8 *v0;
 
-    if (Bag_CanRemoveItem(SaveData_GetBag(fieldSystem->saveData), 431, 1, 4) == 1) {
+    if (Bag_CanRemoveItem(SaveData_GetBag(fieldSystem->saveData), ITEM_POKE_RADAR, 1, HEAP_ID_FIELD1) == TRUE) {
         v0 = SpecialEncounter_GetRadarCharge(SaveData_GetSpecialEncounters(fieldSystem->saveData));
         if ((*v0) < RADAR_BATTERY_STEPS) {
             (*v0)++;

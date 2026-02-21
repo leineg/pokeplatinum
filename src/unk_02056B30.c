@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "generated/movement_actions.h"
+
 #include "struct_decls/struct_02061AB4_decl.h"
 
 #include "field/field_system.h"
@@ -27,9 +29,9 @@
 #include "map_object.h"
 #include "map_tile_behavior.h"
 #include "player_avatar.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
-#include "unk_02054D00.h"
+#include "screen_fade.h"
+#include "sound_playback.h"
+#include "terrain_collision_manager.h"
 #include "unk_020553DC.h"
 #include "unk_020655F4.h"
 
@@ -49,7 +51,7 @@ typedef struct {
     u16 unk_10;
     int unk_14;
     int unk_18;
-    int unk_1C;
+    enum HeapID heapID;
 } UnkStruct_02056B30;
 
 static BOOL sub_02056B70(FieldTask *taskMan);
@@ -98,9 +100,9 @@ static const UnkFuncPtr_020EC57C Unk_020EC57C[7] = {
     NULL
 };
 
-void sub_02056B30(FieldTask *taskMan, int param1, int param2, int param3, u16 param4, int param5, int param6, int param7)
+void sub_02056B30(FieldTask *taskMan, int param1, int param2, int param3, u16 param4, int param5, int param6, enum HeapID heapID)
 {
-    UnkStruct_02056B30 *v0 = Heap_AllocFromHeap(param7, sizeof(UnkStruct_02056B30));
+    UnkStruct_02056B30 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_02056B30));
 
     v0->unk_04 = param1;
     v0->unk_08 = param2;
@@ -108,7 +110,7 @@ void sub_02056B30(FieldTask *taskMan, int param1, int param2, int param3, u16 pa
     v0->unk_10 = param4;
     v0->unk_14 = param5;
     v0->unk_18 = param6;
-    v0->unk_1C = param7;
+    v0->heapID = heapID;
     v0->unk_00 = 0;
 
     FieldTask_InitCall(taskMan, sub_02056B70, v0);
@@ -122,13 +124,13 @@ static BOOL sub_02056B70(FieldTask *taskMan)
     switch (v1->unk_00) {
     case 0:
         HBlankSystem_Stop(fieldSystem->unk_04->hBlankSystem);
-        StartScreenTransition(v1->unk_04, v1->unk_08, v1->unk_0C, v1->unk_10, v1->unk_14, v1->unk_18, v1->unk_1C);
+        StartScreenFade(v1->unk_04, v1->unk_08, v1->unk_0C, v1->unk_10, v1->unk_14, v1->unk_18, v1->heapID);
         v1->unk_00++;
         break;
     case 1:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             HBlankSystem_Start(fieldSystem->unk_04->hBlankSystem);
-            Heap_FreeToHeap(v1);
+            Heap_Free(v1);
             return 1;
         }
     }
@@ -138,7 +140,7 @@ static BOOL sub_02056B70(FieldTask *taskMan)
 
 void sub_02056BDC(FieldSystem *fieldSystem, const int param1, const int param2, const int param3, const int param4, const int param5, const int param6)
 {
-    UnkStruct_02056BDC *v0 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_02056BDC));
+    UnkStruct_02056BDC *v0 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_02056BDC));
 
     v0->unk_00 = 0;
     v0->unk_04 = 0;
@@ -154,7 +156,7 @@ void sub_02056C18(FieldSystem *fieldSystem, const int param1, const int param2, 
 {
     int v0;
     int v1;
-    UnkStruct_02056BDC *v2 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_02056BDC));
+    UnkStruct_02056BDC *v2 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_02056BDC));
 
     v2->unk_00 = 0;
     v2->unk_04 = 0;
@@ -234,7 +236,7 @@ static BOOL sub_02056CFC(FieldTask *taskMan)
         (v1->unk_00)++;
         break;
     case 5:
-        if (Sound_CheckFade() != 0) {
+        if (Sound_IsFadeActive()) {
             break;
         }
 
@@ -246,7 +248,7 @@ static BOOL sub_02056CFC(FieldTask *taskMan)
         (v1->unk_00)++;
         break;
     case 6:
-        Heap_FreeToHeap(v1);
+        Heap_Free(v1);
         return 1;
     }
 
@@ -260,7 +262,7 @@ static BOOL sub_02056DE4(FieldTask *taskMan)
 
     switch (v1->unk_04) {
     case 0:
-        Sound_PlayEffect(1539);
+        Sound_PlayEffect(SEQ_SE_DP_KAIDAN2);
 
         FieldTransition_FadeOut(taskMan);
         (v1->unk_04)++;
@@ -345,9 +347,9 @@ static BOOL sub_02056F1C(FieldTask *taskMan)
         v2 = Player_MapObject(fieldSystem->playerAvatar);
 
         if (v3 == 2) {
-            LocalMapObj_SetAnimationCode(v2, 0xa);
+            LocalMapObj_SetAnimationCode(v2, MOVEMENT_ACTION_WALK_SLOW_WEST);
         } else if (v3 == 3) {
-            LocalMapObj_SetAnimationCode(v2, 0xb);
+            LocalMapObj_SetAnimationCode(v2, MOVEMENT_ACTION_WALK_SLOW_EAST);
         } else {
             GF_ASSERT(FALSE);
         }
@@ -363,12 +365,12 @@ static BOOL sub_02056F1C(FieldTask *taskMan)
         }
         break;
     case 2:
-        Sound_PlayEffect(1539);
-        ov5_021D1744(0);
+        Sound_PlayEffect(SEQ_SE_DP_KAIDAN2);
+        FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_OUT);
         (v1->unk_04)++;
         break;
     case 3:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             return 1;
         }
         break;
@@ -431,7 +433,7 @@ static BOOL sub_02057050(FieldTask *taskMan)
         u8 v4;
         MapObject *v5 = Player_MapObject(fieldSystem->playerAvatar);
 
-        v4 = FieldSystem_GetTileBehavior(fieldSystem, Player_GetXPos(fieldSystem->playerAvatar), Player_GetZPos(fieldSystem->playerAvatar));
+        v4 = TerrainCollisionManager_GetTileBehavior(fieldSystem, Player_GetXPos(fieldSystem->playerAvatar), Player_GetZPos(fieldSystem->playerAvatar));
 
         if (TileBehavior_IsDoor(v4)) {
             MapObject_SetHidden(v5, 1);
@@ -482,7 +484,7 @@ static BOOL sub_0205711C(FieldTask *taskMan)
         u8 v4;
         MapObject *v5 = Player_MapObject(fieldSystem->playerAvatar);
 
-        v4 = FieldSystem_GetTileBehavior(fieldSystem, Player_GetXPos(fieldSystem->playerAvatar), Player_GetZPos(fieldSystem->playerAvatar));
+        v4 = TerrainCollisionManager_GetTileBehavior(fieldSystem, Player_GetXPos(fieldSystem->playerAvatar), Player_GetZPos(fieldSystem->playerAvatar));
 
         if (TileBehavior_IsDoor(v4)) {
             MapObject_SetHidden(v5, 1);
@@ -540,7 +542,7 @@ static BOOL sub_02057218(FieldTask *taskMan)
     switch (v1->unk_04) {
     case 0:
 
-        ov5_021D1744(1);
+        FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_IN);
         v2 = Player_MapObject(fieldSystem->playerAvatar);
 
         if (1) {
@@ -549,9 +551,9 @@ static BOOL sub_02057218(FieldTask *taskMan)
             v3 = PlayerAvatar_GetDir(fieldSystem->playerAvatar);
 
             if (v3 == 2) {
-                LocalMapObj_SetAnimationCode(v2, 0xa);
+                LocalMapObj_SetAnimationCode(v2, MOVEMENT_ACTION_WALK_SLOW_WEST);
             } else if (v3 == 3) {
-                LocalMapObj_SetAnimationCode(v2, 0xb);
+                LocalMapObj_SetAnimationCode(v2, MOVEMENT_ACTION_WALK_SLOW_EAST);
             } else {
                 GF_ASSERT(FALSE);
             }
@@ -570,7 +572,7 @@ static BOOL sub_02057218(FieldTask *taskMan)
         }
         break;
     case 2:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             (v1->unk_04)++;
         }
         break;
@@ -616,7 +618,7 @@ static void sub_02057300(FieldSystem *fieldSystem)
         v1.x += (FX32_ONE * 16);
     }
 
-    v1.y = sub_02054FBC(fieldSystem, v1.y, v1.x, v1.z, NULL);
+    v1.y = TerrainCollisionManager_GetHeight(fieldSystem, v1.y, v1.x, v1.z, NULL);
 
     sub_0205ECB8(fieldSystem->playerAvatar, &v1, v0);
     Camera_SetTargetAndUpdatePosition(PlayerAvatar_PosVector(fieldSystem->playerAvatar), fieldSystem->camera);
@@ -634,7 +636,7 @@ static void sub_02057368(FieldSystem *fieldSystem)
 
     v0 = Player_GetXPos(fieldSystem->playerAvatar);
     v1 = Player_GetZPos(fieldSystem->playerAvatar);
-    v4 = FieldSystem_GetTileBehavior(fieldSystem, v0, v1);
+    v4 = TerrainCollisionManager_GetTileBehavior(fieldSystem, v0, v1);
 
     if (TileBehavior_IsWarpStairsEast(v4)) {
         v3.x += (FX32_ONE * 16);
@@ -646,7 +648,7 @@ static void sub_02057368(FieldSystem *fieldSystem)
         (void)0;
     }
 
-    v3.y = sub_02054FBC(fieldSystem, v3.y, v3.x, v3.z, NULL);
+    v3.y = TerrainCollisionManager_GetHeight(fieldSystem, v3.y, v3.x, v3.z, NULL);
 
     sub_0205ECB8(fieldSystem->playerAvatar, &v3, v2);
     Camera_SetTargetAndUpdatePosition(PlayerAvatar_PosVector(fieldSystem->playerAvatar), fieldSystem->camera);

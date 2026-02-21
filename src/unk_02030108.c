@@ -3,23 +3,20 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "struct_defs/battle_frontier.h"
 #include "struct_defs/struct_02030114.h"
 #include "struct_defs/struct_0203026C.h"
-#include "struct_defs/struct_0203068C.h"
 
 #include "savedata.h"
 
 void sub_02030108(UnkStruct_02030114 *param0);
-UnkStruct_02030114 *sub_02030114(SaveData *param0);
 BOOL sub_02030124(UnkStruct_02030114 *param0);
 void sub_0203012C(UnkStruct_02030114 *param0, BOOL param1);
 void sub_02030140(UnkStruct_02030114 *param0, u8 param1, u8 param2, u8 param3, const void *param4);
 u32 sub_02030198(UnkStruct_02030114 *param0, u8 param1, u8 param2, u8 param3, void *param4);
-u8 sub_020301E0(u8 param0, u8 *param1);
 void sub_02030204(u8 param0, u8 *param1, u8 param2);
 void sub_02030244(u8 *param0);
 void sub_02030260(UnkStruct_0203026C *param0);
-UnkStruct_0203026C *sub_0203026C(SaveData *param0);
 void sub_02030280(UnkStruct_0203026C *param0, u8 param1, u8 param2, u8 param3, const void *param4);
 u32 sub_020302B4(UnkStruct_0203026C *param0, u8 param1, u8 param2, u8 param3, void *param4);
 
@@ -29,10 +26,10 @@ void sub_02030108(UnkStruct_02030114 *param0)
     return;
 }
 
-UnkStruct_02030114 *sub_02030114(SaveData *param0)
+UnkStruct_02030114 *sub_02030114(SaveData *saveData)
 {
-    UnkStruct_0203068C *v0 = SaveData_SaveTable(param0, 23);
-    return &v0->unk_8E0_val3;
+    BattleFrontier *frontier = SaveData_SaveTable(saveData, SAVE_TABLE_ENTRY_FRONTIER);
+    return &frontier->unk_8E0_val3;
 }
 
 BOOL sub_02030124(UnkStruct_02030114 *param0)
@@ -97,17 +94,13 @@ u32 sub_02030198(UnkStruct_02030114 *param0, u8 param1, u8 param2, u8 param3, vo
     return 0;
 }
 
-u8 sub_020301E0(u8 param0, u8 *param1)
+u8 BattleHall_GetRankOfType(u8 idx, u8 *typeRanks)
 {
-    u8 v0;
-    u8 v1;
-    u8 v2;
+    u8 byte = idx / 2;
+    u8 nybble = idx % 2;
+    u8 rank = (typeRanks[byte] >> (4 * nybble)) & 0xf;
 
-    v0 = (param0 / 2);
-    v1 = (param0 % 2);
-    v2 = (param1[v0] >> (4 * v1)) & 0xf;
-
-    return v2;
+    return rank;
 }
 
 void sub_02030204(u8 param0, u8 *param1, u8 param2)
@@ -148,10 +141,10 @@ void sub_02030260(UnkStruct_0203026C *param0)
     return;
 }
 
-UnkStruct_0203026C *sub_0203026C(SaveData *param0)
+UnkStruct_0203026C *sub_0203026C(SaveData *saveData)
 {
-    UnkStruct_0203068C *v0 = SaveData_SaveTable(param0, 23);
-    return &v0->unk_1618.unk_00;
+    BattleFrontier *frontier = SaveData_SaveTable(saveData, SAVE_TABLE_ENTRY_FRONTIER);
+    return &frontier->unk_1618.unk_00;
 }
 
 void sub_02030280(UnkStruct_0203026C *param0, u8 param1, u8 param2, u8 param3, const void *param4)

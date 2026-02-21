@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/canalave_library_3f.h"
 
-    .data
 
     ScriptEntry _0032
     ScriptEntry _0062
@@ -18,17 +17,17 @@
     ScriptEntryEnd
 
 _0032:
-    GetPlayerGender 0x4000
-    GoToIfEq 0x4000, GENDER_MALE, _0052
-    GoToIfEq 0x4000, GENDER_FEMALE, _005A
+    GetPlayerGender VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_MALE, _0052
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_FEMALE, _005A
     End
 
 _0052:
-    SetVar 0x4020, 97
+    SetVar VAR_OBJ_GFX_ID_0, 97
     End
 
 _005A:
-    SetVar 0x4020, 0
+    SetVar VAR_OBJ_GFX_ID_0, 0
     End
 
 _0062:
@@ -40,11 +39,11 @@ _0062:
     ApplyMovement 4, _0364
     ApplyMovement LOCALID_PLAYER, _0310
     WaitMovement
-    GetPlayerMapPos 0x8004, 0x8005
-    ScrCmd_066 0x8004, 0x8005
-    ApplyMovement 241, _0340
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    AddFreeCamera VAR_0x8004, VAR_0x8005
+    ApplyFreeCameraMovement _0340
     WaitMovement
-    WaitTime 30, 0x800C
+    WaitTime 30, VAR_RESULT
     BufferRivalName 0
     BufferPlayerName 1
     Message 1
@@ -58,7 +57,7 @@ _0062:
     CloseMessage
     ApplyMovement 4, _035C
     WaitMovement
-    WaitTime 10, 0x800C
+    WaitTime 10, VAR_RESULT
     BufferPlayerName 0
     Message 4
     CloseMessage
@@ -72,8 +71,8 @@ _0062:
     BufferRivalName 0
     Message 7
     Message 8
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0116
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, _0116
     GoTo _0124
     End
 
@@ -95,8 +94,8 @@ _0132:
     ApplyMovement 2, _02E0
     ApplyMovement 3, _03D8
     WaitMovement
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0162
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, _0162
     GoTo _0173
     End
 
@@ -140,20 +139,20 @@ _0184:
     ApplyMovement 4, _03AC
     ApplyMovement LOCALID_PLAYER, _0330
     WaitMovement
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    ScrCmd_067
+    RestoreCamera
     ScrCmd_310
     ReturnToField
-    GetPlayerMapPos 0x8004, 0x8005
-    ScrCmd_066 0x8004, 0x8005
-    ApplyMovement 241, _0340
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    AddFreeCamera VAR_0x8004, VAR_0x8005
+    ApplyFreeCameraMovement _0340
     WaitMovement
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     Message 22
     CloseMessage
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     ApplyMovement 4, _03B4
     WaitMovement
     BufferRivalName 0
@@ -165,179 +164,179 @@ _0184:
     ApplyMovement 3, _03BC
     ApplyMovement 4, _0388
     ApplyMovement 2, _02F0
-    ApplyMovement 241, _0348
+    ApplyFreeCameraMovement _0348
     WaitMovement
     RemoveObject 4
     RemoveObject 3
-    ScrCmd_067
+    RestoreCamera
     ApplyMovement LOCALID_PLAYER, _02C0
     WaitMovement
     Message 25
     CloseMessage
-    ScrCmd_04A 0x5DC
+    StopFanfare SEQ_SE_CONFIRM
     ApplyMovement 2, _0308
     WaitMovement
     PlayFanfare SEQ_SE_DP_KAIDAN2
     RemoveObject 2
-    ScrCmd_04A 0x603
-    SetVar 0x4078, 4
-    SetVar 0x40B2, 2
-    SetFlag 168
-    SetFlag 0x1AE
-    ClearFlag 0x1B3
-    ClearFlag 0x1B5
-    ClearFlag 0x1B2
+    StopFanfare SEQ_SE_DP_KAIDAN2
+    SetVar VAR_CANALAVE_STATE, 4
+    SetVar VAR_CANALAVE_LIBRARY_STATE, 2
+    SetFlag FLAG_UNK_0x00A8
+    SetFlag FLAG_UNK_0x01AE
+    ClearFlag FLAG_UNK_0x01B3
+    ClearFlag FLAG_UNK_0x01B5
+    ClearFlag FLAG_HIDE_CANALAVE_RIVAL
     ReleaseAll
     End
 
     .balign 4, 0
 _02C0:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02C8:
-    MoveAction_011
-    MoveAction_033
+    WalkSlowEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _02D4:
-    MoveAction_014
-    MoveAction_032
+    WalkNormalWest
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02E0:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _02E8:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02F0:
-    MoveAction_015
-    MoveAction_012 4
-    MoveAction_014 5
-    MoveAction_012 3
-    MoveAction_033
+    WalkNormalEast
+    WalkNormalNorth 4
+    WalkNormalWest 5
+    WalkNormalNorth 3
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0308:
-    MoveAction_015
+    WalkNormalEast
     EndMovement
 
     .balign 4, 0
 _0310:
-    MoveAction_063 3
-    MoveAction_033
-    MoveAction_013 2
-    MoveAction_015
-    MoveAction_013
-    MoveAction_015 2
-    MoveAction_013
+    Delay8 3
+    WalkOnSpotNormalSouth
+    WalkNormalSouth 2
+    WalkNormalEast
+    WalkNormalSouth
+    WalkNormalEast 2
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _0330:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0338:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0340:
-    MoveAction_011 3
+    WalkSlowEast 3
     EndMovement
 
     .balign 4, 0
 _0348:
-    MoveAction_010 3
+    WalkSlowWest 3
     EndMovement
 
     .balign 4, 0
 _0350:
-    MoveAction_016
-    MoveAction_033
+    WalkFastNorth
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _035C:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _0364:
-    MoveAction_013
-    MoveAction_015 2
-    MoveAction_032
-    MoveAction_013
-    MoveAction_015
-    MoveAction_013
-    MoveAction_015 3
-    MoveAction_013
+    WalkNormalSouth
+    WalkNormalEast 2
+    WalkOnSpotNormalNorth
+    WalkNormalSouth
+    WalkNormalEast
+    WalkNormalSouth
+    WalkNormalEast 3
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _0388:
-    MoveAction_018 4
-    MoveAction_016 3
-    MoveAction_019
-    MoveAction_069
+    WalkFastWest 4
+    WalkFastNorth 3
+    WalkFastEast
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _039C:
-    MoveAction_039
+    WalkOnSpotFastEast
     EndMovement
 
     .balign 4, 0
 _03A4:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _03AC:
-    MoveAction_016
+    WalkFastNorth
     EndMovement
 
     .balign 4, 0
 _03B4:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _03BC:
-    MoveAction_014
-    MoveAction_012 5
-    MoveAction_014 2
-    MoveAction_012 2
-    MoveAction_015
-    MoveAction_069
+    WalkNormalWest
+    WalkNormalNorth 5
+    WalkNormalWest 2
+    WalkNormalNorth 2
+    WalkNormalEast
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _03D8:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _03E0:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
 _03E8:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _0406
+    GoToIfSet FLAG_UNK_0x00A8, _0406
     Message 26
     WaitABXPadPress
     CloseMessage
@@ -355,7 +354,7 @@ _0411:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _042F
+    GoToIfSet FLAG_UNK_0x00A8, _042F
     Message 28
     WaitABXPadPress
     CloseMessage
@@ -373,9 +372,9 @@ _043A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 30
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0471
-    GoToIfEq 0x800C, MENU_NO, _0463
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0471
+    GoToIfEq VAR_RESULT, MENU_NO, _0463
     End
 
 _0463:
@@ -397,9 +396,9 @@ _047C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 33
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _04B3
-    GoToIfEq 0x800C, MENU_NO, _04A5
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _04B3
+    GoToIfEq VAR_RESULT, MENU_NO, _04A5
     End
 
 _04A5:
@@ -421,9 +420,9 @@ _04BE:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 36
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _04F5
-    GoToIfEq 0x800C, MENU_NO, _04E7
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _04F5
+    GoToIfEq VAR_RESULT, MENU_NO, _04E7
     End
 
 _04E7:
@@ -445,9 +444,9 @@ _0500:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 39
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0537
-    GoToIfEq 0x800C, MENU_NO, _0529
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0537
+    GoToIfEq VAR_RESULT, MENU_NO, _0529
     End
 
 _0529:
@@ -460,11 +459,11 @@ _0529:
 
 _0537:
     Message 41
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0529
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0529
     Message 42
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0529
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0529
     Message 43
     WaitABXPadPress
     CloseMessage
@@ -475,9 +474,9 @@ _056A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 44
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _05A1
-    GoToIfEq 0x800C, MENU_NO, _0593
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _05A1
+    GoToIfEq VAR_RESULT, MENU_NO, _0593
     End
 
 _0593:
@@ -490,11 +489,11 @@ _0593:
 
 _05A1:
     Message 46
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0593
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0593
     Message 47
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0593
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0593
     Message 48
     WaitABXPadPress
     CloseMessage
@@ -505,9 +504,9 @@ _05D4:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 49
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _060B
-    GoToIfEq 0x800C, MENU_NO, _05FD
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _060B
+    GoToIfEq VAR_RESULT, MENU_NO, _05FD
     End
 
 _05FD:
@@ -530,15 +529,15 @@ _0616:
     LockAll
     Message 52
     Message 53
-    ScrCmd_040 1, 1, 0, 1, 0x800C
-    ScrCmd_29D 0x103, 0
-    ScrCmd_29D 0x104, 1
-    ScrCmd_29D 0x105, 2
-    ScrCmd_29D 0x106, 3
-    ScrCmd_043
-    GoToIfEq 0x800C, 0, _0673
-    GoToIfEq 0x800C, 1, _067E
-    GoToIfEq 0x800C, 2, _0689
+    InitGlobalTextMenu 1, 1, 0, VAR_RESULT
+    AddMenuEntry 0x103, 0
+    AddMenuEntry 0x104, 1
+    AddMenuEntry 0x105, 2
+    AddMenuEntry 0x106, 3
+    ShowMenu
+    GoToIfEq VAR_RESULT, 0, _0673
+    GoToIfEq VAR_RESULT, 1, _067E
+    GoToIfEq VAR_RESULT, 2, _0689
     GoTo _0694
     End
 
@@ -580,4 +579,4 @@ _06A2:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

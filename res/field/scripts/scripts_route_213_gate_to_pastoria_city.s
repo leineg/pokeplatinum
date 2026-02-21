@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_213_gate_to_pastoria_city.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _001D
@@ -22,8 +21,8 @@ _001D:
     LockAll
     FacePlayer
     Message 1
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0044
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0044
     Message 2
     GoTo _004F
     End
@@ -39,4 +38,4 @@ _004F:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/team_galactic_eterna_building_4f.h"
 
-    .data
 
     ScriptEntry _001A
     ScriptEntry _0022
@@ -15,10 +14,9 @@ _001A:
     ScrCmd_2CD
     End
 
-    .byte 205
-    .byte 2
-    .byte 2
-    .byte 0
+TeamGalacticEternaBuilding4F_Unused:
+    ScrCmd_2CD
+    End
 
 _0022:
     PlayFanfare SEQ_SE_CONFIRM
@@ -29,20 +27,20 @@ _0022:
     Message 0
     CloseMessage
     StartTrainerBattle TRAINER_COMMANDER_JUPITER_TEAM_GALACTIC_ETERNA_BUILDING
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0135
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0135
     Message 1
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     RemoveObject 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    WaitTime 15, 0x800C
-    GetPlayerDir 0x8004
-    GoToIfEq 0x8004, 0, _00A4
-    GoToIfEq 0x8004, 2, _00BE
-    GoToIfEq 0x8004, 3, _00D0
+    WaitTime 15, VAR_RESULT
+    GetPlayerDir VAR_0x8004
+    GoToIfEq VAR_0x8004, 0, _00A4
+    GoToIfEq VAR_0x8004, 2, _00BE
+    GoToIfEq VAR_0x8004, 3, _00D0
     End
 
 _00A4:
@@ -67,22 +65,22 @@ _00D0:
 _00E2:
     Message 4
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    SetFlag 0x1FD
-    SetFlag 0x1BB
-    SetFlag 0x1C2
-    SetFlag 129
-    ClearFlag 0x192
-    ClearFlag 0x200
-    ClearFlag 0x1FE
+    SetFlag FLAG_UNK_0x01FD
+    SetFlag FLAG_UNK_0x01BB
+    SetFlag FLAG_UNK_0x01C2
+    SetFlag FLAG_UNK_0x0081
+    ClearFlag FLAG_UNK_0x0192
+    ClearFlag FLAG_UNK_0x0200
+    ClearFlag FLAG_UNK_0x01FE
     RemoveObject 2
     RemoveObject 1
     RemoveObject 3
-    SetVar 0x407A, 3
-    FadeScreen 6, 1, 1, 0
+    SetVar VAR_UNK_0x407A, 3
+    FadeScreenIn
     WaitFadeScreen
-    SetFlag 0x987
+    SetFlag FLAG_ALT_MUSIC_GALACTIC_ETERNA_BUILDING
     ReleaseAll
     End
 
@@ -93,73 +91,47 @@ _0135:
 
     .balign 4, 0
 _013C:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0144:
-    MoveAction_012
+    WalkNormalNorth
     EndMovement
 
-    .byte 63
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 15
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 32
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+TeamGalacticEternaBuilding4F_UnusedMovement:
+    Delay8
+    WalkNormalEast 2
+    WalkOnSpotNormalNorth
+    EndMovement
 
     .balign 4, 0
 _015C:
-    MoveAction_012 3
-    MoveAction_035
+    WalkNormalNorth 3
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0168:
-    MoveAction_012 3
-    MoveAction_034
+    WalkNormalNorth 3
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0174:
-    MoveAction_063
-    MoveAction_033
+    Delay8
+    WalkOnSpotNormalSouth
     EndMovement
 
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 62
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+TeamGalacticEternaBuilding4F_UnusedMovement2:
+    WalkOnSpotNormalWest
+    Delay4
+    WalkOnSpotNormalSouth
+    EndMovement
+
+TeamGalacticEternaBuilding4F_UnusedMovement3:
+    WalkOnSpotNormalWest
+    EndMovement
 
 _0198:
     PlayFanfare SEQ_SE_CONFIRM
@@ -168,7 +140,7 @@ _0198:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_CLEFAIRY
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -181,7 +153,7 @@ _01B7:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_BUNEARY
     Message 5
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -191,7 +163,7 @@ _01D6:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 129, _01F4
+    GoToIfSet FLAG_UNK_0x0081, _01F4
     Message 3
     WaitABXPadPress
     CloseMessage

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/grand_lake_valor_lakefront_west_house.h"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
@@ -10,12 +9,12 @@ _0006:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 1, _00D3
-    ScrCmd_1E8 0x800C
-    GoToIfEq 0x800C, 0, _004C
-    GoToIfUnset 171, _0057
-    ScrCmd_1E9 0x800C
-    GoToIfEq 0x800C, 0, _0057
+    GoToIfSet FLAG_UNK_0x0001, _00D3
+    CheckLocalDexCompleted VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _004C
+    GoToIfUnset FLAG_LOCAL_DEX_DIPLOMA_RECEIVED, _0057
+    CheckNationalDexCompleted VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _0057
     GoTo _0095
 
 _004C:
@@ -26,35 +25,35 @@ _004C:
     End
 
 _0057:
-    CallIfUnset 171, _00DE
-    SetFlag 171
-    SetFlag 1
+    CallIfUnset FLAG_LOCAL_DEX_DIPLOMA_RECEIVED, _00DE
+    SetFlag FLAG_LOCAL_DEX_DIPLOMA_RECEIVED
+    SetFlag FLAG_UNK_0x0001
     Message 1
     PlaySound SEQ_FANFA4
     WaitSound
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    ScrCmd_1EA
+    ShowDiplomaSinnoh
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     ReleaseAll
     End
 
 _0095:
-    CallIfUnset 172, _00E4
-    SetFlag 172
-    SetFlag 1
+    CallIfUnset FLAG_NATIONAL_DEX_DIPLOMA_RECEIVED, _00E4
+    SetFlag FLAG_NATIONAL_DEX_DIPLOMA_RECEIVED
+    SetFlag FLAG_UNK_0x0001
     Message 2
     PlaySound SEQ_FANFA4
     WaitSound
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
-    ScrCmd_1EB
+    ShowDiplomaNationalDex
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     ReleaseAll
     End
@@ -67,12 +66,11 @@ _00D3:
     End
 
 _00DE:
-    ScrCmd_260 26
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_LOCAL_DEX_DIPLOMA_RECEIVED
     Return
 
 _00E4:
-    ScrCmd_260 27
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_NATIONAL_DEX_DIPLOMA_RECEIVED
     Return
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

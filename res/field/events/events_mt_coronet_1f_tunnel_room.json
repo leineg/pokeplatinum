@@ -6,7 +6,7 @@
             "x": 6,
             "z": 23,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8103,
@@ -14,7 +14,7 @@
             "x": 18,
             "z": 30,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8104,
@@ -22,7 +22,7 @@
             "x": 16,
             "z": 35,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8107,
@@ -30,7 +30,7 @@
             "x": 16,
             "z": 19,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8106,
@@ -38,7 +38,7 @@
             "x": 24,
             "z": 38,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8108,
@@ -46,15 +46,16 @@
             "x": 20,
             "z": 58,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 32,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_0",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0020",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -65,10 +66,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 33,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_1",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0021",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -79,10 +81,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 34,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_2",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0022",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -93,10 +96,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 35,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_3",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0023",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -107,10 +111,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 36,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_4",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0024",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -121,10 +126,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 37,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_5",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0025",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -135,10 +141,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 38,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_6",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0026",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -149,10 +156,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 39,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_7",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0027",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -163,10 +171,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 40,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_8",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0028",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -177,10 +186,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 41,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_9",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0029",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -191,10 +201,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 42,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_10",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x002A",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -205,10 +216,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 43,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_11",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x002B",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -219,10 +231,11 @@
             "y": 0
         },
         {
-            "graphics_id": 85,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 44,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_ROCK_SMASH_12",
+            "graphics_id": "OBJ_EVENT_GFX_ROCK_SMASH",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x002C",
             "script": 10001,
             "initial_dir": 0,
             "data": [],
@@ -233,11 +246,12 @@
             "y": 0
         },
         {
-            "graphics_id": 124,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 655,
-            "script": 3517,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_GALACTIC_GRUNT_MT_CORONET_TUNNEL_ROOM_1",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "FLAG_UNK_0x028F",
+            "script": "TRAINER_GALACTIC_GRUNT_MT_CORONET_TUNNEL_ROOM_1",
             "initial_dir": 3,
             "data": [
                 4
@@ -249,11 +263,12 @@
             "y": 0
         },
         {
-            "graphics_id": 124,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 655,
-            "script": 3518,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_GALACTIC_GRUNT_MT_CORONET_TUNNEL_ROOM_2",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "FLAG_UNK_0x028F",
+            "script": "TRAINER_GALACTIC_GRUNT_MT_CORONET_TUNNEL_ROOM_2",
             "initial_dir": 1,
             "data": [
                 4
@@ -265,11 +280,12 @@
             "y": 0
         },
         {
-            "graphics_id": 125,
-            "movement_type": 20,
-            "trainer_type": 4,
-            "flag": 655,
-            "script": 3523,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_GALACTIC_GRUNT_MT_CORONET_TUNNEL_ROOM_3",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_F",
+            "movement_type": "MOVEMENT_TYPE_WALK_BACK_AND_FORTH",
+            "trainer_type": "TRAINER_TYPE_FACE_SIDES",
+            "hidden_flag": "FLAG_UNK_0x028F",
+            "script": "TRAINER_GALACTIC_GRUNT_MT_CORONET_TUNNEL_ROOM_3",
             "initial_dir": 1,
             "data": [
                 1,
@@ -282,10 +298,11 @@
             "y": 0
         },
         {
-            "graphics_id": 124,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 655,
+            "id": "MT_CORONET_1F_TUNNEL_ROOM_GRUNT_M_16",
+            "graphics_id": "OBJ_EVENT_GFX_GRUNT_M",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x028F",
             "script": 1,
             "initial_dir": 1,
             "data": [],
@@ -300,13 +317,13 @@
         {
             "x": 2,
             "z": 58,
-            "dest_header_id": 210,
+            "dest_header_id": "MAP_HEADER_MT_CORONET_OUTSIDE_NORTH",
             "dest_warp_id": 2
         },
         {
             "x": 16,
             "z": 13,
-            "dest_header_id": 218,
+            "dest_header_id": "MAP_HEADER_MT_CORONET_1F_NORTH_ROOM_1",
             "dest_warp_id": 0
         }
     ],

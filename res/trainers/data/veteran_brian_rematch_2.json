@@ -20,7 +20,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_CRUNCH"
             ],
-            "power": 100,
+            "iv_scale": 100,
             "ball_seal": 0
         },
         {
@@ -34,7 +34,7 @@
                 "MOVE_FLARE_BLITZ",
                 "MOVE_BOUNCE"
             ],
-            "power": 100,
+            "iv_scale": 100,
             "ball_seal": 0
         },
         {
@@ -48,8 +48,26 @@
                 "MOVE_ANCIENT_POWER",
                 "MOVE_POWER_WHIP"
             ],
-            "power": 100,
+            "iv_scale": 100,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Your young power against my veteran\n",
+                "technique...\r",
+                "Let us battle again to see who wins\n",
+                "this time!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "The power of youth...\n",
+                "It’s startling.\n"
+            ]
         }
     ]
 }

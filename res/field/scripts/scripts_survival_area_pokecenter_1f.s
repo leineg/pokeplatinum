@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/survival_area_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _001E
@@ -10,15 +9,14 @@
     ScriptEntryEnd
 
 _0012:
-    SetVar 0x8007, 0
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 0
     End
 
 _001E:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 200, _003C
+    GoToIfSet FLAG_UNK_0x00C8, _003C
     Message 0
     WaitABXPadPress
     CloseMessage
@@ -52,6 +50,4 @@ _005A:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

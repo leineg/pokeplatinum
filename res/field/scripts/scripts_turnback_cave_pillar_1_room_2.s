@@ -1,15 +1,14 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
 
 _0006:
     Call _0014
-    ScrCmd_285 0x410B, 0x410C
+    InitTurnbackCave VAR_TURNBACK_CAVE_PILLARS_SEEN, VAR_TURNBACK_CAVE_ROOMS_VISITED
     End
 
 _0014:
-    AddVar 0x410C, 1
+    AddVar VAR_TURNBACK_CAVE_ROOMS_VISITED, 1
     Return

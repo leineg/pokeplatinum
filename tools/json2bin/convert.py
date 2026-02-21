@@ -4,11 +4,19 @@ import functools
 
 from generated import (
     ai_flags,
+    bg_event_dirs,
     items,
     genders,
+    map_headers,
+    maps,
     moves,
+    movement_types,
+    object_events_gfx,
     species,
-    trainer_classes
+    trainers,
+    trainer_classes,
+    trainer_types,
+    vars_flags
 )
 
 def pad(len: int) -> bytes:
@@ -22,6 +30,9 @@ def u16(i: int) -> bytes:
 
 def u32(i: int) -> bytes:
     return i.to_bytes(4, 'little')
+
+def ascii(i: str) -> bytes:
+    return str.encode(i, 'ascii')
 
 def from_item(s: str) -> int:
     return items.Item[s].value
@@ -40,6 +51,33 @@ def from_trainer_ai_flag(s: str) -> int:
 
 def from_gender(s: str) -> int:
     return genders.Gender[s].value
+
+def from_bg_event_dir(s: str) -> int:
+    return bg_event_dirs.BgEventDir[s].value
+
+def from_object_event_gfx(s: str) -> int:
+    return object_events_gfx.ObjectEventGfx[s].value
+
+def from_movement_type(s: str) -> int:
+    return movement_types.MovementType[s].value
+
+def from_trainer_type(s: str) -> int:
+    return trainer_types.TrainerType[s].value
+
+def from_var_flag(v: str) -> int:
+    return 0 if v == "0" else vars_flags.VarFlag[v].value
+
+def from_script(v: str, double_battle_id: int) -> int:
+    if v in trainers.TrainerID.__members__:
+        return trainers.TrainerID[v].value - 1 + (5000 if double_battle_id == 2 else 3000)
+    else:
+        return int(v)   
+
+def from_map_header(s: str) -> int:
+    return map_headers.MapHeader[s].value
+
+def from_map(s: str) -> int:
+    return maps.MapID[s].value
 
 TrainerDataFlags = collections.namedtuple('TrainerDataFlags', ['has_moves', 'has_items'])
 

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/pokemon_mansion_maids_room.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0068
@@ -12,20 +11,19 @@ _000E:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0x139, _005D
+    GoToIfSet FLAG_UNK_0x0139, _005D
     Message 0
-    SetVar 0x8004, 218
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0053
-    SetFlag 0x139
-    CallCommonScript 0x7E0
+    SetVar VAR_0x8004, ITEM_SOOTHE_BELL
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0053
+    SetFlag FLAG_UNK_0x0139
+    Common_GiveItemQuantityNoLineFeed
     CloseMessage
     ReleaseAll
     End
 
 _0053:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
@@ -51,8 +49,8 @@ _007B:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 3
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _009D
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _009D
     GoTo _00D3
     End
 
@@ -60,12 +58,12 @@ _009D:
     BufferPlayerName 0
     Message 4
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     PlaySound SEQ_ASA
     WaitSound
     HealParty
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     BufferPlayerName 0
     Message 5
@@ -79,6 +77,4 @@ _00D3:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

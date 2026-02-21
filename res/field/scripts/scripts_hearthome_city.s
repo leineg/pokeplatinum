@@ -1,7 +1,7 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/hearthome_city.h"
+#include "generated/goods.h"
 
-    .data
 
     ScriptEntry _0082
     ScriptEntry _0084
@@ -127,7 +127,7 @@ _011C:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PACHIRISU
     Message 22
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -137,18 +137,18 @@ _013B:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 1, _01A7
+    GoToIfSet FLAG_UNK_0x0001, _01A7
     Message 14
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _01B2
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _01B2
     Message 15
     CloseMessage
-    WaitTime 15, 0x800C
-    GetPlayerDir 0x8004
-    GoToIfEq 0x8004, 0, _01BD
-    GoToIfEq 0x8004, 1, _01D7
-    GoToIfEq 0x8004, 2, _01F1
-    GoToIfEq 0x8004, 3, _020B
+    WaitTime 15, VAR_RESULT
+    GetPlayerDir VAR_0x8004
+    GoToIfEq VAR_0x8004, 0, _01BD
+    GoToIfEq VAR_0x8004, 1, _01D7
+    GoToIfEq VAR_0x8004, 2, _01F1
+    GoToIfEq VAR_0x8004, 3, _020B
     End
 
 _01A7:
@@ -194,83 +194,75 @@ _020B:
     End
 
 _0225:
-    SetFlag 1
+    SetFlag FLAG_UNK_0x0001
     Message 16
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 75
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 65
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+HearthomeCity_UnusedMovement:
+    EmoteExclamationMark
+    Delay16
+    EndMovement
 
     .balign 4, 0
 _0240:
-    MoveAction_014 20
-    MoveAction_012 13
-    MoveAction_015 12
-    MoveAction_012 4
-    MoveAction_033
+    WalkNormalWest 20
+    WalkNormalNorth 13
+    WalkNormalEast 12
+    WalkNormalNorth 4
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0258:
-    MoveAction_012
-    MoveAction_014 2
-    MoveAction_013
-    MoveAction_014 18
-    MoveAction_012 13
-    MoveAction_015 12
-    MoveAction_012 4
-    MoveAction_033
+    WalkNormalNorth
+    WalkNormalWest 2
+    WalkNormalSouth
+    WalkNormalWest 18
+    WalkNormalNorth 13
+    WalkNormalEast 12
+    WalkNormalNorth 4
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _027C:
-    MoveAction_012
-    MoveAction_014 20
-    MoveAction_012 13
-    MoveAction_015 12
-    MoveAction_012 3
+    WalkNormalNorth
+    WalkNormalWest 20
+    WalkNormalNorth 13
+    WalkNormalEast 12
+    WalkNormalNorth 3
     EndMovement
 
     .balign 4, 0
 _0294:
-    MoveAction_013
-    MoveAction_014 20
-    MoveAction_012 13
-    MoveAction_015 12
-    MoveAction_012 3
+    WalkNormalSouth
+    WalkNormalWest 20
+    WalkNormalNorth 13
+    WalkNormalEast 12
+    WalkNormalNorth 3
     EndMovement
 
     .balign 4, 0
 _02AC:
-    MoveAction_014
-    MoveAction_014 20
-    MoveAction_012 13
-    MoveAction_015 12
-    MoveAction_012 3
+    WalkNormalWest
+    WalkNormalWest 20
+    WalkNormalNorth 13
+    WalkNormalEast 12
+    WalkNormalNorth 3
     EndMovement
 
     .balign 4, 0
 _02C4:
-    MoveAction_063 2
-    MoveAction_062
-    MoveAction_034
-    MoveAction_014 19
-    MoveAction_012 13
-    MoveAction_015 12
-    MoveAction_012 3
+    Delay8 2
+    Delay4
+    WalkOnSpotNormalWest
+    WalkNormalWest 19
+    WalkNormalNorth 13
+    WalkNormalEast 12
+    WalkNormalNorth 3
     EndMovement
 
 _02E4:
@@ -308,175 +300,175 @@ _031B:
     FacePlayer
     Message 24
     Message 25
-    GoToIfUnset 0x14A, _03AC
-    GoToIfUnset 0x14B, _03AC
-    GoToIfUnset 0x14C, _03AC
-    GoToIfUnset 0x14D, _03AC
-    GoToIfUnset 0x14E, _03AC
-    GoToIfUnset 0x14F, _03AC
-    GoToIfUnset 0x150, _03AC
-    GoToIfUnset 0x151, _03AC
-    GoToIfUnset 0x152, _03AC
-    GoToIfUnset 0x153, _03AC
-    GoToIfUnset 0x154, _03AC
-    SetFlag 0x15B
+    GoToIfUnset FLAG_UNK_0x014A, _03AC
+    GoToIfUnset FLAG_UNK_0x014B, _03AC
+    GoToIfUnset FLAG_UNK_0x014C, _03AC
+    GoToIfUnset FLAG_UNK_0x014D, _03AC
+    GoToIfUnset FLAG_UNK_0x014E, _03AC
+    GoToIfUnset FLAG_UNK_0x014F, _03AC
+    GoToIfUnset FLAG_UNK_0x0150, _03AC
+    GoToIfUnset FLAG_UNK_0x0151, _03AC
+    GoToIfUnset FLAG_UNK_0x0152, _03AC
+    GoToIfUnset FLAG_UNK_0x0153, _03AC
+    GoToIfUnset FLAG_UNK_0x0154, _03AC
+    SetFlag FLAG_UNK_0x015B
     GoTo _06E8
 
 _03AC:
-    GoToIfSet 0x14A, _03F4
-    GoToIfUnset 0x98C, _03F4
+    GoToIfSet FLAG_UNK_0x014A, _03F4
+    GoToIfUnset FLAG_CONNECTED_TO_WIFI, _03F4
     Message 33
-    SetVar 0x8004, 46
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x14A
+    SetVar VAR_0x8004, UG_GOOD_GLOBE
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x014A
     CloseMessage
     ReleaseAll
     End
 
 _03F4:
-    GoToIfSet 0x14B, _0442
-    CountBadgesAcquired 0x800C
-    GoToIfLt 0x800C, 8, _0442
+    GoToIfSet FLAG_UNK_0x014B, _0442
+    CountBadgesAcquired VAR_RESULT
+    GoToIfLt VAR_RESULT, 8, _0442
     Message 34
-    SetVar 0x8004, 47
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x14B
+    SetVar VAR_0x8004, UG_GOOD_GYM_STATUE
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x014B
     CloseMessage
     ReleaseAll
     End
 
 _0442:
-    GoToIfSet 0x14C, _048A
-    GoToIfUnset 0x96A, _048A
+    GoToIfSet FLAG_UNK_0x014C, _048A
+    GoToIfUnset FLAG_CONTEST_MASTER_CUTE, _048A
     Message 35
-    SetVar 0x8004, 72
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x14C
+    SetVar VAR_0x8004, UG_GOOD_CUTE_CUP
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x014C
     CloseMessage
     ReleaseAll
     End
 
 _048A:
-    GoToIfSet 0x14D, _04D2
-    GoToIfUnset 0x968, _04D2
+    GoToIfSet FLAG_UNK_0x014D, _04D2
+    GoToIfUnset FLAG_CONTEST_MASTER_COOL, _04D2
     Message 36
-    SetVar 0x8004, 73
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x14D
+    SetVar VAR_0x8004, UG_GOOD_COOL_CUP
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x014D
     CloseMessage
     ReleaseAll
     End
 
 _04D2:
-    GoToIfSet 0x14E, _051A
-    GoToIfUnset 0x969, _051A
+    GoToIfSet FLAG_UNK_0x014E, _051A
+    GoToIfUnset FLAG_CONTEST_MASTER_BEAUTY, _051A
     Message 37
-    SetVar 0x8004, 74
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x14E
+    SetVar VAR_0x8004, UG_GOOD_BEAUTY_CUP
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x014E
     CloseMessage
     ReleaseAll
     End
 
 _051A:
-    GoToIfSet 0x14F, _0562
-    GoToIfUnset 0x96C, _0562
+    GoToIfSet FLAG_UNK_0x014F, _0562
+    GoToIfUnset FLAG_CONTEST_MASTER_TOUGH, _0562
     Message 38
-    SetVar 0x8004, 75
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x14F
+    SetVar VAR_0x8004, UG_GOOD_TOUGH_CUP
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x014F
     CloseMessage
     ReleaseAll
     End
 
 _0562:
-    GoToIfSet 0x150, _05AA
-    GoToIfUnset 0x96B, _05AA
+    GoToIfSet FLAG_UNK_0x0150, _05AA
+    GoToIfUnset FLAG_CONTEST_MASTER_SMART, _05AA
     Message 39
-    SetVar 0x8004, 76
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x150
+    SetVar VAR_0x8004, UG_GOOD_CLEVER_CUP
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x0150
     CloseMessage
     ReleaseAll
     End
 
 _05AA:
-    GoToIfSet 0x151, _05F8
-    GetUndergroundTalkCounter 0x800C
-    GoToIfLt 0x800C, 100, _05F8
+    GoToIfSet FLAG_UNK_0x0151, _05F8
+    GetUndergroundTalkCounter VAR_RESULT
+    GoToIfLt VAR_RESULT, 100, _05F8
     Message 40
-    SetVar 0x8004, 77
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x151
+    SetVar VAR_0x8004, UG_GOOD_BLUE_CRYSTAL
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x0151
     CloseMessage
     ReleaseAll
     End
 
 _05F8:
-    GoToIfSet 0x152, _0646
-    GetUndergroundItemsGivenAway 0x800C
-    GoToIfLt 0x800C, 100, _0646
+    GoToIfSet FLAG_UNK_0x0152, _0646
+    GetUndergroundItemsGivenAway VAR_RESULT
+    GoToIfLt VAR_RESULT, 100, _0646
     Message 41
-    SetVar 0x8004, 78
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x152
+    SetVar VAR_0x8004, UG_GOOD_PINK_CRYSTAL
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x0152
     CloseMessage
     ReleaseAll
     End
 
 _0646:
-    GoToIfSet 0x153, _0694
-    GetUndergroundFossilsUnearthed 0x800C
-    GoToIfLt 0x800C, 100, _0694
+    GoToIfSet FLAG_UNK_0x0153, _0694
+    GetUndergroundFossilsUnearthed VAR_RESULT
+    GoToIfLt VAR_RESULT, 100, _0694
     Message 42
-    SetVar 0x8004, 79
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x153
+    SetVar VAR_0x8004, UG_GOOD_RED_CRYSTAL
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x0153
     CloseMessage
     ReleaseAll
     End
 
 _0694:
-    GoToIfSet 0x154, _06E2
-    GetUndergroundTrapsSet 0x800C
-    GoToIfLt 0x800C, 100, _06E2
+    GoToIfSet FLAG_UNK_0x0154, _06E2
+    GetUndergroundTrapsSet VAR_RESULT
+    GoToIfLt VAR_RESULT, 100, _06E2
     Message 43
-    SetVar 0x8004, 80
-    SetVar 0x8005, 1
-    ScrCmd_085 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _06F3
-    CallCommonScript 0x7DC
-    SetFlag 0x154
+    SetVar VAR_0x8004, UG_GOOD_YELLOW_CRYSTAL
+    SetVar VAR_0x8005, 1
+    CheckHasRoomForGoodsInPC VAR_0x8004, VAR_0x8005, VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _06F3
+    Common_SendToUndergroundPC
+    SetFlag FLAG_UNK_0x0154
     CloseMessage
     ReleaseAll
     End
@@ -548,12 +540,12 @@ _0753:
     LockAll
     ApplyMovement LOCALID_PLAYER, _087C
     WaitMovement
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 0x2D5, _07A8
-    GoToIfEq 0x8005, 0x2D6, _07C0
-    GoToIfEq 0x8005, 0x2D7, _07D8
-    GoToIfEq 0x8005, 0x2D8, _07F0
-    GoToIfEq 0x8005, 0x2D9, _0808
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 0x2D5, _07A8
+    GoToIfEq VAR_0x8005, 0x2D6, _07C0
+    GoToIfEq VAR_0x8005, 0x2D7, _07D8
+    GoToIfEq VAR_0x8005, 0x2D8, _07F0
+    GoToIfEq VAR_0x8005, 0x2D9, _0808
     End
 
 _07A8:
@@ -587,129 +579,88 @@ _0808:
     End
 
 _0820:
-    ClearFlag 0x23C
-    ClearFlag 0x23D
+    ClearFlag FLAG_UNK_0x023C
+    ClearFlag FLAG_UNK_0x023D
     AddObject 32
     AddObject 31
     ApplyMovement 31, _0884
     WaitMovement
     PlayCry SPECIES_BUNEARY
-    ScrCmd_04D
+    WaitCry
     ApplyMovement 32, _0894
     WaitMovement
     Message 0
     Message 1
     PlayCry SPECIES_BUNEARY
-    ScrCmd_04D
+    WaitCry
     RemoveObject 31
     Message 2
     CloseMessage
     ApplyMovement 32, _089C
     WaitMovement
     RemoveObject 32
-    SetVar 0x40F6, 1
+    SetVar VAR_UNK_0x40F6, 1
     ReleaseAll
     End
 
     .balign 4, 0
 _087C:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
 _0884:
-    MoveAction_018 9
+    WalkFastWest 9
     EndMovement
 
-    .byte 19
-    .byte 0
-    .byte 8
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+HearthomeCity_UnusedMovement2:
+    WalkFastEast 8
+    EndMovement
 
     .balign 4, 0
 _0894:
-    MoveAction_018 8
+    WalkFastWest 8
     EndMovement
 
     .balign 4, 0
 _089C:
-    MoveAction_015 8
+    WalkNormalEast 8
     EndMovement
 
 _08A4:
-    ScrCmd_036 52, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 52
     End
 
 _08BB:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 53, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 53
     End
 
 _08D0:
-    ScrCmd_036 54, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 54
     End
 
 _08E7:
-    ScrCmd_036 55, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 55
     End
 
 _08FE:
-    ScrCmd_036 56, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 56
     End
 
 _0915:
-    ScrCmd_036 57, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 57
     End
 
 _092C:
-    ScrCmd_036 58, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 58
     End
 
 _0943:
-    ScrCmd_036 59, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 59
     End
 
 _095A:
-    ScrCmd_036 60, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 60
     End
 
 _0971:
@@ -742,5 +693,4 @@ _0997:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

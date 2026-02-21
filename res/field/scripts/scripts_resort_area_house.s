@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/resort_area_house.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0034
@@ -22,7 +21,7 @@ _000E:
 
     .balign 4, 0
 _002C:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
 _0034:
@@ -39,9 +38,9 @@ _0047:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _006F
-    GoToIfEq 0x800C, GENDER_FEMALE, _007A
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, _006F
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, _007A
     End
 
 _006F:
@@ -60,6 +59,4 @@ _0085:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

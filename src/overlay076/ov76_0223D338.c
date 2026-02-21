@@ -6,16 +6,13 @@
 #include "generated/trainer_score_events.h"
 
 #include "struct_decls/font_oam.h"
-#include "struct_defs/archived_sprite.h"
+#include "struct_defs/seal_case.h"
 #include "struct_defs/sprite_animation_frame.h"
 #include "struct_defs/struct_02015958.h"
-#include "struct_defs/struct_0202CA28.h"
-#include "struct_defs/struct_0202CA64.h"
-#include "struct_defs/struct_02099F80.h"
 
-#include "overlay012/ov12_02235E94.h"
-#include "overlay012/struct_ov12_02236030.h"
-#include "overlay012/struct_ov12_02237728.h"
+#include "battle_anim/ov12_02235E94.h"
+#include "battle_anim/struct_ov12_02236030.h"
+#include "battle_anim/struct_ov12_02237728.h"
 #include "overlay076/const_ov76_0223EF3C.h"
 #include "overlay076/funcptr_ov76_0223D674.h"
 #include "overlay076/ov76_0223B140.h"
@@ -31,20 +28,20 @@
 #include "narc.h"
 #include "palette.h"
 #include "pokemon.h"
+#include "pokemon_anim.h"
+#include "pokemon_sprite.h"
 #include "render_window.h"
+#include "screen_fade.h"
+#include "sound_playback.h"
 #include "sprite_system.h"
 #include "string_list.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "system.h"
 #include "touch_screen.h"
-#include "unk_02005474.h"
-#include "unk_0200762C.h"
-#include "unk_0200F174.h"
+#include "touch_screen_actions.h"
 #include "unk_02012744.h"
 #include "unk_02015920.h"
-#include "unk_02015F84.h"
-#include "unk_02023FCC.h"
 #include "unk_0202C9F4.h"
 #include "unk_02097B18.h"
 #include "vram_transfer.h"
@@ -64,12 +61,12 @@ static BOOL ov76_0223EB1C(UnkStruct_ov76_0223DE00 *param0);
 
 void ov76_0223D338(UnkStruct_ov76_0223DE00 *param0)
 {
-    sub_0202CA10(param0->unk_04[param0->unk_3C4[0]].unk_04, &param0->unk_68);
+    BallCapsule_Copy(param0->unk_04[param0->unk_3C4[0]].unk_04, &param0->unk_68);
 }
 
 void ov76_0223D350(UnkStruct_ov76_0223DE00 *param0)
 {
-    sub_0202CA10(&param0->unk_68, param0->unk_04[param0->unk_3C4[0]].unk_04);
+    BallCapsule_Copy(&param0->unk_68, param0->unk_04[param0->unk_3C4[0]].unk_04);
 }
 
 void ov76_0223D368(UnkStruct_ov76_0223DE00 *param0)
@@ -77,16 +74,16 @@ void ov76_0223D368(UnkStruct_ov76_0223DE00 *param0)
     int v0;
 
     for (v0 = 0; v0 < (80 + 1); v0++) {
-        param0->unk_80[v0] = sub_0202CA90(param0->unk_64, v0);
+        param0->unk_80[v0] = SealCase_GetSealCount(param0->unk_64, v0);
     }
 }
 
 void ov76_0223D384(UnkStruct_ov76_0223DE00 *param0)
 {
-    int v0;
+    int i;
 
-    for (v0 = 0; v0 < (80 + 1); v0++) {
-        sub_0202CADC(param0->unk_64, v0, param0->unk_80[v0]);
+    for (i = 0; i < (80 + 1); i++) {
+        SealCase_SetSealQuantity(param0->unk_64, i, param0->unk_80[i]);
     }
 }
 
@@ -122,19 +119,19 @@ void ov76_0223D3CC(UnkStruct_ov76_0223DE00 *param0)
     }
 }
 
-int ov76_0223D430(UnkStruct_0202CA28 *param0)
+int ov76_0223D430(BallCapsule *param0)
 {
     int v0;
     int v1 = 0;
     int v2;
-    UnkStruct_0202CA64 *v3;
+    BallSeal *v3;
 
     v2 = 0;
 
     for (v0 = 0; v0 < 8; v0++) {
-        v3 = sub_0202CA64(param0, v0);
+        v3 = BallCapsule_GetBallSeals(param0, v0);
 
-        if (sub_0202CA7C(v3) != 0) {
+        if (BallSeal_GetSealType(v3) != 0) {
             v2++;
         }
     }
@@ -239,9 +236,7 @@ static BOOL (*const Unk_ov76_0223EE04[])(UnkStruct_ov76_0223DE00 *cbmw) = {
 
 BOOL ov76_0223D550(UnkStruct_ov76_0223DE00 *param0)
 {
-    BOOL v0;
-
-    v0 = Unk_ov76_0223EE04[param0->unk_3CC](param0);
+    BOOL v0 = Unk_ov76_0223EE04[param0->unk_3CC](param0);
     SpriteSystem_DrawSprites(param0->unk_D4.unk_0C);
 
     return v0;
@@ -306,7 +301,7 @@ static BOOL ov76_0223D674(UnkStruct_ov76_0223DE00 *param0)
     case 0: {
         NARC *v0;
 
-        v0 = NARC_ctor(NARC_INDEX_APPLICATION__CUSTOM_BALL__DATA__CB_DATA, 53);
+        v0 = NARC_ctor(NARC_INDEX_APPLICATION__CUSTOM_BALL__DATA__CB_DATA, HEAP_ID_53);
 
         ov76_0223C110(param0);
         ov76_0223C188(param0);
@@ -316,7 +311,7 @@ static BOOL ov76_0223D674(UnkStruct_ov76_0223DE00 *param0)
         ov76_0223CF88(param0, v0);
         ov76_0223C354(param0);
         ov76_0223C61C(param0, v0);
-        ov76_0223CA98(param0->unk_D4.unk_10, &param0->unk_D4.unk_18[0], 1, 2, 21, 27, 2, (0 + ((1 + (18 + 12)) + 9)));
+        ov76_0223CA98(param0->unk_D4.unk_10, &param0->unk_D4.unk_18[0], 1, 2, 21, 27, 2, 0 + ((1 + (18 + 12)) + 9));
         ov76_0223B208(param0);
         ov76_0223B69C(param0, 1);
         ov76_0223B1E0(param0);
@@ -348,7 +343,7 @@ static BOOL ov76_0223D674(UnkStruct_ov76_0223DE00 *param0)
         break;
 
     case 2:
-        if (IsScreenTransitionDone() != 1) {
+        if (IsScreenFadeDone() != 1) {
             break;
         }
 
@@ -382,15 +377,15 @@ static BOOL ov76_0223D674(UnkStruct_ov76_0223DE00 *param0)
             ov76_0223B69C(param0, 1);
             ov76_0223B1E0(param0);
 
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         } else if (gSystem.pressedKeys & PAD_BUTTON_A) {
             param0->unk_3D4++;
             ov76_0223CA30(&param0->unk_D4.unk_18[0], 8);
             ov76_0223BF74(param0->unk_D4.unk_10, &param0->unk_D4.unk_18[1], 1, param0, param0->unk_3C4[0]);
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         } else if (gSystem.pressedKeys & PAD_BUTTON_B) {
             param0->unk_3D4 = 5;
-            Sound_PlayEffect(1501);
+            Sound_PlayEffect(SEQ_SE_DP_DECIDE);
         }
     } break;
     case 4: {
@@ -427,7 +422,7 @@ static BOOL ov76_0223D674(UnkStruct_ov76_0223DE00 *param0)
         param0->unk_3D4++;
         break;
     case 6:
-        if (IsScreenTransitionDone() != 1) {
+        if (IsScreenFadeDone() != 1) {
             break;
         }
         Window_Remove(&param0->unk_D4.unk_18[0]);
@@ -471,8 +466,8 @@ static void ov76_0223D984(FontOAM *param0, int param1, int param2)
     int v1;
 
     if (param0 != NULL) {
-        sub_020129A4(param0, &v0, &v1);
-        sub_020128C4(param0, v0 + param1, v1 + param2);
+        FontOAM_GetXY(param0, &v0, &v1);
+        FontOAM_SetXY(param0, v0 + param1, v1 + param2);
     }
 }
 
@@ -490,7 +485,7 @@ static void ov76_0223D9AC(SysTask *param0, void *param1)
         ov76_0223D984(v0->unk_08, 0, +2);
         ManagedSprite_SetAnimationFrame(v0->unk_04, 0);
         SysTask_Done(param0);
-        Heap_FreeToHeap(v0);
+        Heap_Free(v0);
         break;
     default:
         v0->unk_00++;
@@ -500,9 +495,7 @@ static void ov76_0223D9AC(SysTask *param0, void *param1)
 
 static void ov76_0223DA00(ManagedSprite *param0, FontOAM *param1)
 {
-    UnkStruct_ov76_0223D9AC *v0;
-
-    v0 = Heap_AllocFromHeap(53, sizeof(UnkStruct_ov76_0223D9AC));
+    UnkStruct_ov76_0223D9AC *v0 = Heap_Alloc(HEAP_ID_53, sizeof(UnkStruct_ov76_0223D9AC));
 
     v0->unk_00 = 1;
     v0->unk_04 = param0;
@@ -512,7 +505,7 @@ static void ov76_0223DA00(ManagedSprite *param0, FontOAM *param1)
     SysTask_Start(ov76_0223D9AC, v0, 1000);
 }
 
-void ov76_0223DA34(u32 param0, u32 param1, void *param2)
+void ov76_0223DA34(u32 param0, enum TouchScreenButtonState param1, void *param2)
 {
     UnkStruct_ov76_0223DE00 *v0 = (UnkStruct_ov76_0223DE00 *)param2;
 
@@ -522,7 +515,7 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
 
     switch (param0) {
     case 8:
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             if (v0->unk_418.unk_00 > 0) {
                 v0->unk_418.unk_00--;
             } else {
@@ -534,13 +527,13 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
             ov76_0223BB04(v0);
             ov76_0223BBAC(v0);
             ov76_0223CC8C(v0);
-            Sound_PlayEffect(1733);
+            Sound_PlayEffect(SEQ_SE_DP_CUSTOM02);
         }
 
         ov76_0223D94C(v0->unk_3E4.unk_00[8], param1);
         break;
     case 9:
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             v0->unk_418.unk_00++;
             v0->unk_418.unk_00 %= v0->unk_418.unk_04;
 
@@ -549,15 +542,15 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
             ov76_0223BB04(v0);
             ov76_0223BBAC(v0);
             ov76_0223CC8C(v0);
-            Sound_PlayEffect(1733);
+            Sound_PlayEffect(SEQ_SE_DP_CUSTOM02);
         }
         ov76_0223D94C(v0->unk_3E4.unk_00[9], param1);
         break;
     case 10:
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             if (v0->unk_3D4 != 5) {
                 v0->unk_3D4 = 5;
-                Sound_PlayEffect(1501);
+                Sound_PlayEffect(SEQ_SE_DP_DECIDE);
             }
 
             ov76_0223DA00(v0->unk_3E4.unk_00[10], NULL);
@@ -566,11 +559,11 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
         ov76_0223D94C(v0->unk_3E4.unk_00[10], param1);
         break;
     case 11:
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             if (v0->unk_3D4 != 6) {
                 v0->unk_3D4 = 6;
                 ov76_0223DCB8(v0, 0);
-                Sound_PlayEffect(1506);
+                Sound_PlayEffect(SEQ_SE_DP_PIRORIRO);
             }
 
             ov76_0223DA00(v0->unk_3E4.unk_00[11], v0->unk_D4.unk_164[0]);
@@ -579,11 +572,11 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
         ov76_0223D94C(v0->unk_3E4.unk_00[11], param1);
         break;
     case 12:
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             if (v0->unk_3D4 != 7) {
                 v0->unk_3D4 = 7;
                 ov76_0223DCB8(v0, 0);
-                Sound_PlayEffect(1501);
+                Sound_PlayEffect(SEQ_SE_DP_DECIDE);
             }
 
             ov76_0223DA00(v0->unk_3E4.unk_00[12], v0->unk_D4.unk_164[1]);
@@ -601,22 +594,22 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
     case 7: {
         int v1;
 
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             if (ov76_0223B2F8(v0) == 0) {
-                Sound_PlayEffect(1522);
+                Sound_PlayEffect(SEQ_SE_DP_CUSTOM06);
                 ov76_0223CA30(&v0->unk_D4.unk_18[0], 15);
             } else {
-                if ((v0->unk_418.unk_08[param0] != 0) && (sub_0202CA90(v0->unk_64, v0->unk_418.unk_08[param0] - 1) != 0)) {
+                if ((v0->unk_418.unk_08[param0] != 0) && (SealCase_GetSealCount(v0->unk_64, v0->unk_418.unk_08[param0] - 1) != 0)) {
                     v0->unk_D4.unk_00 = ov76_0223B278(v0, param0);
                     v1 = sub_02098164(v0->unk_418.unk_08[param0]);
 
                     ov76_0223CDC4(&v0->unk_D4.unk_18[0], v1);
-                    sub_0202CAE0(v0->unk_00->unk_20, v0->unk_418.unk_08[param0], -1);
+                    GiveOrTakeSeal(v0->unk_00->unk_20, v0->unk_418.unk_08[param0], -1);
                     ov76_0223CD20(v0, param0);
-                    Sound_PlayEffect(1515);
+                    Sound_PlayEffect(SEQ_SE_DP_BOX02);
                 } else {
                     if (v0->unk_418.unk_08[param0] != 0) {
-                        Sound_PlayEffect(1522);
+                        Sound_PlayEffect(SEQ_SE_DP_CUSTOM06);
                         ov76_0223CA30(&v0->unk_D4.unk_18[0], 16);
                     }
                 }
@@ -634,13 +627,13 @@ void ov76_0223DA34(u32 param0, u32 param1, void *param2)
         int v2;
         int v3;
 
-        if (param1 == 0) {
+        if (param1 == TOUCH_BUTTON_PRESSED) {
             v2 = param0 - 13;
             ov76_0223B5C4(v0, param1, v2);
             v3 = sub_02098164(v0->unk_324[v2].unk_04);
 
             ov76_0223CDC4(&v0->unk_D4.unk_18[0], v3);
-            Sound_PlayEffect(1515);
+            Sound_PlayEffect(SEQ_SE_DP_BOX02);
         }
     } break;
     default:
@@ -689,24 +682,24 @@ void ov76_0223DCC0(UnkStruct_ov76_0223DE00 *param0)
         param0->unk_324[v0 - 13].unk_0C = &param0->unk_D4.unk_FC[v0];
     }
 
-    param0->unk_D4.unk_F8 = sub_02023FCC(param0->unk_D4.unk_FC, 21, ov76_0223DA34, param0, 53);
+    param0->unk_D4.unk_F8 = TouchScreenActions_RegisterHandler(param0->unk_D4.unk_FC, 21, ov76_0223DA34, param0, HEAP_ID_53);
 }
 
 void ov76_0223DD88(UnkStruct_ov76_0223DE00 *param0)
 {
-    ArchivedSprite v0;
-    SpriteAnimationFrame v1[10];
+    PokemonSpriteTemplate v0;
+    SpriteAnimFrame v1[10];
     int v2;
     int v3;
 
-    Pokemon_BuildArchivedSprite(&v0, param0->unk_428, 2);
+    Pokemon_BuildSpriteTemplate(&v0, param0->unk_428, 2);
 
     v2 = Pokemon_GetValue(param0->unk_428, MON_DATA_SPECIES, NULL);
     v3 = Pokemon_SpriteYOffset(param0->unk_428, 2);
 
     param0->unk_D4.unk_D8 = v3;
-    PokeSprite_LoadAnimationFrames(param0->unk_42C, &v1[0], v2, 1);
-    param0->unk_D4.unk_D4 = sub_02007C34(param0->unk_D4.unk_D0, &v0, (256 - 64), 48 + v3, -0x280, 0, &v1[0], NULL);
+    PokemonSprite_LoadAnimFrames(param0->unk_42C, &v1[0], v2, 1);
+    param0->unk_D4.unk_D4 = PokemonSpriteManager_CreateSprite(param0->unk_D4.unk_D0, &v0, 256 - 64, 48 + v3, -0x280, 0, &v1[0], NULL);
 }
 
 static void ov76_0223DE00(UnkStruct_ov76_0223DE00 *param0)
@@ -717,28 +710,28 @@ static void ov76_0223DE00(UnkStruct_ov76_0223DE00 *param0)
     v0 = Pokemon_GetValue(param0->unk_428, MON_DATA_SPECIES, NULL);
     v1 = Pokemon_GetNature(param0->unk_428);
 
-    sub_02007B98(param0->unk_D4.unk_D4, 1);
-    PokeSprite_LoadAnimation(param0->unk_42C, param0->unk_D4.unk_188, param0->unk_D4.unk_D4, v0, 2, 0, 0);
+    PokemonSprite_InitAnim(param0->unk_D4.unk_D4, 1);
+    PokemonSprite_LoadAnim(param0->unk_42C, param0->unk_D4.unk_188, param0->unk_D4.unk_D4, v0, 2, 0, 0);
 }
 
 static void ov76_0223DE54(UnkStruct_ov76_0223DE00 *param0)
 {
-    sub_02007DEC(param0->unk_D4.unk_D4, 12, 0x0);
-    sub_02007DEC(param0->unk_D4.unk_D4, 13, 0x0);
+    PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X, 0x0);
+    PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_Y, 0x0);
 }
 
 static BOOL ov76_0223DE78(UnkStruct_ov76_0223DE00 *param0)
 {
-    if (sub_020080C0(param0->unk_D4.unk_D4, 12) == 0x100) {
+    if (PokemonSprite_GetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X) == 0x100) {
         return 0;
-    } else if (sub_020080C0(param0->unk_D4.unk_D4, 12) >= 0x100) {
-        sub_02007DEC(param0->unk_D4.unk_D4, 12, 0x100);
-        sub_02007DEC(param0->unk_D4.unk_D4, 13, 0x100);
+    } else if (PokemonSprite_GetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X) >= 0x100) {
+        PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X, 0x100);
+        PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_Y, 0x100);
         return 0;
     } else {
-        sub_02008274(param0->unk_D4.unk_D4, 12, 0x20);
-        sub_02008274(param0->unk_D4.unk_D4, 13, 0x20);
-        sub_020087C8(param0->unk_D4.unk_D4, param0->unk_D4.unk_D8);
+        PokemonSprite_AddAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X, 0x20);
+        PokemonSprite_AddAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_Y, 0x20);
+        PokemonSprite_CalcScaledYOffset(param0->unk_D4.unk_D4, param0->unk_D4.unk_D8);
     }
 
     return 1;
@@ -746,16 +739,16 @@ static BOOL ov76_0223DE78(UnkStruct_ov76_0223DE00 *param0)
 
 static BOOL ov76_0223DEF4(UnkStruct_ov76_0223DE00 *param0)
 {
-    if (sub_020080C0(param0->unk_D4.unk_D4, 12) == 0x0) {
+    if (PokemonSprite_GetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X) == 0x0) {
         return 0;
-    } else if (sub_020080C0(param0->unk_D4.unk_D4, 12) <= 0x0) {
-        sub_02007DEC(param0->unk_D4.unk_D4, 12, 0x0);
-        sub_02007DEC(param0->unk_D4.unk_D4, 13, 0x0);
+    } else if (PokemonSprite_GetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X) <= 0x0) {
+        PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X, 0x0);
+        PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_Y, 0x0);
         return 0;
     } else {
-        sub_02008274(param0->unk_D4.unk_D4, 12, -0x20);
-        sub_02008274(param0->unk_D4.unk_D4, 13, -0x20);
-        sub_020087C8(param0->unk_D4.unk_D4, param0->unk_D4.unk_D8);
+        PokemonSprite_AddAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_X, -0x20);
+        PokemonSprite_AddAttribute(param0->unk_D4.unk_D4, MON_SPRITE_SCALE_Y, -0x20);
+        PokemonSprite_CalcScaledYOffset(param0->unk_D4.unk_D4, param0->unk_D4.unk_D8);
     }
 
     return 1;
@@ -763,12 +756,12 @@ static BOOL ov76_0223DEF4(UnkStruct_ov76_0223DE00 *param0)
 
 void ov76_0223DF70(UnkStruct_ov76_0223DE00 *param0, int param1)
 {
-    sub_02007DEC(param0->unk_D4.unk_D4, 6, param1);
+    PokemonSprite_SetAttribute(param0->unk_D4.unk_D4, MON_SPRITE_HIDE, param1);
 }
 
 void ov76_0223DF84(UnkStruct_ov76_0223DE00 *param0)
 {
-    sub_02007DC8(param0->unk_D4.unk_D4);
+    PokemonSprite_Delete(param0->unk_D4.unk_D4);
 }
 
 static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
@@ -793,8 +786,8 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
         PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, (1 << 0) | (1 << 1), 0, 0, 16, 0);
         PaletteData_StartFade(param0->unk_D4.unk_14, 0x4, 0xFFFF, 0, 0, 16, 0);
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 0);
-        GXLayers_EngineBToggleLayers((GX_PLANEMASK_BG2), 1);
-        Bg_SetPriority(7, 1);
+        GXLayers_EngineBToggleLayers(GX_PLANEMASK_BG2, 1);
+        Bg_SetPriority(BG_LAYER_SUB_3, 1);
         ov76_0223D2F4(param0, 1);
         ov76_0223C568(param0, 1);
         ov76_0223B96C(param0, 1);
@@ -804,8 +797,8 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
         if (PaletteData_GetSelectedBuffersMask(param0->unk_D4.unk_14) != 0) {
             break;
         }
-        Bg_SetPriority(3, 1);
-        PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, (1 << 1), 0, 16, 0, 0);
+        Bg_SetPriority(BG_LAYER_MAIN_3, 1);
+        PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, 1 << 1, 0, 16, 0, 0);
         param0->unk_3D4++;
         break;
     case 3:
@@ -840,7 +833,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
                 BallThrow v0;
 
                 v0.type = 1;
-                v0.heapID = 53;
+                v0.heapID = HEAP_ID_53;
                 v0.mode = 0;
                 v0.target = 0xFF;
                 v0.bgPrio = 0;
@@ -855,7 +848,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
             break;
         case 2: {
             int v1;
-            UnkStruct_0202CA28 v2;
+            BallCapsule v2;
             UnkStruct_ov12_02236030 v3 = { 0 };
 
             v3.unk_00 = 1;
@@ -863,10 +856,10 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
             v1 = param0->unk_3C4[0] + 1;
 
             ov76_0223B848(&v2, param0);
-            Pokemon_SetValue(param0->unk_428, MON_DATA_MAIL_ID, (u8 *)&v1);
-            Pokemon_SetValue(param0->unk_428, MON_DATA_171, &v2);
+            Pokemon_SetValue(param0->unk_428, MON_DATA_BALL_CAPSULE_ID, (u8 *)&v1);
+            Pokemon_SetValue(param0->unk_428, MON_DATA_BALL_CAPSULE, &v2);
 
-            param0->unk_D4.unk_154 = ov12_02236004(53, &v3);
+            param0->unk_D4.unk_154 = ov12_02236004(HEAP_ID_53, &v3);
             ov12_02236320(param0->unk_D4.unk_154);
         }
             param0->unk_3DC++;
@@ -882,7 +875,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
                 ov12_022363B4(param0->unk_D4.unk_154);
                 ov76_0223DF70(param0, 0);
                 ov76_0223DE54(param0);
-                Sound_PlayEffect(1734);
+                Sound_PlayEffect(SEQ_SE_DP_CUSTOM05);
                 param0->unk_3DC++;
             }
             break;
@@ -906,11 +899,11 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
                 break;
             }
 
-            if (sub_020160F4(param0->unk_D4.unk_188, 0) != 1) {
+            if (PokemonAnimManager_HasAnimCompleted(param0->unk_D4.unk_188, 0) != TRUE) {
                 break;
             }
 
-            if (sub_02007C24(param0->unk_D4.unk_D4) != 0) {
+            if (PokemonSprite_IsAnimActive(param0->unk_D4.unk_D4) != 0) {
                 break;
             }
 
@@ -927,7 +920,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
                 BallThrow v5;
 
                 v5.type = 1;
-                v5.heapID = 53;
+                v5.heapID = HEAP_ID_53;
                 v5.mode = 5;
                 v5.target = 0xFF;
                 v5.bgPrio = 0;
@@ -980,7 +973,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
         ov76_0223C7E0(param0);
         {
             GameRecords *v7;
-            v7 = SaveData_GetGameRecordsPtr(param0->unk_00->unk_28);
+            v7 = SaveData_GetGameRecords(param0->unk_00->saveData);
 
             GameRecords_IncrementTrainerScore(v7, TRAINER_SCORE_EVENT_UNK_06);
         }
@@ -991,7 +984,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
             if (param0->unk_264[param0->unk_3C4[0]].unk_00 != 0xff) {
                 v8 = param0->unk_00->unk_04[param0->unk_264[param0->unk_3C4[0]].unk_00];
 
-                Pokemon_SetValue(v8, MON_DATA_171, sub_0202CA28(param0->unk_00->unk_20, param0->unk_3C4[0]));
+                Pokemon_SetValue(v8, MON_DATA_BALL_CAPSULE, SealCase_GetCapsuleById(param0->unk_00->unk_20, param0->unk_3C4[0]));
             }
         }
         param0->unk_3D4 = 8;
@@ -1016,7 +1009,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
             }
 
             PaletteData_SetAutoTransparent(param0->unk_D4.unk_14, 0);
-            ov76_0223CA98(param0->unk_D4.unk_10, &param0->unk_D4.unk_18[2], 4, 2, 1, 27, 4, (0 + ((1 + (18 + 12)) + 9)));
+            ov76_0223CA98(param0->unk_D4.unk_10, &param0->unk_D4.unk_18[2], 4, 2, 1, 27, 4, 0 + ((1 + (18 + 12)) + 9));
 
             {
                 UnkStruct_02015958 v9;
@@ -1028,7 +1021,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
                 v9.unk_10 = 25;
                 v9.unk_11 = 6;
 
-                param0->unk_D4.unk_150 = sub_02015920(53);
+                param0->unk_D4.unk_150 = sub_02015920(HEAP_ID_53);
                 sub_02015958(param0->unk_D4.unk_150, &v9);
             }
 
@@ -1093,7 +1086,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
     } break;
     case 8:
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
-        PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, (1 << 1), 0, 0, 16, 0);
+        PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, 1 << 1, 0, 0, 16, 0);
         param0->unk_3D4++;
         break;
     case 9:
@@ -1102,11 +1095,11 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
             break;
         }
 
-        PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, (1 << 0), 0, 16, 0, 0);
+        PaletteData_StartFade(param0->unk_D4.unk_14, 0x1, 1 << 0, 0, 16, 0, 0);
         PaletteData_StartFade(param0->unk_D4.unk_14, 0x4, 0xFFFF, 0, 16, 0, 0);
-        Bg_SetPriority(3, 3);
-        Bg_SetPriority(7, 3);
-        GXLayers_EngineBToggleLayers((GX_PLANEMASK_BG2), 0);
+        Bg_SetPriority(BG_LAYER_MAIN_3, 3);
+        Bg_SetPriority(BG_LAYER_SUB_3, 3);
+        GXLayers_EngineBToggleLayers(GX_PLANEMASK_BG2, 0);
         ov76_0223D2F4(param0, 0);
         ov76_0223C568(param0, 0);
         ov76_0223B96C(param0, 0);
@@ -1132,7 +1125,7 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
     }
 
     if (param0->unk_D4.unk_00 == 0xFF) {
-        sub_0202404C(param0->unk_D4.unk_F8);
+        TouchScreenActions_HandleAction(param0->unk_D4.unk_F8);
     } else {
         u32 v11, v12;
         int v13;
@@ -1156,12 +1149,12 @@ static BOOL ov76_0223DF94(UnkStruct_ov76_0223DE00 *param0)
             ov76_0223B184(param0->unk_324[v13].unk_0C, param0->unk_324[v13].unk_08, 0);
 
             if (v16 == 0) {
-                sub_0202CB20(param0->unk_00->unk_20, param0->unk_324[v13].unk_04, +1);
+                GiveOrTakeSeal2(param0->unk_00->unk_20, param0->unk_324[v13].unk_04, +1);
                 ov76_0223CC8C(param0);
                 ov76_0223B704(param0, v13);
             }
 
-            Sound_PlayEffect(1514);
+            Sound_PlayEffect(SEQ_SE_DP_BOX01);
             param0->unk_D4.unk_00 = 0xFF;
             ov76_0223CDC4(&param0->unk_D4.unk_18[0], 0xFFFF);
         }
@@ -1185,7 +1178,7 @@ static BOOL ov76_0223E8A4(UnkStruct_ov76_0223DE00 *param0)
         param0->unk_3D4++;
         break;
     case 2:
-        if (IsScreenTransitionDone() != 1) {
+        if (IsScreenFadeDone() != 1) {
             break;
         }
 
@@ -1211,12 +1204,12 @@ void ov76_0223E91C(UnkStruct_ov76_0223DE00 *param0, int param1)
     int v0;
     int v1;
     int v2 = 0;
-    UnkStruct_0202CA28 v3;
+    BallCapsule v3;
 
     v1 = param0->unk_04[param1].unk_00;
 
     if (v1 != 0xff) {
-        Pokemon_SetValue(param0->unk_00->unk_04[v1], MON_DATA_MAIL_ID, (u8 *)&v2);
+        Pokemon_SetValue(param0->unk_00->unk_04[v1], MON_DATA_BALL_CAPSULE_ID, (u8 *)&v2);
     }
 
     param0->unk_04[param1].unk_00 = 0xff;
@@ -1266,18 +1259,18 @@ static BOOL ov76_0223E9C4(UnkStruct_ov76_0223DE00 *param0)
         if (v0 == 1) {
             ov76_0223D600(param0, 1, 0);
 
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         } else if (gSystem.pressedKeys & PAD_BUTTON_A) {
             ov76_0223C80C(param0, param0->unk_3C4[0], param0->unk_3C4[1]);
             ov76_0223D600(param0, 1, 1);
             ov76_0223CA30(&param0->unk_D4.unk_18[0], 11);
             param0->unk_3D4 = 2;
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
         } else if (gSystem.pressedKeys & PAD_BUTTON_B) {
             ManagedSprite_SetDrawFlag(param0->unk_2F4[1], 0);
             ov76_0223D600(param0, 0, 1);
             param0->unk_3D4 = 3;
-            Sound_PlayEffect(1501);
+            Sound_PlayEffect(SEQ_SE_DP_DECIDE);
         }
     } break;
     case 2:
@@ -1327,7 +1320,7 @@ void ov76_0223EB64(BgConfig *param0)
     GXLayers_DisableEngineALayers();
 
     {
-        UnkStruct_02099F80 v0 = {
+        GXBanks v0 = {
             GX_VRAM_BG_128_A,
             GX_VRAM_BGEXTPLTT_NONE,
             GX_VRAM_SUB_BG_32_H,
@@ -1362,58 +1355,55 @@ void ov76_0223EB64(BgConfig *param0)
     {
         BgTemplate v2[] = {
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x0000,
-                GX_BG_CHARBASE_0x04000,
-                GX_BG_EXTPLTT_01,
-                0,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x0000,
+                .charBase = GX_BG_CHARBASE_0x04000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 0,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x2000,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x1000,
-                GX_BG_CHARBASE_0x0c000,
-                GX_BG_EXTPLTT_01,
-                2,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x2000,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x1000,
+                .charBase = GX_BG_CHARBASE_0x0c000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 2,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x1000,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x3000,
-                GX_BG_CHARBASE_0x10000,
-                GX_BG_EXTPLTT_01,
-                3,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x1000,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x3000,
+                .charBase = GX_BG_CHARBASE_0x10000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 3,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
         };
 
-        Bg_InitFromTemplate(param0, 1, &v2[0], 0);
-        Bg_InitFromTemplate(param0, 2, &v2[1], 0);
-        Bg_InitFromTemplate(param0, 3, &v2[2], 0);
-        Bg_ClearTilemap(param0, 1);
-        Bg_ClearTilemap(param0, 2);
-        Bg_ClearTilemap(param0, 3);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_1, &v2[0], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_2, &v2[1], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_3, &v2[2], 0);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_1);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_2);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_3);
 
         G2_SetBG0Priority(1);
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG0, 1);
@@ -1422,76 +1412,72 @@ void ov76_0223EB64(BgConfig *param0)
     {
         BgTemplate v3[] = {
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x6800,
-                GX_BG_CHARBASE_0x00000,
-                GX_BG_EXTPLTT_01,
-                0,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x6800,
+                .charBase = GX_BG_CHARBASE_0x00000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 0,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x7000,
-                GX_BG_CHARBASE_0x04000,
-                GX_BG_EXTPLTT_01,
-                2,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x7000,
+                .charBase = GX_BG_CHARBASE_0x04000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 2,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x6000,
-                GX_BG_CHARBASE_0x00000,
-                GX_BG_EXTPLTT_01,
-                1,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x6000,
+                .charBase = GX_BG_CHARBASE_0x00000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 1,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
             {
-                0,
-                0,
-                0x800,
-                0,
-                1,
-                GX_BG_COLORMODE_16,
-                GX_BG_SCRBASE_0x7800,
-                GX_BG_CHARBASE_0x04000,
-                GX_BG_EXTPLTT_01,
-                3,
-                0,
-                0,
-                0,
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x800,
+                .baseTile = 0,
+                .screenSize = BG_SCREEN_SIZE_256x256,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = GX_BG_SCRBASE_0x7800,
+                .charBase = GX_BG_CHARBASE_0x04000,
+                .bgExtPltt = GX_BG_EXTPLTT_01,
+                .priority = 3,
+                .areaOver = 0,
+                .mosaic = FALSE,
             },
         };
 
-        Bg_InitFromTemplate(param0, 4, &v3[0], 0);
-        Bg_InitFromTemplate(param0, 5, &v3[1], 0);
-        Bg_InitFromTemplate(param0, 6, &v3[2], 0);
-        Bg_InitFromTemplate(param0, 7, &v3[3], 0);
-        Bg_ClearTilemap(param0, 4);
-        Bg_ClearTilemap(param0, 5);
-        Bg_ClearTilemap(param0, 6);
-        Bg_ClearTilemap(param0, 7);
-        GXLayers_EngineBToggleLayers((GX_PLANEMASK_BG2), 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_0, &v3[0], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_1, &v3[1], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_2, &v3[2], 0);
+        Bg_InitFromTemplate(param0, BG_LAYER_SUB_3, &v3[3], 0);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_0);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_1);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_2);
+        Bg_ClearTilemap(param0, BG_LAYER_SUB_3);
+        GXLayers_EngineBToggleLayers(GX_PLANEMASK_BG2, 0);
     }
 }
 
@@ -1499,7 +1485,7 @@ void ov76_0223ECB0(void *param0)
 {
     UnkStruct_ov76_0223DE00 *v0 = param0;
 
-    sub_02008A94(v0->unk_D4.unk_D0);
+    PokemonSpriteManager_UpdateCharAndPltt(v0->unk_D4.unk_D0);
     VramTransfer_Process();
     SpriteSystem_TransferOam();
     PaletteData_CommitFadedBuffers(v0->unk_D4.unk_14);

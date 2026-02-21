@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_212_north.h"
 
-    .data
 
     ScriptEntry _00B5
     ScriptEntry _00C8
@@ -16,34 +15,34 @@
     ScriptEntryEnd
 
 _002A:
-    GetTimeOfDay 0x4000
-    GoToIfEq 0x4000, 0, _0071
-    GoToIfEq 0x4000, 1, _0071
-    GoToIfEq 0x4000, 2, _0071
-    GoToIfEq 0x4000, 3, _0093
-    GoToIfEq 0x4000, 4, _0093
+    GetTimeOfDay VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0071
+    GoToIfEq VAR_MAP_LOCAL_0, 1, _0071
+    GoToIfEq VAR_MAP_LOCAL_0, 2, _0071
+    GoToIfEq VAR_MAP_LOCAL_0, 3, _0093
+    GoToIfEq VAR_MAP_LOCAL_0, 4, _0093
     End
 
 _0071:
-    ClearFlag 0x260
-    ClearFlag 0x262
-    ClearFlag 0x264
-    ClearFlag 0x266
-    SetFlag 0x261
-    SetFlag 0x263
-    SetFlag 0x265
-    SetFlag 0x267
+    ClearFlag FLAG_UNK_0x0260
+    ClearFlag FLAG_UNK_0x0262
+    ClearFlag FLAG_UNK_0x0264
+    ClearFlag FLAG_UNK_0x0266
+    SetFlag FLAG_UNK_0x0261
+    SetFlag FLAG_UNK_0x0263
+    SetFlag FLAG_UNK_0x0265
+    SetFlag FLAG_UNK_0x0267
     End
 
 _0093:
-    ClearFlag 0x261
-    ClearFlag 0x263
-    ClearFlag 0x265
-    ClearFlag 0x267
-    SetFlag 0x260
-    SetFlag 0x262
-    SetFlag 0x264
-    SetFlag 0x266
+    ClearFlag FLAG_UNK_0x0261
+    ClearFlag FLAG_UNK_0x0263
+    ClearFlag FLAG_UNK_0x0265
+    ClearFlag FLAG_UNK_0x0267
+    SetFlag FLAG_UNK_0x0260
+    SetFlag FLAG_UNK_0x0262
+    SetFlag FLAG_UNK_0x0264
+    SetFlag FLAG_UNK_0x0266
     End
 
 _00B5:
@@ -57,27 +56,15 @@ _00B5:
     End
 
 _00C8:
-    ScrCmd_036 6, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 6
     End
 
 _00DF:
-    ScrCmd_036 7, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 7
     End
 
 _00F6:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 8, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 8
     End
 
 _010B:
@@ -130,5 +117,4 @@ _0157:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

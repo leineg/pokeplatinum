@@ -3,56 +3,62 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/field/dynamic_map_features.h"
+#include "constants/field/map.h"
+#include "constants/graphics.h"
+#include "constants/map_object.h"
+#include "constants/species.h"
+#include "constants/types.h"
+#include "generated/map_headers.h"
+#include "generated/movement_actions.h"
+#include "generated/sdat.h"
+
 #include "struct_decls/struct_020216E0_decl.h"
-#include "struct_decls/struct_02027860_decl.h"
 #include "struct_decls/struct_0205E884_decl.h"
 #include "struct_decls/struct_02061830_decl.h"
 #include "struct_decls/struct_02061AB4_decl.h"
-#include "struct_defs/struct_02071C5C.h"
-#include "struct_defs/struct_02073838.h"
-#include "struct_defs/struct_02073974.h"
-#include "struct_defs/struct_02073B50.h"
 
 #include "field/field_system.h"
 #include "field/field_system_sub2_t.h"
 #include "overlay005/area_data.h"
+#include "overlay005/field_effect_manager.h"
 #include "overlay005/fieldmap.h"
+#include "overlay005/land_data.h"
+#include "overlay005/land_data_manager_decl.h"
 #include "overlay005/map_object_anim_cmd.h"
 #include "overlay005/ov5_021D57BC.h"
-#include "overlay005/ov5_021DF440.h"
-#include "overlay005/ov5_021E779C.h"
 #include "overlay005/ov5_021EB1A0.h"
 #include "overlay005/ov5_021ECE40.h"
 #include "overlay005/ov5_021F348C.h"
 #include "overlay005/ov5_021F8560.h"
 #include "overlay005/struct_ov5_021D57D8_decl.h"
-#include "overlay005/struct_ov5_021DF47C_decl.h"
-#include "overlay005/struct_ov5_021E8F60_decl.h"
 #include "overlay005/struct_ov5_021ED0A4.h"
-#include "overlay005/struct_ov5_02201C58.h"
-#include "overlay009/struct_ov9_02249FF4.h"
+#include "overlay009/camera_configuration.h"
 #include "overlay009/struct_ov9_0224F6EC_decl.h"
-#include "overlay101/struct_ov101_021D5D90_decl.h"
-#include "overlay101/struct_ov101_021D86B0.h"
-#include "overlay115/camera_angle.h"
 
 #include "bg_window.h"
 #include "camera.h"
 #include "field_system.h"
 #include "field_task.h"
+#include "gfx_box_test.h"
 #include "gx_layers.h"
 #include "heap.h"
+#include "location.h"
 #include "map_header_data.h"
 #include "map_matrix.h"
 #include "map_object.h"
 #include "map_object_move.h"
 #include "map_tile_behavior.h"
-#include "math.h"
+#include "math_util.h"
 #include "narc.h"
+#include "overworld_anim_manager.h"
+#include "persisted_map_features.h"
 #include "player_avatar.h"
 #include "resource_collection.h"
 #include "savedata_misc.h"
 #include "script_manager.h"
+#include "simple3d.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_transfer.h"
@@ -61,27 +67,143 @@
 #include "sys_task_manager.h"
 #include "system_flags.h"
 #include "system_vars.h"
-#include "unk_02005474.h"
-#include "unk_0201CED8.h"
 #include "unk_02020AEC.h"
-#include "unk_02027F50.h"
 #include "unk_0205F180.h"
 #include "unk_020655F4.h"
-#include "unk_020711EC.h"
-#include "unk_02073838.h"
 #include "vars_flags.h"
 #include "vram_transfer.h"
 
-typedef struct UnkStruct_ov9_02249B04_t UnkStruct_ov9_02249B04;
+#define DISTORTION_WORLD_CAMERA_BASE_ANGLE_X            -10750
+#define DISTORTION_WORLD_CAMERA_BASE_ANGLE_Y            0
+#define DISTORTION_WORLD_CAMERA_BASE_ANGLE_Z            0
+#define DISTORTION_WORLD_CAMERA_BASE_DISTANCE           0x29AEC1
+#define DISTORTION_WORLD_CAMERA_BASE_PROJECTION_MTX     0
+#define DISTORTION_WORLD_CAMERA_BASE_FOVY               1473
+#define DISTORTION_WORLD_NON_GIRATINA_ROOM_FOV_ADJUST   (0x681 - 0x5c1)
+#define DISTORTION_WORLD_CAMERA_BASE_NEAR_CLIP          (FX32_ONE * 150)
+#define DISTORTION_WORLD_CAMERA_BASE_FAR_CLIP           (FX32_ONE * 1700)
+#define DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR 0x100
 
-typedef struct {
-    s16 unk_00;
-    s16 unk_02;
-    s16 unk_04;
-    s16 unk_06;
-    s16 unk_08;
-    s16 unk_0A;
-} UnkStruct_ov9_02250E6C;
+#define DISTORTION_WORLD_MAP_COUNT 10
+
+#define GIRATINA_ROOM_TELEPORT_TILE_X 15
+#define GIRATINA_ROOM_TELEPORT_TILE_Z 25
+#define B7F_TELEPORT_TILE_X           89
+#define B7F_TELEPORT_TILE_Z           57
+
+#define FIELD_TASK_CONTEXT_MAX_SIZE 128
+
+#define GHOST_PROP_RENDERER_COUNT 34
+#define GHOST_PROP_OPACITY_MIN    0
+#define GHOST_PROP_OPACITY_MAX    31
+
+#define PLATFORM_PROP_ANIM_TIMING_COUNT 8
+#define PLATFORM_PROP_ANIM_DELTA        0x800
+
+#define GIRATINA_SHADOW_EXTERNAL_COUNT 1
+
+#define OBSTACLE_PROP_ANIM_DELTA 2
+
+#define SIMPLE_PROP_MANAGER_ANIMATOR_COUNT 8
+
+enum FloatingPlatformKind {
+    FLOATING_PLATFORM_KIND_FLOOR = 0,
+    FLOATING_PLATFORM_KIND_WEST_WALL,
+    FLOATING_PLATFORM_KIND_EAST_WALL,
+    FLOATING_PLATFORM_KIND_CEILING,
+    FLOATING_PLATFORM_KIND_INVALID
+};
+
+enum FloatingPlatformJumpTaskState {
+    FLOATING_PLATFORM_JUMP_TASK_STATE_INIT = 0,
+    FLOATING_PLATFORM_JUMP_TASK_STATE_UPDATE_PLAYER_DIR,
+    FLOATING_PLATFORM_JUMP_TASK_STATE_MOVE_PLAYER,
+    FLOATING_PLATFORM_JUMP_TASK_STATE_FINISH
+};
+
+enum PropKind {
+    PROP_KIND_SMALL_PLATFORM = 0,
+    PROP_KIND_FLOATING_BLUE_ROCK,
+    PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1,
+    PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2,
+    PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW,
+    PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1,
+    PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2,
+    PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3,
+    PROP_KIND_LARGE_ELEVATOR_PLATFORM_1,
+    PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4,
+    PROP_KIND_HORIZONTAL_PLATFORM_1,
+    PROP_KIND_VERTICAL_PLATFORM_1,
+    PROP_KIND_VERTICAL_PLATFORM_2,
+    PROP_KIND_HORIZONTAL_PLATFORM_2,
+    PROP_KIND_ROTATED_PLATFORM_EAST,
+    PROP_KIND_ROTATED_PLATFORM_WEST,
+    PROP_KIND_LARGE_ELEVATOR_PLATFORM_2,
+    PROP_KIND_LARGE_ELEVATOR_PLATFORM_3,
+    PROP_KIND_LARGE_ELEVATOR_PLATFORM_4,
+    PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5,
+    PROP_KIND_GIRATINA_SHADOW,
+    PROP_KIND_WATERFALL,
+    PROP_KIND_LAND_VINE_FLOWER,
+    PROP_KIND_LAND_ROCK,
+    PROP_KIND_PORTAL,
+    PROP_KIND_COUNT,
+    PROP_KIND_INVALID = PROP_KIND_COUNT,
+};
+
+enum PropAnimKind {
+    PROP_ANIM_KIND_GIRATINA_SHADOW = 0,
+    PROP_ANIM_KIND_LAND_VINE_FLOWER,
+    PROP_ANIM_KIND_LAND_ROCK,
+    PROP_ANIM_KIND_WATERFALL,
+    PROP_ANIM_KIND_PORTAL,
+    PROP_ANIM_KIND_COUNT,
+    PROP_ANIM_KIND_INVALID = PROP_ANIM_KIND_COUNT,
+};
+
+enum PlatformPropSoundEffectState {
+    PLATFORM_PROP_SFX_STATE_DISAPPEAR = -1,
+    PLATFORM_PROP_SFX_STATE_APPEAR = 1,
+};
+
+enum ObstaclePropSoundEffectState {
+    OBSTACLE_PROP_SFX_STATE_DISAPPEAR = -2,
+    OBSTACLE_PROP_SFX_STATE_APPEAR = 2,
+};
+
+enum GiratinaShadowPropState {
+    GIRATINA_SHADOW_PROP_STATE_SFX = 0,
+    GIRATINA_SHADOW_PROP_STATE_MOVE,
+    GIRATINA_SHADOW_PROP_STATE_END,
+};
+
+enum GiratinaShadowPropSoundEffectKind {
+    GIRATINA_SHADOW_PROP_SFX_KIND_NONE = 0,
+    GIRATINA_SHADOW_PROP_SFX_KIND_CRY,
+    GIRATINA_SHADOW_PROP_SFX_KIND_FLEE,
+};
+
+enum FlagCondition {
+    FLAG_COND_NONE = 0,
+    FLAG_COND_1,
+    FLAG_COND_2,
+    FLAG_COND_WORLD_PROGRESS_EQ,
+    FLAG_COND_WORLD_PROGRESS_LEQ,
+    FLAG_COND_WORLD_PROGRESS_GEQ,
+    FLAG_COND_GIRATINA_SHADOW = 7,
+    FLAG_COND_CYRUS_APPEARANCE,
+};
+
+typedef struct DistWorldSystem DistWorldSystem;
+
+typedef struct DistWorldBounds {
+    s16 startTileX;
+    s16 startTileY;
+    s16 startTileZ;
+    s16 sizeX;
+    s16 sizeY;
+    s16 sizeZ;
+} DistWorldBounds;
 
 typedef struct {
     u8 unk_00;
@@ -134,7 +256,7 @@ typedef struct {
 } UnkStruct_ov9_02253680;
 
 typedef struct {
-    UnkStruct_ov9_02249B04 *unk_00;
+    DistWorldSystem *unk_00;
     UnkStruct_ov9_02253680 unk_04;
     UnkStruct_ov9_0224B064 *unk_34;
 } UnkStruct_ov9_0224B1B4;
@@ -147,7 +269,7 @@ typedef struct {
 } UnkStruct_ov9_0224B2C0;
 
 typedef struct {
-    u32 unk_00;
+    u32 mapHeaderID;
     u16 unk_04;
     s16 unk_06;
     s16 unk_08;
@@ -160,145 +282,155 @@ typedef struct {
     void *unk_08;
 } UnkStruct_ov9_0224BFE0;
 
-typedef struct {
-    s16 unk_00;
-    u16 unk_02;
-    UnkStruct_ov9_02250E6C unk_04;
-    u16 unk_10;
-    u16 unk_12;
-} UnkStruct_ov9_0224C324;
+typedef struct DistWorldFloatingPlatformTemplate {
+    s16 kind;
+    u16 distortionWorldAttrID;
+    DistWorldBounds bounds;
+    u16 tileCountVertical;
+    u16 tileCountHorizontal;
+} DistWorldFloatingPlatformTemplate;
 
-typedef struct {
-    u16 unk_00;
-    s16 unk_02;
-    int unk_04;
-    UnkStruct_ov9_02250E6C unk_08;
-    s16 unk_14;
-    s16 unk_16;
-    s16 unk_18;
+typedef struct DistWorldFloatingPlatformJumpPointTemplate {
+    u16 handlerIndex;
+    s16 playerDir;
+    int dummy04;
+    DistWorldBounds bounds;
+    s16 xDisplacement;
+    s16 yDisplacement;
+    s16 zDisplacement;
     s16 unk_1A;
-    s16 unk_1C;
+    s16 movementAnimSteps;
     u16 unk_1E;
     u16 unk_20;
-    s16 unk_22;
-    s16 unk_24;
-    u16 unk_26;
-} UnkStruct_ov9_0224AA00;
+    s16 finalFacingDir;
+    s16 floatingPlatformKind;
+    u16 floatingPlatformIndex;
+} DistWorldFloatingPlatformJumpPointTemplate;
 
-typedef struct {
-    UnkStruct_ov9_02250E6C unk_00;
-    u16 unk_0C;
-    u16 unk_0E;
-    u16 unk_10;
-    s16 unk_12;
-    s32 unk_14;
-} UnkStruct_ov9_0224A8A0;
+typedef struct DistWorldCameraAngleTemplate {
+    DistWorldBounds bounds;
+    u16 angleX;
+    u16 angleY;
+    u16 angleZ;
+    s16 playerDir;
+    s32 transitionSteps;
+} DistWorldCameraAngleTemplate;
 
-typedef struct {
-    int unk_00;
-    int unk_04;
-    u32 unk_08;
-} UnkStruct_ov9_0224B3F8;
+typedef struct DistWorldGhostPropHeader {
+    int templateCount;
+    int triggerCount;
+    u32 defaultVisiblePropGroups;
+} DistWorldGhostPropHeader;
 
-typedef struct {
-    u32 unk_00;
-    u16 unk_04;
-    s16 unk_06;
-    s16 unk_08;
-    s16 unk_0A;
-} UnkStruct_ov9_0224B6CC;
+typedef struct DistWorldGhostPropTemplate {
+    u32 groupID;
+    u16 propKind;
+    s16 tileX;
+    s16 tileY;
+    s16 tileZ;
+} DistWorldGhostPropTemplate;
 
-typedef struct {
-    u32 unk_00;
-    s16 unk_04;
-    s16 unk_06;
-    UnkStruct_ov9_02250E6C unk_08;
-} UnkStruct_ov9_0224B748;
+typedef struct DistWorldGhostPropTrigger {
+    u32 groupID;
+    s16 playerDir;
+    s16 showProp;
+    DistWorldBounds bounds;
+} DistWorldGhostPropTrigger;
 
-typedef struct {
-    int unk_00;
-    int unk_04;
-    UnkStruct_ov9_0224C324 *unk_08;
-    u32 unk_0C;
-    u16 *unk_10;
-} UnkStruct_ov9_0224C2C4;
+typedef struct DistWorldFloatingPlatformManager {
+    int currentPlatformIndex;
+    int platformCount;
+    DistWorldFloatingPlatformTemplate *templates;
+    u32 terrainAttributesSize;
+    u16 *terrainAttributes;
+} DistWorldFloatingPlatformManager;
 
-typedef struct {
-    int unk_00;
-    UnkStruct_ov9_0224AA00 *unk_04;
-} UnkStruct_ov9_0224C640;
+typedef struct DistWorldFileFloatingPlatformJumpPointSection {
+    int count;
+    DistWorldFloatingPlatformJumpPointTemplate *templates;
+} DistWorldFileFloatingPlatformJumpPointSection;
 
-typedef struct {
-    int unk_00;
-    UnkStruct_ov9_0224A8A0 *unk_04;
-} UnkStruct_ov9_0224C6E4;
+typedef struct DistWorldCameraAngleTemplates {
+    int count;
+    DistWorldCameraAngleTemplate *templates;
+} DistWorldCameraAngleTemplates;
 
-typedef struct {
-    const UnkStruct_ov9_0224B3F8 *unk_00;
-    const UnkStruct_ov9_0224B6CC *unk_04;
-    const UnkStruct_ov9_0224B748 *unk_08;
-} UnkStruct_ov9_0224C788;
+typedef struct DistWorldGhostPropData {
+    const DistWorldGhostPropHeader *header;
+    const DistWorldGhostPropTemplate *templates;
+    const DistWorldGhostPropTrigger *triggers;
+} DistWorldGhostPropData;
 
-typedef struct {
-    int unk_00;
-    int unk_04;
-    int unk_08;
-    int unk_0C;
-    int unk_10;
-} UnkStruct_ov9_0224C088;
+typedef struct DistWorldFileHeader {
+    int dummy00;
+    int floatingPlatformSectionSize;
+    int floatingPlatformJumpPointSectionSize;
+    int cameraAngleSectionSize;
+    int ghostPropSectionSize;
+} DistWorldFileHeader;
 
-typedef struct {
-    u32 unk_00;
-    void *unk_04;
-    void *unk_08;
-    void *unk_0C;
-    void *unk_10;
-    void *unk_14;
-    void *unk_18;
-} UnkStruct_ov9_0224C14C;
+typedef struct DistWorldFileFloatingPlatformSection {
+    int count;
+    DistWorldFloatingPlatformTemplate *templates;
+} DistWorldFileFloatingPlatformSection;
+
+typedef struct DistWorldFileCameraAngleSection {
+    int count;
+    DistWorldCameraAngleTemplate *templates;
+} DistWorldFileCameraAngleSection;
+
+typedef struct DistWorldFile {
+    u32 mapHeaderID;
+    DistWorldFileFloatingPlatformSection *floatingPlatformSection;
+    DistWorldFileFloatingPlatformJumpPointSection *floatingPlatformJumpPointSection;
+    DistWorldFileCameraAngleSection *cameraAngleSection;
+    void *ghostPropSection;
+    DistWorldFileHeader *header;
+    void *buffer;
+} DistWorldFile;
 
 typedef struct {
     UnkStruct_ov9_0224BFE0 unk_00;
-    UnkStruct_ov9_0224C14C unk_0C;
-    UnkStruct_ov9_0224C2C4 unk_28;
-    UnkStruct_ov9_0224C640 unk_3C;
-    UnkStruct_ov9_0224C6E4 unk_44;
-    UnkStruct_ov9_0224C788 unk_4C;
-    UnkStruct_ov9_0224C14C unk_58;
-    UnkStruct_ov9_0224C788 unk_74;
+    DistWorldFile distortionWorldFile;
+    DistWorldFloatingPlatformManager floatingPlatformMan;
+    DistWorldFileFloatingPlatformJumpPointSection floatingPlatformJumpPoints;
+    DistWorldCameraAngleTemplates cameraAngleTemplates;
+    DistWorldGhostPropData ghostPropData;
+    DistWorldFile inactiveDistortionWorldFile;
+    DistWorldGhostPropData inactiveGhostPropData;
 } UnkStruct_ov9_02249B04_sub1;
 
-typedef struct {
-    int unk_00;
-    int unk_04;
-    VecFx32 unk_08;
-    VecFx32 unk_14;
-} UnkStruct_ov9_0224A0DC;
+typedef struct DistWorldCameraTransition {
+    BOOL isActive;
+    int stepsRemaining;
+    VecFx32 currentAngle;
+    VecFx32 angleStep;
+} DistWorldCameraTransition;
 
-typedef struct {
+typedef struct DistWorldCameraManager {
     Camera *camera;
-    CameraAngle unk_04;
-    CameraAngle unk_0C;
-    CameraAngle unk_14;
-    UnkStruct_ov9_0224A0DC unk_1C;
-    SysTask *unk_3C;
-} UnkStruct_ov9_02249F9C;
+    CameraAngle baseAngle;
+    CameraAngle currentAngle;
+    CameraAngle targetAngle;
+    DistWorldCameraTransition transition;
+    SysTask *transitionTask;
+} DistWorldCameraManager;
 
-typedef struct {
-    int unk_00;
-    int unk_04;
-    VecFx32 unk_08;
+typedef struct DistWorldFloatingPlatformJumpTaskContext {
+    int state;
+    int stepsRemaining;
+    VecFx32 positionIncrementVec;
     fx32 unk_14;
-    fx32 unk_18;
-    VecFx32 unk_1C;
-    VecFx32 unk_28;
-    UnkStruct_ov9_0224AA00 unk_34;
-} UnkStruct_ov9_0224AC58;
+    fx32 positionIncrement;
+    VecFx32 accumulatedMovement;
+    VecFx32 positionIncrementVecAbs;
+    DistWorldFloatingPlatformJumpPointTemplate template;
+} DistWorldFloatingPlatformJumpTaskContext;
 
-typedef struct {
-    int unk_00;
-    u8 unk_04[128];
-} UnkStruct_ov9_0224A570;
+typedef struct DistWorldFieldTaskContext {
+    int dummy00;
+    u8 data[FIELD_TASK_CONTEXT_MAX_SIZE];
+} DistWorldFieldTaskContext;
 
 typedef struct {
     s16 unk_00;
@@ -321,49 +453,49 @@ typedef struct {
     NNSFndAllocator unk_10;
 } UnkStruct_ov9_0224A228;
 
-typedef struct {
-    u16 unk_00;
-    u16 unk_02;
-    u32 unk_04;
-} UnkStruct_ov9_022531D0;
+typedef struct DistWorldPropAnimInfo {
+    u16 propKind;
+    u16 animKind;
+    BOOL isStatic;
+} DistWorldPropAnimInfo;
 
-typedef struct {
-    u32 unk_00;
-    UnkStruct_02073838 unk_04;
-} UnkStruct_ov9_0224D744_sub1;
+typedef struct DistWorldProp3DModel {
+    u32 propKind;
+    Simple3DModel model;
+} DistWorldProp3DModel;
 
-typedef struct {
-    u32 unk_00;
-    void *unk_04;
-} UnkStruct_ov9_0224D744_sub2;
+typedef struct DistWorldPropAnimSet {
+    u32 animKind;
+    void *animSet;
+} DistWorldPropAnimSet;
 
-typedef struct {
-    u16 unk_00;
-    u16 unk_02;
-    UnkStruct_02073B50 unk_04;
-    UnkStruct_02073974 unk_58;
-} UnkStruct_ov9_0224D928;
+typedef struct DistWorldPropRenderer {
+    u16 valid;
+    u16 propKind;
+    Simple3DRenderObj renderObj;
+    Simple3DAnimation animation;
+} DistWorldPropRenderer;
 
-typedef struct {
-    UnkStruct_ov9_0224D744_sub1 unk_00[25];
-    UnkStruct_ov9_0224D744_sub2 unk_258[5];
-    UnkStruct_ov9_0224D928 unk_280[34];
-} UnkStruct_ov9_0224D744;
+typedef struct DistWorldPropRenderBuffers {
+    DistWorldProp3DModel models[PROP_KIND_COUNT];
+    DistWorldPropAnimSet animSets[PROP_ANIM_KIND_COUNT];
+    DistWorldPropRenderer renderers[GHOST_PROP_RENDERER_COUNT];
+} DistWorldPropRenderBuffers;
 
-typedef struct {
-    s16 unk_00;
-    s16 unk_02;
-    u16 unk_04;
-    u16 unk_06;
-    UnkStruct_ov9_0224B6CC unk_08;
-    UnkStruct_ov9_02249B04 *unk_14;
-} UnkStruct_ov9_0224B708;
+typedef struct DistWorldGhostProp {
+    s16 animManIndex;
+    s16 mapHeaderID;
+    u16 dummy04;
+    u16 dummy06;
+    DistWorldGhostPropTemplate template;
+    DistWorldSystem *system;
+} DistWorldGhostProp;
 
-typedef struct {
-    u32 unk_00;
-    s32 unk_04;
-    UnkStruct_ov101_021D5D90 **unk_08;
-} UnkStruct_ov9_0224B528;
+typedef struct DistWorldGhostPropManager {
+    u32 hiddenGhostPropGroups;
+    s32 templateCount;
+    OverworldAnimManager **animMans;
+} DistWorldGhostPropManager;
 
 typedef struct {
     int unk_00;
@@ -372,7 +504,7 @@ typedef struct {
     NARC *unk_0C;
     MapMatrix *unk_10;
     AreaDataManager *unk_14;
-    UnkStruct_ov5_021E8F60 *unk_18;
+    LandDataManager *unk_18;
 } UnkStruct_ov9_0224C8E8;
 
 typedef struct {
@@ -381,7 +513,7 @@ typedef struct {
     s16 unk_04;
     u16 unk_06;
     u32 unk_08;
-    UnkStruct_ov9_02249B04 *unk_0C;
+    DistWorldSystem *unk_0C;
 } UnkStruct_ov9_0224DFA0;
 
 typedef struct {
@@ -391,7 +523,7 @@ typedef struct {
     u8 unk_03;
     VecFx32 unk_04;
     UnkStruct_ov9_0224DFA0 unk_10;
-    UnkStruct_ov9_0224D928 *unk_20;
+    DistWorldPropRenderer *unk_20;
 } UnkStruct_ov9_0224E1CC;
 
 typedef struct {
@@ -431,7 +563,7 @@ typedef struct {
     u16 unk_02;
     UnkStruct_ov9_0224DF10 unk_04;
     MapObject *unk_1C;
-    UnkStruct_ov101_021D5D90 *unk_20;
+    OverworldAnimManager *unk_20;
 } UnkStruct_ov9_0224E0DC;
 
 typedef struct {
@@ -442,41 +574,41 @@ typedef struct {
     SysTask *unk_00;
 } UnkStruct_ov9_02249E94;
 
-typedef struct {
-    u32 unk_00;
-    u32 unk_04;
-    u32 unk_08;
-} UnkStruct_ov9_022530A4;
+typedef struct DistWorldMapConnections {
+    u32 currID;
+    u32 prevID;
+    u32 nextID;
+} DistWorldMapConnections;
 
-typedef struct {
-    u32 unk_00;
-    u16 unk_04;
-    s16 unk_06;
-    s16 unk_08;
-    s16 unk_0A;
-    u16 unk_0C;
-    u16 unk_0E;
-} UnkStruct_ov9_0224EC10;
+typedef struct DistWorldSimplePropTemplate {
+    u32 dummy00;
+    u16 propKind;
+    s16 tileX;
+    s16 tileY;
+    s16 tileZ;
+    u16 flagCond;
+    u16 flagCondVal;
+} DistWorldSimplePropTemplate;
 
-typedef struct {
-    u32 unk_00;
-    const UnkStruct_ov9_0224EC10 *unk_04;
-} UnkStruct_ov9_02252548;
+typedef struct DistWorldSimplePropMapTemplates {
+    u32 mapHeaderID;
+    const DistWorldSimplePropTemplate *templates;
+} DistWorldSimplePropMapTemplates;
 
-typedef struct {
-    u16 unk_00;
-    UnkStruct_ov101_021D5D90 *unk_04;
-    UnkStruct_ov9_0224EC10 unk_08;
-} UnkStruct_ov9_0224EBB8;
+typedef struct DistWorldSimplePropAnimator {
+    u16 mapHeaderID;
+    OverworldAnimManager *animMan;
+    DistWorldSimplePropTemplate template;
+} DistWorldSimplePropAnimator;
 
-typedef struct {
-    UnkStruct_ov9_0224EBB8 unk_00[8];
-} UnkStruct_ov9_0224EB68;
+typedef struct DistWorldSimplePropManager {
+    DistWorldSimplePropAnimator animators[SIMPLE_PROP_MANAGER_ANIMATOR_COUNT];
+} DistWorldSimplePropManager;
 
-typedef struct {
-    UnkStruct_ov9_02249B04 *unk_00;
-    const UnkStruct_ov9_0224EBB8 *unk_04;
-} UnkStruct_ov9_0224EBCC;
+typedef struct DistWorldSimplePropUserData {
+    DistWorldSystem *system;
+    const DistWorldSimplePropAnimator *animator;
+} DistWorldSimplePropUserData;
 
 typedef struct {
     u16 unk_00;
@@ -523,7 +655,7 @@ typedef struct {
     u8 unk_0C[160];
 } UnkFuncPtr_ov9_0224E33C;
 
-typedef int (*UnkFuncPtr_ov9_02253BE4)(UnkStruct_ov9_02249B04 *, FieldTask *, u16 *, const void *);
+typedef int (*UnkFuncPtr_ov9_02253BE4)(DistWorldSystem *, FieldTask *, u16 *, const void *);
 
 typedef struct {
     s16 unk_00;
@@ -539,22 +671,22 @@ typedef struct {
     const UnkStruct_ov9_02252044 *unk_04;
 } UnkStruct_ov9_02252D38;
 
-typedef struct {
-    s16 unk_00;
-    s16 unk_02;
-    s16 unk_04;
-    s8 unk_06;
-    u8 unk_07;
-    VecFx32 unk_08;
-    VecFx32 unk_14;
-    int unk_20;
-} UnkStruct_ov9_02252414;
+typedef struct DistWorldGiratinaShadowTemplate {
+    s16 initialTileX;
+    s16 initialTileY;
+    s16 initialTileZ;
+    s8 rotAnglesIndex;
+    u8 soundKind;
+    VecFx32 scale;
+    VecFx32 posDelta;
+    int movementAnimSteps;
+} DistWorldGiratinaShadowTemplate;
 
-typedef struct {
-    u32 unk_00;
-    UnkStruct_ov9_0224D928 *unk_04;
-    UnkStruct_ov101_021D5D90 *unk_08;
-} UnkStruct_ov9_0224E8B4;
+typedef struct DistWorldGiratinaShadowPropRenderer {
+    BOOL valid;
+    DistWorldPropRenderer *renderer;
+    OverworldAnimManager *animMan;
+} DistWorldGiratinaShadowPropRenderer;
 
 typedef struct {
     u8 unk_00;
@@ -581,60 +713,60 @@ typedef struct {
     SysTask *unk_2C;
 } UnkStruct_ov9_0224CBD8;
 
-struct UnkStruct_ov9_02249B04_t {
+struct DistWorldSystem {
     FieldSystem *fieldSystem;
-    UnkStruct_02071C5C *unk_04;
-    NARC *unk_08;
-    NARC *unk_0C;
+    DistWorldPersistedData *persistedData;
+    NARC *distortionWorldNARC;
+    NARC *distortionWorldAttrNARC;
     NARC *unk_10;
-    UnkStruct_ov9_02249F9C unk_14;
-    UnkStruct_ov9_0224A570 unk_54;
+    DistWorldCameraManager cameraMan;
+    DistWorldFieldTaskContext fieldTaskCtx;
     UnkFuncPtr_ov9_0224E33C unk_D8;
     UnkStruct_ov9_02249E94 unk_184;
     UnkStruct_ov9_0224A228 unk_188;
     UnkStruct_ov9_0224B064 unk_1A8;
-    UnkStruct_ov9_0224D744 unk_3A4;
+    DistWorldPropRenderBuffers propRenderBuffs;
     UnkStruct_ov9_02249B04_sub1 unk_169C;
-    UnkStruct_ov9_0224B528 unk_171C;
-    UnkStruct_ov9_0224B528 unk_1728;
+    DistWorldGhostPropManager ghostPropMan;
+    DistWorldGhostPropManager inactiveGhostPropMan;
     UnkStruct_ov9_0224DC34 unk_1734;
-    UnkStruct_ov9_0224EB68 unk_1BB4;
+    DistWorldSimplePropManager simplePropMan;
     UnkStruct_ov9_0224EE40 unk_1C64;
     UnkStruct_ov9_0224CA5C unk_1CB0;
     UnkStruct_ov9_0224CBD8 unk_1CD0;
     UnkStruct_ov9_0224ADC0 unk_1D00;
     UnkStruct_ov9_0224C8E8 unk_1E88;
-    UnkStruct_ov9_0224E8B4 unk_1EA4;
+    DistWorldGiratinaShadowPropRenderer giratinaShadowPropRenderer;
     GXRgb unk_1EB0[8];
     u16 unk_1EC0;
     u16 unk_1EC2;
     SysTask *unk_1EC4;
 };
 
-typedef struct {
-    s8 unk_00;
-    s8 unk_01;
-    u16 unk_02;
-    fx32 unk_04;
-    fx32 unk_08;
-    fx32 unk_0C;
-    VecFx32 unk_10;
-    VecFx32 unk_1C;
-    UnkStruct_ov9_0224B708 unk_28;
-    UnkStruct_ov9_0224D928 *unk_40;
-} UnkStruct_ov9_0224BA48;
+typedef struct DistWorldPlatformProp {
+    s8 opacity;
+    s8 soundEffectState;
+    u16 inView;
+    fx32 animProgress;
+    fx32 animDelta;
+    fx32 yOffset;
+    VecFx32 initialPos;
+    VecFx32 currentPos;
+    DistWorldGhostProp ghostProp;
+    DistWorldPropRenderer *renderer;
+} DistWorldPlatformProp;
 
-typedef struct {
-    s8 unk_00;
-    s8 unk_01;
-    u16 unk_02;
-    u16 unk_04;
-    u16 unk_06;
-    VecFx32 unk_08;
-    VecFx32 unk_14;
-    UnkStruct_ov9_0224B708 unk_20;
-    UnkStruct_ov9_0224D928 *unk_38;
-} UnkStruct_ov9_0224BC08;
+typedef struct DistWorldObstacleProp {
+    s8 opacity;
+    s8 soundEffectState;
+    u16 inView;
+    u16 seqIDAppear;
+    u16 seqIDDisappear;
+    VecFx32 pos;
+    VecFx32 dummy14;
+    DistWorldGhostProp ghostProp;
+    DistWorldPropRenderer *renderer;
+} DistWorldObstacleProp;
 
 typedef struct {
     u8 unk_00;
@@ -687,29 +819,29 @@ typedef struct {
     u32 unk_00;
 } UnkStruct_ov9_0224E870;
 
-typedef struct {
-    UnkStruct_ov9_02249B04 *unk_00;
-    UnkStruct_ov9_0224D928 *unk_04;
-    UnkStruct_ov9_02252414 unk_08;
-} UnkStruct_ov9_0224E91C;
+typedef struct DistWorldGiratinaShadowPropUserData {
+    DistWorldSystem *system;
+    DistWorldPropRenderer *renderer;
+    DistWorldGiratinaShadowTemplate template;
+} DistWorldGiratinaShadowPropUserData;
 
-typedef struct {
-    UnkStruct_ov9_0224E91C unk_00;
-    u16 unk_2C;
-    u16 unk_2E;
-    int unk_30;
-    int unk_34;
-    UnkStruct_ov5_02201C58 unk_38;
-} UnkStruct_ov9_0224E964;
+typedef struct DistWorldGiratinaShadowProp {
+    DistWorldGiratinaShadowPropUserData userData;
+    u16 state;
+    u16 animStopped;
+    int movementAnimStep;
+    BOOL animFinished;
+    Simple3DRotationAngles rotAngles;
+} DistWorldGiratinaShadowProp;
 
-typedef struct {
-    s16 unk_00;
-    u16 unk_02;
-    VecFx32 unk_04;
-    VecFx32 unk_10;
-    UnkStruct_ov9_0224EBCC unk_1C;
-    UnkStruct_ov9_0224D928 *unk_24;
-} UnkStruct_ov9_0224ED58;
+typedef struct DistWorldSimpleProp {
+    s16 dummy00;
+    u16 inView;
+    VecFx32 pos;
+    VecFx32 dummy10;
+    DistWorldSimplePropUserData userData;
+    DistWorldPropRenderer *renderer;
+} DistWorldSimpleProp;
 
 typedef struct {
     u32 unk_00;
@@ -719,7 +851,7 @@ typedef struct {
 } UnkStruct_ov9_0225311C;
 
 struct UnkStruct_ov9_0224F6EC_t {
-    UnkStruct_ov9_02249B04 *unk_00;
+    DistWorldSystem *unk_00;
     FieldSystem *fieldSystem;
     FieldTask *unk_08;
     MapObject *unk_0C;
@@ -861,285 +993,287 @@ typedef struct {
     s16 unk_02;
 } UnkStruct_ov9_02250DE8;
 
-static void ov9_02249B04(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249B68(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249C88(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249CAC(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249CC4(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249D18(UnkStruct_ov9_02249B04 *param0, u16 param1, u16 param2, u16 param3);
-static void ov9_02249D24(UnkStruct_ov9_02249B04 *param0, u16 *param1, u16 *param2, u16 *param3);
-static BOOL ov9_02249D38(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249D44(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static u32 ov9_02249D5C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249D68(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_02249D70(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_02249D8C(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_02249DA8(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_02249DC8(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_02249DE4(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_02249E00(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_02249E20(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static u32 ov9_02249E44(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249E94(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249EC8(UnkStruct_ov9_02249B04 *param0);
+typedef void (*FloatingPlatformJumpPointHandler)(DistWorldSystem *, const DistWorldFloatingPlatformJumpPointTemplate *);
+
+static void ov9_02249B04(DistWorldSystem *param0);
+static void ov9_02249B68(DistWorldSystem *param0);
+static void OpenArchives(DistWorldSystem *system);
+static void CloseArchives(DistWorldSystem *system);
+static void ov9_02249CC4(DistWorldSystem *param0);
+static void SetPersistedCameraAngles(DistWorldSystem *system, u16 angleX, u16 angleY, u16 angleZ);
+static void GetPersistedCameraAngles(DistWorldSystem *system, u16 *angleX, u16 *angleY, u16 *angleZ);
+static BOOL IsPersistedDataValid(DistWorldSystem *system);
+static void SetPersistedHiddenGhostPropGroups(DistWorldSystem *system, u32 hiddenGhostPropGroups);
+static u32 GetPersistedHiddenGhostPropGroups(DistWorldSystem *system);
+static void ov9_02249D68(DistWorldSystem *param0, u32 param1);
+static void ov9_02249D70(DistWorldSystem *param0, u32 param1);
+static void ov9_02249D8C(DistWorldSystem *param0, u32 param1);
+static BOOL ov9_02249DA8(DistWorldSystem *param0, u32 param1);
+static void ov9_02249DC8(DistWorldSystem *param0, u32 param1);
+static void ov9_02249DE4(DistWorldSystem *param0, u32 param1);
+static BOOL ov9_02249E00(DistWorldSystem *param0, u32 param1);
+static void SetPersistedCurrentFloatingPlatformIndex(DistWorldSystem *system, u32 floatingPlatformIndex);
+static u32 GetPersistedCurrentFloatingPlatformIndex(DistWorldSystem *system);
+static void ov9_02249E94(DistWorldSystem *param0);
+static void ov9_02249EC8(DistWorldSystem *param0);
 static void ov9_02249EDC(SysTask *param0, void *param1);
-static void ov9_02249EF0(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249F18(UnkStruct_ov9_02249B04 *param0);
+static void ov9_02249EF0(DistWorldSystem *param0);
+static void ov9_02249F18(DistWorldSystem *param0);
 static void ov9_02249F3C(SysTask *param0, void *param1);
-static void ov9_02249F50(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249F84(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249F88(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249F98(UnkStruct_ov9_02249B04 *param0);
-static void ov9_02249FF4(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224A0C8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224A0DC(SysTask *param0, void *param1);
-static BOOL ov9_0224A148(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224A8A0 *param1);
-static void ov9_0224A1E4(UnkStruct_ov9_02249B04 *param0, int param1);
+static void ov9_02249F50(DistWorldSystem *param0);
+static void ov9_02249F84(DistWorldSystem *param0);
+static void ov9_02249F88(DistWorldSystem *param0);
+static void ov9_02249F98(DistWorldSystem *param0);
+static void CameraInit(DistWorldSystem *system);
+static void CameraFree(DistWorldSystem *system);
+static void CameraTransitionTask(SysTask *sysTask, void *sysTaskParam);
+static BOOL DoCameraTransition(DistWorldSystem *system, const DistWorldCameraAngleTemplate *cameraAngleTemplate);
+static void ov9_0224A1E4(DistWorldSystem *param0, int param1);
 static void ov9_0224A228(UnkStruct_ov9_0224A228 *param0, UnkStruct_ov9_0224A294 *param1, UnkStruct_020216E0 *param2);
 static void ov9_0224A294(UnkStruct_ov9_0224A228 *param0, UnkStruct_ov9_0224A294 *param1);
 static void ov9_0224A2AC(UnkStruct_ov9_0224A228 *param0, UnkStruct_ov9_0224A294 *param1);
-static void ov9_0224A334(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224A390(UnkStruct_ov9_02249B04 *param0, MapObject *param1, int param2);
-static void ov9_0224A3C4(UnkStruct_ov9_02249B04 *param0, UnkStruct_020216E0 *param1, int param2);
-static void ov9_0224A408(UnkStruct_ov9_02249B04 *param0, const UnkStruct_020216E0 *param1);
-static void ov9_0224A49C(UnkStruct_ov9_02249B04 *param0);
+static void ov9_0224A334(DistWorldSystem *param0);
+static void ov9_0224A390(DistWorldSystem *param0, MapObject *param1, int param2);
+static void ov9_0224A3C4(DistWorldSystem *param0, UnkStruct_020216E0 *param1, int param2);
+static void ov9_0224A408(DistWorldSystem *param0, const UnkStruct_020216E0 *param1);
+static void ov9_0224A49C(DistWorldSystem *param0);
 static void ov9_0224A4C8(UnkStruct_020216E0 *param0, void *param1);
-static void ov9_0224A4D0(UnkStruct_ov9_02249B04 *param0, MapObject *param1, int param2, int param3);
-static void ov9_0224A570(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224A574(UnkStruct_ov9_02249B04 *param0);
-static void *ov9_0224A578(UnkStruct_ov9_02249B04 *param0, int param1);
-static void *ov9_0224A598(UnkStruct_ov9_02249B04 *param0);
-static BOOL ov9_0224A8A0(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4);
-static void ov9_0224A8C0(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224A9E8(UnkStruct_ov9_02249B04 *param0);
-static BOOL ov9_0224AA00(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4);
-static void ov9_0224AA34(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224AA00 *param1);
-static BOOL ov9_0224AAD4(FieldTask *param0);
-static BOOL ov9_0224AC58(UnkStruct_ov9_0224AC58 *param0, MapObject *param1);
-static void ov9_0224ADC0(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224AED8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224AEE4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B064 *param1, NARC *param2);
+static void ov9_0224A4D0(DistWorldSystem *param0, MapObject *param1, int param2, int param3);
+static void FieldTaskContextNoOp1(DistWorldSystem *system);
+static void FieldTaskContextNoOp2(DistWorldSystem *system);
+static void *InitFieldTaskContext(DistWorldSystem *system, int ctxSize);
+static void *GetFieldTaskContext(DistWorldSystem *system);
+static BOOL ApplyCameraAngleForPlayerPosition(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir);
+static void ov9_0224A8C0(DistWorldSystem *param0);
+static void ov9_0224A9E8(DistWorldSystem *param0);
+static BOOL HandleFloatingPlatformJumpPointAt(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir);
+static void CreateJumpOnFloatingPlatformTask(DistWorldSystem *system, const DistWorldFloatingPlatformJumpPointTemplate *template);
+static BOOL JumpOnFloatingPlatform(FieldTask *task);
+static BOOL TickJumpOnFloatingPlatformMovementAnimation(DistWorldFloatingPlatformJumpTaskContext *ctx, MapObject *playerMapObj);
+static void ov9_0224ADC0(DistWorldSystem *param0);
+static void ov9_0224AED8(DistWorldSystem *param0);
+static void ov9_0224AEE4(DistWorldSystem *param0, UnkStruct_ov9_0224B064 *param1, NARC *param2);
 static void ov9_0224B064(UnkStruct_ov9_0224B064 *param0);
 static void ov9_0224B124(SysTask *param0, void *param1);
 static Sprite *ov9_0224B130(UnkStruct_ov9_0224B064 *param0, const VecFx32 *param1, u32 param2, u32 param3, u32 param4, u32 param5, int param6, int param7);
-static void ov9_0224B1B4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov5_021DF47C *param1, UnkStruct_ov9_0224B064 *param2);
-static void ov9_0224B3A8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B3F4(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B3F8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B528 *param1, const UnkStruct_ov9_0224B3F8 *param2, const UnkStruct_ov9_0224B6CC *param3, int param4, u32 param5);
-static void ov9_0224B45C(UnkStruct_ov9_02249B04 *param0, int param1);
-static void ov9_0224B4CC(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B514(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B528(UnkStruct_ov9_0224B528 *param0);
-static void ov9_0224B560(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B624(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224B64C(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224B674(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224B698(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224B6BC(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B6CC(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B528 *param1, const UnkStruct_ov9_0224B6CC *param2, int param3);
-static UnkStruct_ov101_021D5D90 *ov9_0224B708(UnkStruct_ov9_02249B04 *param0, int param1, int param2, const UnkStruct_ov9_0224B6CC *param3);
-static void ov9_0224B748(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4);
-static BOOL ov9_0224B7B0(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224B844(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224B8DC(UnkStruct_ov9_02249B04 *param0, int param1);
-static void ov9_0224B570(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B580(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B590(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B5A0(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B5B0(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224B5EC(UnkStruct_ov9_02249B04 *param0);
-static u16 ov9_0224B958(UnkStruct_ov101_021D5D90 *param0);
-static void ov9_0224BE14(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224BE8C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224BEB4(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224BF18(UnkStruct_ov9_02249B04 *param0, u32 param1);
+static void ov9_0224B1B4(DistWorldSystem *param0, FieldEffectManager *param1, UnkStruct_ov9_0224B064 *param2);
+static void ov9_0224B3A8(DistWorldSystem *param0);
+static void ov9_0224B3F4(DistWorldSystem *param0);
+static void InitGhostPropManager(DistWorldSystem *system, DistWorldGhostPropManager *ghostPropMan, const DistWorldGhostPropHeader *header, const DistWorldGhostPropTemplate *ghostPropTemplateList, int mapHeaderID, u32 hiddenGhostPropGroups);
+static void InitActiveGhostPropManager(DistWorldSystem *system, BOOL useDefaultVisibility);
+static void InitInactiveGhostPropManager(DistWorldSystem *system);
+static void InitAllGhostPropManagers(DistWorldSystem *system);
+static void FinishGhostPropManager(DistWorldGhostPropManager *system);
+static void FinishAllGhostPropManagers(DistWorldSystem *system);
+static void HideGhostPropGroup(DistWorldSystem *system, u32 groupID);
+static void ShowGhostPropGroup(DistWorldSystem *system, u32 groupID);
+static BOOL IsActiveGhostPropGroupHidden(DistWorldSystem *system, u32 groupID);
+static BOOL IsInactiveGhostPropGroupHidden(DistWorldSystem *system, u32 groupID);
+static void PersistActiveHiddenGhostPropGroups(DistWorldSystem *system);
+static void InitAllGhostPropAnimManagers(DistWorldSystem *system, DistWorldGhostPropManager *ghostPropMan, const DistWorldGhostPropTemplate *iter, int mapHeaderID);
+static OverworldAnimManager *InitGhostPropAnimManager(DistWorldSystem *system, int animManIndex, int mapHeaderID, const DistWorldGhostPropTemplate *ghostPropTemplate);
+static void HandleGhostPropTriggerAt(DistWorldSystem *system, int tileX, int tileY, int tileZ, int direction);
+static BOOL ov9_0224B7B0(DistWorldSystem *param0, u32 param1);
+static BOOL ov9_0224B844(DistWorldSystem *param0, u32 param1);
+static BOOL HasActivePropAnimManager(DistWorldSystem *system, int propKind);
+static void FinishActiveGhostPropManager(DistWorldSystem *system);
+static void FinishInactiveGhostPropManager(DistWorldSystem *system);
+static void ResetActiveGhostPropManager(DistWorldSystem *system);
+static void ResetInactiveGhostPropManager(DistWorldSystem *system);
+static void MoveActiveGhostPropManagerToInactive(DistWorldSystem *system);
+static void MoveInactiveGhostPropManagerToActive(DistWorldSystem *system);
+static u16 GetAnimManagerGhostPropKind(OverworldAnimManager *system);
+static void ov9_0224BE14(DistWorldSystem *param0);
+static void ov9_0224BE8C(DistWorldSystem *param0);
+static void ov9_0224BEB4(DistWorldSystem *param0, u32 param1);
+static void ov9_0224BF18(DistWorldSystem *param0, u32 param1);
 static void ov9_0224BF8C(NARC *param0, UnkStruct_ov9_0224BFE0 *param1);
-static void ov9_0224BFBC(UnkStruct_ov9_02249B04 *param0);
+static void ov9_0224BFBC(DistWorldSystem *param0);
 static void ov9_0224BFE0(UnkStruct_ov9_0224BFE0 *param0);
-static void ov9_0224BFFC(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224C034 *ov9_0224C00C(const UnkStruct_ov9_0224BFE0 *param0, int param1);
-static const UnkStruct_ov9_0224C034 *ov9_0224C034(UnkStruct_ov9_02249B04 *param0, int param1);
-static u32 ov9_0224C044(UnkStruct_ov9_02249B04 *param0, int param1);
+static void ov9_0224BFFC(DistWorldSystem *param0);
+static const UnkStruct_ov9_0224C034 *ov9_0224C00C(const UnkStruct_ov9_0224BFE0 *param0, enum MapHeader mapHeaderID);
+static const UnkStruct_ov9_0224C034 *ov9_0224C034(DistWorldSystem *system, enum MapHeader mapHeaderID);
+static u32 FindNARCIndex(DistWorldSystem *system, enum MapHeader mapHeaderID);
 static void ov9_0224C050(const UnkStruct_ov9_0224BFE0 *param0, int param1, int *param2, int *param3, int *param4);
-static void ov9_0224C070(UnkStruct_ov9_02249B04 *param0, int param1, int *param2, int *param3, int *param4);
-static void ov9_0224C088(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224C14C *param1, int param2);
-static void ov9_0224C0F8(UnkStruct_ov9_02249B04 *param0, int param1, int param2);
-static void ov9_0224C10C(UnkStruct_ov9_02249B04 *param0, int param1);
-static void ov9_0224C120(UnkStruct_ov9_02249B04 *param0, int param1);
-static void ov9_0224C14C(UnkStruct_ov9_0224C14C *param0);
-static void ov9_0224C164(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C174(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C184(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C194(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C1E4(UnkStruct_ov9_02249B04 *param0);
-static int ov9_0224C234(UnkStruct_ov9_0224C14C *param0);
-static int ov9_0224C23C(UnkStruct_ov9_0224C14C *param0);
-static UnkStruct_ov9_0224C324 *ov9_0224C244(UnkStruct_ov9_0224C14C *param0);
-static int ov9_0224C24C(UnkStruct_ov9_0224C14C *param0);
-static int ov9_0224C254(UnkStruct_ov9_0224C14C *param0);
-static UnkStruct_ov9_0224AA00 *ov9_0224C25C(UnkStruct_ov9_0224C14C *param0);
-static int ov9_0224C264(UnkStruct_ov9_0224C14C *param0);
-static int ov9_0224C26C(UnkStruct_ov9_0224C14C *param0);
-static UnkStruct_ov9_0224A8A0 *ov9_0224C274(UnkStruct_ov9_0224C14C *param0);
-static int ov9_0224C27C(UnkStruct_ov9_02249B04 *param0);
-static int ov9_0224C288(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224B3F8 *ov9_0224C2A8(UnkStruct_ov9_0224C14C *param0);
-static const UnkStruct_ov9_0224B6CC *ov9_0224C2AC(UnkStruct_ov9_0224C14C *param0);
-static const UnkStruct_ov9_0224B748 *ov9_0224C2B4(UnkStruct_ov9_0224C14C *param0);
-static void ov9_0224C2C4(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C300(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C378(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, s16 param4);
-static void ov9_0224C3F8(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224C44C(UnkStruct_ov9_02249B04 *param0);
-static u32 ov9_0224C470(UnkStruct_ov9_02249B04 *param0);
-static u32 ov9_0224C494(UnkStruct_ov9_02249B04 *param0);
-static u32 ov9_0224C4B8(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3);
-static void ov9_0224C4F4(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static u16 ov9_0224C52C(UnkStruct_ov9_02249B04 *param0, int param1, int param2);
-static u16 ov9_0224C55C(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3);
-static void ov9_0224C640(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C680(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224AA00 *ov9_0224C69C(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4);
-static void ov9_0224C6E4(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C724(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224A8A0 *ov9_0224C740(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4);
-static void ov9_0224C788(UnkStruct_ov9_0224C14C *param0, UnkStruct_ov9_0224C788 *param1);
-static void ov9_0224C7C8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C7E8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C808(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C834(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C854(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C844(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C864(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C888(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224B3F8 *ov9_0224C8AC(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224B3F8 *ov9_0224C8B8(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224B6CC *ov9_0224C8C4(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224B6CC *ov9_0224C8D0(UnkStruct_ov9_02249B04 *param0);
-static const UnkStruct_ov9_0224B748 *ov9_0224C8DC(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C8E8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224C9E8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224CA98(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224CB30(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224CBD8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224CBF8(UnkStruct_ov9_02249B04 *param0);
+static void ov9_0224C070(DistWorldSystem *param0, int param1, int *param2, int *param3, int *param4);
+static void DistWorldFile_Load(DistWorldSystem *system, DistWorldFile *file, enum MapHeader mapHeaderID);
+static void ov9_0224C0F8(DistWorldSystem *param0, enum MapHeader mapHeaderID, int param2);
+static void ov9_0224C10C(DistWorldSystem *param0, enum MapHeader mapHeaderID);
+static void ov9_0224C120(DistWorldSystem *param0, enum MapHeader mapHeaderID);
+static void DistWorldFile_Free(DistWorldFile *file);
+static void ov9_0224C164(DistWorldSystem *param0);
+static void ov9_0224C174(DistWorldSystem *param0);
+static void ov9_0224C184(DistWorldSystem *param0);
+static void ov9_0224C194(DistWorldSystem *param0);
+static void ov9_0224C1E4(DistWorldSystem *param0);
+static int DistWorldFile_GetFloatingPlatformSectionSize(DistWorldFile *file);
+static int DistWorldFile_GetFloatingPlatformCount(DistWorldFile *file);
+static DistWorldFloatingPlatformTemplate *DistWorldFile_GetFloatingPlatformSectionTemplates(DistWorldFile *file);
+static int DistWorldFile_GetFloatingPlatformJumpPointSectionSize(DistWorldFile *file);
+static int DistWorldFile_GetFloatingPlatformJumpPointCount(DistWorldFile *file);
+static DistWorldFloatingPlatformJumpPointTemplate *DistWorldFile_GetFloatingPlatformJumpPointTemplates(DistWorldFile *file);
+static int DistWorldFile_GetCameraAngleSectionSize(DistWorldFile *file);
+static int DistWorldFile_GetCameraAngleCount(DistWorldFile *file);
+static DistWorldCameraAngleTemplate *DistWorldFile_GetCameraAngleTemplates(DistWorldFile *file);
+static int GetActiveGhostPropFileSectionSize(DistWorldSystem *system);
+static int GetInactiveGhostPropFileSectionSize(DistWorldSystem *system);
+static const DistWorldGhostPropHeader *DistWorldFile_GetGhostPropHeader(DistWorldFile *system);
+static const DistWorldGhostPropTemplate *DistWorldFile_GetGhostPropTemplates(DistWorldFile *system);
+static const DistWorldGhostPropTrigger *DistWorldFile_GetGhostPropTriggers(DistWorldFile *system);
+static void InitFloatingPlatformManager(DistWorldSystem *system);
+static void ResetFloatingPlatformManager(DistWorldSystem *system);
+static void FindAndPrepareNewCurrentFloatingPlatform(DistWorldSystem *system, int tileX, int tileY, int tileZ, s16 floatingPlatformKind);
+static void PrepareNewCurrentFloatingPlatform(DistWorldSystem *system, u32 floatingPlatformIndex);
+static void FreeFloatingPlatformManagerTerrainAttrs(DistWorldSystem *system);
+static u32 GetCurrentFloatingPlatformKind2(DistWorldSystem *system);
+static u32 GetCurrentFloatingPlatformKind(DistWorldSystem *system);
+static u32 GetCurrentFloatingPlatformKindSafely(DistWorldSystem *system, int tileX, int tileY, int tileZ);
+static void LoadFloatingPlatformTerrainAttributes(DistWorldSystem *system, u32 distortionWorldAttrID);
+static u16 GetCurrentFloatingPlatformTileAttributesRelative(DistWorldSystem *system, int tileRelativeVerticalPos, int tileRelativeHorizontalPos);
+static u16 GetCurrentFloatingPlatformTileAttributes(DistWorldSystem *system, int tileX, int tileY, int tileZ);
+static void InitFloatingPlatformJumpPoint(DistWorldSystem *system);
+static void ResetFloatingPlatformJumpPoint(DistWorldSystem *system);
+static const DistWorldFloatingPlatformJumpPointTemplate *FindFloatingPlatformJumpPointAt(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir);
+static void InitCameraAngleTemplates(DistWorldSystem *system);
+static void ResetCameraAngleTemplates(DistWorldSystem *system);
+static const DistWorldCameraAngleTemplate *FindCameraAngleForPlayerPosition(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir);
+static void DistWorldGhostPropData_InitFromFile(DistWorldFile *file, DistWorldGhostPropData *data);
+static void InitActiveGhostPropData(DistWorldSystem *system);
+static void InitInactiveGhostPropData(DistWorldSystem *system);
+static void InitAllGhostPropData(DistWorldSystem *system);
+static void ResetActiveGhostPropData(DistWorldSystem *system);
+static void ResetAllGhostPropData(DistWorldSystem *system);
+static void ResetInactiveGhostPropData(DistWorldSystem *system);
+static void MoveActiveGhostPropDataToInactive(DistWorldSystem *system);
+static void MoveInactiveGhostPropDataToActive(DistWorldSystem *system);
+static const DistWorldGhostPropHeader *GetActiveGhostPropHeader(DistWorldSystem *system);
+static const DistWorldGhostPropHeader *GetInactiveGhostPropHeader(DistWorldSystem *system);
+static const DistWorldGhostPropTemplate *GetActiveGhostPropTemplates(DistWorldSystem *system);
+static const DistWorldGhostPropTemplate *GetInactiveGhostPropTemplates(DistWorldSystem *system);
+static const DistWorldGhostPropTrigger *GetActiveGhostPropTriggers(DistWorldSystem *system);
+static void ov9_0224C8E8(DistWorldSystem *param0);
+static void ov9_0224C9E8(DistWorldSystem *param0);
+static void ov9_0224CA98(DistWorldSystem *param0);
+static void ov9_0224CB30(DistWorldSystem *param0);
+static void ov9_0224CBD8(DistWorldSystem *param0);
+static void ov9_0224CBF8(DistWorldSystem *param0);
 static void ov9_0224CC08(SysTask *param0, void *param1);
-static void ov9_0224CC4C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224CC50(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2);
-static BOOL ov9_0224CC7C(UnkStruct_ov9_02249B04 *param0);
-static BOOL ov9_0224D040(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3);
-static void ov9_0224D078(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1);
+static void ov9_0224CC4C(DistWorldSystem *param0);
+static void ov9_0224CC50(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2);
+static BOOL ov9_0224CC7C(DistWorldSystem *param0);
+static BOOL ov9_0224D040(DistWorldSystem *param0, int param1, int param2, int param3);
+static void ov9_0224D078(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1);
 static BOOL ov9_0224D098(FieldTask *param0);
-static const UnkStruct_ov9_022530A4 *ov9_0224D720(int param0);
-static void ov9_0224D744(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224D780(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224D7C0(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static UnkStruct_02073838 *ov9_0224D7EC(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224D814(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224D874(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224D994(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224D9BC(UnkStruct_ov9_02249B04 *param0, u32 param1, u32 param2, UnkStruct_02073B50 *param3, UnkStruct_02073974 *param4);
-static void ov9_0224DA48(UnkStruct_ov9_02249B04 *param0, int param1, UnkStruct_02073B50 *param2, UnkStruct_02073974 *param3);
-static void ov9_0224DA64(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3);
-static void ov9_0224DAAC(UnkStruct_ov9_02249B04 *param0, int param1, int param2);
-static void ov9_0224DAB8(UnkStruct_ov9_02249B04 *param0, int param1, int param2);
-static BOOL ov9_0224DAEC(int param0);
-static BOOL ov9_0224DB04(int param0);
-static void ov9_0224DB1C(UnkStruct_ov9_02249B04 *param0);
-static UnkStruct_ov9_0224D928 *ov9_0224D8A4(UnkStruct_ov9_02249B04 *param0, u32 param1, int *param2);
-static void ov9_0224D928(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D928 *param1);
-static void ov9_0224D938(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D928 *param1);
-static void ov9_0224D954(UnkStruct_ov9_02249B04 *param0, int param1);
-static BOOL ov9_0224DBE4(UnkStruct_ov9_02249B04 *param0, int param1, VecFx32 *param2);
-static void ov9_0224DC34(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224DC4C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224DC74(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224DCA8(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224DD24(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224DD40(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252C38 *param1, u32 param2);
-static void ov9_0224DDA0(UnkStruct_ov9_02249B04 *param0, u32 param1, int param2);
-static UnkStruct_ov9_0224E0DC *ov9_0224DDDC(UnkStruct_ov9_02249B04 *param0);
-static UnkStruct_ov9_0224E0DC *ov9_0224DE08(UnkStruct_ov9_02249B04 *param0, u32 param1, u32 param2);
+static const DistWorldMapConnections *GetConnectionsForMap(int mapHeaderID);
+static void InitPropRenderBuffers(DistWorldSystem *system);
+static void LoadProp3DModel(DistWorldSystem *system, u32 propKind);
+static void FreeProp3DModel(DistWorldSystem *system, u32 propKind);
+static Simple3DModel *GetProp3DModel(DistWorldSystem *system, u32 propKind);
+static void LoadPropAnimSet(DistWorldSystem *system, u32 animKind);
+static void FreePropAnimSet(DistWorldSystem *system, u32 animKind);
+static void FreePropRenderBuffers(DistWorldSystem *system);
+static void LoadRenderBuffersForPropEx(DistWorldSystem *system, u32 propKind, u32 animKind, Simple3DRenderObj *renderObj, Simple3DAnimation *animation);
+static void LoadRenderBuffersForProp(DistWorldSystem *system, int propKind, Simple3DRenderObj *renderObj, Simple3DAnimation *animation);
+static void SetPropOpacityAndPolygonID(DistWorldSystem *system, int propKind, int opacity, int polygonID);
+static void SetPropOpacity(DistWorldSystem *system, int propKind, int opacity);
+static void SetPropPolygonID(DistWorldSystem *system, int propKind, int polygonID);
+static BOOL DistWorldPropAnimInfo_IsAnimKindValid(int propKind);
+static BOOL DistWorldPropAnimInfo_IsStatic(int propKind);
+static void ov9_0224DB1C(DistWorldSystem *param0);
+static DistWorldPropRenderer *DistWorldPropRenderer_Init(DistWorldSystem *system, u32 propKind, BOOL *alreadyInit);
+static void DistWorldPropRenderer_Invalidate(DistWorldSystem *system, DistWorldPropRenderer *propRenderer);
+static void DistWorldPropRenderer_InvalidateAnimated(DistWorldSystem *system, DistWorldPropRenderer *propRenderer);
+static void InvalidateAllPropRenderersOfKind(DistWorldSystem *system, int propKind);
+static BOOL IsPropInView(DistWorldSystem *system, int propKind, VecFx32 *pos);
+static void ov9_0224DC34(DistWorldSystem *param0);
+static void ov9_0224DC4C(DistWorldSystem *param0);
+static void ov9_0224DC74(DistWorldSystem *param0, u32 param1);
+static void ov9_0224DCA8(DistWorldSystem *param0);
+static void ov9_0224DD24(DistWorldSystem *param0, u32 param1);
+static void ov9_0224DD40(DistWorldSystem *param0, const UnkStruct_ov9_02252C38 *param1, u32 param2);
+static void ov9_0224DDA0(DistWorldSystem *param0, u32 param1, int param2);
+static UnkStruct_ov9_0224E0DC *ov9_0224DDDC(DistWorldSystem *param0);
+static UnkStruct_ov9_0224E0DC *ov9_0224DE08(DistWorldSystem *param0, u32 param1, u32 param2);
 static const UnkStruct_ov9_02252C38 *ov9_0224DE40(u32 param0);
 static const UnkStruct_ov9_0224DF10 *ov9_0224DE60(u32 param0, u32 param1);
 static const UnkStruct_ov9_02253830 *ov9_0224DE70(u32 param0);
-static MapObject *ov9_0224DE94(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4, int param5, u32 param6);
-static void ov9_0224DF10(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, MapObject *param2);
-static UnkStruct_ov101_021D5D90 *ov9_0224DFA0(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1);
-static void ov9_0224DFF4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, const UnkStruct_ov9_0224DF10 *param2, u32 param3);
-static void ov9_0224E044(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1);
-static void ov9_0224E060(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1);
-static void ov9_0224E07C(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2);
+static MapObject *ov9_0224DE94(DistWorldSystem *param0, int param1, int param2, int param3, int param4, int param5, u32 param6);
+static void ov9_0224DF10(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, MapObject *param2);
+static OverworldAnimManager *ov9_0224DFA0(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1);
+static void ov9_0224DFF4(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, const UnkStruct_ov9_0224DF10 *param2, u32 param3);
+static void ov9_0224E044(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1);
+static void ov9_0224E060(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1);
+static void ov9_0224E07C(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2);
 static void ov9_0224E0DC(UnkStruct_ov9_0224E0DC *param0, u32 param1);
-static BOOL ov9_0224E0E0(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224E120(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224E160(UnkStruct_ov9_02249B04 *param0, int param1);
-static UnkStruct_ov9_0224E0DC *ov9_0224E188(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, u32 param4);
-static VecFx32 *ov9_0224E330(UnkStruct_ov101_021D5D90 *param0);
-static void ov9_0224E33C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224E34C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224E350(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02251438 *param1);
-static void *ov9_0224E37C(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void *ov9_0224E39C(UnkStruct_ov9_02249B04 *param0);
-static BOOL ov9_0224E3A0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1);
-static BOOL ov9_0224E434(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3);
-static void ov9_0224E498(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02251438 *param1);
-static void ov9_0224E4B0(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252044 *param1);
+static BOOL ov9_0224E0E0(DistWorldSystem *param0, u32 param1);
+static BOOL ov9_0224E120(DistWorldSystem *param0, u32 param1);
+static BOOL ov9_0224E160(DistWorldSystem *param0, int param1);
+static UnkStruct_ov9_0224E0DC *ov9_0224E188(DistWorldSystem *param0, int param1, int param2, int param3, u32 param4);
+static VecFx32 *ov9_0224E330(OverworldAnimManager *param0);
+static void ov9_0224E33C(DistWorldSystem *param0);
+static void ov9_0224E34C(DistWorldSystem *param0);
+static void ov9_0224E350(DistWorldSystem *param0, const UnkStruct_ov9_02251438 *param1);
+static void *ov9_0224E37C(DistWorldSystem *param0, u32 param1);
+static void *ov9_0224E39C(DistWorldSystem *param0);
+static BOOL ov9_0224E3A0(DistWorldSystem *param0, FieldTask *param1);
+static BOOL ov9_0224E434(DistWorldSystem *param0, int param1, int param2, int param3);
+static void ov9_0224E498(DistWorldSystem *param0, const UnkStruct_ov9_02251438 *param1);
+static void ov9_0224E4B0(DistWorldSystem *param0, const UnkStruct_ov9_02252044 *param1);
 static BOOL ov9_0224E4BC(FieldTask *param0);
-static void ov9_0224E8B4(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224E8EC(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224E91C(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252414 *param1);
-static BOOL ov9_0224E964(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224E984(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224E988(UnkStruct_ov9_02249B04 *param0);
-static BOOL ov9_0224E9A4(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224E9CC(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224E9F4(UnkStruct_ov9_02249B04 *param0, int param1);
-static void ov9_0224EB68(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224EB94(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224EBB8(UnkStruct_ov9_0224EBB8 *param0);
-static void ov9_0224EC10(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252548 *param1);
-static void ov9_0224EC48(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static UnkStruct_ov9_0224EBB8 *ov9_0224EC70(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224EC94(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224ECC0(UnkStruct_ov9_02249B04 *param0, int param1);
-static BOOL ov9_0224ECE8(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static BOOL ov9_0224ED20(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224EE40(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224EE6C(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224EE70(UnkStruct_ov9_02249B04 *param0, MapObject *param1);
-static MapObject **ov9_0224EEA0(UnkStruct_ov9_02249B04 *param0);
-static BOOL ov9_0224EF30(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224EF30 *param1, u16 param2);
-static BOOL ov9_0224EF64(UnkStruct_ov9_02249B04 *param0, MapObject **param1, const UnkStruct_ov9_0224EF30 *param2, u32 param3, u16 param4);
-static BOOL ov9_0224F048(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224EF30 **param1, u32 param2);
-static void ov9_0224F078(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224F0A4(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static MapObject *ov9_0224F0D4(UnkStruct_ov9_02249B04 *param0, u32 param1, u16 param2);
-static BOOL ov9_0224F1CC(UnkStruct_ov9_02249B04 *param0, MapObject *param1);
-static void ov9_0224F724(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224F760(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224F764(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224F804(UnkStruct_ov9_02249B04 *param0);
-static void ov9_0224F854(UnkStruct_ov9_02249B04 *param0, u32 param1);
-static void ov9_0224F860(UnkStruct_ov9_02249B04 *param0, s16 param1);
+static void LoadGiratinaShadowPropRenderer(DistWorldSystem *system);
+static void FreeGiratinaShadowPropRenderer(DistWorldSystem *system);
+static void LoadGiratinaShadowPropAnimation(DistWorldSystem *system, const DistWorldGiratinaShadowTemplate *giratinaTemplate);
+static BOOL IsGiratinaShadowAnimationFinished(DistWorldSystem *system);
+static void Dummy0224E984(DistWorldSystem *system);
+static void FinishGiratinaShadowPropRenderer(DistWorldSystem *system);
+static BOOL IsGiratinaShadowPropRendererValid2(DistWorldSystem *system, u32 propKind);
+static BOOL IsGiratinaShadowPropRendererAnimValid(DistWorldSystem *system, u32 animKind);
+static BOOL IsGiratinaShadowPropRendererValid(DistWorldSystem *system, int propKind);
+static void InitSimplePropsForCurrentAndNextMaps(DistWorldSystem *system);
+static void FinishAllSimplePropAnimators(DistWorldSystem *system);
+static void DistWorldMapSimplePropAnimator_Finish(DistWorldSimplePropAnimator *animator);
+static void InitSimplePropsFromTemplates(DistWorldSystem *system, const DistWorldSimplePropMapTemplates *mapTemplates);
+static void InitSimplePropsForMap(DistWorldSystem *system, u32 mapHeaderID);
+static DistWorldSimplePropAnimator *FindUnusedSimplePropAnimator(DistWorldSystem *system);
+static void FinishSimplePropAnimatorForMap(DistWorldSystem *system, u32 mapHeaderID);
+static BOOL HasActiveSimpleProp(DistWorldSystem *system, int propKind);
+static BOOL HasActiveSimpleProp2(DistWorldSystem *system, u32 propKind);
+static BOOL HasActiveSimplePropAnim(DistWorldSystem *system, u32 animKind);
+static void ov9_0224EE40(DistWorldSystem *param0);
+static void ov9_0224EE6C(DistWorldSystem *param0);
+static void ov9_0224EE70(DistWorldSystem *param0, MapObject *param1);
+static MapObject **ov9_0224EEA0(DistWorldSystem *param0);
+static BOOL ov9_0224EF30(DistWorldSystem *param0, const UnkStruct_ov9_0224EF30 *param1, u16 param2);
+static BOOL ov9_0224EF64(DistWorldSystem *param0, MapObject **param1, const UnkStruct_ov9_0224EF30 *param2, u32 param3, u16 param4);
+static BOOL ov9_0224F048(DistWorldSystem *param0, const UnkStruct_ov9_0224EF30 **param1, u32 param2);
+static void ov9_0224F078(DistWorldSystem *param0, u32 param1);
+static void ov9_0224F0A4(DistWorldSystem *param0, u32 param1);
+static MapObject *ov9_0224F0D4(DistWorldSystem *param0, u32 param1, u16 param2);
+static BOOL ov9_0224F1CC(DistWorldSystem *param0, MapObject *param1);
+static void ov9_0224F724(DistWorldSystem *param0);
+static void ov9_0224F760(DistWorldSystem *param0);
+static void ov9_0224F764(DistWorldSystem *param0);
+static void ov9_0224F804(DistWorldSystem *param0);
+static void ov9_0224F854(DistWorldSystem *param0, u32 param1);
+static void ov9_0224F860(DistWorldSystem *param0, s16 param1);
 static void ov9_0224F86C(u16 param0, u16 param1, u16 param2, u16 *param3);
-static BOOL ov9_02250E6C(int param0, int param1, int param2, const UnkStruct_ov9_02250E6C *param3);
-static int ov9_02250EB0(u16 param0, u16 param1);
+static BOOL DistWorldBounds_AreCoordinatesInBounds(int tileX, int tileY, int tileZ, const DistWorldBounds *bounds);
+static int CalculateCameraAngleDelta(u16 currentAngleComponent, u16 targetAngleComponent);
 static void ov9_02250EE8(s16 *param0, s16 param1);
 static void ov9_02250F1C(fx32 *param0, fx32 param1);
-static void ov9_02250F44(UnkStruct_ov9_02249B04 *param0, int *param1, int *param2, int *param3);
-static u32 ov9_022510D0(UnkStruct_ov9_02249B04 *param0);
-static int ov9_022510D8(u32 param0);
-static BOOL ov9_02251104(UnkStruct_ov9_02249B04 *param0, u32 param1, u32 param2);
-static void ov9_022511E0(u16 param0);
+static void GetPlayerPos(DistWorldSystem *system, int *playerX, int *playerY, int *playerZ);
+static u32 DistWorldSystem_GetMapHeaderID(DistWorldSystem *system);
+static enum AvatarDistortionState GetAvatarDistortionStateForFloatingPlatformKind(u32 platformKind);
+static BOOL CheckFlagCondition(DistWorldSystem *system, enum FlagCondition flagCond, u32 val);
+static void PlaySoundIfNotActive(u16 seqID);
 static void ov9_022511F4(MapObject *param0, const VecFx32 *param1);
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_02251508;
-static const UnkStruct_ov101_021D86B0 Unk_ov9_02251468;
-static const UnkStruct_ov101_021D86B0 Unk_ov9_022514B8;
-static const UnkStruct_ov101_021D86B0 Unk_ov9_02251530;
+static const OverworldAnimManagerFuncs Unk_ov9_02251508;
+static const OverworldAnimManagerFuncs Unk_ov9_02251468;
+static const OverworldAnimManagerFuncs sGiratinaShadowPropAnimFuncs;
+static const OverworldAnimManagerFuncs sSimplePropAnimFuncs;
 static const fx32 Unk_ov9_02252CF8[16];
-static void (*const Unk_ov9_02251224[1])(UnkStruct_ov9_02249B04 *, const UnkStruct_ov9_0224AA00 *);
+static const FloatingPlatformJumpPointHandler sFloatingPlatformJumpPointHandlers[1];
 static const int Unk_ov9_02251E58[7];
 static const int Unk_ov9_02251E90[7];
 static const int Unk_ov9_02251EAC[7];
@@ -1147,198 +1281,194 @@ static const int Unk_ov9_02251210[1];
 static const UnkStruct_ov9_02251EC8 Unk_ov9_02251EC8[7];
 static const UnkStruct_ov9_02253680 Unk_ov9_02253680[9];
 static const fx32 Unk_ov9_02252C08[3][4];
-static const u32 Unk_ov9_02252FD0[25];
-static const u32 Unk_ov9_022514A4[5];
-static const UnkStruct_ov9_022531D0 Unk_ov9_022531D0[25];
-static const VecFx32 Unk_ov9_02253298[25];
-static const VecFx32 Unk_ov9_022533C4[25];
-static const UnkStruct_ov101_021D86B0 *const Unk_ov9_02252F6C[25];
-static const UnkStruct_ov9_022530A4 Unk_ov9_022530A4[10];
+static const u32 sProp3DModelNARCIndexByKind[PROP_KIND_COUNT];
+static const u32 sPropAnimSetNARCIndexByKind[PROP_ANIM_KIND_COUNT];
+static const DistWorldPropAnimInfo sPropAnimInfoByKind[PROP_KIND_COUNT];
+static const VecFx32 sPropInitialPosOffsetByKind[PROP_KIND_COUNT];
+static const VecFx32 sPropScaleByKind[PROP_KIND_COUNT];
+static const OverworldAnimManagerFuncs *const sPropAnimFuncsByKind[PROP_KIND_COUNT];
+static const DistWorldMapConnections sDistWorldMapConnectionList[DISTORTION_WORLD_MAP_COUNT];
 static const UnkStruct_ov9_02252C38 Unk_ov9_02252C38[8];
 static const UnkStruct_ov9_02253830 Unk_ov9_02253830[22];
 static const UnkFuncPtr_ov9_02253BE4 *Unk_ov9_02253BE4[18];
 const UnkStruct_ov9_02252D38 Unk_ov9_02252D38[];
 const UnkStruct_ov9_02251438 Unk_ov9_02251438[];
 const UnkStruct_ov9_02251438 Unk_ov9_022513D8[];
-const UnkStruct_ov9_02252548 Unk_ov9_02252548[];
+const DistWorldSimplePropMapTemplates sSimplePropsMapTemplates[];
 const UnkStruct_ov9_02252EB4 Unk_ov9_02252EB4[];
 
-void ov9_02249960(FieldSystem *fieldSystem)
+void DistWorld_DynamicMapFeaturesInit(FieldSystem *fieldSystem)
 {
-    UnkStruct_02027860 *v0;
-    UnkStruct_02071C5C *v1;
-    UnkStruct_ov9_02249B04 *v2;
+    PersistedMapFeatures *persistedMapFeatures = MiscSaveBlock_GetPersistedMapFeatures(FieldSystem_GetSaveData(fieldSystem));
+    DistWorldPersistedData *data = PersistedMapFeatures_GetBuffer(persistedMapFeatures, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD);
+    DistWorldSystem *dwSystem = Heap_Alloc(HEAP_ID_FIELD1, sizeof(DistWorldSystem));
 
-    v0 = sub_02027860(FieldSystem_GetSaveData(fieldSystem));
-    v1 = sub_02027F6C(v0, 9);
-    v2 = Heap_AllocFromHeap(4, sizeof(UnkStruct_ov9_02249B04));
+    memset(dwSystem, 0, sizeof(DistWorldSystem));
 
-    memset(v2, 0, sizeof(UnkStruct_ov9_02249B04));
+    dwSystem->fieldSystem = fieldSystem;
+    dwSystem->persistedData = data;
 
-    v2->fieldSystem = fieldSystem;
-    v2->unk_04 = v1;
+    fieldSystem->unk_04->dynamicMapFeaturesData = dwSystem;
 
-    fieldSystem->unk_04->unk_24 = v2;
+    OpenArchives(dwSystem);
 
-    ov9_02249C88(v2);
-
-    if (v1->unk_00_0 == 0) {
-        ov9_02249CC4(v2);
+    if (!data->valid) {
+        ov9_02249CC4(dwSystem);
     }
 
-    ov9_0224BE14(v2);
-    ov9_02249F50(v2);
-    ov9_02249F88(v2);
-    ov9_0224A1E4(v2, (4 + 2));
-    ov9_0224D744(v2);
-    ov9_0224ADC0(v2);
-    ov9_0224B3A8(v2);
-    ov9_0224AEE4(v2, &v2->unk_1A8, v2->unk_10);
-    ov9_0224F724(v2);
-    ov9_02249FF4(v2);
-    ov9_0224A570(v2);
-    ov9_0224A8C0(v2);
-    ov9_0224EE40(v2);
-    ov9_0224EB68(v2);
-    ov9_0224B514(v2);
-    ov9_0224DC34(v2);
-    ov9_0224E33C(v2);
-    ov9_02249E94(v2);
-    ov9_0224C8E8(v2);
-    ov9_0224CBD8(v2);
-    ov9_0224DCA8(v2);
-    ov9_0224B1B4(v2, v2->fieldSystem->unk_40, &v2->unk_1A8);
-    ov9_0224E984(v2);
-    ov5_021F34B8(v2->fieldSystem->unk_40);
-    ov9_02249EF0(v2);
+    ov9_0224BE14(dwSystem);
+    ov9_02249F50(dwSystem);
+    ov9_02249F88(dwSystem);
+    ov9_0224A1E4(dwSystem, (4 + 2));
+    InitPropRenderBuffers(dwSystem);
+    ov9_0224ADC0(dwSystem);
+    ov9_0224B3A8(dwSystem);
+    ov9_0224AEE4(dwSystem, &dwSystem->unk_1A8, dwSystem->unk_10);
+    ov9_0224F724(dwSystem);
+    CameraInit(dwSystem);
+    FieldTaskContextNoOp1(dwSystem);
+    ov9_0224A8C0(dwSystem);
+    ov9_0224EE40(dwSystem);
+    InitSimplePropsForCurrentAndNextMaps(dwSystem);
+    InitAllGhostPropManagers(dwSystem);
+    ov9_0224DC34(dwSystem);
+    ov9_0224E33C(dwSystem);
+    ov9_02249E94(dwSystem);
+    ov9_0224C8E8(dwSystem);
+    ov9_0224CBD8(dwSystem);
+    ov9_0224DCA8(dwSystem);
+    ov9_0224B1B4(dwSystem, dwSystem->fieldSystem->fieldEffMan, &dwSystem->unk_1A8);
+    Dummy0224E984(dwSystem);
+    ov5_021F34B8(dwSystem->fieldSystem->fieldEffMan);
+    ov9_02249EF0(dwSystem);
 
-    v1->unk_00_0 = 1;
+    data->valid = TRUE;
 }
 
-void ov9_02249A60(FieldSystem *fieldSystem)
+void DistWorld_DynamicMapFeaturesFree(FieldSystem *fieldSystem)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
     ov9_02249F18(v0);
-    ov9_0224E988(v0);
+    FinishGiratinaShadowPropRenderer(v0);
     ov9_0224CBF8(v0);
     ov9_0224C9E8(v0);
     ov9_02249EC8(v0);
     ov9_0224E34C(v0);
     ov9_0224DC4C(v0);
-    ov9_0224B560(v0);
-    ov9_0224EB94(v0);
+    FinishAllGhostPropManagers(v0);
+    FinishAllSimplePropAnimators(v0);
     ov9_0224EE6C(v0);
     ov9_0224A9E8(v0);
-    ov9_0224A574(v0);
-    ov9_0224A0C8(v0);
+    FieldTaskContextNoOp2(v0);
+    CameraFree(v0);
     ov9_0224F760(v0);
     ov9_0224B064(&v0->unk_1A8);
     ov9_0224B3F4(v0);
     ov9_0224AED8(v0);
-    ov9_0224D994(v0);
+    FreePropRenderBuffers(v0);
     ov9_0224A334(v0);
     ov9_02249F98(v0);
     ov9_02249F84(v0);
     ov9_0224BE8C(v0);
-    ov9_02249CAC(v0);
+    CloseArchives(v0);
 
-    Heap_FreeToHeap(v0);
+    Heap_Free(v0);
 
-    fieldSystem->unk_04->unk_24 = NULL;
+    fieldSystem->unk_04->dynamicMapFeaturesData = NULL;
 }
 
-static void ov9_02249B04(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249B04(DistWorldSystem *param0)
 {
-    u32 v0 = ov9_022510D0(param0);
-    const UnkStruct_ov9_022530A4 *v1 = ov9_0224D720(v0);
+    u32 v0 = DistWorldSystem_GetMapHeaderID(param0);
+    const DistWorldMapConnections *v1 = GetConnectionsForMap(v0);
 
-    ov9_0224B570(param0);
-    ov9_02249D44(param0, 0);
-    ov9_0224EC94(param0, v1->unk_04);
-    ov9_0224DC74(param0, v1->unk_04);
-    ov9_0224F0A4(param0, v1->unk_04);
-    ov9_0224BF18(param0, v1->unk_08);
+    FinishActiveGhostPropManager(param0);
+    SetPersistedHiddenGhostPropGroups(param0, 0);
+    FinishSimplePropAnimatorForMap(param0, v1->prevID);
+    ov9_0224DC74(param0, v1->prevID);
+    ov9_0224F0A4(param0, v1->prevID);
+    ov9_0224BF18(param0, v1->nextID);
     ov9_0224DB1C(param0);
-    ov9_0224B4CC(param0);
-    ov9_0224EC48(param0, v1->unk_08);
-    ov9_0224DD24(param0, v1->unk_08);
-    ov9_0224F078(param0, v1->unk_08);
+    InitInactiveGhostPropManager(param0);
+    InitSimplePropsForMap(param0, v1->nextID);
+    ov9_0224DD24(param0, v1->nextID);
+    ov9_0224F078(param0, v1->nextID);
 }
 
-static void ov9_02249B68(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249B68(DistWorldSystem *param0)
 {
-    u32 v0 = ov9_022510D0(param0);
-    const UnkStruct_ov9_022530A4 *v1 = ov9_0224D720(v0);
+    u32 v0 = DistWorldSystem_GetMapHeaderID(param0);
+    const DistWorldMapConnections *v1 = GetConnectionsForMap(v0);
 
-    v1 = ov9_0224D720(v1->unk_08);
+    v1 = GetConnectionsForMap(v1->nextID);
 
-    ov9_0224B580(param0);
-    ov9_02249D44(param0, 0);
-    ov9_0224EC94(param0, v1->unk_08);
-    ov9_0224DC74(param0, v1->unk_08);
-    ov9_0224F0A4(param0, v1->unk_08);
+    FinishInactiveGhostPropManager(param0);
+    SetPersistedHiddenGhostPropGroups(param0, 0);
+    FinishSimplePropAnimatorForMap(param0, v1->nextID);
+    ov9_0224DC74(param0, v1->nextID);
+    ov9_0224F0A4(param0, v1->nextID);
     ov9_0224BEB4(param0, v0);
     ov9_0224DB1C(param0);
-    ov9_0224B45C(param0, 1);
-    ov9_0224EC48(param0, v0);
+    InitActiveGhostPropManager(param0, TRUE);
+    InitSimplePropsForMap(param0, v0);
     ov9_0224DD24(param0, v0);
     ov9_0224F078(param0, v0);
 }
 
-static void ov9_02249BD4(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249BD4(DistWorldSystem *param0, u32 param1)
 {
-    ov9_0224B570(param0);
-    ov9_02249D44(param0, 0);
-    ov9_0224EC94(param0, param1);
+    FinishActiveGhostPropManager(param0);
+    SetPersistedHiddenGhostPropGroups(param0, 0);
+    FinishSimplePropAnimatorForMap(param0, param1);
     ov9_0224DC74(param0, param1);
     ov9_0224F0A4(param0, param1);
     ov9_0224DB1C(param0);
 }
 
-static void ov9_02249C08(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249C08(DistWorldSystem *param0, u32 param1)
 {
-    ov9_0224B4CC(param0);
-    ov9_0224EC48(param0, param1);
+    InitInactiveGhostPropManager(param0);
+    InitSimplePropsForMap(param0, param1);
     ov9_0224DD24(param0, param1);
     ov9_0224F078(param0, param1);
 }
 
-static void ov9_02249C2C(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249C2C(DistWorldSystem *param0, u32 param1)
 {
-    ov9_0224B580(param0);
-    ov9_02249D44(param0, 0);
-    ov9_0224EC94(param0, param1);
+    FinishInactiveGhostPropManager(param0);
+    SetPersistedHiddenGhostPropGroups(param0, 0);
+    FinishSimplePropAnimatorForMap(param0, param1);
     ov9_0224DC74(param0, param1);
     ov9_0224F0A4(param0, param1);
     ov9_0224DB1C(param0);
 }
 
-static void ov9_02249C60(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249C60(DistWorldSystem *param0, u32 param1)
 {
-    ov9_0224B45C(param0, 1);
-    ov9_0224EC48(param0, param1);
+    InitActiveGhostPropManager(param0, TRUE);
+    InitSimplePropsForMap(param0, param1);
     ov9_0224DD24(param0, param1);
     ov9_0224F078(param0, param1);
 }
 
-static void ov9_02249C88(UnkStruct_ov9_02249B04 *param0)
+static void OpenArchives(DistWorldSystem *system)
 {
-    param0->unk_08 = NARC_ctor(NARC_INDEX_FIELDDATA__TORNWORLD__TW_ARC, 4);
-    param0->unk_0C = NARC_ctor(NARC_INDEX_FIELDDATA__TORNWORLD__TW_ARC_ATTR, 4);
-    param0->unk_10 = NARC_ctor(NARC_INDEX_DATA__TW_ARC_ETC, 4);
+    system->distortionWorldNARC = NARC_ctor(NARC_INDEX_FIELDDATA__TORNWORLD__TW_ARC, HEAP_ID_FIELD1);
+    system->distortionWorldAttrNARC = NARC_ctor(NARC_INDEX_FIELDDATA__TORNWORLD__TW_ARC_ATTR, HEAP_ID_FIELD1);
+    system->unk_10 = NARC_ctor(NARC_INDEX_DATA__TW_ARC_ETC, HEAP_ID_FIELD1);
 }
 
-static void ov9_02249CAC(UnkStruct_ov9_02249B04 *param0)
+static void CloseArchives(DistWorldSystem *system)
 {
-    NARC_dtor(param0->unk_08);
-    NARC_dtor(param0->unk_0C);
-    NARC_dtor(param0->unk_10);
+    NARC_dtor(system->distortionWorldNARC);
+    NARC_dtor(system->distortionWorldAttrNARC);
+    NARC_dtor(system->unk_10);
 }
 
-static void ov9_02249CC4(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249CC4(DistWorldSystem *param0)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
     VarsFlags *v1 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
 
     v0->unk_0C = 0;
@@ -1346,81 +1476,79 @@ static void ov9_02249CC4(UnkStruct_ov9_02249B04 *param0)
     {
         u32 v2 = ((1 << 3) | (1 << 7));
 
-        if (ov9_022510D0(param0) == 581) {
+        if (DistWorldSystem_GetMapHeaderID(param0) == 581) {
             v2 = ((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 7) | (1 << 9) | (1 << 10));
         }
 
         ov9_02249D68(param0, v2);
     }
 
-    if (SystemFlag_HandleDistortionWorldPuzzleFinished(v1, HANDLE_FLAG_CHECK) == FALSE) {
+    if (!SystemFlag_HandleDistortionWorldPuzzleFinished(v1, HANDLE_FLAG_CHECK)) {
         v0->unk_0C |= ((1 << 0) | (1 << 1) | (1 << 2));
     } else {
         v0->unk_0C |= ((1 << 10) | (1 << 11) | (1 << 12) | (1 << 6) | (1 << 7) | (1 << 8));
     }
 }
 
-static void ov9_02249D18(UnkStruct_ov9_02249B04 *param0, u16 param1, u16 param2, u16 param3)
+static void SetPersistedCameraAngles(DistWorldSystem *system, u16 angleX, u16 angleY, u16 angleZ)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *persistedData = system->persistedData;
 
-    v0->unk_04 = param1;
-    v0->unk_06 = param2;
-    v0->unk_08 = param3;
+    persistedData->cameraAngleX = angleX;
+    persistedData->cameraAngleY = angleY;
+    persistedData->cameraAngleZ = angleZ;
 }
 
-static void ov9_02249D24(UnkStruct_ov9_02249B04 *param0, u16 *param1, u16 *param2, u16 *param3)
+static void GetPersistedCameraAngles(DistWorldSystem *system, u16 *angleX, u16 *angleY, u16 *angleZ)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *persistedData = system->persistedData;
 
-    *param1 = v0->unk_04;
-    *param2 = v0->unk_06;
-    *param3 = v0->unk_08;
+    *angleX = persistedData->cameraAngleX;
+    *angleY = persistedData->cameraAngleY;
+    *angleZ = persistedData->cameraAngleZ;
 }
 
-static BOOL ov9_02249D38(UnkStruct_ov9_02249B04 *param0)
+static BOOL IsPersistedDataValid(DistWorldSystem *system)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
-    return v0->unk_00_0;
+    DistWorldPersistedData *persistedData = system->persistedData;
+    return persistedData->valid;
 }
 
-static void ov9_02249D44(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void SetPersistedHiddenGhostPropGroups(DistWorldSystem *system, u32 hiddenGhostPropGroups)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
-    v0->unk_00_1 = param1;
+    system->persistedData->hiddenGhostPropGroups = hiddenGhostPropGroups;
 }
 
-static u32 ov9_02249D5C(UnkStruct_ov9_02249B04 *param0)
+static u32 GetPersistedHiddenGhostPropGroups(DistWorldSystem *system)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
-    return v0->unk_00_1;
+    return system->persistedData->hiddenGhostPropGroups;
 }
 
-static void ov9_02249D68(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249D68(DistWorldSystem *param0, u32 param1)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
     v0->unk_0A = param1;
 }
 
-static void ov9_02249D70(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249D70(DistWorldSystem *param0, u32 param1)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
 
     GF_ASSERT(param1 < 11);
     v0->unk_0A |= (1 << param1);
 }
 
-static void ov9_02249D8C(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249D8C(DistWorldSystem *param0, u32 param1)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
 
     GF_ASSERT(param1 < 11);
     v0->unk_0A &= ~(1 << param1);
 }
 
-static BOOL ov9_02249DA8(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL ov9_02249DA8(DistWorldSystem *param0, u32 param1)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
 
     GF_ASSERT(param1 < 11);
 
@@ -1431,84 +1559,78 @@ static BOOL ov9_02249DA8(UnkStruct_ov9_02249B04 *param0, u32 param1)
     return 0;
 }
 
-static void ov9_02249DC8(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249DC8(DistWorldSystem *param0, u32 param1)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
 
     GF_ASSERT(param1 < 17);
     v0->unk_0C |= (1 << param1);
 }
 
-static void ov9_02249DE4(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_02249DE4(DistWorldSystem *param0, u32 param1)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *v0 = param0->persistedData;
 
     GF_ASSERT(param1 < 17);
     v0->unk_0C &= ~(1 << param1);
 }
 
-static BOOL ov9_02249E00(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL ov9_02249E00(DistWorldSystem *system, u32 val)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *persistedData = system->persistedData;
 
-    GF_ASSERT(param1 < 17);
-
-    if (v0->unk_0C & (1 << param1)) {
-        return 1;
-    }
-
-    return 0;
+    GF_ASSERT(val < 17);
+    return persistedData->unk_0C & (1 << val) ? TRUE : FALSE;
 }
 
-static void ov9_02249E20(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void SetPersistedCurrentFloatingPlatformIndex(DistWorldSystem *system, u32 floatingPlatformIndex)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
+    DistWorldPersistedData *persistedData = system->persistedData;
 
-    GF_ASSERT(param1 < (1 << 4));
-    v0->unk_00_25 = param1;
+    GF_ASSERT(floatingPlatformIndex < DIST_WORLD_PERSISTED_DATA_CURRENT_FLOATING_PLATFORM_MAX);
+    persistedData->currentFloatingPlatformIndex = floatingPlatformIndex;
 }
 
-static u32 ov9_02249E44(UnkStruct_ov9_02249B04 *param0)
+static u32 GetPersistedCurrentFloatingPlatformIndex(DistWorldSystem *system)
 {
-    UnkStruct_02071C5C *v0 = param0->unk_04;
-    return v0->unk_00_25;
+    return system->persistedData->currentFloatingPlatformIndex;
 }
 
-BOOL ov9_02249E50(FieldSystem *fieldSystem, const int param1, const int param2, const fx32 param3, BOOL *param4)
+BOOL DistWorld_DynamicMapFeaturesCheckCollision(FieldSystem *fieldSystem, const int tileX, const int tileZ, const fx32 height, BOOL *isColliding)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
-    u32 v1 = ov9_022510D0(v0);
+    DistWorldSystem *dwSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    enum MapHeader mapHeaderID = DistWorldSystem_GetMapHeaderID(dwSystem);
 
-    if (v1 == 582) {
-        if ((param1 == 15) && (param2 == 26)) {
-            *param4 = 1;
-            return 1;
+    if (mapHeaderID == MAP_HEADER_DISTORTION_WORLD_GIRATINA_ROOM) {
+        if (tileX == GIRATINA_ROOM_TELEPORT_TILE_X && tileZ == GIRATINA_ROOM_TELEPORT_TILE_Z + 1) {
+            *isColliding = TRUE;
+            return TRUE;
         }
-    } else if (v1 == 581) {
-        if ((param1 == 89) && (param2 == 56)) {
-            *param4 = 1;
-            return 1;
+    } else if (mapHeaderID == MAP_HEADER_DISTORTION_WORLD_B7F) {
+        if (tileX == B7F_TELEPORT_TILE_X && tileZ == B7F_TELEPORT_TILE_Z - 1) {
+            *isColliding = TRUE;
+            return TRUE;
         }
     }
 
-    *param4 = 0;
-    return 0;
+    *isColliding = FALSE;
+    return FALSE;
 }
 
-static void ov9_02249E94(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249E94(DistWorldSystem *param0)
 {
     int v0;
     UnkStruct_ov9_02249E94 *v1 = &param0->unk_184;
 
     memset(v1, 0, sizeof(UnkStruct_ov9_02249E94));
 
-    v0 = sub_02062858(param0->fieldSystem->mapObjMan);
+    v0 = MapObjectMan_GetTaskBasePriority(param0->fieldSystem->mapObjMan);
     v0 += 2;
 
     v1->unk_00 = SysTask_Start(ov9_02249EDC, param0, v0);
 }
 
-static void ov9_02249EC8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249EC8(DistWorldSystem *param0)
 {
     UnkStruct_ov9_02249E94 *v0 = &param0->unk_184;
 
@@ -1519,7 +1641,7 @@ static void ov9_02249EC8(UnkStruct_ov9_02249B04 *param0)
 
 static void ov9_02249EDC(SysTask *param0, void *param1)
 {
-    UnkStruct_ov9_02249B04 *v0 = param1;
+    DistWorldSystem *v0 = param1;
     UnkStruct_ov9_02249E94 *v1 = &v0->unk_184;
 
     {
@@ -1531,13 +1653,13 @@ static void ov9_02249EDC(SysTask *param0, void *param1)
     }
 }
 
-static void ov9_02249EF0(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249EF0(DistWorldSystem *param0)
 {
     GF_ASSERT(param0->unk_1EC4 == NULL);
     param0->unk_1EC4 = SysTask_ExecuteOnVBlank(ov9_02249F3C, param0, 0x80);
 }
 
-static void ov9_02249F18(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249F18(DistWorldSystem *param0)
 {
     GF_ASSERT(param0->unk_1EC4 != NULL);
     SysTask_Done(param0->unk_1EC4);
@@ -1546,13 +1668,13 @@ static void ov9_02249F18(UnkStruct_ov9_02249B04 *param0)
 
 static void ov9_02249F3C(SysTask *param0, void *param1)
 {
-    UnkStruct_ov9_02249B04 *v0 = param1;
+    DistWorldSystem *v0 = param1;
 
     ov9_0224CC4C(v0);
     ov9_0224F804(v0);
 }
 
-static void ov9_02249F50(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249F50(DistWorldSystem *param0)
 {
     {
         int v0;
@@ -1566,178 +1688,176 @@ static void ov9_02249F50(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_02249F84(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249F84(DistWorldSystem *param0)
 {
     return;
 }
 
-static void ov9_02249F88(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249F88(DistWorldSystem *param0)
 {
     MapObjectMan_SetEndMovement(param0->fieldSystem->mapObjMan, 0);
 }
 
-static void ov9_02249F98(UnkStruct_ov9_02249B04 *param0)
+static void ov9_02249F98(DistWorldSystem *param0)
 {
     return;
 }
 
-void ov9_02249F9C(FieldSystem *fieldSystem)
+void DistWorld_UpdateCameraAngle(FieldSystem *fieldSystem)
 {
-    CameraAngle v0;
-    UnkStruct_ov9_02249B04 *v1 = fieldSystem->unk_04->unk_24;
-    UnkStruct_ov9_02249F9C *v2 = &v1->unk_14;
+    CameraAngle cameraAngle;
+    DistWorldSystem *dwSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    DistWorldCameraManager *cameraMan = &dwSystem->cameraMan;
 
-    v0.x = v2->unk_04.x + v2->unk_0C.x;
-    v0.y = v2->unk_04.y + v2->unk_0C.y;
-    v0.z = v2->unk_04.z + v2->unk_0C.z;
+    cameraAngle.x = cameraMan->baseAngle.x + cameraMan->currentAngle.x;
+    cameraAngle.y = cameraMan->baseAngle.y + cameraMan->currentAngle.y;
+    cameraAngle.z = cameraMan->baseAngle.z + cameraMan->currentAngle.z;
 
-    Camera_SetAngleAroundTarget(&v0, v2->camera);
+    Camera_SetAngleAroundTarget(&cameraAngle, cameraMan->camera);
 }
 
-void ov9_02249FD0(FieldSystem *fieldSystem)
+void DistWorld_ResetPersistedCameraAngles(FieldSystem *fieldSystem)
 {
-    UnkStruct_02027860 *v0;
-    UnkStruct_02071C5C *v1;
-
     GF_ASSERT(fieldSystem != NULL);
 
-    v0 = sub_02027860(FieldSystem_GetSaveData(fieldSystem));
-    v1 = sub_02027F6C(v0, 9);
+    PersistedMapFeatures *persistedMapFeatures = MiscSaveBlock_GetPersistedMapFeatures(FieldSystem_GetSaveData(fieldSystem));
+    DistWorldPersistedData *data = PersistedMapFeatures_GetBuffer(persistedMapFeatures, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD);
 
-    v1->unk_04 = 0;
-    v1->unk_06 = 0;
-    v1->unk_08 = 0;
+    data->cameraAngleX = 0;
+    data->cameraAngleY = 0;
+    data->cameraAngleZ = 0;
 }
 
-static void ov9_02249FF4(UnkStruct_ov9_02249B04 *param0)
+static void CameraInit(DistWorldSystem *system)
 {
-    UnkStruct_ov9_02249F9C *v0 = &param0->unk_14;
+    DistWorldCameraManager *cameraMan = &system->cameraMan;
 
-    param0->fieldSystem->unk_20 = 1;
-    v0->camera = param0->fieldSystem->camera;
+    system->fieldSystem->unk_20 = 1;
+    cameraMan->camera = system->fieldSystem->camera;
 
-    {
-        UnkStruct_ov9_02249FF4 v1 = {
-            0x29aec1, { -0x29fe, 0, 0 }, 0, 0x5c1, 0
-        };
+    CameraConfiguration cameraConfig = {
+        .distance = DISTORTION_WORLD_CAMERA_BASE_DISTANCE,
+        .cameraAngle = {
+            DISTORTION_WORLD_CAMERA_BASE_ANGLE_X,
+            DISTORTION_WORLD_CAMERA_BASE_ANGLE_Y,
+            DISTORTION_WORLD_CAMERA_BASE_ANGLE_Z },
+        .projectionMtx = DISTORTION_WORLD_CAMERA_BASE_PROJECTION_MTX,
+        .fovY = DISTORTION_WORLD_CAMERA_BASE_FOVY,
+    };
 
-        Camera_SetDistance(v1.unk_00, v0->camera);
-        Camera_SetAngleAroundTarget(&v1.cameraAngle, v0->camera);
-        Camera_SetFOV(v1.unk_0E, v0->camera);
-        Camera_ComputeProjectionMatrix(v1.unk_0C, v0->camera);
+    Camera_SetDistance(cameraConfig.distance, cameraMan->camera);
+    Camera_SetAngleAroundTarget(&cameraConfig.cameraAngle, cameraMan->camera);
+    Camera_SetFOV(cameraConfig.fovY, cameraMan->camera);
+    Camera_ComputeProjectionMatrix(cameraConfig.projectionMtx, cameraMan->camera);
+    Camera_SetClipping(DISTORTION_WORLD_CAMERA_BASE_NEAR_CLIP, DISTORTION_WORLD_CAMERA_BASE_FAR_CLIP, cameraMan->camera);
+
+    cameraMan->baseAngle.x = DISTORTION_WORLD_CAMERA_BASE_ANGLE_X;
+    cameraMan->baseAngle.y = DISTORTION_WORLD_CAMERA_BASE_ANGLE_Y;
+    cameraMan->baseAngle.z = DISTORTION_WORLD_CAMERA_BASE_ANGLE_Z;
+
+    if (IsPersistedDataValid(system) == TRUE) {
+        u16 angleX, angleY, angleZ;
+        GetPersistedCameraAngles(system, &angleX, &angleY, &angleZ);
+
+        cameraMan->targetAngle.x = angleX * DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR;
+        cameraMan->targetAngle.y = angleY * DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR;
+        cameraMan->targetAngle.z = angleZ * DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR;
+
+        cameraMan->currentAngle = cameraMan->targetAngle;
     }
 
-    Camera_SetClipping((FX32_ONE * 150), (FX32_ONE * 1700), v0->camera);
-
-    v0->unk_04.x = -0x29fe;
-    v0->unk_04.y = 0x0;
-    v0->unk_04.z = 0x0;
-
-    if (ov9_02249D38(param0) == 1) {
-        u16 v2, v3, v4;
-
-        ov9_02249D24(param0, &v2, &v3, &v4);
-
-        v0->unk_14.x = ((v2) * 0x100);
-        v0->unk_14.y = ((v3) * 0x100);
-        v0->unk_14.z = ((v4) * 0x100);
-        v0->unk_0C = v0->unk_14;
+    if (DistWorldSystem_GetMapHeaderID(system) != MAP_HEADER_DISTORTION_WORLD_GIRATINA_ROOM) {
+        Camera_AdjustFOV(DISTORTION_WORLD_NON_GIRATINA_ROOM_FOV_ADJUST, cameraMan->camera);
     }
 
-    if (ov9_022510D0(param0) != 582) {
-        Camera_AdjustFOV(0x681 - 0x5c1, v0->camera);
-    }
-
-    v0->unk_3C = SysTask_Start(ov9_0224A0DC, param0, 0);
+    cameraMan->transitionTask = SysTask_Start(CameraTransitionTask, system, 0);
 }
 
-static void ov9_0224A0C8(UnkStruct_ov9_02249B04 *param0)
+static void CameraFree(DistWorldSystem *system)
 {
-    UnkStruct_ov9_02249F9C *v0 = &param0->unk_14;
+    DistWorldCameraManager *cameraMan = &system->cameraMan;
 
-    param0->fieldSystem->unk_20 = 0;
+    system->fieldSystem->unk_20 = 0;
 
-    if (v0->unk_3C != NULL) {
-        SysTask_Done(v0->unk_3C);
+    if (cameraMan->transitionTask != NULL) {
+        SysTask_Done(cameraMan->transitionTask);
     }
 }
 
-static void ov9_0224A0DC(SysTask *param0, void *param1)
+static void CameraTransitionTask(SysTask *sysTask, void *sysTaskParam)
 {
-    UnkStruct_ov9_02249B04 *v0 = param1;
-    UnkStruct_ov9_02249F9C *v1 = &v0->unk_14;
-    UnkStruct_ov9_0224A0DC *v2 = &v1->unk_1C;
+    DistWorldSystem *system = sysTaskParam;
+    DistWorldCameraManager *cameraMan = &system->cameraMan;
+    DistWorldCameraTransition *transition = &cameraMan->transition;
 
-    if (v2->unk_00 == 0) {
+    if (!transition->isActive) {
         return;
     }
 
-    v2->unk_04--;
+    transition->stepsRemaining--;
 
-    if (v2->unk_04 <= 0) {
-        v2->unk_00 = 0;
-        v1->unk_0C = v1->unk_14;
+    if (transition->stepsRemaining <= 0) {
+        transition->isActive = FALSE;
+        cameraMan->currentAngle = cameraMan->targetAngle;
         return;
     }
 
-    v2->unk_08.x += v2->unk_14.x;
-    v2->unk_08.y += v2->unk_14.y;
-    v2->unk_08.z += v2->unk_14.z;
-    v1->unk_0C.x = ((v2->unk_08.x) / FX32_ONE);
-    v1->unk_0C.y = ((v2->unk_08.y) / FX32_ONE);
-    v1->unk_0C.z = ((v2->unk_08.z) / FX32_ONE);
+    transition->currentAngle.x += transition->angleStep.x;
+    transition->currentAngle.y += transition->angleStep.y;
+    transition->currentAngle.z += transition->angleStep.z;
+
+    cameraMan->currentAngle.x = transition->currentAngle.x / FX32_ONE;
+    cameraMan->currentAngle.y = transition->currentAngle.y / FX32_ONE;
+    cameraMan->currentAngle.z = transition->currentAngle.z / FX32_ONE;
 }
 
-static BOOL ov9_0224A148(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224A8A0 *param1)
+static BOOL DoCameraTransition(DistWorldSystem *system, const DistWorldCameraAngleTemplate *cameraAngleTemplate)
 {
-    UnkStruct_ov9_02249F9C *v0 = &param0->unk_14;
-    UnkStruct_ov9_0224A0DC *v1 = &v0->unk_1C;
+    DistWorldCameraManager *cameraMan = &system->cameraMan;
+    DistWorldCameraTransition *transition = &cameraMan->transition;
 
-    ov9_02249D18(param0, param1->unk_0C, param1->unk_0E, param1->unk_10);
+    SetPersistedCameraAngles(system, cameraAngleTemplate->angleX, cameraAngleTemplate->angleY, cameraAngleTemplate->angleZ);
 
-    v0->unk_14.x = ((param1->unk_0C) * 0x100);
-    v0->unk_14.y = ((param1->unk_0E) * 0x100);
-    v0->unk_14.z = ((param1->unk_10) * 0x100);
+    cameraMan->targetAngle.x = cameraAngleTemplate->angleX * DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR;
+    cameraMan->targetAngle.y = cameraAngleTemplate->angleY * DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR;
+    cameraMan->targetAngle.z = cameraAngleTemplate->angleZ * DISTORTION_WORLD_CAMERA_PERSISTED_ANGLES_FACTOR;
 
-    if ((v0->unk_0C.x == v0->unk_14.x) && (v0->unk_0C.y == v0->unk_14.y) && (v0->unk_0C.z == v0->unk_14.z)) {
-        v1->unk_00 = 0;
-        return 0;
+    if (cameraMan->currentAngle.x == cameraMan->targetAngle.x && cameraMan->currentAngle.y == cameraMan->targetAngle.y && cameraMan->currentAngle.z == cameraMan->targetAngle.z) {
+        transition->isActive = FALSE;
+        return FALSE;
     }
 
-    v1->unk_00 = 1;
-    v1->unk_04 = param1->unk_14;
-    v1->unk_08.x = (FX32_ONE * (v0->unk_0C.x));
-    v1->unk_08.y = (FX32_ONE * (v0->unk_0C.y));
-    v1->unk_08.z = (FX32_ONE * (v0->unk_0C.z));
+    transition->isActive = TRUE;
+    transition->stepsRemaining = cameraAngleTemplate->transitionSteps;
 
-    {
-        int v2;
+    transition->currentAngle.x = FX32_ONE * cameraMan->currentAngle.x;
+    transition->currentAngle.y = FX32_ONE * cameraMan->currentAngle.y;
+    transition->currentAngle.z = FX32_ONE * cameraMan->currentAngle.z;
 
-        v2 = ov9_02250EB0(v0->unk_0C.x, v0->unk_14.x);
-        v1->unk_14.x = (FX32_ONE * (v2)) / param1->unk_14;
+    int angleDelta = CalculateCameraAngleDelta(cameraMan->currentAngle.x, cameraMan->targetAngle.x);
+    transition->angleStep.x = (FX32_ONE * angleDelta) / cameraAngleTemplate->transitionSteps;
 
-        v2 = ov9_02250EB0(v0->unk_0C.y, v0->unk_14.y);
-        v1->unk_14.y = (FX32_ONE * (v2)) / param1->unk_14;
+    angleDelta = CalculateCameraAngleDelta(cameraMan->currentAngle.y, cameraMan->targetAngle.y);
+    transition->angleStep.y = (FX32_ONE * angleDelta) / cameraAngleTemplate->transitionSteps;
 
-        v2 = ov9_02250EB0(v0->unk_0C.z, v0->unk_14.z);
-        v1->unk_14.z = (FX32_ONE * (v2)) / param1->unk_14;
-    }
+    angleDelta = CalculateCameraAngleDelta(cameraMan->currentAngle.z, cameraMan->targetAngle.z);
+    transition->angleStep.z = (FX32_ONE * angleDelta) / cameraAngleTemplate->transitionSteps;
 
-    return 1;
+    return TRUE;
 }
 
-static void ov9_0224A1E4(UnkStruct_ov9_02249B04 *param0, int param1)
+static void ov9_0224A1E4(DistWorldSystem *param0, int param1)
 {
     UnkStruct_ov9_0224A228 *v0 = &param0->unk_188;
 
     v0->unk_00 = param1;
     param1 *= sizeof(UnkStruct_ov9_0224A294);
-    v0->unk_04 = Heap_AllocFromHeap(4, param1);
+    v0->unk_04 = Heap_Alloc(HEAP_ID_FIELD1, param1);
 
     memset(v0->unk_04, 0, param1);
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_10, 4, 4);
+    HeapExp_FndInitAllocator(&v0->unk_10, HEAP_ID_FIELD1, 4);
 
-    v0->unk_08 = ov5_021DF5C0(param0->fieldSystem->unk_40, 197, 1);
+    v0->unk_08 = FieldEffectManager_AllocAndReadNARCWholeMember(param0->fieldSystem->fieldEffMan, 197, 1);
     v0->unk_0C = NNS_G3dGetAnmByIdx(v0->unk_08, 0);
 }
 
@@ -1814,7 +1934,7 @@ static int ov9_0224A2E4(UnkStruct_ov9_0224A294 *param0)
     return 0;
 }
 
-static void ov9_0224A334(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224A334(DistWorldSystem *param0)
 {
     int v0;
     UnkStruct_ov9_0224A228 *v1 = &param0->unk_188;
@@ -1825,11 +1945,11 @@ static void ov9_0224A334(UnkStruct_ov9_02249B04 *param0)
     }
 
     if (v1->unk_08 != NULL) {
-        Heap_FreeToHeap(v1->unk_08);
+        Heap_Free(v1->unk_08);
         v1->unk_08 = NULL;
     }
 
-    Heap_FreeToHeap(v1->unk_04);
+    Heap_Free(v1->unk_04);
     v1->unk_04 = NULL;
 }
 
@@ -1845,7 +1965,7 @@ static void ov9_0224A374(UnkStruct_ov9_0224A294 *param0, MapObject *param1, int 
     }
 }
 
-static void ov9_0224A390(UnkStruct_ov9_02249B04 *param0, MapObject *param1, int param2)
+static void ov9_0224A390(DistWorldSystem *param0, MapObject *param1, int param2)
 {
     int v0 = 0;
     UnkStruct_ov9_0224A228 *v1 = &param0->unk_188;
@@ -1864,7 +1984,7 @@ static void ov9_0224A390(UnkStruct_ov9_02249B04 *param0, MapObject *param1, int 
     GF_ASSERT(0);
 }
 
-static void ov9_0224A3C4(UnkStruct_ov9_02249B04 *param0, UnkStruct_020216E0 *param1, int param2)
+static void ov9_0224A3C4(DistWorldSystem *param0, UnkStruct_020216E0 *param1, int param2)
 {
     int v0 = 0;
     UnkStruct_ov9_0224A228 *v1 = &param0->unk_188;
@@ -1884,7 +2004,7 @@ static void ov9_0224A3C4(UnkStruct_ov9_02249B04 *param0, UnkStruct_020216E0 *par
     GF_ASSERT(0);
 }
 
-static void ov9_0224A408(UnkStruct_ov9_02249B04 *param0, const UnkStruct_020216E0 *param1)
+static void ov9_0224A408(DistWorldSystem *param0, const UnkStruct_020216E0 *param1)
 {
     int v0 = 0;
     UnkStruct_ov9_0224A228 *v1 = &param0->unk_188;
@@ -1903,7 +2023,7 @@ static void ov9_0224A408(UnkStruct_ov9_02249B04 *param0, const UnkStruct_020216E
     GF_ASSERT(0);
 }
 
-static void ov9_0224A438(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224A228 *param1, UnkStruct_ov9_0224A294 *param2)
+static void ov9_0224A438(DistWorldSystem *param0, UnkStruct_ov9_0224A228 *param1, UnkStruct_ov9_0224A294 *param2)
 {
     int v0;
 
@@ -1936,7 +2056,7 @@ static void ov9_0224A438(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224A228 
     }
 }
 
-static void ov9_0224A49C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224A49C(DistWorldSystem *param0)
 {
     int v0;
     UnkStruct_ov9_0224A228 *v1 = &param0->unk_188;
@@ -1953,7 +2073,7 @@ static void ov9_0224A4C8(UnkStruct_020216E0 *param0, void *param1)
     NNS_G3dAnmObjSetFrame(v0->unk_10, v0->unk_0C);
 }
 
-static void ov9_0224A4D0(UnkStruct_ov9_02249B04 *param0, MapObject *param1, int param2, int param3)
+static void ov9_0224A4D0(DistWorldSystem *param0, MapObject *param1, int param2, int param3)
 {
     int v0 = 0;
     UnkStruct_ov9_0224A228 *v1 = &param0->unk_188;
@@ -1978,7 +2098,7 @@ static void ov9_0224A4D0(UnkStruct_ov9_02249B04 *param0, MapObject *param1, int 
 int ov9_0224A520(FieldSystem *fieldSystem, MapObject *param1)
 {
     int v0 = 0;
-    UnkStruct_ov9_02249B04 *v1 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v1 = fieldSystem->unk_04->dynamicMapFeaturesData;
     UnkStruct_ov9_0224A228 *v2 = &v1->unk_188;
     UnkStruct_ov9_0224A294 *v3 = v2->unk_04;
 
@@ -1998,73 +2118,66 @@ int ov9_0224A520(FieldSystem *fieldSystem, MapObject *param1)
 
 void ov9_0224A558(FieldSystem *fieldSystem, UnkStruct_020216E0 *param1, int param2)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
     ov9_0224A3C4(v0, param1, param2);
 }
 
 void ov9_0224A564(FieldSystem *fieldSystem, const UnkStruct_020216E0 *param1)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
     ov9_0224A408(v0, param1);
 }
 
-static void ov9_0224A570(UnkStruct_ov9_02249B04 *param0)
+static void FieldTaskContextNoOp1(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224A570 *v0 = &param0->unk_54;
+    DistWorldFieldTaskContext *ctx = &system->fieldTaskCtx;
 }
 
-static void ov9_0224A574(UnkStruct_ov9_02249B04 *param0)
+static void FieldTaskContextNoOp2(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224A570 *v0 = &param0->unk_54;
+    DistWorldFieldTaskContext *ctx = &system->fieldTaskCtx;
 }
 
-static void *ov9_0224A578(UnkStruct_ov9_02249B04 *param0, int param1)
+static void *InitFieldTaskContext(DistWorldSystem *system, int ctxSize)
 {
-    GF_ASSERT(param1 <= 128);
-    {
-        UnkStruct_ov9_0224A570 *v0 = &param0->unk_54;
-        void *v1 = v0->unk_04;
+    GF_ASSERT(ctxSize <= FIELD_TASK_CONTEXT_MAX_SIZE);
 
-        memset(v1, 0, param1);
-        return v1;
-    }
+    void *ctx = system->fieldTaskCtx.data;
+    memset(ctx, 0, ctxSize);
+
+    return ctx;
 }
 
-static void *ov9_0224A598(UnkStruct_ov9_02249B04 *param0)
+static void *GetFieldTaskContext(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224A570 *v0 = &param0->unk_54;
-    void *v1 = v0->unk_04;
-
-    return v1;
+    return system->fieldTaskCtx.data;
 }
 
 BOOL ov9_0224A59C(FieldSystem *fieldSystem, int param1)
 {
-    UnkStruct_02027860 *v0;
+    PersistedMapFeatures *v0 = MiscSaveBlock_GetPersistedMapFeatures(FieldSystem_GetSaveData(fieldSystem));
 
-    v0 = sub_02027860(FieldSystem_GetSaveData(fieldSystem));
-
-    if (sub_02027F80(v0) == 9) {
+    if (PersistedMapFeatures_GetID(v0) == DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) {
         int v1, v2, v3, v4;
-        UnkStruct_ov9_02249B04 *v5 = fieldSystem->unk_04->unk_24;
+        DistWorldSystem *v5 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
         v4 = sub_02061434(fieldSystem->playerAvatar, param1);
-        ov9_02250F44(v5, &v1, &v2, &v3);
+        GetPlayerPos(v5, &v1, &v2, &v3);
 
         if (v4 == 1) {
-            ov9_0224B748(v5, v1, v2, v3, param1);
+            HandleGhostPropTriggerAt(v5, v1, v2, v3, param1);
         }
 
-        if (ov9_0224A8A0(v5, v1, v2, v3, param1) == 1) {
+        if (ApplyCameraAngleForPlayerPosition(v5, v1, v2, v3, param1) == 1) {
             (void)0;
         }
 
-        if (ov9_0224AA00(v5, v1, v2, v3, param1) == 1) {
+        if (HandleFloatingPlatformJumpPointAt(v5, v1, v2, v3, param1) == 1) {
             return 1;
         }
 
         {
-            u32 v6 = ov9_022510D0(v5);
+            u32 v6 = DistWorldSystem_GetMapHeaderID(v5);
 
             if (v6 == 577) {
                 if ((param1 == 3) && (v1 == 104) && (v2 == 170) && (v3 >= 76) && (v3 <= 79)) {
@@ -2085,8 +2198,8 @@ BOOL ov9_0224A59C(FieldSystem *fieldSystem, int param1)
 
 BOOL ov9_0224A67C(FieldSystem *fieldSystem, int param1)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
-    u32 v1 = ov9_022510D0(v0);
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
+    u32 v1 = DistWorldSystem_GetMapHeaderID(v0);
 
     switch (v1) {
     case 581:
@@ -2096,7 +2209,7 @@ BOOL ov9_0224A67C(FieldSystem *fieldSystem, int param1)
             if (SystemVars_GetDistortionWorldProgress(v2) >= 10) {
                 int v3, v4, v5;
 
-                ov9_02250F44(v0, &v3, &v4, &v5);
+                GetPlayerPos(v0, &v3, &v4, &v5);
 
                 if ((v3 == 89) && (v4 == 65) && (v5 == 57)) {
                     ScriptManager_Set(fieldSystem, 2, NULL);
@@ -2109,7 +2222,7 @@ BOOL ov9_0224A67C(FieldSystem *fieldSystem, int param1)
         if (param1 == 1) {
             int v6, v7, v8;
 
-            ov9_02250F44(v0, &v6, &v7, &v8);
+            GetPlayerPos(v0, &v6, &v7, &v8);
 
             if ((v6 == 15) && (v7 == 1) && (v8 == 25)) {
                 ScriptManager_Set(fieldSystem, 4, NULL);
@@ -2124,20 +2237,18 @@ BOOL ov9_0224A67C(FieldSystem *fieldSystem, int param1)
 
 BOOL ov9_0224A71C(FieldSystem *fieldSystem)
 {
-    UnkStruct_02027860 *v0;
+    PersistedMapFeatures *v0 = MiscSaveBlock_GetPersistedMapFeatures(FieldSystem_GetSaveData(fieldSystem));
 
-    v0 = sub_02027860(FieldSystem_GetSaveData(fieldSystem));
-
-    if (sub_02027F80(v0) != 9) {
+    if (PersistedMapFeatures_GetID(v0) != DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) {
         return 0;
     }
 
     {
         int v1, v2, v3;
         int v4 = PlayerAvatar_GetDir(fieldSystem->playerAvatar);
-        UnkStruct_ov9_02249B04 *v5 = fieldSystem->unk_04->unk_24;
+        DistWorldSystem *v5 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
-        ov9_02250F44(v5, &v1, &v2, &v3);
+        GetPlayerPos(v5, &v1, &v2, &v3);
 
         if (ov9_0224D040(v5, v1, v2, v3) == 1) {
             return 1;
@@ -2148,7 +2259,7 @@ BOOL ov9_0224A71C(FieldSystem *fieldSystem)
         }
 
         {
-            u32 v6 = ov9_022510D0(v5);
+            u32 v6 = DistWorldSystem_GetMapHeaderID(v5);
             VarsFlags *v7 = SaveData_GetVarsFlags(v5->fieldSystem->saveData);
 
             if ((v6 == 581) && (v4 == 0)) {
@@ -2172,8 +2283,8 @@ BOOL ov9_0224A71C(FieldSystem *fieldSystem)
 
 BOOL ov9_0224A800(FieldSystem *fieldSystem, int param1)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
-    u32 v1 = ov9_022510D0(v0);
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
+    u32 v1 = DistWorldSystem_GetMapHeaderID(v0);
 
     switch (v1) {
     case 581:
@@ -2183,7 +2294,7 @@ BOOL ov9_0224A800(FieldSystem *fieldSystem, int param1)
             if (SystemVars_GetDistortionWorldProgress(v2) >= 10) {
                 int v3, v4, v5;
 
-                ov9_02250F44(v0, &v3, &v4, &v5);
+                GetPlayerPos(v0, &v3, &v4, &v5);
 
                 if ((v3 == 89) && (v4 == 65) && (v5 == 57)) {
                     ScriptManager_Set(fieldSystem, 2, NULL);
@@ -2196,7 +2307,7 @@ BOOL ov9_0224A800(FieldSystem *fieldSystem, int param1)
         if (param1 == 1) {
             int v6, v7, v8;
 
-            ov9_02250F44(v0, &v6, &v7, &v8);
+            GetPlayerPos(v0, &v6, &v7, &v8);
 
             if ((v6 == 15) && (v7 == 1) && (v8 == 25)) {
                 ScriptManager_Set(fieldSystem, 4, NULL);
@@ -2209,21 +2320,19 @@ BOOL ov9_0224A800(FieldSystem *fieldSystem, int param1)
     return 0;
 }
 
-static BOOL ov9_0224A8A0(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4)
+static BOOL ApplyCameraAngleForPlayerPosition(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir)
 {
-    const UnkStruct_ov9_0224A8A0 *v0;
+    const DistWorldCameraAngleTemplate *cameraAngleTemplate = FindCameraAngleForPlayerPosition(system, playerX, playerY, playerZ, playerDir);
 
-    v0 = ov9_0224C740(param0, param1, param2, param3, param4);
-
-    if (v0 == NULL) {
-        return 0;
+    if (cameraAngleTemplate == NULL) {
+        return FALSE;
     }
 
-    ov9_0224A148(param0, v0);
-    return 1;
+    DoCameraTransition(system, cameraAngleTemplate);
+    return TRUE;
 }
 
-static void ov9_0224A8C0(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224A8C0(DistWorldSystem *param0)
 {
     u32 v0, v1;
     int v2, v3, v4, v5;
@@ -2231,15 +2340,15 @@ static void ov9_0224A8C0(UnkStruct_ov9_02249B04 *param0)
     PlayerAvatar *playerAvatar = param0->fieldSystem->playerAvatar;
     MapObject *v8 = Player_MapObject(playerAvatar);
 
-    ov9_02250F44(param0, &v2, &v3, &v4);
+    GetPlayerPos(param0, &v2, &v3, &v4);
 
-    v0 = ov9_0224C494(param0);
-    v0 = ov9_022510D8(v0);
+    v0 = GetCurrentFloatingPlatformKind(param0);
+    v0 = GetAvatarDistortionStateForFloatingPlatformKind(v0);
 
     if (v0 == 1) {
-        sub_02062E28(v8, 0);
+        MapObject_SetHeightCalculationDisabled(v8, FALSE);
     } else {
-        sub_02062E28(v8, 1);
+        MapObject_SetHeightCalculationDisabled(v8, TRUE);
     }
 
     PlayerAvatar_SetDistortionState(playerAvatar, v0);
@@ -2274,21 +2383,21 @@ static void ov9_0224A8C0(UnkStruct_ov9_02249B04 *param0)
     sub_02061AD4(v8, v1);
 
     if (v0 != 1) {
-        GF_ASSERT(sub_02062E44(v8) == 1);
+        GF_ASSERT(MapObject_IsHeightCalculationDisabled(v8) == TRUE);
     }
 
     if (v5 == 0x2) {
-        UnkStruct_ov101_021D5D90 *v9;
+        OverworldAnimManager *v9;
         int v10 = PlayerAvatar_GetDir(playerAvatar);
 
         v9 = ov5_021F85BC(playerAvatar, v2, v3, v4, v10, 1, v0);
-        sub_0205EC00(playerAvatar, v9);
+        PlayerAvatar_SetSurfMountAnimManager(playerAvatar, v9);
     }
 
     ov9_0224A390(param0, v8, v6[v0]);
 }
 
-static void ov9_0224A9E8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224A9E8(DistWorldSystem *param0)
 {
     PlayerAvatar *v0 = param0->fieldSystem->playerAvatar;
 
@@ -2296,272 +2405,286 @@ static void ov9_0224A9E8(UnkStruct_ov9_02249B04 *param0)
     PlayerAvatar_ClearSpeed(v0);
 }
 
-static BOOL ov9_0224AA00(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4)
+static BOOL HandleFloatingPlatformJumpPointAt(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir)
 {
-    {
-        const UnkStruct_ov9_0224AA00 *v0;
+    const DistWorldFloatingPlatformJumpPointTemplate *template = FindFloatingPlatformJumpPointAt(system, playerX, playerY, playerZ, playerDir);
 
-        v0 = ov9_0224C69C(param0, param1, param2, param3, param4);
+    if (template) {
+        MapObject *playerMapObj = Player_MapObject(system->fieldSystem->playerAvatar);
+        sFloatingPlatformJumpPointHandlers[template->handlerIndex](system, template);
 
-        if (v0) {
-            MapObject *v1 = Player_MapObject(param0->fieldSystem->playerAvatar);
-
-            Unk_ov9_02251224[v0->unk_00](param0, v0);
-            return 1;
-        }
+        return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
-static void ov9_0224AA34(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224AA00 *param1)
+static void CreateJumpOnFloatingPlatformTask(DistWorldSystem *system, const DistWorldFloatingPlatformJumpPointTemplate *template)
 {
-    UnkStruct_ov9_0224AC58 *v0;
+    DistWorldFloatingPlatformJumpTaskContext *ctx = InitFieldTaskContext(system, sizeof(DistWorldFloatingPlatformJumpTaskContext));
 
-    v0 = ov9_0224A578(param0, sizeof(UnkStruct_ov9_0224AC58));
+    ctx->template = *template;
+    ctx->stepsRemaining = template->movementAnimSteps;
+    ctx->positionIncrementVec.x = template->xDisplacement * MAP_OBJECT_TILE_SIZE / template->movementAnimSteps;
+    ctx->positionIncrementVec.y = template->yDisplacement * MAP_OBJECT_TILE_SIZE / template->movementAnimSteps;
+    ctx->positionIncrementVec.z = template->zDisplacement * MAP_OBJECT_TILE_SIZE / template->movementAnimSteps;
+    ctx->positionIncrement = MAP_OBJECT_TILE_SIZE / template->movementAnimSteps;
+    ctx->positionIncrementVecAbs = ctx->positionIncrementVec;
 
-    v0->unk_34 = *param1;
-    v0->unk_04 = param1->unk_1C;
-    v0->unk_08.x = (((param1->unk_14) << 4) * FX32_ONE) / param1->unk_1C;
-    v0->unk_08.y = (((param1->unk_16) << 4) * FX32_ONE) / param1->unk_1C;
-    v0->unk_08.z = (((param1->unk_18) << 4) * FX32_ONE) / param1->unk_1C;
-    v0->unk_18 = (FX32_ONE * 16) / param1->unk_1C;
-    v0->unk_28 = v0->unk_08;
-
-    if (v0->unk_28.x < 0) {
-        v0->unk_28.x = -v0->unk_28.x;
+    if (ctx->positionIncrementVecAbs.x < 0) {
+        ctx->positionIncrementVecAbs.x = -ctx->positionIncrementVecAbs.x;
     }
 
-    if (v0->unk_28.y < 0) {
-        v0->unk_28.y = -v0->unk_28.y;
+    if (ctx->positionIncrementVecAbs.y < 0) {
+        ctx->positionIncrementVecAbs.y = -ctx->positionIncrementVecAbs.y;
     }
 
-    if (v0->unk_28.z < 0) {
-        v0->unk_28.z = -v0->unk_28.z;
+    if (ctx->positionIncrementVecAbs.z < 0) {
+        ctx->positionIncrementVecAbs.z = -ctx->positionIncrementVecAbs.z;
     }
 
-    FieldSystem_CreateTask(param0->fieldSystem, ov9_0224AAD4, param0);
+    FieldSystem_CreateTask(system->fieldSystem, JumpOnFloatingPlatform, system);
 }
 
-static BOOL ov9_0224AAD4(FieldTask *param0)
+static BOOL JumpOnFloatingPlatform(FieldTask *task)
 {
-    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_ov9_02249B04 *v1 = FieldTask_GetEnv(param0);
-    UnkStruct_ov9_0224AC58 *v2 = ov9_0224A598(v1);
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
+    DistWorldSystem *system = FieldTask_GetEnv(task);
+    DistWorldFloatingPlatformJumpTaskContext *ctx = GetFieldTaskContext(system);
     PlayerAvatar *playerAvatar = fieldSystem->playerAvatar;
-    MapObject *v4 = Player_MapObject(playerAvatar);
+    MapObject *playerMapObj = Player_MapObject(playerAvatar);
 
-    switch (v2->unk_00) {
-    case 0: {
-        v2->unk_00++;
-    } break;
-    case 1:
-        if (LocalMapObj_IsAnimationSet(v4) == 0) {
-            break;
-        } else {
-            int v5, v6, v7;
-
-            v5 = v2->unk_34.unk_02;
-            v7 = ov9_0224C470(v1);
-
-            switch (v7) {
-            case 4:
-            case 0:
-                break;
-            case 1: {
-                int v8[] = { 2, 3, 0, 1 };
-
-                v5 = v8[v5];
-            } break;
-            case 2: {
-                int v9[] = { 3, 2, 0, 1 };
-
-                v5 = v9[v5];
-            } break;
-            case 3: {
-                int v10[] = { 1, 0, 3, 2 };
-
-                v5 = v10[v5];
-            } break;
-            }
-
-            v6 = sub_02065838(v5, 0x0);
-
-            LocalMapObj_SetAnimationCode(v4, v6);
-            MapObject_TryFace(v4, v5);
-
-            ov9_0224A4D0(v1, v4, v2->unk_34.unk_1A, v2->unk_34.unk_1C);
-            v2->unk_00++;
-        }
-    case 2:
-        if (ov9_0224AC58(v2, v4) != 1) {
-            break;
-        }
-
-        {
-            int v11 = 1;
-            int v12 = 0;
-            MapObject *v13 = Player_MapObject(playerAvatar);
-
-            ov9_0224C3F8(v1, v2->unk_34.unk_26);
-            v11 = ov9_022510D8(v2->unk_34.unk_24);
-
-            PlayerAvatar_SetDistortionState(playerAvatar, v11);
-            PlayerAvatar_ClearSpeed(playerAvatar);
-
-            if (v2->unk_34.unk_26 < 0) {
-                sub_02062E28(v13, 0);
-            } else {
-                sub_02062E28(v13, 1);
-            }
-
-            switch (v2->unk_34.unk_24) {
-            case 1:
-                v12 = 2;
-                break;
-            case 2:
-                v12 = 1;
-                break;
-            case 3:
-                v12 = 3;
-                break;
-            }
-
-            ov5_021F3678(v13, v12);
-            Sound_PlayEffect(1607);
-
-            v2->unk_00++;
-        }
+    switch (ctx->state) {
+    case FLOATING_PLATFORM_JUMP_TASK_STATE_INIT: {
+        ctx->state++;
         break;
-    case 3:
-        if (LocalMapObj_IsAnimationSet(v4) == 0) {
+    }
+
+    case FLOATING_PLATFORM_JUMP_TASK_STATE_UPDATE_PLAYER_DIR: {
+        if (!LocalMapObj_IsAnimationSet(playerMapObj)) {
             break;
+        }
+
+        int playerDir = ctx->template.playerDir;
+        int platformKind = GetCurrentFloatingPlatformKind2(system);
+
+        switch (platformKind) {
+        case FLOATING_PLATFORM_KIND_INVALID:
+        case FLOATING_PLATFORM_KIND_FLOOR:
+            break;
+
+        case FLOATING_PLATFORM_KIND_WEST_WALL: {
+            int newPlayerDirs[] = {
+                [FACE_UP] = FACE_LEFT,
+                [FACE_DOWN] = FACE_RIGHT,
+                [FACE_LEFT] = FACE_UP,
+                [FACE_RIGHT] = FACE_DOWN
+            };
+
+            playerDir = newPlayerDirs[playerDir];
+            break;
+        }
+
+        case FLOATING_PLATFORM_KIND_EAST_WALL: {
+            int newPlayerDirs[] = {
+                [FACE_UP] = FACE_RIGHT,
+                [FACE_DOWN] = FACE_LEFT,
+                [FACE_LEFT] = FACE_UP,
+                [FACE_RIGHT] = FACE_DOWN
+            };
+
+            playerDir = newPlayerDirs[playerDir];
+            break;
+        }
+
+        case FLOATING_PLATFORM_KIND_CEILING: {
+            int newPlayerDirs[] = {
+                [FACE_UP] = FACE_DOWN,
+                [FACE_DOWN] = FACE_UP,
+                [FACE_LEFT] = FACE_RIGHT,
+                [FACE_RIGHT] = FACE_LEFT
+            };
+
+            playerDir = newPlayerDirs[playerDir];
+            break;
+        }
+        }
+
+        int animCode = MovementAction_TurnActionTowardsDir(playerDir, MOVEMENT_ACTION_FACE_NORTH);
+
+        LocalMapObj_SetAnimationCode(playerMapObj, animCode);
+        MapObject_TryFace(playerMapObj, playerDir);
+        ov9_0224A4D0(system, playerMapObj, ctx->template.unk_1A, ctx->template.movementAnimSteps);
+
+        ctx->state++;
+    }
+
+    case FLOATING_PLATFORM_JUMP_TASK_STATE_MOVE_PLAYER: {
+        if (TickJumpOnFloatingPlatformMovementAnimation(ctx, playerMapObj) != TRUE) {
+            break;
+        }
+
+        enum AvatarDistortionState playerAvatarDistortionState = AVATAR_DISTORTION_STATE_ACTIVE;
+        int particlesDir = 0;
+        MapObject *playerMapObj = Player_MapObject(playerAvatar);
+
+        PrepareNewCurrentFloatingPlatform(system, ctx->template.floatingPlatformIndex);
+        playerAvatarDistortionState = GetAvatarDistortionStateForFloatingPlatformKind(ctx->template.floatingPlatformKind);
+
+        PlayerAvatar_SetDistortionState(playerAvatar, playerAvatarDistortionState);
+        PlayerAvatar_ClearSpeed(playerAvatar);
+
+        if (ctx->template.floatingPlatformIndex < 0) {
+            MapObject_SetHeightCalculationDisabled(playerMapObj, FALSE);
         } else {
-            int v14 = sub_02065838(
-                v2->unk_34.unk_22, 0x0);
-
-            LocalMapObj_SetAnimationCode(v4, v14);
-            return 1;
+            MapObject_SetHeightCalculationDisabled(playerMapObj, TRUE);
         }
+
+        switch (ctx->template.floatingPlatformKind) {
+        case FLOATING_PLATFORM_KIND_WEST_WALL:
+            particlesDir = 2;
+            break;
+
+        case FLOATING_PLATFORM_KIND_EAST_WALL:
+            particlesDir = 1;
+            break;
+
+        case FLOATING_PLATFORM_KIND_CEILING:
+            particlesDir = 3;
+            break;
+        }
+
+        // TODO: The following function plays the dust particle effects when
+        // the player lands on the ground.
+        ov5_021F3678(playerMapObj, particlesDir);
+        Sound_PlayEffect(SEQ_SE_DP_SUTYA2);
+
+        ctx->state++;
+        break;
     }
 
-    return 0;
+    case FLOATING_PLATFORM_JUMP_TASK_STATE_FINISH: {
+        if (!LocalMapObj_IsAnimationSet(playerMapObj)) {
+            break;
+        }
+
+        int animCode = MovementAction_TurnActionTowardsDir(ctx->template.finalFacingDir, MOVEMENT_ACTION_FACE_NORTH);
+        LocalMapObj_SetAnimationCode(playerMapObj, animCode);
+
+        return TRUE;
+    }
+    }
+
+    return FALSE;
 }
 
-static BOOL ov9_0224AC58(UnkStruct_ov9_0224AC58 *param0, MapObject *param1)
+static BOOL TickJumpOnFloatingPlatformMovementAnimation(DistWorldFloatingPlatformJumpTaskContext *ctx, MapObject *playerMapObj)
 {
-    const UnkStruct_ov9_0224AA00 *v0 = &param0->unk_34;
+    const DistWorldFloatingPlatformJumpPointTemplate *template = &ctx->template;
 
-    {
-        VecFx32 v1;
+    VecFx32 playerPos;
+    MapObject_GetPosPtr(playerMapObj, &playerPos);
 
-        MapObject_GetPosPtr(param1, &v1);
+    playerPos.x += ctx->positionIncrementVec.x;
+    playerPos.y += ctx->positionIncrementVec.y;
+    playerPos.z += ctx->positionIncrementVec.z;
 
-        v1.x += param0->unk_08.x;
-        v1.y += param0->unk_08.y;
-        v1.z += param0->unk_08.z;
+    MapObject_SetPos(playerMapObj, &playerPos);
 
-        MapObject_SetPos(param1, &v1);
+    ctx->accumulatedMovement.x += ctx->positionIncrementVecAbs.x;
+
+    if (ctx->accumulatedMovement.x >= MAP_OBJECT_TILE_SIZE) {
+        ctx->accumulatedMovement.x -= MAP_OBJECT_TILE_SIZE;
+
+        int playerX = MapObject_GetX(playerMapObj);
+
+        if (template->xDisplacement > 0) {
+            playerX++;
+        } else if (template->xDisplacement < 0) {
+            playerX--;
+        }
+
+        MapObject_SetX(playerMapObj, playerX);
     }
 
-    {
-        int v2;
+    ctx->accumulatedMovement.y += ctx->positionIncrementVecAbs.y;
 
-        param0->unk_1C.x += param0->unk_28.x;
+    if (ctx->accumulatedMovement.y >= MAP_OBJECT_TILE_SIZE / 2) {
+        ctx->accumulatedMovement.y -= MAP_OBJECT_TILE_SIZE / 2;
 
-        if (param0->unk_1C.x >= (16 * FX32_ONE)) {
-            param0->unk_1C.x -= (16 * FX32_ONE);
+        int playerY = MapObject_GetY(playerMapObj);
 
-            v2 = MapObject_GetX(param1);
-
-            if (v0->unk_14 > 0) {
-                v2++;
-            } else if (v0->unk_14 < 0) {
-                v2--;
-            }
-
-            MapObject_SetX(param1, v2);
+        if (template->yDisplacement > 0) {
+            playerY++;
+        } else if (template->yDisplacement < 0) {
+            playerY--;
         }
 
-        param0->unk_1C.y += param0->unk_28.y;
-
-        if (param0->unk_1C.y >= (8 * FX32_ONE)) {
-            param0->unk_1C.y -= (8 * FX32_ONE);
-
-            v2 = MapObject_GetY(param1);
-
-            if (v0->unk_16 > 0) {
-                v2++;
-            } else if (v0->unk_16 < 0) {
-                v2--;
-            }
-
-            MapObject_SetY(param1, v2);
-        }
-
-        param0->unk_1C.z += param0->unk_28.z;
-
-        if (param0->unk_1C.z >= (16 * FX32_ONE)) {
-            param0->unk_1C.z -= (16 * FX32_ONE);
-
-            v2 = MapObject_GetZ(param1);
-
-            if (v0->unk_18 > 0) {
-                v2++;
-            } else if (v0->unk_18 < 0) {
-                v2--;
-            }
-
-            MapObject_SetZ(param1, v2);
-        }
+        MapObject_SetY(playerMapObj, playerY);
     }
 
-    {
-        int v3;
-        fx32 *v4;
-        VecFx32 *v5 = sub_02063098(param1);
-        const fx32 *v6 = Unk_ov9_02252CF8;
+    ctx->accumulatedMovement.z += ctx->positionIncrementVecAbs.z;
 
-        param0->unk_14 += param0->unk_18;
-        v3 = ((param0->unk_14) / FX32_ONE);
+    if (ctx->accumulatedMovement.z >= MAP_OBJECT_TILE_SIZE) {
+        ctx->accumulatedMovement.z -= MAP_OBJECT_TILE_SIZE;
 
-        switch (v0->unk_1E) {
-        case 0:
-            v4 = &v5->x;
-            break;
-        case 1:
-            v4 = &v5->y;
-            break;
-        case 2:
-            v4 = &v5->z;
-            break;
-        default:
-            GF_ASSERT(0);
-            break;
+        int playerZ = MapObject_GetZ(playerMapObj);
+
+        if (template->zDisplacement > 0) {
+            playerZ++;
+        } else if (template->zDisplacement < 0) {
+            playerZ--;
         }
 
-        *v4 = v6[v3];
-
-        if (v0->unk_20 == 1) {
-            *v4 = -(*v4);
-        }
-
-        param0->unk_04--;
-
-        if (param0->unk_04 <= 0) {
-            *v4 = 0;
-            MapObject_UpdateCoords(param1);
-            sub_02062B68(param1);
-            MapObject_TryFace(param1, v0->unk_22);
-            sub_02062A0C(param1, 0x0);
-            return 1;
-        }
+        MapObject_SetZ(playerMapObj, playerZ);
     }
 
-    return 0;
+    int v3;
+    fx32 *v4;
+    VecFx32 *v5 = MapObject_GetSpriteJumpOffset1(playerMapObj);
+    const fx32 *v6 = Unk_ov9_02252CF8;
+
+    ctx->unk_14 += ctx->positionIncrement;
+    v3 = ((ctx->unk_14) / FX32_ONE);
+
+    switch (template->unk_1E) {
+    case 0:
+        v4 = &v5->x;
+        break;
+    case 1:
+        v4 = &v5->y;
+        break;
+    case 2:
+        v4 = &v5->z;
+        break;
+    default:
+        GF_ASSERT(0);
+        break;
+    }
+
+    *v4 = v6[v3];
+
+    if (template->unk_20 == 1) {
+        *v4 = -(*v4);
+    }
+
+    ctx->stepsRemaining--;
+
+    if (ctx->stepsRemaining <= 0) {
+        *v4 = 0;
+
+        MapObject_UpdateCoords(playerMapObj);
+        sub_02062B68(playerMapObj);
+        MapObject_TryFace(playerMapObj, template->finalFacingDir);
+        sub_02062A0C(playerMapObj, MAP_OBJ_UNK_A0_00);
+
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
-static void ov9_0224ADC0(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224ADC0(DistWorldSystem *param0)
 {
     char *v0;
 
@@ -2588,7 +2711,7 @@ static void ov9_0224ADC0(UnkStruct_ov9_02249B04 *param0)
             }
         }
 
-        Heap_FreeToHeap(v1);
+        Heap_Free(v1);
     }
 
     {
@@ -2599,7 +2722,7 @@ static void ov9_0224ADC0(UnkStruct_ov9_02249B04 *param0)
         NNS_G2dGetUnpackedCharacterData(v6, &v7);
 
         Bg_LoadTiles(param0->fieldSystem->bgConfig, 2, v7->pRawData, v7->szByte, 0);
-        Heap_FreeToHeap(v6);
+        Heap_Free(v6);
     }
 
     {
@@ -2612,7 +2735,7 @@ static void ov9_0224ADC0(UnkStruct_ov9_02249B04 *param0)
         Bg_CopyTilemapBufferRangeToVRAM(param0->fieldSystem->bgConfig, 2, (void *)v9->rawData, v9->szByte, 0);
         Bg_LoadTilemapBuffer(param0->fieldSystem->bgConfig, 2, (void *)v9->rawData, v9->szByte);
         Bg_CopyTilemapBufferToVRAM(param0->fieldSystem->bgConfig, 2);
-        Heap_FreeToHeap(v8);
+        Heap_Free(v8);
     }
 
     {
@@ -2630,29 +2753,29 @@ static void ov9_0224ADC0(UnkStruct_ov9_02249B04 *param0)
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
 }
 
-static void ov9_0224AED8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224AED8(DistWorldSystem *param0)
 {
     G2_BlendNone();
 }
 
-static void ov9_0224AEE4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B064 *param1, NARC *param2)
+static void ov9_0224AEE4(DistWorldSystem *param0, UnkStruct_ov9_0224B064 *param1, NARC *param2)
 {
-    param1->unk_00 = SpriteList_InitRendering(16, &param1->unk_04, 4);
+    param1->unk_00 = SpriteList_InitRendering(16, &param1->unk_04, HEAP_ID_FIELD1);
     SetMainScreenViewRect(&param1->unk_04, (FX32_ONE * 0), (FX32_ONE * -512));
-    param1->unk_190 = SpriteResourceCollection_New(7, 0, 4);
-    param1->unk_194 = SpriteResourceCollection_New(1, 1, 4);
-    param1->unk_198 = SpriteResourceCollection_New(7, 2, 4);
-    param1->unk_19C = SpriteResourceCollection_New(7, 3, 4);
+    param1->unk_190 = SpriteResourceCollection_New(7, 0, HEAP_ID_FIELD1);
+    param1->unk_194 = SpriteResourceCollection_New(1, 1, HEAP_ID_FIELD1);
+    param1->unk_198 = SpriteResourceCollection_New(7, 2, HEAP_ID_FIELD1);
+    param1->unk_19C = SpriteResourceCollection_New(7, 3, HEAP_ID_FIELD1);
 
     {
         int v0;
 
         for (v0 = 0; v0 < 7; v0++) {
-            param1->unk_1A0[v0] = SpriteResourceCollection_AddTilesFrom(param1->unk_190, param2, Unk_ov9_02251E58[v0], 0, ((v0) + 0xff), NNS_G2D_VRAM_TYPE_2DMAIN, 4);
+            param1->unk_1A0[v0] = SpriteResourceCollection_AddTilesFrom(param1->unk_190, param2, Unk_ov9_02251E58[v0], 0, ((v0) + 0xff), NNS_G2D_VRAM_TYPE_2DMAIN, HEAP_ID_FIELD1);
             SpriteTransfer_RequestCharAtEnd(param1->unk_1A0[v0]);
         }
 
-        param1->unk_1BC[0] = SpriteResourceCollection_AddPaletteFrom(param1->unk_194, param2, Unk_ov9_02251210[0], 0, (0 + 0xff), NNS_G2D_VRAM_TYPE_2DMAIN, 5, 4);
+        param1->unk_1BC[0] = SpriteResourceCollection_AddPaletteFrom(param1->unk_194, param2, Unk_ov9_02251210[0], 0, (0 + 0xff), NNS_G2D_VRAM_TYPE_2DMAIN, 5, HEAP_ID_FIELD1);
 
         {
             NNSG2dPaletteData *v1;
@@ -2675,11 +2798,11 @@ static void ov9_0224AEE4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B064 
         SpriteTransfer_RequestPlttFreeSpace(param1->unk_1BC[0]);
 
         for (v0 = 0; v0 < 7; v0++) {
-            param1->unk_1C0[v0] = SpriteResourceCollection_AddFrom(param1->unk_198, param2, Unk_ov9_02251E90[v0], 0, ((v0) + 0xff), 2, 4);
+            param1->unk_1C0[v0] = SpriteResourceCollection_AddFrom(param1->unk_198, param2, Unk_ov9_02251E90[v0], 0, ((v0) + 0xff), 2, HEAP_ID_FIELD1);
         }
 
         for (v0 = 0; v0 < 7; v0++) {
-            param1->unk_1DC[v0] = SpriteResourceCollection_AddFrom(param1->unk_19C, param2, Unk_ov9_02251EAC[v0], 0, ((v0) + 0xff), 3, 4);
+            param1->unk_1DC[v0] = SpriteResourceCollection_AddFrom(param1->unk_19C, param2, Unk_ov9_02251EAC[v0], 0, ((v0) + 0xff), 3, HEAP_ID_FIELD1);
         }
     }
 
@@ -2750,7 +2873,7 @@ static Sprite *ov9_0224B130(UnkStruct_ov9_0224B064 *param0, const VecFx32 *param
     v1.position = *param1;
     v1.priority = param7;
     v1.vramType = NNS_G2D_VRAM_TYPE_2DMAIN;
-    v1.heapID = 4;
+    v1.heapID = HEAP_ID_FIELD1;
 
     v2 = SpriteList_Add(&v1);
     GF_ASSERT(v2 != NULL);
@@ -2758,15 +2881,15 @@ static Sprite *ov9_0224B130(UnkStruct_ov9_0224B064 *param0, const VecFx32 *param
     return v2;
 }
 
-static void ov9_0224B1B4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov5_021DF47C *param1, UnkStruct_ov9_0224B064 *param2)
+static void ov9_0224B1B4(DistWorldSystem *param0, FieldEffectManager *param1, UnkStruct_ov9_0224B064 *param2)
 {
     int v0;
     UnkStruct_ov9_0224B1B4 v1;
-    UnkStruct_ov101_021D5D90 *v2;
+    OverworldAnimManager *v2;
 
     param0->unk_1EC2 = 0;
 
-    if (ov9_022510D0(param0) == 582) {
+    if (DistWorldSystem_GetMapHeaderID(param0) == 582) {
         VarsFlags *v3 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
         u32 v4 = SystemVars_GetDistortionWorldProgress(v3);
 
@@ -2784,15 +2907,15 @@ static void ov9_0224B1B4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov5_021DF47C 
 
     for (v0 = 0; v0 < 9; v0++) {
         v1.unk_04 = Unk_ov9_02253680[v0];
-        v2 = ov5_021DF72C(param1, &Unk_ov9_02251508, NULL, 0, &v1, 0);
+        v2 = FieldEffectManager_InitAnimManager(param1, &Unk_ov9_02251508, NULL, 0, &v1, 0);
     }
 }
 
-static int ov9_0224B23C(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static int ov9_0224B23C(OverworldAnimManager *param0, void *param1)
 {
     VecFx32 v0 = { 0, 0, 0 };
     const UnkStruct_ov9_02251EC8 *v1;
-    const UnkStruct_ov9_0224B1B4 *v2 = sub_020715BC(param0);
+    const UnkStruct_ov9_0224B1B4 *v2 = OverworldAnimManager_GetUserData(param0);
     UnkStruct_ov9_0224B2C0 *v3 = param1;
 
     v3->unk_08 = *v2;
@@ -2806,13 +2929,13 @@ static int ov9_0224B23C(UnkStruct_ov101_021D5D90 *param0, void *param1)
     return 1;
 }
 
-static void ov9_0224B2C0(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void ov9_0224B2C0(OverworldAnimManager *param0, void *param1)
 {
     UnkStruct_ov9_0224B2C0 *v0 = param1;
     Sprite_Delete(v0->unk_40);
 }
 
-static void ov9_0224B2CC(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void ov9_0224B2CC(OverworldAnimManager *param0, void *param1)
 {
     fx32 v0, v1, v2;
     VecFx32 v3;
@@ -2845,17 +2968,17 @@ static void ov9_0224B2CC(UnkStruct_ov101_021D5D90 *param0, void *param1)
     v3.x += (FX32_ONE * 0) + (CalcCosineDegrees((v4->unk_00) / FX32_ONE) * v4->unk_08.unk_04.unk_10);
     v3.y += (FX32_ONE * -512) + (CalcSineDegrees((v4->unk_00) / FX32_ONE) * v4->unk_08.unk_04.unk_10);
 
-    sub_020715D4(param0, &v3);
+    OverworldAnimManager_SetPosition(param0, &v3);
     Sprite_SetPosition(v4->unk_40, &v3);
     Sprite_SetAffineZRotation(v4->unk_40, CalcAngleRotationIdx_Wraparound((v0) / FX32_ONE));
 }
 
-static void ov9_0224B3A4(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void ov9_0224B3A4(OverworldAnimManager *param0, void *param1)
 {
     return;
 }
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_02251508 = {
+static const OverworldAnimManagerFuncs Unk_ov9_02251508 = {
     sizeof(UnkStruct_ov9_0224B2C0),
     ov9_0224B23C,
     ov9_0224B2C0,
@@ -2863,7 +2986,7 @@ static const UnkStruct_ov101_021D86B0 Unk_ov9_02251508 = {
     ov9_0224B3A4
 };
 
-static void ov9_0224B3A8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224B3A8(DistWorldSystem *param0)
 {
     UnkStruct_ov5_021D57D8 *v0 = param0->fieldSystem->unk_48;
 
@@ -2883,350 +3006,283 @@ static void ov9_0224B3A8(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224B3F4(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224B3F4(DistWorldSystem *param0)
 {
     return;
 }
 
-static void ov9_0224B3F8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B528 *param1, const UnkStruct_ov9_0224B3F8 *param2, const UnkStruct_ov9_0224B6CC *param3, int param4, u32 param5)
+static void InitGhostPropManager(DistWorldSystem *system, DistWorldGhostPropManager *ghostPropMan, const DistWorldGhostPropHeader *header, const DistWorldGhostPropTemplate *ghostPropTemplateList, int mapHeaderID, u32 hiddenGhostPropGroups)
 {
-    {
-        GF_ASSERT(param1->unk_08 == NULL);
-    }
+    GF_ASSERT(ghostPropMan->animMans == NULL);
 
-    {
-        int v0;
+    memset(ghostPropMan, 0, sizeof(DistWorldGhostPropManager));
 
-        memset(param1, 0, sizeof(UnkStruct_ov9_0224B528));
+    ghostPropMan->hiddenGhostPropGroups = hiddenGhostPropGroups;
+    ghostPropMan->templateCount = header->templateCount;
 
-        param1->unk_00 = param5;
-        param1->unk_04 = param2->unk_00;
+    GF_ASSERT(ghostPropMan->templateCount);
 
-        GF_ASSERT(param1->unk_04);
+    int animMansSize = ghostPropMan->templateCount * sizeof(OverworldAnimManager *);
+    ghostPropMan->animMans = Heap_AllocAtEnd(HEAP_ID_FIELD1, animMansSize);
 
-        v0 = param1->unk_04 * sizeof(UnkStruct_ov101_021D5D90 *);
-        param1->unk_08 = Heap_AllocFromHeapAtEnd(4, v0);
-
-        memset((u8 *)param1->unk_08, 0, v0);
-        ov9_0224B6CC(param0, param1, param3, param4);
-    }
+    memset((u8 *)ghostPropMan->animMans, 0, animMansSize);
+    InitAllGhostPropAnimManagers(system, ghostPropMan, ghostPropTemplateList, mapHeaderID);
 }
 
-static void ov9_0224B45C(UnkStruct_ov9_02249B04 *param0, int param1)
+static void InitActiveGhostPropManager(DistWorldSystem *system, BOOL useDefaultVisibility)
 {
-    int v0;
-    const UnkStruct_ov9_022530A4 *v1;
+    int mapHeaderID = DistWorldSystem_GetMapHeaderID(system);
+    const DistWorldMapConnections *mapConnections = GetConnectionsForMap(mapHeaderID);
 
-    v0 = ov9_022510D0(param0);
-    v1 = ov9_0224D720(v0);
+    if (GetActiveGhostPropFileSectionSize(system)) {
+        DistWorldGhostPropManager *ghostPropMan = &system->ghostPropMan;
+        const DistWorldGhostPropHeader *header = GetActiveGhostPropHeader(system);
+        const DistWorldGhostPropTemplate *ghostPropTemplateList = GetActiveGhostPropTemplates(system);
 
-    if (ov9_0224C27C(param0)) {
-        UnkStruct_ov9_0224B528 *v2 = &param0->unk_171C;
-        const UnkStruct_ov9_0224B3F8 *v3 = ov9_0224C8AC(param0);
-        const UnkStruct_ov9_0224B6CC *v4 = ov9_0224C8C4(param0);
-
-        if ((param1 == 1) || (ov9_02249D38(param0) == 0)) {
-            v2->unk_00 = ~v3->unk_08;
-            ov9_02249D44(param0, v2->unk_00);
+        if (useDefaultVisibility == TRUE || !IsPersistedDataValid(system)) {
+            ghostPropMan->hiddenGhostPropGroups = ~header->defaultVisiblePropGroups;
+            SetPersistedHiddenGhostPropGroups(system, ghostPropMan->hiddenGhostPropGroups);
         } else {
-            v2->unk_00 = ov9_02249D5C(param0);
+            ghostPropMan->hiddenGhostPropGroups = GetPersistedHiddenGhostPropGroups(system);
         }
 
-        ov9_0224B3F8(param0, v2, v3, v4, v0, v2->unk_00);
+        InitGhostPropManager(system, ghostPropMan, header, ghostPropTemplateList, mapHeaderID, ghostPropMan->hiddenGhostPropGroups);
     }
 }
 
-static void ov9_0224B4CC(UnkStruct_ov9_02249B04 *param0)
+static void InitInactiveGhostPropManager(DistWorldSystem *system)
 {
-    int v0;
-    const UnkStruct_ov9_022530A4 *v1;
+    enum MapHeader mapHeaderID = DistWorldSystem_GetMapHeaderID(system);
+    const DistWorldMapConnections *mapConnections = GetConnectionsForMap(mapHeaderID);
+    mapHeaderID = mapConnections->nextID;
 
-    v0 = ov9_022510D0(param0);
-    v1 = ov9_0224D720(v0);
-    v0 = v1->unk_08;
+    if (GetInactiveGhostPropFileSectionSize(system)) {
+        DistWorldGhostPropManager *ghostPropMan = &system->inactiveGhostPropMan;
+        const DistWorldGhostPropHeader *header = GetInactiveGhostPropHeader(system);
+        const DistWorldGhostPropTemplate *ghostPropTemplateList = GetInactiveGhostPropTemplates(system);
 
-    if (ov9_0224C288(param0)) {
-        UnkStruct_ov9_0224B528 *v2 = &param0->unk_1728;
-        const UnkStruct_ov9_0224B3F8 *v3 = ov9_0224C8B8(param0);
-        const UnkStruct_ov9_0224B6CC *v4 = ov9_0224C8D0(param0);
-
-        ov9_0224B3F8(param0, v2, v3, v4, v0, ~v3->unk_08);
+        InitGhostPropManager(system, ghostPropMan, header, ghostPropTemplateList, mapHeaderID, ~header->defaultVisiblePropGroups);
     }
 }
 
-static void ov9_0224B514(UnkStruct_ov9_02249B04 *param0)
+static void InitAllGhostPropManagers(DistWorldSystem *system)
 {
-    ov9_0224B45C(param0, 0);
-    ov9_0224B4CC(param0);
+    InitActiveGhostPropManager(system, FALSE);
+    InitInactiveGhostPropManager(system);
 }
 
-static void ov9_0224B528(UnkStruct_ov9_0224B528 *param0)
+static void FinishGhostPropManager(DistWorldGhostPropManager *ghostPropMan)
 {
-    int v0;
-
-    if (param0->unk_04) {
-        for (v0 = 0; v0 < param0->unk_04; v0++) {
-            if (param0->unk_08[v0] != NULL) {
-                sub_0207136C(param0->unk_08[v0]);
+    if (ghostPropMan->templateCount) {
+        for (int i = 0; i < ghostPropMan->templateCount; i++) {
+            if (ghostPropMan->animMans[i] != NULL) {
+                OverworldAnimManager_Finish(ghostPropMan->animMans[i]);
             }
         }
 
-        Heap_FreeToHeap(param0->unk_08);
+        Heap_Free(ghostPropMan->animMans);
 
-        param0->unk_08 = NULL;
-        param0->unk_04 = 0;
+        ghostPropMan->animMans = NULL;
+        ghostPropMan->templateCount = 0;
     }
 }
 
-static void ov9_0224B560(UnkStruct_ov9_02249B04 *param0)
+static void FinishAllGhostPropManagers(DistWorldSystem *system)
 {
-    ov9_0224B570(param0);
-    ov9_0224B580(param0);
+    FinishActiveGhostPropManager(system);
+    FinishInactiveGhostPropManager(system);
 }
 
-static void ov9_0224B570(UnkStruct_ov9_02249B04 *param0)
+static void FinishActiveGhostPropManager(DistWorldSystem *system)
 {
-    ov9_0224B528(&param0->unk_171C);
+    FinishGhostPropManager(&system->ghostPropMan);
 }
 
-static void ov9_0224B580(UnkStruct_ov9_02249B04 *param0)
+static void FinishInactiveGhostPropManager(DistWorldSystem *system)
 {
-    ov9_0224B528(&param0->unk_1728);
+    FinishGhostPropManager(&system->inactiveGhostPropMan);
 }
 
-static void ov9_0224B590(UnkStruct_ov9_02249B04 *param0)
+static void ResetActiveGhostPropManager(DistWorldSystem *system)
 {
-    param0->unk_171C.unk_08 = NULL;
-    param0->unk_171C.unk_04 = 0;
+    system->ghostPropMan.animMans = NULL;
+    system->ghostPropMan.templateCount = 0;
 }
 
-static void ov9_0224B5A0(UnkStruct_ov9_02249B04 *param0)
+static void ResetInactiveGhostPropManager(DistWorldSystem *system)
 {
-    param0->unk_1728.unk_08 = NULL;
-    param0->unk_1728.unk_04 = 0;
+    system->inactiveGhostPropMan.animMans = NULL;
+    system->inactiveGhostPropMan.templateCount = 0;
 }
 
-static void ov9_0224B5B0(UnkStruct_ov9_02249B04 *param0)
+static void MoveActiveGhostPropManagerToInactive(DistWorldSystem *system)
 {
-    GF_ASSERT(param0->unk_1728.unk_08 == NULL);
-    GF_ASSERT(param0->unk_1728.unk_04 == 0);
+    GF_ASSERT(system->inactiveGhostPropMan.animMans == NULL);
+    GF_ASSERT(system->inactiveGhostPropMan.templateCount == 0);
 
-    param0->unk_1728 = param0->unk_171C;
+    system->inactiveGhostPropMan = system->ghostPropMan;
 }
 
-static void ov9_0224B5EC(UnkStruct_ov9_02249B04 *param0)
+static void MoveInactiveGhostPropManagerToActive(DistWorldSystem *system)
 {
-    GF_ASSERT(param0->unk_171C.unk_08 == NULL);
-    GF_ASSERT(param0->unk_171C.unk_04 == 0);
+    GF_ASSERT(system->ghostPropMan.animMans == NULL);
+    GF_ASSERT(system->ghostPropMan.templateCount == 0);
 
-    param0->unk_171C = param0->unk_1728;
+    system->ghostPropMan = system->inactiveGhostPropMan;
 }
 
-static void ov9_0224B624(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void HideGhostPropGroup(DistWorldSystem *system, u32 groupID)
 {
-    UnkStruct_ov9_0224B528 *v0 = &param0->unk_171C;
+    DistWorldGhostPropManager *ghostPropMan = &system->ghostPropMan;
 
-    GF_ASSERT(param1 < 24);
+    GF_ASSERT(groupID < GHOST_PROP_GROUP_MAX_COUNT);
 
-    v0->unk_00 |= 1 << param1;
-    ov9_02249D44(param0, v0->unk_00);
+    ghostPropMan->hiddenGhostPropGroups |= 1 << groupID;
+    SetPersistedHiddenGhostPropGroups(system, ghostPropMan->hiddenGhostPropGroups);
 }
 
-static void ov9_0224B64C(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ShowGhostPropGroup(DistWorldSystem *system, u32 groupID)
 {
-    u32 v0 = ~(1 << param1);
-    UnkStruct_ov9_0224B528 *v1 = &param0->unk_171C;
+    u32 mask = ~(1 << groupID);
+    DistWorldGhostPropManager *ghostPropMan = &system->ghostPropMan;
 
-    GF_ASSERT(param1 < 24);
+    GF_ASSERT(groupID < GHOST_PROP_GROUP_MAX_COUNT);
 
-    v1->unk_00 &= v0;
-    ov9_02249D44(param0, v1->unk_00);
+    ghostPropMan->hiddenGhostPropGroups &= mask;
+    SetPersistedHiddenGhostPropGroups(system, ghostPropMan->hiddenGhostPropGroups);
 }
 
-static BOOL ov9_0224B674(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL IsActiveGhostPropGroupHidden(DistWorldSystem *system, u32 groupID)
 {
-    UnkStruct_ov9_0224B528 *v0 = &param0->unk_171C;
+    DistWorldGhostPropManager *ghostPropMan = &system->ghostPropMan;
 
-    GF_ASSERT(param1 < 24);
+    GF_ASSERT(groupID < GHOST_PROP_GROUP_MAX_COUNT);
 
-    if (v0->unk_00 & (1 << param1)) {
-        return 1;
-    }
-
-    return 0;
+    return ghostPropMan->hiddenGhostPropGroups & (1 << groupID) ? TRUE : FALSE;
 }
 
-static BOOL ov9_0224B698(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL IsInactiveGhostPropGroupHidden(DistWorldSystem *system, u32 groupID)
 {
-    UnkStruct_ov9_0224B528 *v0 = &param0->unk_1728;
+    DistWorldGhostPropManager *ghostPropMan = &system->inactiveGhostPropMan;
 
-    GF_ASSERT(param1 < 24);
+    GF_ASSERT(groupID < GHOST_PROP_GROUP_MAX_COUNT);
 
-    if (v0->unk_00 & (1 << param1)) {
-        return 1;
-    }
-
-    return 0;
+    return ghostPropMan->hiddenGhostPropGroups & (1 << groupID) ? TRUE : FALSE;
 }
 
-static void ov9_0224B6BC(UnkStruct_ov9_02249B04 *param0)
+static void PersistActiveHiddenGhostPropGroups(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224B528 *v0 = &param0->unk_171C;
-    ov9_02249D44(param0, v0->unk_00);
+    SetPersistedHiddenGhostPropGroups(system, system->ghostPropMan.hiddenGhostPropGroups);
 }
 
-static void ov9_0224B6CC(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224B528 *param1, const UnkStruct_ov9_0224B6CC *param2, int param3)
+static void InitAllGhostPropAnimManagers(DistWorldSystem *system, DistWorldGhostPropManager *ghostPropMan, const DistWorldGhostPropTemplate *iter, int mapHeaderID)
 {
-    if (param1->unk_04) {
-        int v0;
-
-        for (v0 = 0; v0 < param1->unk_04; v0++, param2++) {
-            param1->unk_08[v0] = ov9_0224B708(param0, v0, param3, param2);
+    if (ghostPropMan->templateCount) {
+        for (int i = 0; i < ghostPropMan->templateCount; i++, iter++) {
+            ghostPropMan->animMans[i] = InitGhostPropAnimManager(system, i, mapHeaderID, iter);
         }
     }
 }
 
-static UnkStruct_ov101_021D5D90 *ov9_0224B708(UnkStruct_ov9_02249B04 *param0, int param1, int param2, const UnkStruct_ov9_0224B6CC *param3)
+static OverworldAnimManager *InitGhostPropAnimManager(DistWorldSystem *system, int animManIndex, int mapHeaderID, const DistWorldGhostPropTemplate *ghostPropTemplate)
 {
-    UnkStruct_ov101_021D5D90 *v0;
-    UnkStruct_ov9_0224B708 v1;
-    UnkStruct_ov9_0224B528 *v2 = &param0->unk_171C;
-    const UnkStruct_ov101_021D86B0 *v3 = Unk_ov9_02252F6C[param3->unk_04];
+    DistWorldGhostProp ghostProp;
+    const OverworldAnimManagerFuncs *animFuncs = sPropAnimFuncsByKind[ghostPropTemplate->propKind];
 
-    v1.unk_00 = param1;
-    v1.unk_02 = param2;
-    v1.unk_08 = *param3;
-    v1.unk_14 = param0;
+    ghostProp.animManIndex = animManIndex;
+    ghostProp.mapHeaderID = mapHeaderID;
+    ghostProp.template = *ghostPropTemplate;
+    ghostProp.system = system;
 
-    v0 = ov5_021DF72C(param0->fieldSystem->unk_40, v3, NULL, 0, &v1, 2);
-
-    return v0;
+    return FieldEffectManager_InitAnimManager(system->fieldSystem->fieldEffMan, animFuncs, NULL, 0, &ghostProp, 2);
 }
 
-static void ov9_0224B748(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4)
+static void HandleGhostPropTriggerAt(DistWorldSystem *system, int tileX, int tileY, int tileZ, int direction)
 {
-    if (ov9_0224C27C(param0)) {
-        const UnkStruct_ov9_0224B3F8 *v0 = ov9_0224C8AC(param0);
+    if (GetActiveGhostPropFileSectionSize(system)) {
+        const DistWorldGhostPropHeader *header = GetActiveGhostPropHeader(system);
 
-        if (v0->unk_04) {
-            int v1 = v0->unk_04;
-            const UnkStruct_ov9_0224B748 *v2;
-
-            v2 = ov9_0224C8DC(param0);
+        if (header->triggerCount) {
+            int i = header->triggerCount;
+            const DistWorldGhostPropTrigger *iter = GetActiveGhostPropTriggers(system);
 
             do {
-                if (param4 == v2->unk_04) {
-                    if (ov9_02250E6C(param1, param2, param3, &v2->unk_08)) {
-                        if (v2->unk_06 == 0) {
-                            ov9_0224B624(param0, v2->unk_00);
-                        } else {
-                            ov9_0224B64C(param0, v2->unk_00);
-                        }
+                if (direction == iter->playerDir && DistWorldBounds_AreCoordinatesInBounds(tileX, tileY, tileZ, &iter->bounds)) {
+                    if (!iter->showProp) {
+                        HideGhostPropGroup(system, iter->groupID);
+                    } else {
+                        ShowGhostPropGroup(system, iter->groupID);
                     }
                 }
 
-                v2++;
-            } while (--v1);
+                iter++;
+            } while (--i);
         }
     }
 }
 
-static BOOL ov9_0224B7B0(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL ov9_0224B7B0(DistWorldSystem *system, u32 param1)
 {
-    int v0;
-    u16 v1;
-    const UnkStruct_ov9_022531D0 *v2;
-    UnkStruct_ov9_0224B528 *v3 = &param0->unk_171C;
+    const DistWorldPropAnimInfo *v2;
+    DistWorldGhostPropManager *ghostPropMan = &system->ghostPropMan;
 
     GF_ASSERT(param1 != 25);
 
-    for (v0 = 0; v0 < v3->unk_04; v0++) {
-        if (sub_020714F0(v3->unk_08[v0]) == 1) {
-            v1 = ov9_0224B958(v3->unk_08[v0]);
-            v2 = &Unk_ov9_022531D0[v1];
+    for (int i = 0; i < ghostPropMan->templateCount; i++) {
+        if (OverworldAnimManager_IsActive(ghostPropMan->animMans[i]) == TRUE) {
+            u16 ghostPropKind = GetAnimManagerGhostPropKind(ghostPropMan->animMans[i]);
+            v2 = &sPropAnimInfoByKind[ghostPropKind];
 
-            if (param1 == v2->unk_00) {
-                return 1;
+            if (param1 == v2->propKind) {
+                return TRUE;
             }
         }
     }
 
-    v3 = &param0->unk_1728;
+    ghostPropMan = &system->inactiveGhostPropMan;
 
-    for (v0 = 0; v0 < v3->unk_04; v0++) {
-        if (sub_020714F0(v3->unk_08[v0]) == 1) {
-            v1 = ov9_0224B958(v3->unk_08[v0]);
-            v2 = &Unk_ov9_022531D0[v1];
+    for (int i = 0; i < ghostPropMan->templateCount; i++) {
+        if (OverworldAnimManager_IsActive(ghostPropMan->animMans[i]) == TRUE) {
+            u16 ghostPropKind = GetAnimManagerGhostPropKind(ghostPropMan->animMans[i]);
+            v2 = &sPropAnimInfoByKind[ghostPropKind];
 
-            if (param1 == v2->unk_00) {
-                return 1;
+            if (param1 == v2->propKind) {
+                return TRUE;
             }
         }
     }
 
-    return 0;
+    return FALSE;
 }
 
-static BOOL ov9_0224B844(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL ov9_0224B844(DistWorldSystem *param0, u32 param1)
 {
     int v0;
     u16 v1;
-    const UnkStruct_ov9_022531D0 *v2;
-    UnkStruct_ov9_0224B528 *v3 = &param0->unk_171C;
+    const DistWorldPropAnimInfo *v2;
+    DistWorldGhostPropManager *v3 = &param0->ghostPropMan;
 
     GF_ASSERT(param1 != 5);
 
-    for (v0 = 0; v0 < v3->unk_04; v0++) {
-        if (sub_020714F0(v3->unk_08[v0]) == 1) {
-            v1 = ov9_0224B958(v3->unk_08[v0]);
-            v2 = &Unk_ov9_022531D0[v1];
+    for (v0 = 0; v0 < v3->templateCount; v0++) {
+        if (OverworldAnimManager_IsActive(v3->animMans[v0]) == 1) {
+            v1 = GetAnimManagerGhostPropKind(v3->animMans[v0]);
+            v2 = &sPropAnimInfoByKind[v1];
 
-            if (param1 == v2->unk_02) {
+            if (param1 == v2->animKind) {
                 return 1;
             }
         }
     }
 
-    v3 = &param0->unk_1728;
+    v3 = &param0->inactiveGhostPropMan;
 
-    for (v0 = 0; v0 < v3->unk_04; v0++) {
-        if (sub_020714F0(v3->unk_08[v0]) == 1) {
-            v1 = ov9_0224B958(v3->unk_08[v0]);
-            v2 = &Unk_ov9_022531D0[v1];
+    for (v0 = 0; v0 < v3->templateCount; v0++) {
+        if (OverworldAnimManager_IsActive(v3->animMans[v0]) == 1) {
+            v1 = GetAnimManagerGhostPropKind(v3->animMans[v0]);
+            v2 = &sPropAnimInfoByKind[v1];
 
-            if (param1 == v2->unk_02) {
-                return 1;
-            }
-        }
-    }
-
-    return 0;
-}
-
-static BOOL ov9_0224B8DC(UnkStruct_ov9_02249B04 *param0, int param1)
-{
-    int v0;
-    u16 v1;
-    const UnkStruct_ov9_022531D0 *v2;
-    UnkStruct_ov9_0224B528 *v3 = &param0->unk_171C;
-
-    for (v0 = 0; v0 < v3->unk_04; v0++) {
-        if (sub_020714F0(v3->unk_08[v0]) == 1) {
-            v1 = ov9_0224B958(v3->unk_08[v0]);
-
-            if (v1 == param1) {
-                return 1;
-            }
-        }
-    }
-
-    v3 = &param0->unk_1728;
-
-    for (v0 = 0; v0 < v3->unk_04; v0++) {
-        if (sub_020714F0(v3->unk_08[v0]) == 1) {
-            v1 = ov9_0224B958(v3->unk_08[v0]);
-
-            if (v1 == param1) {
+            if (param1 == v2->animKind) {
                 return 1;
             }
         }
@@ -3235,80 +3291,101 @@ static BOOL ov9_0224B8DC(UnkStruct_ov9_02249B04 *param0, int param1)
     return 0;
 }
 
-static u16 ov9_0224B958(UnkStruct_ov101_021D5D90 *param0)
+static BOOL HasActivePropAnimManager(DistWorldSystem *system, int propKind)
 {
-    return (u16)sub_020715C4(param0);
-}
+    DistWorldGhostPropManager *ghostPropMan = &system->ghostPropMan;
 
-static int ov9_0224B964(UnkStruct_ov101_021D5D90 *param0, void *param1)
-{
-    int v0;
-    UnkStruct_ov9_0224B6CC *v1;
-    UnkStruct_ov9_0224BA48 *v2 = param1;
-    const UnkStruct_ov9_0224B708 *v3 = sub_020715BC(param0);
+    for (int i = 0; i < ghostPropMan->templateCount; i++) {
+        if (OverworldAnimManager_IsActive(ghostPropMan->animMans[i]) == TRUE) {
+            u16 currPropKind = GetAnimManagerGhostPropKind(ghostPropMan->animMans[i]);
 
-    v2->unk_28 = *v3;
-    v1 = &v2->unk_28.unk_08;
-
-    sub_020715C0(param0, v1->unk_04);
-
-    v2->unk_40 = ov9_0224D8A4(v3->unk_14, v1->unk_04, &v0);
-
-    if (v0 == 0) {
-        ov9_0224DA48(v2->unk_28.unk_14, v1->unk_04, &v2->unk_40->unk_04, &v2->unk_40->unk_58);
-    }
-
-    {
-        BOOL v4;
-
-        if (ov9_022510D0(v3->unk_14) == v3->unk_02) {
-            v4 = ov9_0224B674(v3->unk_14, v1->unk_00);
-        } else {
-            v4 = ov9_0224B698(v3->unk_14, v1->unk_00);
-        }
-
-        if (v4 == 1) {
-            v2->unk_00 = 0;
-        } else {
-            v2->unk_00 = 31;
+            if (currPropKind == propKind) {
+                return TRUE;
+            }
         }
     }
 
-    sub_02064450(v1->unk_06, v1->unk_0A, &v2->unk_10);
-    v2->unk_10.y = (((v1->unk_08) << 4) * FX32_ONE) + ((16 * FX32_ONE) >> 1);
+    ghostPropMan = &system->inactiveGhostPropMan;
 
-    {
-        VecFx32 v5;
-        const VecFx32 *v6 = &Unk_ov9_02253298[v1->unk_04];
+    for (int i = 0; i < ghostPropMan->templateCount; i++) {
+        if (OverworldAnimManager_IsActive(ghostPropMan->animMans[i]) == TRUE) {
+            u16 currPropKind = GetAnimManagerGhostPropKind(ghostPropMan->animMans[i]);
 
-        v2->unk_10.x += v6->x;
-        v2->unk_10.y += v6->y;
-        v2->unk_10.z += v6->z;
+            if (currPropKind == propKind) {
+                return TRUE;
+            }
+        }
     }
 
-    v2->unk_04 = LCRNG_Next() % (FX32_ONE * 8);
-    v2->unk_08 = 0x800;
-
-    if (v2->unk_04 & 0x1) {
-        v2->unk_08 = -v2->unk_08;
-    }
-
-    return 1;
+    return FALSE;
 }
 
-static void ov9_0224BA48(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static u16 GetAnimManagerGhostPropKind(OverworldAnimManager *animMan)
 {
-    UnkStruct_ov9_0224BA48 *v0 = param1;
-    UnkStruct_ov9_0224B708 *v1 = &v0->unk_28;
-
-    if (ov9_0224DAEC(v1->unk_08.unk_04) == 1) {
-        sub_02073AA8(&v0->unk_40->unk_58);
-    }
-
-    ov9_0224D938(v1->unk_14, v0->unk_40);
+    return (u16)OverworldAnimManager_GetDistWorldGhostPropKind(animMan);
 }
 
-static const fx32 Unk_ov9_022521E4[8] = {
+static BOOL DistWorldPlatformProp_AnimInit(OverworldAnimManager *animMan, void *context)
+{
+    DistWorldPlatformProp *platformProp = context;
+    const DistWorldGhostProp *ghostProp = OverworldAnimManager_GetUserData(animMan);
+    platformProp->ghostProp = *ghostProp;
+
+    DistWorldGhostPropTemplate *ghostPropTemplate = &platformProp->ghostProp.template;
+    OverworldAnimManager_SetDistWorldGhostPropKind(animMan, ghostPropTemplate->propKind);
+
+    BOOL rendererAlreadyInit;
+    platformProp->renderer = DistWorldPropRenderer_Init(ghostProp->system, ghostPropTemplate->propKind, &rendererAlreadyInit);
+
+    if (!rendererAlreadyInit) {
+        LoadRenderBuffersForProp(platformProp->ghostProp.system, ghostPropTemplate->propKind, &platformProp->renderer->renderObj, &platformProp->renderer->animation);
+    }
+
+    BOOL ghostPropGroupHidden;
+
+    if (DistWorldSystem_GetMapHeaderID(ghostProp->system) == ghostProp->mapHeaderID) {
+        ghostPropGroupHidden = IsActiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    } else {
+        ghostPropGroupHidden = IsInactiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    }
+
+    if (ghostPropGroupHidden == TRUE) {
+        platformProp->opacity = GHOST_PROP_OPACITY_MIN;
+    } else {
+        platformProp->opacity = GHOST_PROP_OPACITY_MAX;
+    }
+
+    VecFx32_SetPosFromMapCoords(ghostPropTemplate->tileX, ghostPropTemplate->tileZ, &platformProp->initialPos);
+    platformProp->initialPos.y = MAP_OBJECT_COORD_TO_FX32(ghostPropTemplate->tileY);
+
+    const VecFx32 *initialPosOffset = &sPropInitialPosOffsetByKind[ghostPropTemplate->propKind];
+    platformProp->initialPos.x += initialPosOffset->x;
+    platformProp->initialPos.y += initialPosOffset->y;
+    platformProp->initialPos.z += initialPosOffset->z;
+
+    platformProp->animProgress = LCRNG_Next() % (FX32_ONE * 8);
+    platformProp->animDelta = PLATFORM_PROP_ANIM_DELTA;
+
+    if (platformProp->animProgress & 0x1) {
+        platformProp->animDelta = -platformProp->animDelta;
+    }
+
+    return TRUE;
+}
+
+static void DistWorldPlatformProp_AnimExit(OverworldAnimManager *animMan, void *context)
+{
+    DistWorldPlatformProp *platformProp = context;
+    DistWorldGhostProp *ghostProp = &platformProp->ghostProp;
+
+    if (DistWorldPropAnimInfo_IsAnimKindValid(ghostProp->template.propKind) == TRUE) {
+        Simple3D_FreeAnimation(&platformProp->renderer->animation);
+    }
+
+    DistWorldPropRenderer_InvalidateAnimated(ghostProp->system, platformProp->renderer);
+}
+
+static const fx32 sPlatformPropAnimOffsets[PLATFORM_PROP_ANIM_TIMING_COUNT] = {
     0x0,
     -0x1000,
     -0x2000,
@@ -3319,336 +3396,312 @@ static const fx32 Unk_ov9_022521E4[8] = {
     -0x6000
 };
 
-static void ov9_0224BA6C(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldPlatformProp_AnimTick(OverworldAnimManager *animMan, void *context)
 {
-    const fx32 *v0;
-    UnkStruct_ov9_0224BA48 *v1 = param1;
-    UnkStruct_ov9_0224B708 *v2 = &v1->unk_28;
-    UnkStruct_ov9_0224B6CC *v3 = &v2->unk_08;
-    u32 v4 = 0, v5 = ov9_022510D0(v2->unk_14);
+    DistWorldPlatformProp *platformProp = context;
+    DistWorldGhostProp *ghostProp = &platformProp->ghostProp;
+    DistWorldGhostPropTemplate *ghostPropTemplate = &ghostProp->template;
+    BOOL slowDownAnimation = FALSE;
+    u32 mapHeaderID = DistWorldSystem_GetMapHeaderID(ghostProp->system);
 
-    if ((v2->unk_08.unk_04 == 0) && (v5 == v2->unk_02)) {
-        int v6 = 0;
-        int v7 = ((v2->unk_08.unk_08) * 2);
-        const MapObjectManager *v8 = v2->unk_14->fieldSystem->mapObjMan;
-        MapObject *v9;
+    if (ghostProp->template.propKind == PROP_KIND_SMALL_PLATFORM && mapHeaderID == ghostProp->mapHeaderID) {
+        int startIdx = 0;
+        int ghostPropTileY = ghostProp->template.tileY * 2;
+        const MapObjectManager *mapObjMan = ghostProp->system->fieldSystem->mapObjMan;
+        MapObject *mapObj;
 
-        while (sub_020625B0(
-                   v8, &v9, &v6, (1 << 0))
-            == 1) {
-            if (MapObject_GetY(v9) == v7) {
-                if (MapObject_GetZ(v9) == v2->unk_08.unk_0A) {
-                    if (MapObject_GetX(v9) == v2->unk_08.unk_06) {
-                        v4 = 1;
-                        break;
-                    }
-                }
+        while (MapObjectMan_FindObjectWithStatus(mapObjMan, &mapObj, &startIdx, MAP_OBJ_STATUS_0) == TRUE) {
+            if (MapObject_GetY(mapObj) == ghostPropTileY && MapObject_GetZ(mapObj) == ghostProp->template.tileZ && MapObject_GetX(mapObj) == ghostProp->template.tileX) {
+                slowDownAnimation = TRUE;
+                break;
             }
         }
     }
 
-    v0 = Unk_ov9_022521E4;
-    v1->unk_0C = v0[((v1->unk_04) / FX32_ONE) % 8];
+    platformProp->yOffset = sPlatformPropAnimOffsets[platformProp->animProgress / FX32_ONE % 8];
 
-    if (v4 == 1) {
-        v1->unk_0C >>= 1;
+    if (slowDownAnimation == TRUE) {
+        platformProp->yOffset >>= 1;
     }
 
-    v1->unk_04 += v1->unk_08;
+    platformProp->animProgress += platformProp->animDelta;
 
-    if (v1->unk_04 < 0) {
-        v1->unk_04 = 0;
-        v1->unk_08 = 0x800;
-    } else if (v1->unk_04 >= (FX32_ONE * 8)) {
-        v1->unk_04 = (FX32_ONE * 8) - 0x800;
-        v1->unk_08 = -0x800;
+    if (platformProp->animProgress < 0) {
+        platformProp->animProgress = 0;
+        platformProp->animDelta = PLATFORM_PROP_ANIM_DELTA;
+    } else if (platformProp->animProgress >= FX32_ONE * 8) {
+        platformProp->animProgress = FX32_ONE * 8 - PLATFORM_PROP_ANIM_DELTA;
+        platformProp->animDelta = -PLATFORM_PROP_ANIM_DELTA;
     }
 
-    {
-        BOOL v10;
+    BOOL ghostPropHidden;
 
-        if (ov9_022510D0(v2->unk_14) == v2->unk_02) {
-            v10 = ov9_0224B674(v2->unk_14, v3->unk_00);
-        } else {
-            v10 = ov9_0224B698(v2->unk_14, v3->unk_00);
+    if (DistWorldSystem_GetMapHeaderID(ghostProp->system) == ghostProp->mapHeaderID) {
+        ghostPropHidden = IsActiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    } else {
+        ghostPropHidden = IsInactiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    }
+
+    if (ghostPropHidden == TRUE) {
+        if (platformProp->opacity > GHOST_PROP_OPACITY_MIN) {
+            platformProp->opacity--;
+
+            if (platformProp->soundEffectState != PLATFORM_PROP_SFX_STATE_DISAPPEAR) {
+                platformProp->soundEffectState = PLATFORM_PROP_SFX_STATE_DISAPPEAR;
+                PlaySoundIfNotActive(SEQ_SE_PL_SYUWA3);
+            }
         }
+    } else if (platformProp->opacity < GHOST_PROP_OPACITY_MAX) {
+        platformProp->opacity++;
 
-        if (v10 == 1) {
-            if (v1->unk_00 > 0) {
-                v1->unk_00--;
-
-                if (v1->unk_01 != -1) {
-                    v1->unk_01 = -1;
-                    ov9_022511E0(1484);
-                }
-            }
-        } else if (v1->unk_00 < 31) {
-            v1->unk_00++;
-
-            if (v1->unk_01 != 1) {
-                v1->unk_01 = 1;
-                ov9_022511E0(1484);
-            }
+        if (platformProp->soundEffectState != PLATFORM_PROP_SFX_STATE_APPEAR) {
+            platformProp->soundEffectState = PLATFORM_PROP_SFX_STATE_APPEAR;
+            PlaySoundIfNotActive(SEQ_SE_PL_SYUWA3);
         }
     }
 
-    {
-        v1->unk_1C = v1->unk_10;
-        v1->unk_1C.y += v1->unk_0C;
-        v1->unk_02 = ov9_0224DBE4(v2->unk_14, v2->unk_08.unk_04, &v1->unk_1C);
-    }
+    platformProp->currentPos = platformProp->initialPos;
+    platformProp->currentPos.y += platformProp->yOffset;
+    platformProp->inView = IsPropInView(ghostProp->system, ghostProp->template.propKind, &platformProp->currentPos);
 }
 
-static void ov9_0224BBDC(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldPlatformProp_AnimRender(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224BA48 *v0 = param1;
+    DistWorldPlatformProp *platformProp = context;
 
-    if (v0->unk_02 == 0) {
+    if (!platformProp->inView) {
         return;
     }
 
-    if (v0->unk_00 > 0) {
-        UnkStruct_ov9_0224B708 *v1 = &v0->unk_28;
+    if (platformProp->opacity > GHOST_PROP_OPACITY_MIN) {
+        DistWorldGhostProp *ghostProp = &platformProp->ghostProp;
 
-        ov9_0224DAAC(v1->unk_14, v1->unk_08.unk_04, v0->unk_00);
-        sub_02073BB4(&v0->unk_40->unk_04, &v0->unk_1C);
+        SetPropOpacity(ghostProp->system, ghostProp->template.propKind, platformProp->opacity);
+        Simple3D_DrawRenderObjWithPos(&platformProp->renderer->renderObj, &platformProp->currentPos);
     }
 }
 
-static int ov9_0224BC08(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static BOOL DistWorldObstacleProp_AnimInit(OverworldAnimManager *animMan, void *context)
 {
-    int v0;
-    UnkStruct_ov9_0224B6CC *v1;
-    UnkStruct_ov9_0224BC08 *v2 = param1;
-    const UnkStruct_ov9_0224B708 *v3 = sub_020715BC(param0);
+    DistWorldGhostPropTemplate *ghostPropTemplate;
+    DistWorldObstacleProp *obstacleProp = context;
+    const DistWorldGhostProp *ghostProp = OverworldAnimManager_GetUserData(animMan);
 
-    v2->unk_20 = *v3;
-    v1 = &v2->unk_20.unk_08;
+    obstacleProp->ghostProp = *ghostProp;
+    ghostPropTemplate = &obstacleProp->ghostProp.template;
 
-    sub_020715C0(param0, v1->unk_04);
+    OverworldAnimManager_SetDistWorldGhostPropKind(animMan, ghostPropTemplate->propKind);
 
-    v2->unk_38 = ov9_0224D8A4(v3->unk_14, v1->unk_04, &v0);
+    BOOL rendererAlreadyInit;
+    obstacleProp->renderer = DistWorldPropRenderer_Init(ghostProp->system, ghostPropTemplate->propKind, &rendererAlreadyInit);
 
-    if (v0 == 0) {
-        ov9_0224DA48(v2->unk_20.unk_14, v1->unk_04, &v2->unk_38->unk_04, &v2->unk_38->unk_58);
+    if (!rendererAlreadyInit) {
+        LoadRenderBuffersForProp(obstacleProp->ghostProp.system, ghostPropTemplate->propKind, &obstacleProp->renderer->renderObj, &obstacleProp->renderer->animation);
     }
 
-    if (v1->unk_04 == 23) {
-        v2->unk_04 = 1483;
-        v2->unk_06 = 1483;
+    if (ghostPropTemplate->propKind == PROP_KIND_LAND_ROCK) {
+        obstacleProp->seqIDAppear = SEQ_SE_PL_FW089_2;
+        obstacleProp->seqIDDisappear = SEQ_SE_PL_FW089_2;
     } else {
-        v2->unk_04 = 1485;
-        v2->unk_06 = 1486;
+        obstacleProp->seqIDAppear = SEQ_SE_PL_MEKI;
+        obstacleProp->seqIDDisappear = SEQ_SE_PL_MEKI2;
     }
 
-    {
-        BOOL v4;
+    BOOL ghostPropGroupHidden;
 
-        if (ov9_022510D0(v3->unk_14) == v3->unk_02) {
-            v4 = ov9_0224B674(v3->unk_14, v1->unk_00);
-        } else {
-            v4 = ov9_0224B698(v3->unk_14, v1->unk_00);
-        }
-
-        if (v4 == 1) {
-            v2->unk_00 = 0;
-        } else {
-            v2->unk_00 = 31;
-            sub_02073B20(&v2->unk_38->unk_58, sub_02073B28(&v2->unk_38->unk_58));
-        }
+    if (DistWorldSystem_GetMapHeaderID(ghostProp->system) == ghostProp->mapHeaderID) {
+        ghostPropGroupHidden = IsActiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    } else {
+        ghostPropGroupHidden = IsInactiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
     }
 
-    sub_02064450(v1->unk_06, v1->unk_0A, &v2->unk_08);
-    v2->unk_08.y = (((v1->unk_08) << 4) * FX32_ONE) + ((16 * FX32_ONE) >> 1);
-
-    {
-        VecFx32 v5;
-        const VecFx32 *v6 = &Unk_ov9_02253298[v1->unk_04];
-
-        v2->unk_08.x += v6->x;
-        v2->unk_08.y += v6->y;
-        v2->unk_08.z += v6->z;
+    if (ghostPropGroupHidden == TRUE) {
+        obstacleProp->opacity = GHOST_PROP_OPACITY_MIN;
+    } else {
+        obstacleProp->opacity = GHOST_PROP_OPACITY_MAX;
+        Simple3D_SetAnimFrame(&obstacleProp->renderer->animation, Simple3D_GetAnimFrameCount(&obstacleProp->renderer->animation));
     }
 
-    return 1;
+    VecFx32_SetPosFromMapCoords(ghostPropTemplate->tileX, ghostPropTemplate->tileZ, &obstacleProp->pos);
+    obstacleProp->pos.y = MAP_OBJECT_COORD_TO_FX32(ghostPropTemplate->tileY);
+
+    const VecFx32 *initialPosOffset = &sPropInitialPosOffsetByKind[ghostPropTemplate->propKind];
+    obstacleProp->pos.x += initialPosOffset->x;
+    obstacleProp->pos.y += initialPosOffset->y;
+    obstacleProp->pos.z += initialPosOffset->z;
+
+    return TRUE;
 }
 
-static void ov9_0224BCF4(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldObstacleProp_AnimExit(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224BC08 *v0 = param1;
-    UnkStruct_ov9_0224B708 *v1 = &v0->unk_20;
+    DistWorldObstacleProp *obstacleProp = context;
+    DistWorldGhostProp *ghostProp = &obstacleProp->ghostProp;
 
-    if (ov9_0224DAEC(v1->unk_08.unk_04) == 1) {
-        sub_02073AA8(&v0->unk_38->unk_58);
+    if (DistWorldPropAnimInfo_IsAnimKindValid(ghostProp->template.propKind) == TRUE) {
+        Simple3D_FreeAnimation(&obstacleProp->renderer->animation);
     }
 
-    ov9_0224D938(v1->unk_14, v0->unk_38);
+    DistWorldPropRenderer_InvalidateAnimated(ghostProp->system, obstacleProp->renderer);
 }
 
-static void ov9_0224BD18(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldObstacleProp_AnimTick(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224BC08 *v0 = param1;
-    UnkStruct_ov9_0224B708 *v1 = &v0->unk_20;
-    UnkStruct_ov9_0224B6CC *v2 = &v1->unk_08;
+    DistWorldObstacleProp *obstacleProp = context;
+    DistWorldGhostProp *ghostProp = &obstacleProp->ghostProp;
+    DistWorldGhostPropTemplate *ghostPropTemplate = &ghostProp->template;
 
-    {
-        BOOL v3;
+    BOOL ghostPropGroupHidden;
 
-        if (ov9_022510D0(v1->unk_14) == v1->unk_02) {
-            v3 = ov9_0224B674(v1->unk_14, v2->unk_00);
-        } else {
-            v3 = ov9_0224B698(v1->unk_14, v2->unk_00);
-        }
+    if (DistWorldSystem_GetMapHeaderID(ghostProp->system) == ghostProp->mapHeaderID) {
+        ghostPropGroupHidden = IsActiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    } else {
+        ghostPropGroupHidden = IsInactiveGhostPropGroupHidden(ghostProp->system, ghostPropTemplate->groupID);
+    }
 
-        if (v3 == 1) {
-            fx32 v4;
+    if (ghostPropGroupHidden == TRUE) {
+        Simple3D_UpdateAnim(&obstacleProp->renderer->animation, -FX32_ONE * 2, FALSE);
+        fx32 animFrame = Simple3D_GetAnimFrame(&obstacleProp->renderer->animation);
 
-            sub_02073AC0(&v0->unk_38->unk_58, -FX32_ONE * 2, 0);
-            v4 = sub_02073B24(&v0->unk_38->unk_58);
+        if (obstacleProp->opacity >= animFrame / FX32_ONE) {
+            if (obstacleProp->opacity > GHOST_PROP_OPACITY_MIN) {
+                obstacleProp->opacity -= OBSTACLE_PROP_ANIM_DELTA;
 
-            if (v0->unk_00 >= ((v4) / FX32_ONE)) {
-                if (v0->unk_00 > 0) {
-                    v0->unk_00 -= 2;
-
-                    if (v0->unk_01 != -2) {
-                        v0->unk_01 = -2;
-                        ov9_022511E0(v0->unk_06);
-                    }
-
-                    if (v0->unk_00 < 0) {
-                        v0->unk_00 = 0;
-                    }
-                } else {
-                    v0->unk_00 = 0;
-                }
-            }
-        } else {
-            if (v0->unk_00 < 31) {
-                v0->unk_00 += 2;
-
-                if (v0->unk_01 != 2) {
-                    v0->unk_01 = 2;
-                    ov9_022511E0(v0->unk_04);
+                if (obstacleProp->soundEffectState != OBSTACLE_PROP_SFX_STATE_DISAPPEAR) {
+                    obstacleProp->soundEffectState = OBSTACLE_PROP_SFX_STATE_DISAPPEAR;
+                    PlaySoundIfNotActive(obstacleProp->seqIDDisappear);
                 }
 
-                if (v0->unk_00 > 31) {
-                    v0->unk_00 = 31;
+                if (obstacleProp->opacity < GHOST_PROP_OPACITY_MIN) {
+                    obstacleProp->opacity = GHOST_PROP_OPACITY_MIN;
                 }
             } else {
-                v0->unk_00 = 31;
+                obstacleProp->opacity = GHOST_PROP_OPACITY_MIN;
+            }
+        }
+    } else {
+        if (obstacleProp->opacity < GHOST_PROP_OPACITY_MAX) {
+            obstacleProp->opacity += OBSTACLE_PROP_ANIM_DELTA;
+
+            if (obstacleProp->soundEffectState != OBSTACLE_PROP_SFX_STATE_APPEAR) {
+                obstacleProp->soundEffectState = OBSTACLE_PROP_SFX_STATE_APPEAR;
+                PlaySoundIfNotActive(obstacleProp->seqIDAppear);
             }
 
-            sub_02073AC0(&v0->unk_38->unk_58, FX32_ONE * 2, 0);
+            if (obstacleProp->opacity > GHOST_PROP_OPACITY_MAX) {
+                obstacleProp->opacity = GHOST_PROP_OPACITY_MAX;
+            }
+        } else {
+            obstacleProp->opacity = GHOST_PROP_OPACITY_MAX;
         }
+
+        Simple3D_UpdateAnim(&obstacleProp->renderer->animation, FX32_ONE * 2, FALSE);
     }
 
-    {
-        v0->unk_02 = ov9_0224DBE4(
-            v1->unk_14, v1->unk_08.unk_04, &v0->unk_08);
-    }
+    obstacleProp->inView = IsPropInView(ghostProp->system, ghostProp->template.propKind, &obstacleProp->pos);
 }
 
-static void ov9_0224BDE8(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldObstacleProp_AnimRender(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224BC08 *v0 = param1;
+    DistWorldObstacleProp *obstacleProp = context;
 
-    if (v0->unk_02 == 0) {
+    if (!obstacleProp->inView) {
         return;
     }
 
-    if (v0->unk_00 > 0) {
-        UnkStruct_ov9_0224B708 *v1 = &v0->unk_20;
+    if (obstacleProp->opacity > GHOST_PROP_OPACITY_MIN) {
+        DistWorldGhostProp *ghostProp = &obstacleProp->ghostProp;
 
-        ov9_0224DAAC(v1->unk_14, v1->unk_08.unk_04, v0->unk_00);
-        sub_02073BB4(&v0->unk_38->unk_04, &v0->unk_08);
+        SetPropOpacity(ghostProp->system, ghostProp->template.propKind, obstacleProp->opacity);
+        Simple3D_DrawRenderObjWithPos(&obstacleProp->renderer->renderObj, &obstacleProp->pos);
     }
 }
 
-static void ov9_0224BE14(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224BE14(DistWorldSystem *param0)
 {
-    int v0;
-    const UnkStruct_ov9_022530A4 *v1;
+    enum MapHeader mapHeaderID;
+    const DistWorldMapConnections *v1;
 
-    v0 = ov9_022510D0(param0);
-    v1 = ov9_0224D720(v0);
+    mapHeaderID = DistWorldSystem_GetMapHeaderID(param0);
+    v1 = GetConnectionsForMap(mapHeaderID);
 
     ov9_0224BFBC(param0);
-    ov9_0224C0F8(param0, v0, v1->unk_08);
+    ov9_0224C0F8(param0, mapHeaderID, v1->nextID);
 
-    ov9_0224C2C4(param0);
-    ov9_0224C640(param0);
-    ov9_0224C6E4(param0);
-    ov9_0224C808(param0);
+    InitFloatingPlatformManager(param0);
+    InitFloatingPlatformJumpPoint(param0);
+    InitCameraAngleTemplates(param0);
+    InitAllGhostPropData(param0);
 
-    if (ov9_02249D38(param0) == 0) {
+    if (IsPersistedDataValid(param0) == 0) {
         int v2, v3, v4;
 
-        ov9_02250F44(param0, &v2, &v3, &v4);
-        ov9_0224C378(param0, v2, v3, v4, 4);
+        GetPlayerPos(param0, &v2, &v3, &v4);
+        FindAndPrepareNewCurrentFloatingPlatform(param0, v2, v3, v4, 4);
     } else {
-        u32 v5 = ov9_02249E44(param0);
-        ov9_0224C3F8(param0, v5);
+        u32 v5 = GetPersistedCurrentFloatingPlatformIndex(param0);
+        PrepareNewCurrentFloatingPlatform(param0, v5);
     }
 }
 
-static void ov9_0224BE8C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224BE8C(DistWorldSystem *param0)
 {
-    ov9_0224C724(param0);
-    ov9_0224C680(param0);
-    ov9_0224C300(param0);
-    ov9_0224C854(param0);
+    ResetCameraAngleTemplates(param0);
+    ResetFloatingPlatformJumpPoint(param0);
+    ResetFloatingPlatformManager(param0);
+    ResetAllGhostPropData(param0);
     ov9_0224C164(param0);
     ov9_0224BFFC(param0);
 }
 
-static void ov9_0224BEB4(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224BEB4(DistWorldSystem *param0, u32 param1)
 {
-    ov9_0224C844(param0);
+    ResetInactiveGhostPropData(param0);
     ov9_0224C184(param0);
-    ov9_0224C724(param0);
-    ov9_0224C680(param0);
-    ov9_0224C300(param0);
+    ResetCameraAngleTemplates(param0);
+    ResetFloatingPlatformJumpPoint(param0);
+    ResetFloatingPlatformManager(param0);
     ov9_0224C194(param0);
-    ov9_0224C864(param0);
-    ov9_0224B5B0(param0);
-    ov9_0224B590(param0);
+    MoveActiveGhostPropDataToInactive(param0);
+    MoveActiveGhostPropManagerToInactive(param0);
+    ResetActiveGhostPropManager(param0);
     ov9_0224C10C(param0, param1);
-    ov9_0224C2C4(param0);
-    ov9_0224C44C(param0);
-    ov9_0224C640(param0);
-    ov9_0224C6E4(param0);
-    ov9_0224C7C8(param0);
+    InitFloatingPlatformManager(param0);
+    FreeFloatingPlatformManagerTerrainAttrs(param0);
+    InitFloatingPlatformJumpPoint(param0);
+    InitCameraAngleTemplates(param0);
+    InitActiveGhostPropData(param0);
 }
 
-static void ov9_0224BF18(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224BF18(DistWorldSystem *param0, u32 param1)
 {
-    ov9_0224C724(param0);
-    ov9_0224C680(param0);
-    ov9_0224C300(param0);
-    ov9_0224C834(param0);
+    ResetCameraAngleTemplates(param0);
+    ResetFloatingPlatformJumpPoint(param0);
+    ResetFloatingPlatformManager(param0);
+    ResetActiveGhostPropData(param0);
     ov9_0224C174(param0);
     ov9_0224C1E4(param0);
-    ov9_0224C888(param0);
-    ov9_0224B5EC(param0);
-    ov9_0224B6BC(param0);
-    ov9_0224B5A0(param0);
-    ov9_0224C2C4(param0);
-    ov9_0224C44C(param0);
-    ov9_0224C640(param0);
-    ov9_0224C6E4(param0);
+    MoveInactiveGhostPropDataToActive(param0);
+    MoveInactiveGhostPropManagerToActive(param0);
+    PersistActiveHiddenGhostPropGroups(param0);
+    ResetInactiveGhostPropManager(param0);
+    InitFloatingPlatformManager(param0);
+    FreeFloatingPlatformManagerTerrainAttrs(param0);
+    InitFloatingPlatformJumpPoint(param0);
+    InitCameraAngleTemplates(param0);
 
     if (param1 != 593) {
         ov9_0224C120(param0, param1);
-        ov9_0224C7E8(param0);
+        InitInactiveGhostPropData(param0);
     }
 }
 
-static void ov9_0224BF8C(NARC *param0, UnkStruct_ov9_0224BFE0 *param1)
+static void ov9_0224BF8C(NARC *distortionWorldNARC, UnkStruct_ov9_0224BFE0 *param1)
 {
-    u32 v0 = NARC_GetMemberSize(param0, 0);
+    u32 v0 = NARC_GetMemberSize(distortionWorldNARC, 0);
 
-    param1->unk_08 = Heap_AllocFromHeap(4, v0);
-    NARC_ReadWholeMember(param0, 0, param1->unk_08);
+    param1->unk_08 = Heap_Alloc(HEAP_ID_FIELD1, v0);
+    NARC_ReadWholeMember(distortionWorldNARC, 0, param1->unk_08);
 
     param1->unk_00 = *(int *)param1->unk_08;
     param1->unk_04 = param1->unk_08;
@@ -3656,32 +3709,32 @@ static void ov9_0224BF8C(NARC *param0, UnkStruct_ov9_0224BFE0 *param1)
     (u8 *)param1->unk_04 += 4;
 }
 
-static void ov9_0224BFBC(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224BFBC(DistWorldSystem *param0)
 {
     GF_ASSERT(param0->unk_169C.unk_00.unk_08 == NULL);
-    ov9_0224BF8C(param0->unk_08, &param0->unk_169C.unk_00);
+    ov9_0224BF8C(param0->distortionWorldNARC, &param0->unk_169C.unk_00);
 }
 
 static void ov9_0224BFE0(UnkStruct_ov9_0224BFE0 *param0)
 {
     GF_ASSERT(param0->unk_08 != NULL);
 
-    Heap_FreeToHeap(param0->unk_08);
+    Heap_Free(param0->unk_08);
     param0->unk_08 = NULL;
 }
 
-static void ov9_0224BFFC(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224BFFC(DistWorldSystem *param0)
 {
     ov9_0224BFE0(&param0->unk_169C.unk_00);
 }
 
-static const UnkStruct_ov9_0224C034 *ov9_0224C00C(const UnkStruct_ov9_0224BFE0 *param0, int param1)
+static const UnkStruct_ov9_0224C034 *ov9_0224C00C(const UnkStruct_ov9_0224BFE0 *param0, enum MapHeader mapHeaderID)
 {
     int v0 = 0;
     const UnkStruct_ov9_0224C034 *v1 = param0->unk_04;
 
     while (v0 < param0->unk_00) {
-        if (param1 == v1->unk_00) {
+        if (mapHeaderID == v1->mapHeaderID) {
             return v1;
         }
 
@@ -3694,674 +3747,644 @@ static const UnkStruct_ov9_0224C034 *ov9_0224C00C(const UnkStruct_ov9_0224BFE0 *
     return NULL;
 }
 
-static const UnkStruct_ov9_0224C034 *ov9_0224C034(UnkStruct_ov9_02249B04 *param0, int param1)
+static const UnkStruct_ov9_0224C034 *ov9_0224C034(DistWorldSystem *system, enum MapHeader mapHeaderID)
 {
-    return ov9_0224C00C(&param0->unk_169C.unk_00, param1);
+    return ov9_0224C00C(&system->unk_169C.unk_00, mapHeaderID);
 }
 
-static u32 ov9_0224C044(UnkStruct_ov9_02249B04 *param0, int param1)
+static u32 FindNARCIndex(DistWorldSystem *system, enum MapHeader mapHeaderID)
 {
-    const UnkStruct_ov9_0224C034 *v0 = ov9_0224C034(param0, param1);
-    return v0->unk_04 + (0 + 1);
+    const UnkStruct_ov9_0224C034 *v0 = ov9_0224C034(system, mapHeaderID);
+    return v0->unk_04 + 1;
 }
 
 static void ov9_0224C050(const UnkStruct_ov9_0224BFE0 *param0, int param1, int *param2, int *param3, int *param4)
 {
-    const UnkStruct_ov9_0224C034 *v0;
-
-    v0 = ov9_0224C00C(param0, param1);
+    const UnkStruct_ov9_0224C034 *v0 = ov9_0224C00C(param0, param1);
 
     *param2 = v0->unk_06;
     *param3 = v0->unk_08;
     *param4 = v0->unk_0A;
 }
 
-static void ov9_0224C070(UnkStruct_ov9_02249B04 *param0, int param1, int *param2, int *param3, int *param4)
+static void ov9_0224C070(DistWorldSystem *param0, int param1, int *param2, int *param3, int *param4)
 {
     ov9_0224C050(&param0->unk_169C.unk_00, param1, param2, param3, param4);
 }
 
-static void ov9_0224C088(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224C14C *param1, int param2)
+static void DistWorldFile_Load(DistWorldSystem *system, DistWorldFile *file, enum MapHeader mapHeaderID)
 {
-    GF_ASSERT(param1->unk_18 == NULL);
+    GF_ASSERT(file->buffer == NULL);
 
-    memset(param1, 0, sizeof(UnkStruct_ov9_0224C14C));
-    param1->unk_00 = param2;
+    memset(file, 0, sizeof(DistWorldFile));
+    file->mapHeaderID = mapHeaderID;
 
-    if (param2 != 593) {
-        u8 *v0;
-        u32 v1, v2;
-        UnkStruct_ov9_0224C088 *v3;
+    if (mapHeaderID != MAP_HEADER_COUNT) {
+        u8 *data;
+        u32 narcMemberSize, narcIndex;
+        DistWorldFileHeader *header;
 
-        v2 = ov9_0224C044(param0, param2);
-        v1 = NARC_GetMemberSize(param0->unk_08, v2);
+        narcIndex = FindNARCIndex(system, mapHeaderID);
+        narcMemberSize = NARC_GetMemberSize(system->distortionWorldNARC, narcIndex);
 
-        param1->unk_18 = Heap_AllocFromHeapAtEnd(4, v1);
-        NARC_ReadWholeMember(param0->unk_08, v2, param1->unk_18);
+        file->buffer = Heap_AllocAtEnd(HEAP_ID_FIELD1, narcMemberSize);
+        NARC_ReadWholeMember(system->distortionWorldNARC, narcIndex, file->buffer);
 
-        v3 = param1->unk_18;
-        param1->unk_14 = v3;
+        header = file->buffer;
+        file->header = header;
 
-        v0 = param1->unk_18;
-        v0 += sizeof(UnkStruct_ov9_0224C088);
+        data = file->buffer;
+        data += sizeof(DistWorldFileHeader);
 
-        param1->unk_04 = v0;
-        param1->unk_08 = (u8 *)param1->unk_04 + v3->unk_04;
-        param1->unk_0C = (u8 *)param1->unk_08 + v3->unk_08;
-        param1->unk_10 = (u8 *)param1->unk_0C + v3->unk_0C;
+        file->floatingPlatformSection = (DistWorldFileFloatingPlatformSection *)data;
+        file->floatingPlatformJumpPointSection = (DistWorldFileFloatingPlatformJumpPointSection *)((u8 *)file->floatingPlatformSection + header->floatingPlatformSectionSize);
+        file->cameraAngleSection = (DistWorldFileCameraAngleSection *)((u8 *)file->floatingPlatformJumpPointSection + header->floatingPlatformJumpPointSectionSize);
+        file->ghostPropSection = (u8 *)file->cameraAngleSection + header->cameraAngleSectionSize;
     }
 }
 
-static void ov9_0224C0F8(UnkStruct_ov9_02249B04 *param0, int param1, int param2)
+static void ov9_0224C0F8(DistWorldSystem *param0, enum MapHeader mapHeaderID, int param2)
 {
-    ov9_0224C10C(param0, param1);
+    ov9_0224C10C(param0, mapHeaderID);
     ov9_0224C120(param0, param2);
 }
 
-static void ov9_0224C10C(UnkStruct_ov9_02249B04 *param0, int param1)
+static void ov9_0224C10C(DistWorldSystem *param0, enum MapHeader mapHeaderID)
 {
-    ov9_0224C088(param0, &param0->unk_169C.unk_0C, param1);
+    DistWorldFile_Load(param0, &param0->unk_169C.distortionWorldFile, mapHeaderID);
 }
 
-static void ov9_0224C120(UnkStruct_ov9_02249B04 *param0, int param1)
+static void ov9_0224C120(DistWorldSystem *param0, enum MapHeader mapHeaderID)
 {
-    ov9_0224C088(param0, &param0->unk_169C.unk_58, param1);
+    DistWorldFile_Load(param0, &param0->unk_169C.inactiveDistortionWorldFile, mapHeaderID);
 }
 
-static void ov9_0224C134(UnkStruct_ov9_0224C14C *param0)
+static void DistWorldFile_Invalidate(DistWorldFile *file)
 {
-    memset(param0, 0, sizeof(UnkStruct_ov9_0224C14C));
-    param0->unk_00 = 593;
+    memset(file, 0, sizeof(DistWorldFile));
+    file->mapHeaderID = MAP_HEADER_COUNT;
 }
 
-static void ov9_0224C14C(UnkStruct_ov9_0224C14C *param0)
+static void DistWorldFile_Free(DistWorldFile *file)
 {
-    if (param0->unk_18 != NULL) {
-        Heap_FreeToHeap(param0->unk_18);
+    if (file->buffer != NULL) {
+        Heap_Free(file->buffer);
     }
 
-    ov9_0224C134(param0);
+    DistWorldFile_Invalidate(file);
 }
 
-static void ov9_0224C164(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C164(DistWorldSystem *param0)
 {
     ov9_0224C174(param0);
     ov9_0224C184(param0);
 }
 
-static void ov9_0224C174(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C174(DistWorldSystem *param0)
 {
-    ov9_0224C14C(&param0->unk_169C.unk_0C);
+    DistWorldFile_Free(&param0->unk_169C.distortionWorldFile);
 }
 
-static void ov9_0224C184(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C184(DistWorldSystem *param0)
 {
-    ov9_0224C14C(&param0->unk_169C.unk_58);
+    DistWorldFile_Free(&param0->unk_169C.inactiveDistortionWorldFile);
 }
 
-static void ov9_0224C194(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C194(DistWorldSystem *param0)
 {
-    GF_ASSERT(param0->unk_169C.unk_58.unk_00 == 593);
-    GF_ASSERT(param0->unk_169C.unk_58.unk_18 == NULL);
+    GF_ASSERT(param0->unk_169C.inactiveDistortionWorldFile.mapHeaderID == MAP_HEADER_COUNT);
+    GF_ASSERT(param0->unk_169C.inactiveDistortionWorldFile.buffer == NULL);
 
-    param0->unk_169C.unk_58 = param0->unk_169C.unk_0C;
+    param0->unk_169C.inactiveDistortionWorldFile = param0->unk_169C.distortionWorldFile;
 
-    ov9_0224C134(&param0->unk_169C.unk_0C);
+    DistWorldFile_Invalidate(&param0->unk_169C.distortionWorldFile);
 }
 
-static void ov9_0224C1E4(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C1E4(DistWorldSystem *param0)
 {
-    GF_ASSERT(param0->unk_169C.unk_0C.unk_00 == 593);
-    GF_ASSERT(param0->unk_169C.unk_0C.unk_18 == NULL);
+    GF_ASSERT(param0->unk_169C.distortionWorldFile.mapHeaderID == MAP_HEADER_COUNT);
+    GF_ASSERT(param0->unk_169C.distortionWorldFile.buffer == NULL);
 
-    param0->unk_169C.unk_0C = param0->unk_169C.unk_58;
-    ov9_0224C134(&param0->unk_169C.unk_58);
+    param0->unk_169C.distortionWorldFile = param0->unk_169C.inactiveDistortionWorldFile;
+    DistWorldFile_Invalidate(&param0->unk_169C.inactiveDistortionWorldFile);
 }
 
-static int ov9_0224C234(UnkStruct_ov9_0224C14C *param0)
+static int DistWorldFile_GetFloatingPlatformSectionSize(DistWorldFile *file)
 {
-    UnkStruct_ov9_0224C088 *v0 = param0->unk_14;
-    return v0->unk_04;
+    return file->header->floatingPlatformSectionSize;
 }
 
-static int ov9_0224C23C(UnkStruct_ov9_0224C14C *param0)
+static int DistWorldFile_GetFloatingPlatformCount(DistWorldFile *file)
 {
-    int *v0 = param0->unk_04;
-    return *v0;
+    return file->floatingPlatformSection->count;
 }
 
-static UnkStruct_ov9_0224C324 *ov9_0224C244(UnkStruct_ov9_0224C14C *param0)
+static DistWorldFloatingPlatformTemplate *DistWorldFile_GetFloatingPlatformSectionTemplates(DistWorldFile *file)
 {
-    u8 *v0 = param0->unk_04;
+    u8 *templates = (u8 *)file->floatingPlatformSection;
+    templates += sizeof(file->floatingPlatformSection->count);
 
-    v0 += 4;
-    return (UnkStruct_ov9_0224C324 *)v0;
+    return (DistWorldFloatingPlatformTemplate *)templates;
 }
 
-static int ov9_0224C24C(UnkStruct_ov9_0224C14C *param0)
+static int DistWorldFile_GetFloatingPlatformJumpPointSectionSize(DistWorldFile *file)
 {
-    UnkStruct_ov9_0224C088 *v0 = param0->unk_14;
-    return v0->unk_08;
+    return file->header->floatingPlatformJumpPointSectionSize;
 }
 
-static int ov9_0224C254(UnkStruct_ov9_0224C14C *param0)
+static int DistWorldFile_GetFloatingPlatformJumpPointCount(DistWorldFile *file)
 {
-    int *v0 = param0->unk_08;
-    return *v0;
+    return file->floatingPlatformJumpPointSection->count;
 }
 
-static UnkStruct_ov9_0224AA00 *ov9_0224C25C(UnkStruct_ov9_0224C14C *param0)
+static DistWorldFloatingPlatformJumpPointTemplate *DistWorldFile_GetFloatingPlatformJumpPointTemplates(DistWorldFile *file)
 {
-    u8 *v0 = param0->unk_08;
+    u8 *templates = (u8 *)file->floatingPlatformJumpPointSection;
+    templates += sizeof(file->floatingPlatformJumpPointSection->count);
 
-    v0 += 4;
-    return (UnkStruct_ov9_0224AA00 *)v0;
+    return (DistWorldFloatingPlatformJumpPointTemplate *)templates;
 }
 
-static int ov9_0224C264(UnkStruct_ov9_0224C14C *param0)
+static int DistWorldFile_GetCameraAngleSectionSize(DistWorldFile *file)
 {
-    UnkStruct_ov9_0224C088 *v0 = param0->unk_14;
-    return v0->unk_0C;
+    return file->header->cameraAngleSectionSize;
 }
 
-static int ov9_0224C26C(UnkStruct_ov9_0224C14C *param0)
+static int DistWorldFile_GetCameraAngleCount(DistWorldFile *file)
 {
-    int *v0 = param0->unk_0C;
-    return *v0;
+    return file->cameraAngleSection->count;
 }
 
-static UnkStruct_ov9_0224A8A0 *ov9_0224C274(UnkStruct_ov9_0224C14C *param0)
+static DistWorldCameraAngleTemplate *DistWorldFile_GetCameraAngleTemplates(DistWorldFile *file)
 {
-    u8 *v0 = param0->unk_0C;
+    u8 *templates = (u8 *)file->cameraAngleSection;
+    templates += sizeof(int);
 
-    v0 += 4;
-    return (UnkStruct_ov9_0224A8A0 *)v0;
+    return (DistWorldCameraAngleTemplate *)templates;
 }
 
-static int ov9_0224C27C(UnkStruct_ov9_02249B04 *param0)
+static int GetActiveGhostPropFileSectionSize(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C14C *v0 = &param0->unk_169C.unk_0C;
-    UnkStruct_ov9_0224C088 *v1 = v0->unk_14;
-
-    return v1->unk_10;
+    return system->unk_169C.distortionWorldFile.header->ghostPropSectionSize;
 }
 
-static int ov9_0224C288(UnkStruct_ov9_02249B04 *param0)
+static int GetInactiveGhostPropFileSectionSize(DistWorldSystem *system)
 {
-    int v0 = 0;
-    UnkStruct_ov9_0224C14C *v1 = &param0->unk_169C.unk_58;
+    int ghostPropSectionSize = 0;
+    DistWorldFile *inactiveFile = &system->unk_169C.inactiveDistortionWorldFile;
 
-    if (v1->unk_00 != 593) {
-        UnkStruct_ov9_0224C088 *v2 = v1->unk_14;
-        v0 = v2->unk_10;
+    if (inactiveFile->mapHeaderID != MAP_HEADER_INVALID) {
+        ghostPropSectionSize = inactiveFile->header->ghostPropSectionSize;
     }
 
-    return v0;
+    return ghostPropSectionSize;
 }
 
-static const UnkStruct_ov9_0224B3F8 *ov9_0224C2A8(UnkStruct_ov9_0224C14C *param0)
+static const DistWorldGhostPropHeader *DistWorldFile_GetGhostPropHeader(DistWorldFile *file)
 {
-    UnkStruct_ov9_0224B3F8 *v0 = param0->unk_10;
-    return v0;
+    return file->ghostPropSection;
 }
 
-static const UnkStruct_ov9_0224B6CC *ov9_0224C2AC(UnkStruct_ov9_0224C14C *param0)
+static const DistWorldGhostPropTemplate *DistWorldFile_GetGhostPropTemplates(DistWorldFile *file)
 {
-    const u8 *v0 = param0->unk_10;
+    const u8 *templates = file->ghostPropSection;
+    templates += sizeof(DistWorldGhostPropHeader);
 
-    v0 += sizeof(UnkStruct_ov9_0224B3F8);
-    return (UnkStruct_ov9_0224B6CC *)v0;
+    return (DistWorldGhostPropTemplate *)templates;
 }
 
-static const UnkStruct_ov9_0224B748 *ov9_0224C2B4(UnkStruct_ov9_0224C14C *param0)
+static const DistWorldGhostPropTrigger *DistWorldFile_GetGhostPropTriggers(DistWorldFile *file)
 {
-    const UnkStruct_ov9_0224B3F8 *v0 = param0->unk_10;
-    const u8 *v1 = param0->unk_10;
+    const DistWorldGhostPropHeader *header = file->ghostPropSection;
+    const u8 *triggers = file->ghostPropSection;
 
-    v1 += sizeof(UnkStruct_ov9_0224B3F8) + (sizeof(UnkStruct_ov9_0224B6CC) * v0->unk_00);
-    return (UnkStruct_ov9_0224B748 *)v1;
+    triggers += sizeof(DistWorldGhostPropHeader) + (sizeof(DistWorldGhostPropTemplate) * header->templateCount);
+    return (DistWorldGhostPropTrigger *)triggers;
 }
 
-static void ov9_0224C2C4(UnkStruct_ov9_02249B04 *param0)
+static void InitFloatingPlatformManager(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C14C *v0 = &param0->unk_169C.unk_0C;
+    DistWorldFile *file = &system->unk_169C.distortionWorldFile;
 
-    GF_ASSERT(param0->unk_169C.unk_28.unk_08 == NULL);
+    GF_ASSERT(system->unk_169C.floatingPlatformMan.templates == NULL);
 
-    if (ov9_0224C234(v0)) {
-        UnkStruct_ov9_0224C2C4 *v1 = &param0->unk_169C.unk_28;
+    if (DistWorldFile_GetFloatingPlatformSectionSize(file)) {
+        DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
 
-        v1->unk_04 = ov9_0224C23C(v0);
-        v1->unk_08 = ov9_0224C244(v0);
+        floatingPlatformMan->platformCount = DistWorldFile_GetFloatingPlatformCount(file);
+        floatingPlatformMan->templates = DistWorldFile_GetFloatingPlatformSectionTemplates(file);
     }
 }
 
-static void ov9_0224C300(UnkStruct_ov9_02249B04 *param0)
+static void ResetFloatingPlatformManager(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
 
-    if (v0->unk_10 != NULL) {
-        Heap_FreeToHeap(v0->unk_10);
+    if (floatingPlatformMan->terrainAttributes != NULL) {
+        Heap_Free(floatingPlatformMan->terrainAttributes);
     }
 
-    memset(v0, 0, sizeof(UnkStruct_ov9_0224C2C4));
+    memset(floatingPlatformMan, 0, sizeof(DistWorldFloatingPlatformManager));
 }
 
-static BOOL ov9_0224C324(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, s16 param4)
+static BOOL HasFloatingPlatformAtCoords(DistWorldSystem *system, int tileX, int tileY, int tileZ, s16 floatingPlatformKind)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
-    const UnkStruct_ov9_0224C324 *v1 = v0->unk_08;
-    int v2 = 0, v3 = v0->unk_04;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    const DistWorldFloatingPlatformTemplate *floatingPlatformTemplateIter = floatingPlatformMan->templates;
+    int i = 0;
+    int floatingPlatformCount = floatingPlatformMan->platformCount;
 
-    if (v3 == 0) {
-        return 0;
+    if (floatingPlatformCount == 0) {
+        return FALSE;
     }
 
     do {
-        if (ov9_02250E6C(param1, param2, param3, &v1->unk_04) == 1) {
-            if ((param4 != 4) || (param4 == v1->unk_00)) {
-                return 1;
+        if (DistWorldBounds_AreCoordinatesInBounds(tileX, tileY, tileZ, &floatingPlatformTemplateIter->bounds) == TRUE) {
+            if (floatingPlatformKind != FLOATING_PLATFORM_KIND_INVALID || floatingPlatformKind == floatingPlatformTemplateIter->kind) {
+                return TRUE;
             }
         }
 
-        v1++;
-        v2++;
-    } while (v2 < v3);
+        floatingPlatformTemplateIter++;
+        i++;
+    } while (i < floatingPlatformCount);
 
-    return 0;
+    return FALSE;
 }
 
-static void ov9_0224C378(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, s16 param4)
+static void FindAndPrepareNewCurrentFloatingPlatform(DistWorldSystem *system, int tileX, int tileY, int tileZ, s16 floatingPlatformKind)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
-    const UnkStruct_ov9_0224C324 *v1 = v0->unk_08;
-    int v2 = 0, v3 = v0->unk_04;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    const DistWorldFloatingPlatformTemplate *floatingPlatformTemplateIter = floatingPlatformMan->templates;
+    int i = 0;
+    int floatingPlatformCount = floatingPlatformMan->platformCount;
 
-    v0->unk_00 = v3;
-    ov9_02249E20(param0, v3);
+    floatingPlatformMan->currentPlatformIndex = floatingPlatformCount;
+    SetPersistedCurrentFloatingPlatformIndex(system, floatingPlatformCount);
 
-    if (v0->unk_10 != NULL) {
-        Heap_FreeToHeap(v0->unk_10);
-        v0->unk_10 = NULL;
+    if (floatingPlatformMan->terrainAttributes != NULL) {
+        Heap_Free(floatingPlatformMan->terrainAttributes);
+        floatingPlatformMan->terrainAttributes = NULL;
     }
 
-    if (v3 == 0) {
+    if (floatingPlatformCount == 0) {
         return;
     }
 
     do {
-        if (ov9_02250E6C(param1, param2, param3, &v1->unk_04) == 1) {
-            if ((param4 == 4) || (param4 == v1->unk_00)) {
-                v0->unk_00 = v2;
-                ov9_02249E20(param0, v2);
-                ov9_0224C4F4(param0, v1->unk_02);
+        if (DistWorldBounds_AreCoordinatesInBounds(tileX, tileY, tileZ, &floatingPlatformTemplateIter->bounds) == TRUE) {
+            if (floatingPlatformKind == FLOATING_PLATFORM_KIND_INVALID || floatingPlatformKind == floatingPlatformTemplateIter->kind) {
+                floatingPlatformMan->currentPlatformIndex = i;
+                SetPersistedCurrentFloatingPlatformIndex(system, i);
+                LoadFloatingPlatformTerrainAttributes(system, floatingPlatformTemplateIter->distortionWorldAttrID);
+
                 return;
             }
         }
 
-        v1++;
-        v2++;
-    } while (v2 < v3);
+        floatingPlatformTemplateIter++;
+        i++;
+    } while (i < floatingPlatformCount);
 }
 
-static void ov9_0224C3F8(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void PrepareNewCurrentFloatingPlatform(DistWorldSystem *system, u32 floatingPlatformIndex)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
-    const UnkStruct_ov9_0224C324 *v1 = v0->unk_08;
-    int v2 = 0, v3 = v0->unk_04;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    const DistWorldFloatingPlatformTemplate *floatingPlatformTemplates = floatingPlatformMan->templates;
+    int floatingPlatformCount = floatingPlatformMan->platformCount;
 
-    v0->unk_00 = v3;
+    floatingPlatformMan->currentPlatformIndex = floatingPlatformCount;
 
-    if (v0->unk_10 != NULL) {
-        Heap_FreeToHeap(v0->unk_10);
-        v0->unk_10 = NULL;
+    if (floatingPlatformMan->terrainAttributes != NULL) {
+        Heap_Free(floatingPlatformMan->terrainAttributes);
+        floatingPlatformMan->terrainAttributes = NULL;
     }
 
-    if ((v3 == 0) || (param1 >= v3) || (param1 < 0)) {
-        ov9_02249E20(param0, v3);
+    if (floatingPlatformCount == 0 || floatingPlatformIndex < 0 || floatingPlatformIndex >= floatingPlatformCount) {
+        SetPersistedCurrentFloatingPlatformIndex(system, floatingPlatformCount);
         return;
     }
 
-    v0->unk_00 = param1;
+    floatingPlatformMan->currentPlatformIndex = floatingPlatformIndex;
 
-    ov9_02249E20(param0, param1);
-    ov9_0224C4F4(param0, v1[param1].unk_02);
+    SetPersistedCurrentFloatingPlatformIndex(system, floatingPlatformIndex);
+    LoadFloatingPlatformTerrainAttributes(system, floatingPlatformTemplates[floatingPlatformIndex].distortionWorldAttrID);
 }
 
-static void ov9_0224C44C(UnkStruct_ov9_02249B04 *param0)
+static void FreeFloatingPlatformManagerTerrainAttrs(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
 
-    v0->unk_00 = v0->unk_04;
-    ov9_02249E20(param0, v0->unk_04);
+    floatingPlatformMan->currentPlatformIndex = floatingPlatformMan->platformCount;
+    SetPersistedCurrentFloatingPlatformIndex(system, floatingPlatformMan->platformCount);
 
-    if (v0->unk_10 != NULL) {
-        Heap_FreeToHeap(v0->unk_10);
-        v0->unk_10 = NULL;
-    }
-}
-
-static u32 ov9_0224C470(UnkStruct_ov9_02249B04 *param0)
-{
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
-    const UnkStruct_ov9_0224C324 *v1 = v0->unk_08;
-    int v2 = 0, v3 = v0->unk_04;
-
-    if ((v0->unk_04 == 0) || (v0->unk_00 >= v0->unk_04)) {
-        return 4;
-    }
-
-    {
-        UnkStruct_ov9_0224C324 *v4 = &v0->unk_08[v0->unk_00];
-        return v4->unk_00;
+    if (floatingPlatformMan->terrainAttributes != NULL) {
+        Heap_Free(floatingPlatformMan->terrainAttributes);
+        floatingPlatformMan->terrainAttributes = NULL;
     }
 }
 
-static u32 ov9_0224C494(UnkStruct_ov9_02249B04 *param0)
+static u32 GetCurrentFloatingPlatformKind2(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
-    int v1 = v0->unk_04;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    int floatingPlatformCount = floatingPlatformMan->platformCount;
 
-    if ((v0->unk_04 == 0) || (v0->unk_00 >= v0->unk_04)) {
-        return 4;
+    if (floatingPlatformMan->platformCount == 0 || floatingPlatformMan->currentPlatformIndex >= floatingPlatformMan->platformCount) {
+        return FLOATING_PLATFORM_KIND_INVALID;
     }
 
-    {
-        const UnkStruct_ov9_0224C324 *v2 = &v0->unk_08[v0->unk_00];
-        return v2->unk_00;
+    const DistWorldFloatingPlatformTemplate *currentFloatingPlatform = &floatingPlatformMan->templates[floatingPlatformMan->currentPlatformIndex];
+    return currentFloatingPlatform->kind;
+}
+
+static u32 GetCurrentFloatingPlatformKind(DistWorldSystem *system)
+{
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    int floatingPlatformCount = floatingPlatformMan->platformCount;
+
+    if (floatingPlatformMan->platformCount == 0 || floatingPlatformMan->currentPlatformIndex >= floatingPlatformMan->platformCount) {
+        return FLOATING_PLATFORM_KIND_INVALID;
+    }
+
+    const DistWorldFloatingPlatformTemplate *currentFloatingPlatform = &floatingPlatformMan->templates[floatingPlatformMan->currentPlatformIndex];
+    return currentFloatingPlatform->kind;
+}
+
+static u32 GetCurrentFloatingPlatformKindSafely(DistWorldSystem *system, int tileX, int tileY, int tileZ)
+{
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    int floatingPlatformCount = floatingPlatformMan->platformCount;
+
+    if (floatingPlatformMan->platformCount == 0 || floatingPlatformMan->currentPlatformIndex >= floatingPlatformMan->platformCount) {
+        return FLOATING_PLATFORM_KIND_INVALID;
+    }
+
+    const DistWorldFloatingPlatformTemplate *currentFloatingPlatform = &floatingPlatformMan->templates[floatingPlatformMan->currentPlatformIndex];
+
+    if (DistWorldBounds_AreCoordinatesInBounds(tileX, tileY, tileZ, &currentFloatingPlatform->bounds) == FALSE) {
+        return FLOATING_PLATFORM_KIND_FLOOR;
+    }
+
+    return currentFloatingPlatform->kind;
+}
+
+static void LoadFloatingPlatformTerrainAttributes(DistWorldSystem *system, u32 distortionWorldAttrID)
+{
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+
+    if (floatingPlatformMan->terrainAttributes != NULL) {
+        Heap_Free(floatingPlatformMan->terrainAttributes);
+    }
+
+    floatingPlatformMan->terrainAttributesSize = NARC_GetMemberSize(system->distortionWorldAttrNARC, distortionWorldAttrID);
+    floatingPlatformMan->terrainAttributes = Heap_AllocAtEnd(HEAP_ID_FIELD1, floatingPlatformMan->terrainAttributesSize);
+
+    NARC_ReadWholeMember(system->distortionWorldAttrNARC, distortionWorldAttrID, floatingPlatformMan->terrainAttributes);
+}
+
+static u16 GetCurrentFloatingPlatformTileAttributesRelative(DistWorldSystem *system, int tileRelativeVerticalPos, int tileRelativeHorizontalPos)
+{
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+    const DistWorldFloatingPlatformTemplate *currentFloatingPlatform = &floatingPlatformMan->templates[floatingPlatformMan->currentPlatformIndex];
+
+    GF_ASSERT(floatingPlatformMan->terrainAttributes != NULL);
+    return floatingPlatformMan->terrainAttributes[tileRelativeVerticalPos + (tileRelativeHorizontalPos * currentFloatingPlatform->tileCountVertical)];
+}
+
+static u16 GetCurrentFloatingPlatformTileAttributes(DistWorldSystem *system, int tileX, int tileY, int tileZ)
+{
+    int tileRelativeVerticalPos = 0;
+    int tileRelativeHorizontalPos = 0;
+    DistWorldFloatingPlatformManager *floatingPlatformMan = &system->unk_169C.floatingPlatformMan;
+
+    if (floatingPlatformMan->platformCount == 0 || floatingPlatformMan->currentPlatformIndex >= floatingPlatformMan->platformCount) {
+        return INVALID_TERRAIN_ATTRIBUTES;
+    }
+
+    DistWorldFloatingPlatformTemplate *currentFloatingPlatform = &floatingPlatformMan->templates[floatingPlatformMan->currentPlatformIndex];
+
+    if (DistWorldBounds_AreCoordinatesInBounds(tileX, tileY, tileZ, &currentFloatingPlatform->bounds) == 0) {
+        return OUT_OF_BOUNDS_TERRAIN_ATTRIBUTES;
+    }
+
+    GF_ASSERT(floatingPlatformMan->terrainAttributes != NULL);
+
+    switch (currentFloatingPlatform->kind) {
+    case FLOATING_PLATFORM_KIND_FLOOR:
+        tileRelativeVerticalPos = tileX - currentFloatingPlatform->bounds.startTileX;
+        tileRelativeHorizontalPos = tileZ - currentFloatingPlatform->bounds.startTileZ;
+        break;
+    case FLOATING_PLATFORM_KIND_WEST_WALL:
+        tileRelativeVerticalPos = currentFloatingPlatform->bounds.sizeY - (tileY - currentFloatingPlatform->bounds.startTileY);
+        tileRelativeHorizontalPos = tileZ - currentFloatingPlatform->bounds.startTileZ;
+        break;
+    case FLOATING_PLATFORM_KIND_EAST_WALL:
+        tileRelativeVerticalPos = tileY - currentFloatingPlatform->bounds.startTileY;
+        tileRelativeHorizontalPos = tileZ - currentFloatingPlatform->bounds.startTileZ;
+        break;
+    case FLOATING_PLATFORM_KIND_CEILING:
+        tileRelativeVerticalPos = currentFloatingPlatform->bounds.sizeX - (tileX - currentFloatingPlatform->bounds.startTileX);
+        tileRelativeHorizontalPos = tileZ - currentFloatingPlatform->bounds.startTileZ;
+        break;
+    default:
+        GF_ASSERT(0);
+        break;
+    }
+
+    return GetCurrentFloatingPlatformTileAttributesRelative(system, tileRelativeVerticalPos, tileRelativeHorizontalPos);
+}
+
+static void InitFloatingPlatformJumpPoint(DistWorldSystem *system)
+{
+    DistWorldFile *file = &system->unk_169C.distortionWorldFile;
+
+    GF_ASSERT(system->unk_169C.floatingPlatformJumpPoints.templates == NULL);
+
+    if (DistWorldFile_GetFloatingPlatformJumpPointSectionSize(file)) {
+        DistWorldFileFloatingPlatformJumpPointSection *floatingPlatformJumpPoints = &system->unk_169C.floatingPlatformJumpPoints;
+
+        floatingPlatformJumpPoints->count = DistWorldFile_GetFloatingPlatformJumpPointCount(file);
+        floatingPlatformJumpPoints->templates = DistWorldFile_GetFloatingPlatformJumpPointTemplates(file);
     }
 }
 
-static u32 ov9_0224C4B8(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3)
+static void ResetFloatingPlatformJumpPoint(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
-    int v1 = v0->unk_04;
-
-    if ((v0->unk_04 == 0) || (v0->unk_00 >= v0->unk_04)) {
-        return 4;
-    }
-
-    {
-        const UnkStruct_ov9_0224C324 *v2 = &v0->unk_08[v0->unk_00];
-
-        if (ov9_02250E6C(param1, param2, param3, &v2->unk_04) == 0) {
-            return 0;
-        }
-
-        return v2->unk_00;
-    }
+    DistWorldFileFloatingPlatformJumpPointSection *floatingPlatformJumpPoints = &system->unk_169C.floatingPlatformJumpPoints;
+    memset(floatingPlatformJumpPoints, 0, sizeof(DistWorldFileFloatingPlatformJumpPointSection));
 }
 
-static void ov9_0224C4F4(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static const DistWorldFloatingPlatformJumpPointTemplate *FindFloatingPlatformJumpPointAt(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir)
 {
-    UnkStruct_ov9_0224C2C4 *v0 = &param0->unk_169C.unk_28;
+    DistWorldFileFloatingPlatformJumpPointSection *floatingPlatformJumpPoints = &system->unk_169C.floatingPlatformJumpPoints;
+    DistWorldFloatingPlatformJumpPointTemplate *iter = floatingPlatformJumpPoints->templates;
+    int i = floatingPlatformJumpPoints->count;
 
-    if (v0->unk_10 != NULL) {
-        Heap_FreeToHeap(v0->unk_10);
-    }
-
-    v0->unk_0C = NARC_GetMemberSize(param0->unk_0C, param1);
-    v0->unk_10 = Heap_AllocFromHeapAtEnd(4, v0->unk_0C);
-
-    NARC_ReadWholeMember(param0->unk_0C, param1, v0->unk_10);
-}
-
-static u16 ov9_0224C52C(UnkStruct_ov9_02249B04 *param0, int param1, int param2)
-{
-    u16 v0;
-    UnkStruct_ov9_0224C2C4 *v1 = &param0->unk_169C.unk_28;
-    const UnkStruct_ov9_0224C324 *v2 = &v1->unk_08[v1->unk_00];
-
-    GF_ASSERT(v1->unk_10 != NULL);
-    v0 = v1->unk_10[param1 + (param2 * v2->unk_10)];
-
-    return v0;
-}
-
-static u16 ov9_0224C55C(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3)
-{
-    u16 v0;
-    int v1 = 0, v2 = 0;
-    UnkStruct_ov9_0224C2C4 *v3 = &param0->unk_169C.unk_28;
-
-    if ((v3->unk_04 == 0) || (v3->unk_00 >= v3->unk_04)) {
-        return 65535;
-    }
-
-    {
-        UnkStruct_ov9_0224C324 *v4 = &v3->unk_08[v3->unk_00];
-
-        if (ov9_02250E6C(param1, param2, param3, &v4->unk_04) == 0) {
-            return 65534;
-        }
-
-        GF_ASSERT(v3->unk_10 != NULL);
-
-        switch (v4->unk_00) {
-        case 0:
-            v1 = param1 - v4->unk_04.unk_00;
-            v2 = param3 - v4->unk_04.unk_04;
-            break;
-        case 1:
-            v1 = v4->unk_04.unk_08 - (param2 - v4->unk_04.unk_02);
-            v2 = param3 - v4->unk_04.unk_04;
-            break;
-        case 2:
-            v1 = param2 - v4->unk_04.unk_02;
-            v2 = param3 - v4->unk_04.unk_04;
-            break;
-        case 3:
-            v1 = v4->unk_04.unk_06 - (param1 - v4->unk_04.unk_00);
-            v2 = param3 - v4->unk_04.unk_04;
-            break;
-        default:
-            GF_ASSERT(0);
-            break;
-        }
-
-        v0 = ov9_0224C52C(param0, v1, v2);
-        return v0;
-    }
-}
-
-static void ov9_0224C640(UnkStruct_ov9_02249B04 *param0)
-{
-    UnkStruct_ov9_0224C14C *v0 = &param0->unk_169C.unk_0C;
-
-    GF_ASSERT(param0->unk_169C.unk_3C.unk_04 == NULL);
-
-    if (ov9_0224C24C(v0)) {
-        UnkStruct_ov9_0224C640 *v1 = &param0->unk_169C.unk_3C;
-
-        v1->unk_00 = ov9_0224C254(v0);
-        v1->unk_04 = ov9_0224C25C(v0);
-    }
-}
-
-static void ov9_0224C680(UnkStruct_ov9_02249B04 *param0)
-{
-    UnkStruct_ov9_0224C640 *v0 = &param0->unk_169C.unk_3C;
-    memset(v0, 0, sizeof(UnkStruct_ov9_0224C640));
-}
-
-static const UnkStruct_ov9_0224AA00 *ov9_0224C69C(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4)
-{
-    UnkStruct_ov9_0224C640 *v0 = &param0->unk_169C.unk_3C;
-    UnkStruct_ov9_0224AA00 *v1 = v0->unk_04;
-    int v2 = v0->unk_00;
-
-    while (v2) {
-        if (param4 == v1->unk_02) {
-            if (ov9_02250E6C(param1, param2, param3, &v1->unk_08)) {
-                return v1;
+    while (i) {
+        if (playerDir == iter->playerDir) {
+            if (DistWorldBounds_AreCoordinatesInBounds(playerX, playerY, playerZ, &iter->bounds)) {
+                return iter;
             }
         }
 
-        v1++;
-        v2--;
+        iter++;
+        i--;
     }
 
     return NULL;
 }
 
-static void ov9_0224C6E4(UnkStruct_ov9_02249B04 *param0)
+static void InitCameraAngleTemplates(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C14C *v0 = &param0->unk_169C.unk_0C;
+    DistWorldFile *file = &system->unk_169C.distortionWorldFile;
 
-    GF_ASSERT(param0->unk_169C.unk_44.unk_04 == NULL);
+    GF_ASSERT(system->unk_169C.cameraAngleTemplates.templates == NULL);
 
-    if (ov9_0224C264(v0)) {
-        UnkStruct_ov9_0224C6E4 *v1 = &param0->unk_169C.unk_44;
+    if (DistWorldFile_GetCameraAngleSectionSize(file)) {
+        DistWorldCameraAngleTemplates *cameraAngleTemplates = &system->unk_169C.cameraAngleTemplates;
 
-        v1->unk_00 = ov9_0224C26C(v0);
-        v1->unk_04 = ov9_0224C274(v0);
+        cameraAngleTemplates->count = DistWorldFile_GetCameraAngleCount(file);
+        cameraAngleTemplates->templates = DistWorldFile_GetCameraAngleTemplates(file);
     }
 }
 
-static void ov9_0224C724(UnkStruct_ov9_02249B04 *param0)
+static void ResetCameraAngleTemplates(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C6E4 *v0 = &param0->unk_169C.unk_44;
-    memset(v0, 0, sizeof(UnkStruct_ov9_0224C6E4));
+    DistWorldCameraAngleTemplates *cameraAngleTemplates = &system->unk_169C.cameraAngleTemplates;
+    memset(cameraAngleTemplates, 0, sizeof(DistWorldCameraAngleTemplates));
 }
 
-static const UnkStruct_ov9_0224A8A0 *ov9_0224C740(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4)
+static const DistWorldCameraAngleTemplate *FindCameraAngleForPlayerPosition(DistWorldSystem *system, int playerX, int playerY, int playerZ, int playerDir)
 {
-    UnkStruct_ov9_0224C6E4 *v0 = &param0->unk_169C.unk_44;
-    UnkStruct_ov9_0224A8A0 *v1 = v0->unk_04;
-    int v2 = v0->unk_00;
+    DistWorldCameraAngleTemplates *cameraAngleTemplates = &system->unk_169C.cameraAngleTemplates;
+    DistWorldCameraAngleTemplate *cameraAngleTemplateIter = cameraAngleTemplates->templates;
+    int i = cameraAngleTemplates->count;
 
-    while (v2) {
-        if (param4 == v1->unk_12) {
-            if (ov9_02250E6C(param1, param2, param3, &v1->unk_00)) {
-                return v1;
+    while (i) {
+        if (playerDir == cameraAngleTemplateIter->playerDir) {
+            if (DistWorldBounds_AreCoordinatesInBounds(playerX, playerY, playerZ, &cameraAngleTemplateIter->bounds)) {
+                return cameraAngleTemplateIter;
             }
         }
 
-        v1++;
-        v2--;
+        cameraAngleTemplateIter++;
+        i--;
     }
 
     return NULL;
 }
 
-static void ov9_0224C788(UnkStruct_ov9_0224C14C *param0, UnkStruct_ov9_0224C788 *param1)
+static void DistWorldGhostPropData_InitFromFile(DistWorldFile *file, DistWorldGhostPropData *data)
 {
-    GF_ASSERT(param1->unk_00 == NULL);
-    GF_ASSERT(param1->unk_04 == NULL);
-    GF_ASSERT(param1->unk_08 == NULL);
+    GF_ASSERT(data->header == NULL);
+    GF_ASSERT(data->templates == NULL);
+    GF_ASSERT(data->triggers == NULL);
 
-    param1->unk_00 = ov9_0224C2A8(param0);
-    param1->unk_04 = ov9_0224C2AC(param0);
-    param1->unk_08 = ov9_0224C2B4(param0);
+    data->header = DistWorldFile_GetGhostPropHeader(file);
+    data->templates = DistWorldFile_GetGhostPropTemplates(file);
+    data->triggers = DistWorldFile_GetGhostPropTriggers(file);
 }
 
-static void ov9_0224C7C8(UnkStruct_ov9_02249B04 *param0)
+static void InitActiveGhostPropData(DistWorldSystem *system)
 {
-    if (ov9_0224C27C(param0)) {
-        UnkStruct_ov9_0224C14C *v0 = &param0->unk_169C.unk_0C;
-        UnkStruct_ov9_0224C788 *v1 = &param0->unk_169C.unk_4C;
+    if (GetActiveGhostPropFileSectionSize(system)) {
+        DistWorldFile *file = &system->unk_169C.distortionWorldFile;
+        DistWorldGhostPropData *ghostPropData = &system->unk_169C.ghostPropData;
 
-        ov9_0224C788(v0, v1);
+        DistWorldGhostPropData_InitFromFile(file, ghostPropData);
     }
 }
 
-static void ov9_0224C7E8(UnkStruct_ov9_02249B04 *param0)
+static void InitInactiveGhostPropData(DistWorldSystem *system)
 {
-    if (ov9_0224C288(param0)) {
-        UnkStruct_ov9_0224C14C *v0 = &param0->unk_169C.unk_58;
-        UnkStruct_ov9_0224C788 *v1 = &param0->unk_169C.unk_74;
+    if (GetInactiveGhostPropFileSectionSize(system)) {
+        DistWorldFile *file = &system->unk_169C.inactiveDistortionWorldFile;
+        DistWorldGhostPropData *ghostPropData = &system->unk_169C.inactiveGhostPropData;
 
-        ov9_0224C788(v0, v1);
+        DistWorldGhostPropData_InitFromFile(file, ghostPropData);
     }
 }
 
-static void ov9_0224C808(UnkStruct_ov9_02249B04 *param0)
+static void InitAllGhostPropData(DistWorldSystem *system)
 {
-    ov9_0224C7C8(param0);
-    ov9_0224C7E8(param0);
+    InitActiveGhostPropData(system);
+    InitInactiveGhostPropData(system);
 }
 
-static void ov9_0224C818(UnkStruct_ov9_0224C788 *param0)
+static void DistWorldGhostPropData_Reset(DistWorldGhostPropData *data)
 {
-    memset(param0, 0, sizeof(UnkStruct_ov9_0224C788));
+    memset(data, 0, sizeof(DistWorldGhostPropData));
 }
 
-static void ov9_0224C834(UnkStruct_ov9_02249B04 *param0)
+static void ResetActiveGhostPropData(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_4C;
-    ov9_0224C818(v0);
+    DistWorldGhostPropData_Reset(&system->unk_169C.ghostPropData);
 }
 
-static void ov9_0224C844(UnkStruct_ov9_02249B04 *param0)
+static void ResetInactiveGhostPropData(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_74;
-    ov9_0224C818(v0);
+    DistWorldGhostPropData_Reset(&system->unk_169C.inactiveGhostPropData);
 }
 
-static void ov9_0224C854(UnkStruct_ov9_02249B04 *param0)
+static void ResetAllGhostPropData(DistWorldSystem *system)
 {
-    ov9_0224C834(param0);
-    ov9_0224C844(param0);
+    ResetActiveGhostPropData(system);
+    ResetInactiveGhostPropData(system);
 }
 
-static void ov9_0224C864(UnkStruct_ov9_02249B04 *param0)
+static void MoveActiveGhostPropDataToInactive(DistWorldSystem *system)
 {
-    param0->unk_169C.unk_74 = param0->unk_169C.unk_4C;
-    ov9_0224C818(&param0->unk_169C.unk_4C);
+    system->unk_169C.inactiveGhostPropData = system->unk_169C.ghostPropData;
+    DistWorldGhostPropData_Reset(&system->unk_169C.ghostPropData);
 }
 
-static void ov9_0224C888(UnkStruct_ov9_02249B04 *param0)
+static void MoveInactiveGhostPropDataToActive(DistWorldSystem *system)
 {
-    param0->unk_169C.unk_4C = param0->unk_169C.unk_74;
-    ov9_0224C818(&param0->unk_169C.unk_74);
+    system->unk_169C.ghostPropData = system->unk_169C.inactiveGhostPropData;
+    DistWorldGhostPropData_Reset(&system->unk_169C.inactiveGhostPropData);
 }
 
-static const UnkStruct_ov9_0224B3F8 *ov9_0224C8AC(UnkStruct_ov9_02249B04 *param0)
+static const DistWorldGhostPropHeader *GetActiveGhostPropHeader(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_4C;
-    return v0->unk_00;
+    return system->unk_169C.ghostPropData.header;
 }
 
-static const UnkStruct_ov9_0224B3F8 *ov9_0224C8B8(UnkStruct_ov9_02249B04 *param0)
+static const DistWorldGhostPropHeader *GetInactiveGhostPropHeader(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_74;
-    return v0->unk_00;
+    return system->unk_169C.inactiveGhostPropData.header;
 }
 
-static const UnkStruct_ov9_0224B6CC *ov9_0224C8C4(UnkStruct_ov9_02249B04 *param0)
+static const DistWorldGhostPropTemplate *GetActiveGhostPropTemplates(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_4C;
-    return v0->unk_04;
+    return system->unk_169C.ghostPropData.templates;
 }
 
-static const UnkStruct_ov9_0224B6CC *ov9_0224C8D0(UnkStruct_ov9_02249B04 *param0)
+static const DistWorldGhostPropTemplate *GetInactiveGhostPropTemplates(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_74;
-    return v0->unk_04;
+    return system->unk_169C.inactiveGhostPropData.templates;
 }
 
-static const UnkStruct_ov9_0224B748 *ov9_0224C8DC(UnkStruct_ov9_02249B04 *param0)
+static const DistWorldGhostPropTrigger *GetActiveGhostPropTriggers(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224C788 *v0 = &param0->unk_169C.unk_4C;
-    return v0->unk_08;
+    return system->unk_169C.ghostPropData.triggers;
 }
 
-static void ov9_0224C8E8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C8E8(DistWorldSystem *param0)
 {
-    int v0, v1;
+    enum MapHeader mapHeaderID, v1;
     UnkStruct_ov9_0224C8E8 *v2 = &param0->unk_1E88;
     FieldSystem *fieldSystem = param0->fieldSystem;
-    const UnkStruct_ov9_022530A4 *v4, *v5;
+    const DistWorldMapConnections *v4, *v5;
 
-    v0 = ov9_022510D0(param0);
-    v4 = ov9_0224D720(v0);
-    v1 = v4->unk_08;
+    mapHeaderID = DistWorldSystem_GetMapHeaderID(param0);
+    v4 = GetConnectionsForMap(mapHeaderID);
+    v1 = v4->nextID;
 
-    if (v1 == 593) {
+    if (v1 == MAP_HEADER_INVALID) {
         return;
     }
 
-    v5 = ov9_0224D720(v1);
+    v5 = GetConnectionsForMap(v1);
     v2->unk_00 = v1;
 
     {
@@ -4374,40 +4397,40 @@ static void ov9_0224C8E8(UnkStruct_ov9_02249B04 *param0)
     }
 
     {
-        NARC *v6 = ov5_021E9828(fieldSystem->unk_28);
+        NARC *v6 = LandDataManager_GetLandDataNARC(fieldSystem->landDataMan);
 
-        v2->unk_18 = ov5_021E9830(v2->unk_10, v2->unk_14, v6);
-        ov5_021E931C(PlayerAvatar_PosVector(fieldSystem->playerAvatar), v2->unk_18);
+        v2->unk_18 = LandDataManager_DistortionWorldNew(v2->unk_10, v2->unk_14, v6);
+        LandDataManager_TrackTarget(PlayerAvatar_PosVector(fieldSystem->playerAvatar), v2->unk_18);
     }
 
     {
-        ov5_021EA6A4(v2->unk_18, 1);
-        ov5_021EA6D0(v2->unk_18, 1);
+        LandDataManager_SetInDistortionWorld(v2->unk_18, 1);
+        LandDataManager_SetSkipMapProps(v2->unk_18, 1);
     }
 
     {
         int v7, v8, v9;
 
         ov9_0224C070(param0, v1, &v7, &v8, &v9);
-        ov5_021EA678(v2->unk_18, v7, v8, v9);
+        LandDataManager_DistortionWorldSetOffsets(v2->unk_18, v7, v8, v9);
     }
 
     {
         int v10 = Player_GetXPos(fieldSystem->playerAvatar);
         int v11 = Player_GetZPos(fieldSystem->playerAvatar);
 
-        ov5_021E99D8(v2->unk_18, v10, v11);
+        LandDataManager_DistortionWorldInitialLoad(v2->unk_18, v10, v11);
         v2->unk_08 = 1;
     }
 
     v2->unk_04 = 1;
 
-    if (ov9_02249D38(param0) == 0) {
+    if (IsPersistedDataValid(param0) == 0) {
         VecFx32 v12, v13;
         MapObject *v14 = Player_MapObject(fieldSystem->playerAvatar);
 
         MapObject_GetPosPtr(v14, &v13);
-        ov5_021EA6BC(fieldSystem->unk_28, &v12);
+        LandDataManager_GetOffset(fieldSystem->landDataMan, &v12);
 
         v13.y = v12.y + ((1 << 4) * FX32_ONE);
 
@@ -4417,20 +4440,20 @@ static void ov9_0224C8E8(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224C9E8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224C9E8(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224C8E8 *v0 = &param0->unk_1E88;
 
     if (v0->unk_04) {
-        ov5_021E9338(v0->unk_18);
-        ov5_021E9938(v0->unk_18);
+        LandDataManager_ForgetTrackedTarget(v0->unk_18);
+        LandDataManager_DistortionWorldEnd(v0->unk_18);
 
         if (v0->unk_14 != NULL) {
             v0->unk_14 = NULL;
         }
 
         if (v0->unk_18 != NULL) {
-            ov5_021E99C4(v0->unk_18);
+            LandDataManager_DistortionWorldFreeLoadedMapBuffers(v0->unk_18);
             v0->unk_18 = NULL;
         }
 
@@ -4443,24 +4466,24 @@ static void ov9_0224C9E8(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224CA30(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224CA30(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224C8E8 *v0 = &param0->unk_1E88;
 
     if (v0->unk_08) {
-        ov5_021E9C0C(v0->unk_18, param0->fieldSystem->unk_44);
+        LandDataManager_DistortionWorldRenderNextFloorMaps(v0->unk_18, param0->fieldSystem->areaModelAttrs);
     }
 }
 
 void ov9_0224CA50(FieldSystem *fieldSystem)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
     ov9_0224CA30(v0);
 }
 
 void ov9_0224CA5C(FieldSystem *fieldSystem)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
     UnkStruct_ov9_0224C8E8 *v1 = &v0->unk_1E88;
 
     {
@@ -4474,22 +4497,22 @@ void ov9_0224CA5C(FieldSystem *fieldSystem)
     }
 
     if (v1->unk_08 == 1) {
-        ov5_021EA174(fieldSystem, v1->unk_18);
+        LandDataManager_DistortionWorldTick(fieldSystem, v1->unk_18);
     }
 }
 
-static void ov9_0224CA98(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224CA98(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224CA5C *v0 = &param0->unk_1CB0;
     UnkStruct_ov9_0224C8E8 *v1 = &param0->unk_1E88;
 
     switch (v0->unk_01) {
     case 0:
-        ov5_021E9AAC(v1->unk_18, v0->unk_04, v0->unk_08, v0->unk_0C);
+        LandDataManager_DistortionWorldInitLoadedMaps(v1->unk_18, v0->unk_04, v0->unk_08, v0->unk_0C);
         v0->unk_01++;
         break;
     case 1:
-        ov5_021E9B10(v1->unk_18, v0->unk_02, v0->unk_0C[v0->unk_02]);
+        LandDataManager_DistortionWorldLoadAndInvalidate(v1->unk_18, v0->unk_02, v0->unk_0C[v0->unk_02]);
         v0->unk_02++;
 
         if (v0->unk_02 >= 4) {
@@ -4497,13 +4520,13 @@ static void ov9_0224CA98(UnkStruct_ov9_02249B04 *param0)
         }
         break;
     case 2:
-        ov5_021EA6F4(v1->unk_18, v0->unk_04, v0->unk_08);
+        LandDataManager_DistortionWorldUpdateTrackedTargetValues(v1->unk_18, v0->unk_04, v0->unk_08);
 
         {
             int v2 = 0;
 
             do {
-                ov5_021EA6E0(v1->unk_18, v2, 1);
+                LandDataManager_SetLoadedMapValid(v1->unk_18, v2, 1);
                 v2++;
             } while (v2 < 4);
         }
@@ -4519,7 +4542,7 @@ static void ov9_0224CA98(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224CB30(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224CB30(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224CA5C *v0 = &param0->unk_1CB0;
     UnkStruct_ov9_0224C8E8 *v1 = &param0->unk_1E88;
@@ -4527,11 +4550,11 @@ static void ov9_0224CB30(UnkStruct_ov9_02249B04 *param0)
 
     switch (v0->unk_01) {
     case 0:
-        ov5_021EA58C(fieldSystem->unk_28, v0->unk_04, v0->unk_08, v0->unk_0C);
+        LandDataManager_DistortionWorldInvalidateLoadedMaps(fieldSystem->landDataMan, v0->unk_04, v0->unk_08, v0->unk_0C);
         v0->unk_01++;
         break;
     case 1:
-        ov5_021EA5E0(fieldSystem->unk_28, v0->unk_02, v0->unk_0C[v0->unk_02]);
+        LandDataManager_DistortionWorldLoadEntire(fieldSystem->landDataMan, v0->unk_02, v0->unk_0C[v0->unk_02]);
         v0->unk_02++;
 
         if (v0->unk_02 >= 4) {
@@ -4539,13 +4562,13 @@ static void ov9_0224CB30(UnkStruct_ov9_02249B04 *param0)
         }
         break;
     case 2:
-        ov5_021EA6F4(fieldSystem->unk_28, v0->unk_04, v0->unk_08);
+        LandDataManager_DistortionWorldUpdateTrackedTargetValues(fieldSystem->landDataMan, v0->unk_04, v0->unk_08);
 
         {
             int v3 = 0;
 
             do {
-                ov5_021EA6E0(fieldSystem->unk_28, v3, 1);
+                LandDataManager_SetLoadedMapValid(fieldSystem->landDataMan, v3, 1);
                 v3++;
             } while (v3 < 4);
         }
@@ -4560,19 +4583,19 @@ static void ov9_0224CB30(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static int (*const Unk_ov9_022514E0[5])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224CBD8 *);
-static int (*const Unk_ov9_02251428[4])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224CBD8 *);
+static int (*const Unk_ov9_022514E0[5])(DistWorldSystem *, UnkStruct_ov9_0224CBD8 *);
+static int (*const Unk_ov9_02251428[4])(DistWorldSystem *, UnkStruct_ov9_0224CBD8 *);
 
-static void ov9_0224CBBC(UnkStruct_ov5_021E8F60 *param0, BOOL param1)
+static void ov9_0224CBBC(LandDataManager *param0, BOOL param1)
 {
     int v0 = 0;
 
     do {
-        ov5_021EA6E0(param0, v0++, param1);
+        LandDataManager_SetLoadedMapValid(param0, v0++, param1);
     } while (v0 < 4);
 }
 
-static void ov9_0224CBD8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224CBD8(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224CBD8 *v0 = &param0->unk_1CD0;
 
@@ -4580,7 +4603,7 @@ static void ov9_0224CBD8(UnkStruct_ov9_02249B04 *param0)
     v0->unk_2C = SysTask_Start(ov9_0224CC08, param0, 1);
 }
 
-static void ov9_0224CBF8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224CBF8(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224CBD8 *v0 = &param0->unk_1CD0;
 
@@ -4589,10 +4612,10 @@ static void ov9_0224CBF8(UnkStruct_ov9_02249B04 *param0)
 
 static void ov9_0224CC08(SysTask *param0, void *param1)
 {
-    UnkStruct_ov9_02249B04 *v0 = param1;
+    DistWorldSystem *v0 = param1;
     UnkStruct_ov9_0224CBD8 *v1 = &v0->unk_1CD0;
 
-    int (*const *v2)(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224CBD8 *) = NULL;
+    int (*const *v2)(DistWorldSystem *, UnkStruct_ov9_0224CBD8 *) = NULL;
 
     if (v1->unk_00 == 2) {
         v2 = Unk_ov9_022514E0;
@@ -4613,12 +4636,12 @@ static void ov9_0224CC08(SysTask *param0, void *param1)
     }
 }
 
-static void ov9_0224CC4C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224CC4C(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224CBD8 *v0 = &param0->unk_1CD0;
 }
 
-static void ov9_0224CC50(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2)
+static void ov9_0224CC50(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2)
 {
     UnkStruct_ov9_0224CBD8 *v0 = &param0->unk_1CD0;
 
@@ -4631,7 +4654,7 @@ static void ov9_0224CC50(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC 
     v0->unk_28 = param1;
 }
 
-static BOOL ov9_0224CC7C(UnkStruct_ov9_02249B04 *param0)
+static BOOL ov9_0224CC7C(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224CBD8 *v0 = &param0->unk_1CD0;
 
@@ -4642,48 +4665,46 @@ static BOOL ov9_0224CC7C(UnkStruct_ov9_02249B04 *param0)
     return 0;
 }
 
-static int ov9_0224CC90(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CC90(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
-    ov9_0224CBBC(param0->fieldSystem->unk_28, 0);
-    ov9_02249BD4(param0, ov9_022510D0(param0));
+    ov9_0224CBBC(param0->fieldSystem->landDataMan, 0);
+    ov9_02249BD4(param0, DistWorldSystem_GetMapHeaderID(param0));
 
     param1->unk_04 = 1;
     return 0;
 }
 
-static int ov9_0224CCB8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CCB8(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
     FieldSystem *fieldSystem = param0->fieldSystem;
     UnkStruct_ov9_0224C8E8 *v1 = &param0->unk_1E88;
-    const UnkStruct_ov9_022530A4 *v2;
+    const DistWorldMapConnections *v2 = GetConnectionsForMap(DistWorldSystem_GetMapHeaderID(param0));
+    GF_ASSERT(v2->nextID != MAP_HEADER_INVALID);
 
-    v2 = ov9_0224D720(ov9_022510D0(param0));
-    GF_ASSERT(v2->unk_08 != 593);
-
-    v2 = ov9_0224D720(v2->unk_08);
-    param1->unk_0C = v2->unk_00;
+    v2 = GetConnectionsForMap(v2->nextID);
+    param1->unk_0C = v2->currID;
 
     ov5_021D12D0(param0->fieldSystem, param1->unk_0C);
-    ov9_0224BF18(param0, v2->unk_08);
-    ov5_021E9CD8(fieldSystem->unk_28);
+    ov9_0224BF18(param0, v2->nextID);
+    LandDataManager_DistortionWorldEndWithoutFreeing(fieldSystem->landDataMan);
 
     param1->unk_08 = Player_GetXPos(fieldSystem->playerAvatar);
     param1->unk_0A = Player_GetZPos(fieldSystem->playerAvatar);
 
-    ov5_021E9D3C(v1->unk_10, v1->unk_14, v1->unk_18, fieldSystem->unk_28, param1->unk_08, param1->unk_0A);
+    LandDataManager_DistortionWorldPrepareNextFloor(v1->unk_10, v1->unk_14, v1->unk_18, fieldSystem->landDataMan, param1->unk_08, param1->unk_0A);
     v1->unk_08 = 0;
     ov9_0224CBBC(v1->unk_18, 0);
 
     MapMatrix_Free(v1->unk_10);
     v1->unk_10 = NULL;
 
-    ov9_0224CBBC(param0->fieldSystem->unk_28, 1);
-    v1->unk_00 = v2->unk_08;
+    ov9_0224CBBC(param0->fieldSystem->landDataMan, 1);
+    v1->unk_00 = v2->nextID;
 
     if (v1->unk_00 != 593) {
-        v2 = ov9_0224D720(v2->unk_08);
+        v2 = GetConnectionsForMap(v2->nextID);
         v1->unk_10 = MapMatrix_NewWithHeapID(4);
-        MapMatrix_Load(v2->unk_00, v1->unk_10);
+        MapMatrix_Load(v2->currID, v1->unk_10);
         param1->unk_04 = 2;
     } else {
         param1->unk_04 = 4;
@@ -4692,21 +4713,21 @@ static int ov9_0224CCB8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
     return 0;
 }
 
-static int ov9_0224CD84(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CD84(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
     if (param1->unk_20 == 0) {
         int v0, v1, v2;
         NARC *v3;
         UnkStruct_ov9_0224C8E8 *v4 = &param0->unk_1E88;
 
-        v3 = ov5_021E9828(param0->fieldSystem->unk_28);
-        ov5_021E98C8(v4->unk_18, v4->unk_10, v4->unk_14, v3);
+        v3 = LandDataManager_GetLandDataNARC(param0->fieldSystem->landDataMan);
+        LandDataManager_DistortionWorldInit(v4->unk_18, v4->unk_10, v4->unk_14, v3);
 
         ov9_0224C070(param0, v4->unk_00, &v0, &v1, &v2);
-        ov5_021EA678(v4->unk_18, v0, v1, v2);
-        ov5_021EA6A4(v4->unk_18, 1);
-        ov5_021EA6D0(v4->unk_18, 1);
-        ov5_021E9AAC(v4->unk_18, param1->unk_08, param1->unk_0A, param1->unk_10);
+        LandDataManager_DistortionWorldSetOffsets(v4->unk_18, v0, v1, v2);
+        LandDataManager_SetInDistortionWorld(v4->unk_18, 1);
+        LandDataManager_SetSkipMapProps(v4->unk_18, 1);
+        LandDataManager_DistortionWorldInitLoadedMaps(v4->unk_18, param1->unk_08, param1->unk_0A, param1->unk_10);
 
         param1->unk_04 = 3;
         return 1;
@@ -4715,11 +4736,11 @@ static int ov9_0224CD84(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
     return 0;
 }
 
-static int ov9_0224CE00(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CE00(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
     UnkStruct_ov9_0224C8E8 *v0 = &param0->unk_1E88;
 
-    ov5_021E9B10(v0->unk_18, param1->unk_06, param1->unk_10[param1->unk_06]);
+    LandDataManager_DistortionWorldLoadAndInvalidate(v0->unk_18, param1->unk_06, param1->unk_10[param1->unk_06]);
 
     param1->unk_06++;
 
@@ -4730,19 +4751,19 @@ static int ov9_0224CE00(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
     return 0;
 }
 
-static int ov9_0224CE2C(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CE2C(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
-    const UnkStruct_ov9_022530A4 *v0;
+    const DistWorldMapConnections *v0;
     UnkStruct_ov9_0224C8E8 *v1 = &param0->unk_1E88;
 
     if (v1->unk_00 != 593) {
         v1->unk_08 = 1;
         ov9_0224CBBC(v1->unk_18, 1);
-        ov5_021EA6F4(v1->unk_18, param1->unk_08, param1->unk_0A);
+        LandDataManager_DistortionWorldUpdateTrackedTargetValues(v1->unk_18, param1->unk_08, param1->unk_0A);
     }
 
-    v0 = ov9_0224D720(param1->unk_0C);
-    ov9_02249C08(param0, v0->unk_08);
+    v0 = GetConnectionsForMap(param1->unk_0C);
+    ov9_02249C08(param0, v0->nextID);
 
     if (param1->unk_28 != NULL) {
         ov9_0224E0DC(param1->unk_28, 0);
@@ -4751,7 +4772,7 @@ static int ov9_0224CE2C(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
     return 2;
 }
 
-static int (*const Unk_ov9_022514E0[5])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224CBD8 *) = {
+static int (*const Unk_ov9_022514E0[5])(DistWorldSystem *, UnkStruct_ov9_0224CBD8 *) = {
     ov9_0224CC90,
     ov9_0224CCB8,
     ov9_0224CD84,
@@ -4759,9 +4780,9 @@ static int (*const Unk_ov9_022514E0[5])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_
     ov9_0224CE2C
 };
 
-static int ov9_0224CE80(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CE80(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
-    const UnkStruct_ov9_022530A4 *v0;
+    const DistWorldMapConnections *v0;
     UnkStruct_ov9_0224C8E8 *v1 = &param0->unk_1E88;
 
     v1->unk_08 = 0;
@@ -4770,24 +4791,22 @@ static int ov9_0224CE80(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
         ov9_0224CBBC(v1->unk_18, 0);
     }
 
-    v0 = ov9_0224D720(ov9_022510D0(param0));
-    ov9_02249C2C(param0, v0->unk_08);
+    v0 = GetConnectionsForMap(DistWorldSystem_GetMapHeaderID(param0));
+    ov9_02249C2C(param0, v0->nextID);
 
     param1->unk_04 = 1;
     return 0;
 }
 
-static int ov9_0224CEBC(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CEBC(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
     FieldSystem *fieldSystem = param0->fieldSystem;
     UnkStruct_ov9_0224C8E8 *v1 = &param0->unk_1E88;
-    const UnkStruct_ov9_022530A4 *v2;
+    const DistWorldMapConnections *v2 = GetConnectionsForMap(DistWorldSystem_GetMapHeaderID(param0));
+    GF_ASSERT(v2->prevID != MAP_HEADER_INVALID);
+    v2 = GetConnectionsForMap(v2->prevID);
 
-    v2 = ov9_0224D720(ov9_022510D0(param0));
-    GF_ASSERT(v2->unk_04 != 593);
-    v2 = ov9_0224D720(v2->unk_04);
-
-    param1->unk_0C = v2->unk_00;
+    param1->unk_0C = v2->currID;
 
     ov5_021D12D0(param0->fieldSystem, param1->unk_0C);
     ov9_0224BEB4(param0, param1->unk_0C);
@@ -4801,51 +4820,51 @@ static int ov9_0224CEBC(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
     }
 
     if (v1->unk_04 == 0) {
-        NARC *v3 = ov5_021E9828(fieldSystem->unk_28);
+        NARC *v3 = LandDataManager_GetLandDataNARC(fieldSystem->landDataMan);
 
-        v1->unk_18 = ov5_021E9830(NULL, v1->unk_14, v3);
-        ov5_021E7A54(v1->unk_18);
+        v1->unk_18 = LandDataManager_DistortionWorldNew(NULL, v1->unk_14, v3);
+        LandDataManager_DistortionWorldNewLoadedMapsWithoutAttributesAndModel(v1->unk_18);
     }
 
     if (v1->unk_04 == 1) {
-        ov5_021E9998(v1->unk_18);
+        LandDataManager_DistortionWorldInitLoadedMapPropManagers(v1->unk_18);
     }
 
-    ov5_021E9998(fieldSystem->unk_28);
-    ov5_021EA6D8(v1->unk_18, v1->unk_10);
-    ov5_021E9F98(v1->unk_18, fieldSystem->unk_28);
+    LandDataManager_DistortionWorldInitLoadedMapPropManagers(fieldSystem->landDataMan);
+    LandDataManager_SetMapMatrix(v1->unk_18, v1->unk_10);
+    LandDataManager_DistortionWorldPreparePreviousFloor(v1->unk_18, fieldSystem->landDataMan);
 
     v1->unk_04 = 1;
     v1->unk_08 = 1;
 
     ov9_0224CBBC(v1->unk_18, 1);
-    ov9_0224CBBC(param0->fieldSystem->unk_28, 0);
-    MapMatrix_Load(v2->unk_00, fieldSystem->mapMatrix);
+    ov9_0224CBBC(param0->fieldSystem->landDataMan, 0);
+    MapMatrix_Load(v2->currID, fieldSystem->mapMatrix);
 
     {
         int v4 = 0, v5 = 0, v6 = 0;
 
-        ov5_021EA540(fieldSystem->unk_28, fieldSystem->mapMatrix, fieldSystem->areaDataManager);
-        ov9_02251094(v2->unk_00, &v4, &v5, &v6);
-        ov5_021EA678(fieldSystem->unk_28, v4, v5, v6);
-        ov5_021EA6A4(fieldSystem->unk_28, 1);
-        ov5_021EA6D0(fieldSystem->unk_28, 1);
+        LandDataManager_DistortionWorldInitWithoutNARC(fieldSystem->landDataMan, fieldSystem->mapMatrix, fieldSystem->areaDataManager);
+        ov9_02251094(v2->currID, &v4, &v5, &v6);
+        LandDataManager_DistortionWorldSetOffsets(fieldSystem->landDataMan, v4, v5, v6);
+        LandDataManager_SetInDistortionWorld(fieldSystem->landDataMan, 1);
+        LandDataManager_SetSkipMapProps(fieldSystem->landDataMan, 1);
 
         param1->unk_08 = fieldSystem->location->x;
         param1->unk_0A = fieldSystem->location->z;
 
-        ov5_021EA58C(fieldSystem->unk_28, param1->unk_08, param1->unk_0A, param1->unk_10);
+        LandDataManager_DistortionWorldInvalidateLoadedMaps(fieldSystem->landDataMan, param1->unk_08, param1->unk_0A, param1->unk_10);
     }
 
     param1->unk_04 = 2;
     return 0;
 }
 
-static int ov9_0224CFE0(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224CFE0(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
     FieldSystem *fieldSystem = param0->fieldSystem;
 
-    ov5_021EA5E0(fieldSystem->unk_28, param1->unk_06, param1->unk_10[param1->unk_06]);
+    LandDataManager_DistortionWorldLoadEntire(fieldSystem->landDataMan, param1->unk_06, param1->unk_10[param1->unk_06]);
 
     param1->unk_06++;
 
@@ -4856,34 +4875,32 @@ static int ov9_0224CFE0(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *
     return 0;
 }
 
-static int ov9_0224D008(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224CBD8 *param1)
+static int ov9_0224D008(DistWorldSystem *param0, UnkStruct_ov9_0224CBD8 *param1)
 {
     FieldSystem *fieldSystem = param0->fieldSystem;
 
-    ov5_021EA6F4(fieldSystem->unk_28, param1->unk_08, param1->unk_0A);
+    LandDataManager_DistortionWorldUpdateTrackedTargetValues(fieldSystem->landDataMan, param1->unk_08, param1->unk_0A);
     ov9_02249C60(param0, param1->unk_0C);
 
     if (param1->unk_28 != NULL) {
         ov9_0224E0DC(param1->unk_28, 0);
     }
 
-    ov9_0224CBBC(param0->fieldSystem->unk_28, 1);
+    ov9_0224CBBC(param0->fieldSystem->landDataMan, 1);
 
     return 2;
 }
 
-static int (*const Unk_ov9_02251428[4])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224CBD8 *) = {
+static int (*const Unk_ov9_02251428[4])(DistWorldSystem *, UnkStruct_ov9_0224CBD8 *) = {
     ov9_0224CE80,
     ov9_0224CEBC,
     ov9_0224CFE0,
     ov9_0224D008
 };
 
-static BOOL ov9_0224D040(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3)
+static BOOL ov9_0224D040(DistWorldSystem *param0, int param1, int param2, int param3)
 {
-    UnkStruct_ov9_0224E0DC *v0;
-
-    v0 = ov9_0224E188(param0, param1, param2, param3, ov9_022510D0(param0));
+    UnkStruct_ov9_0224E0DC *v0 = ov9_0224E188(param0, param1, param2, param3, DistWorldSystem_GetMapHeaderID(param0));
 
     if (v0 == NULL) {
         return 0;
@@ -4897,13 +4914,11 @@ static BOOL ov9_0224D040(UnkStruct_ov9_02249B04 *param0, int param1, int param2,
     return 0;
 }
 
-static int (*const Unk_ov9_02252224[8])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224D078 *);
+static int (*const Unk_ov9_02252224[8])(DistWorldSystem *, UnkStruct_ov9_0224D078 *);
 
-static void ov9_0224D078(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1)
+static void ov9_0224D078(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1)
 {
-    UnkStruct_ov9_0224D078 *v0;
-
-    v0 = ov9_0224A578(param0, sizeof(UnkStruct_ov9_0224D078));
+    UnkStruct_ov9_0224D078 *v0 = InitFieldTaskContext(param0, sizeof(UnkStruct_ov9_0224D078));
     v0->unk_64 = param1;
 
     FieldSystem_CreateTask(param0->fieldSystem, ov9_0224D098, param0);
@@ -4912,8 +4927,8 @@ static void ov9_0224D078(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC 
 static BOOL ov9_0224D098(FieldTask *param0)
 {
     int v0;
-    UnkStruct_ov9_02249B04 *v1 = FieldTask_GetEnv(param0);
-    UnkStruct_ov9_0224D078 *v2 = ov9_0224A598(v1);
+    DistWorldSystem *v1 = FieldTask_GetEnv(param0);
+    UnkStruct_ov9_0224D078 *v2 = GetFieldTaskContext(v1);
 
     do {
         v0 = Unk_ov9_02252224[v2->unk_04](v1, v2);
@@ -4926,21 +4941,21 @@ static BOOL ov9_0224D098(FieldTask *param0)
     return 0;
 }
 
-static int ov9_0224D0C8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D0C8(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     u32 v0;
     MapObject *v1;
-    const UnkStruct_ov9_022530A4 *v2;
+    const DistWorldMapConnections *v2;
     const UnkStruct_ov9_02253830 *v3;
 
     param1->unk_00 = param1->unk_64->unk_04.unk_0A;
     param1->unk_02 = param1->unk_64->unk_04.unk_08;
 
-    v0 = ov9_022510D0(param0);
-    v2 = ov9_0224D720(v0);
+    v0 = DistWorldSystem_GetMapHeaderID(param0);
+    v2 = GetConnectionsForMap(v0);
 
     if (param1->unk_00 == 1) {
-        param1->unk_06 = v2->unk_08;
+        param1->unk_06 = v2->nextID;
 
         {
             VarsFlags *v4 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
@@ -4955,7 +4970,7 @@ static int ov9_0224D0C8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
             }
         }
     } else {
-        param1->unk_06 = v2->unk_04;
+        param1->unk_06 = v2->prevID;
 
         switch (param0, param1->unk_02) {
         case 13:
@@ -4977,7 +4992,7 @@ static int ov9_0224D0C8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     v1 = Player_MapObject(param0->fieldSystem->playerAvatar);
 
     MapObject_GetPosPtr(v1, &param1->unk_14);
-    sub_02062E28(v1, 1);
+    MapObject_SetHeightCalculationDisabled(v1, TRUE);
 
     param1->unk_44.x = 0;
     param1->unk_44.y = 0;
@@ -5001,11 +5016,11 @@ static int ov9_0224D0C8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
         VecFx32 v6, *v7;
 
         param1->unk_5C = (FX32_ONE * 6);
-        sub_0206309C(v1, &v6);
+        MapObject_GetSpritePosOffset(v1, &v6);
         param1->unk_50 = v6.y;
 
         if (param1->unk_68 != NULL) {
-            sub_0206309C(param1->unk_68, &v6);
+            MapObject_GetSpritePosOffset(param1->unk_68, &v6);
             param1->unk_54 = v6.y;
         }
 
@@ -5015,7 +5030,7 @@ static int ov9_0224D0C8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
         param1->unk_01 = 1;
         param1->unk_04 = 1;
 
-        Sound_PlayEffect(1481);
+        Sound_PlayEffect(SEQ_SE_PL_FW089);
     } else {
         param1->unk_04 = 2;
     }
@@ -5026,26 +5041,26 @@ static int ov9_0224D0C8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int ov9_0224D288(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D288(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     VecFx32 v0;
     PlayerAvatar *playerAvatar = param0->fieldSystem->playerAvatar;
     MapObject *v2 = Player_MapObject(playerAvatar);
     VecFx32 *v3 = ov9_0224E330(param1->unk_64->unk_20);
 
-    sub_0206309C(v2, &v0);
+    MapObject_GetSpritePosOffset(v2, &v0);
 
     v0.y = param1->unk_50 + param1->unk_5C;
 
-    sub_020630AC(v2, &v0);
+    MapObject_SetSpritePosOffset(v2, &v0);
     ov9_022511F4(v2, &param1->unk_14);
 
     if (param1->unk_68 != NULL) {
         VecFx32 v4;
 
-        sub_0206309C(param1->unk_68, &v0);
+        MapObject_GetSpritePosOffset(param1->unk_68, &v0);
         v0.y = param1->unk_54 + param1->unk_5C;
-        sub_020630AC(param1->unk_68, &v0);
+        MapObject_SetSpritePosOffset(param1->unk_68, &v0);
 
         MapObject_GetPosPtr(param1->unk_68, &v4);
         v4.y = param1->unk_14.y;
@@ -5069,14 +5084,14 @@ static int ov9_0224D288(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
         }
 
         if (param1->unk_5C <= 0) {
-            sub_0206309C(v2, &v0);
+            MapObject_GetSpritePosOffset(v2, &v0);
             v0.y = param1->unk_50;
-            sub_020630AC(v2, &v0);
+            MapObject_SetSpritePosOffset(v2, &v0);
 
             if (param1->unk_68 != NULL) {
-                sub_0206309C(param1->unk_68, &v0);
+                MapObject_GetSpritePosOffset(param1->unk_68, &v0);
                 v0.y = param1->unk_54;
-                sub_020630AC(param1->unk_68, &v0);
+                MapObject_SetSpritePosOffset(param1->unk_68, &v0);
             }
 
             v3->y = param1->unk_58;
@@ -5087,7 +5102,7 @@ static int ov9_0224D288(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int ov9_0224D374(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D374(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     int v0;
     PlayerAvatar *playerAvatar = param0->fieldSystem->playerAvatar;
@@ -5130,7 +5145,7 @@ static int ov9_0224D374(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int ov9_0224D430(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D430(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     ov9_0224E0DC(param1->unk_64, 1);
 
@@ -5154,7 +5169,7 @@ static int ov9_0224D430(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
             MapObject_SetScript(param1->unk_68, 6);
         }
 
-        sub_02062914(param1->unk_68, param1->unk_06);
+        MapObject_SetMapID(param1->unk_68, param1->unk_06);
     }
 
     if (param1->unk_00 == 1) {
@@ -5169,7 +5184,7 @@ static int ov9_0224D430(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int ov9_0224D4C4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D4C4(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     int v0;
     PlayerAvatar *playerAvatar = param0->fieldSystem->playerAvatar;
@@ -5237,7 +5252,7 @@ static int ov9_0224D4C4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int ov9_0224D5E8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D5E8(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     if (ov9_0224CC7C(param0) == 0) {
         MapObject *v0 = Player_MapObject(param0->fieldSystem->playerAvatar);
@@ -5246,7 +5261,7 @@ static int ov9_0224D5E8(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
         MapObject_SetY(v0, param1->unk_0C);
         MapObject_SetZ(v0, param1->unk_0E);
         MapObject_UpdateCoords(v0);
-        sub_0205ED48(param0->fieldSystem->playerAvatar, 1);
+        PlayerAvatar_SetHeightCalculationEnabledAndUpdate(param0->fieldSystem->playerAvatar, TRUE);
 
         if (param1->unk_68 != NULL) {
             MapObject_SetY(param1->unk_68, param1->unk_0C);
@@ -5300,7 +5315,7 @@ static const MapObjectAnimCmd *const Unk_ov9_02251384[3] = {
     Unk_ov9_02251350
 };
 
-static int ov9_0224D69C(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D69C(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     int v0;
     MapObject *v1;
@@ -5319,7 +5334,7 @@ static int ov9_0224D69C(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int ov9_0224D6E0(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *param1)
+static int ov9_0224D6E0(DistWorldSystem *param0, UnkStruct_ov9_0224D078 *param1)
 {
     if (MapObject_HasAnimationEnded(param1->unk_6C) == 1) {
         VarsFlags *v0;
@@ -5338,7 +5353,7 @@ static int ov9_0224D6E0(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D078 *
     return 0;
 }
 
-static int (*const Unk_ov9_02252224[8])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_0224D078 *) = {
+static int (*const Unk_ov9_02252224[8])(DistWorldSystem *, UnkStruct_ov9_0224D078 *) = {
     ov9_0224D0C8,
     ov9_0224D288,
     ov9_0224D374,
@@ -5349,127 +5364,116 @@ static int (*const Unk_ov9_02252224[8])(UnkStruct_ov9_02249B04 *, UnkStruct_ov9_
     ov9_0224D6E0
 };
 
-static const UnkStruct_ov9_022530A4 *ov9_0224D720(int param0)
+static const DistWorldMapConnections *GetConnectionsForMap(int mapHeaderID)
 {
-    int v0 = 0;
-    const UnkStruct_ov9_022530A4 *v1 = Unk_ov9_022530A4;
+    int i = 0;
+    const DistWorldMapConnections *iter = sDistWorldMapConnectionList;
 
-    while (v0 < 10) {
-        if (v1->unk_00 == param0) {
-            return v1;
+    while (i < DISTORTION_WORLD_MAP_COUNT) {
+        if (iter->currID == mapHeaderID) {
+            return iter;
         }
 
-        v0++;
-        v1++;
+        i++;
+        iter++;
     }
 
     GF_ASSERT(0);
     return NULL;
 }
 
-static void ov9_0224D744(UnkStruct_ov9_02249B04 *param0)
+static void InitPropRenderBuffers(DistWorldSystem *system)
 {
-    int v0;
-    UnkStruct_ov9_0224D744 *v1 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
+    memset((u8 *)renderBuffs, 0, sizeof(DistWorldPropRenderBuffers));
 
-    memset((u8 *)v1, 0, sizeof(UnkStruct_ov9_0224D744));
-
-    for (v0 = 0; v0 < 25; v0++) {
-        v1->unk_00[v0].unk_00 = 25;
+    for (int i = 0; i < PROP_KIND_COUNT; i++) {
+        renderBuffs->models[i].propKind = PROP_KIND_INVALID;
     }
 
-    for (v0 = 0; v0 < 5; v0++) {
-        v1->unk_258[v0].unk_00 = 5;
+    for (int i = 0; i < PROP_ANIM_KIND_COUNT; i++) {
+        renderBuffs->animSets[i].animKind = PROP_ANIM_KIND_INVALID;
     }
 }
 
-static void ov9_0224D780(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void LoadProp3DModel(DistWorldSystem *system, u32 propKind)
 {
-    UnkStruct_ov9_0224D744 *v0 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
+    GF_ASSERT(propKind < PROP_KIND_COUNT);
 
-    GF_ASSERT(param1 < 25);
-
-    if (v0->unk_00[param1].unk_00 == 25) {
-        v0->unk_00[param1].unk_00 = param1;
-        ov5_021DFB00(param0->fieldSystem->unk_40, &v0->unk_00[param1].unk_04, 0, Unk_ov9_02252FD0[param1], 1);
+    if (renderBuffs->models[propKind].propKind == PROP_KIND_INVALID) {
+        renderBuffs->models[propKind].propKind = propKind;
+        FieldEffectManager_LoadModel(system->fieldSystem->fieldEffMan, &renderBuffs->models[propKind].model, 0, sProp3DModelNARCIndexByKind[propKind], TRUE);
     }
 }
 
-static void ov9_0224D7C0(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void FreeProp3DModel(DistWorldSystem *system, u32 propKind)
 {
-    UnkStruct_ov9_0224D744 *v0 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
+    GF_ASSERT(propKind < PROP_KIND_COUNT);
 
-    GF_ASSERT(param1 < 25);
-
-    if (v0->unk_00[param1].unk_00 != 25) {
-        v0->unk_00[param1].unk_00 = 25;
-        sub_0207395C(&v0->unk_00[param1].unk_04);
+    if (renderBuffs->models[propKind].propKind != PROP_KIND_INVALID) {
+        renderBuffs->models[propKind].propKind = PROP_KIND_INVALID;
+        Simple3D_FreeModel(&renderBuffs->models[propKind].model);
     }
 }
 
-static UnkStruct_02073838 *ov9_0224D7EC(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static Simple3DModel *GetProp3DModel(DistWorldSystem *system, u32 propKind)
 {
-    UnkStruct_ov9_0224D744 *v0 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
 
-    GF_ASSERT(param1 < 25);
-    GF_ASSERT(v0->unk_00[param1].unk_00 != 25);
+    GF_ASSERT(propKind < PROP_KIND_COUNT);
+    GF_ASSERT(renderBuffs->models[propKind].propKind != PROP_KIND_INVALID);
 
-    return &v0->unk_00[param1].unk_04;
+    return &renderBuffs->models[propKind].model;
 }
 
-static void ov9_0224D814(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void LoadPropAnimSet(DistWorldSystem *system, u32 animKind)
 {
-    UnkStruct_ov9_0224D744 *v0 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
+    GF_ASSERT(animKind < PROP_ANIM_KIND_COUNT);
 
-    GF_ASSERT(param1 < 5);
+    if (renderBuffs->animSets[animKind].animKind == PROP_ANIM_KIND_INVALID) {
+        u32 narcIndex = sPropAnimSetNARCIndexByKind[animKind];
+        u32 animSetSize = FieldEffectManager_GetNARCMemberSize(system->fieldSystem->fieldEffMan, narcIndex);
 
-    if (v0->unk_258[param1].unk_00 == 5) {
-        u32 v1 = Unk_ov9_022514A4[param1];
-        u32 v2 = ov5_021DF5A8(param0->fieldSystem->unk_40, v1);
-
-        v0->unk_258[param1].unk_04 = Heap_AllocFromHeapAtEnd(4, v2);
-        ov5_021DF5B4(param0->fieldSystem->unk_40, v1, v0->unk_258[param1].unk_04);
-        v0->unk_258[param1].unk_00 = param1;
+        renderBuffs->animSets[animKind].animSet = Heap_AllocAtEnd(HEAP_ID_FIELD1, animSetSize);
+        FieldEffectManager_ReadNARCWholeMember(system->fieldSystem->fieldEffMan, narcIndex, renderBuffs->animSets[animKind].animSet);
+        renderBuffs->animSets[animKind].animKind = animKind;
     }
 }
 
-static void ov9_0224D874(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void FreePropAnimSet(DistWorldSystem *system, u32 animKind)
 {
-    UnkStruct_ov9_0224D744 *v0 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
+    GF_ASSERT(animKind < PROP_ANIM_KIND_COUNT);
 
-    GF_ASSERT(param1 < 5);
-
-    if (v0->unk_258[param1].unk_00 != 5) {
-        v0->unk_258[param1].unk_00 = 5;
-        Heap_FreeToHeap(v0->unk_258[param1].unk_04);
+    if (renderBuffs->animSets[animKind].animKind != PROP_ANIM_KIND_INVALID) {
+        renderBuffs->animSets[animKind].animKind = PROP_ANIM_KIND_INVALID;
+        Heap_Free(renderBuffs->animSets[animKind].animSet);
     }
 }
 
-static UnkStruct_ov9_0224D928 *ov9_0224D8A4(UnkStruct_ov9_02249B04 *param0, u32 param1, int *param2)
+static DistWorldPropRenderer *DistWorldPropRenderer_Init(DistWorldSystem *system, u32 propKind, BOOL *alreadyInit)
 {
-    int v0;
-    BOOL v1;
-    UnkStruct_ov9_0224D744 *v2 = &param0->unk_3A4;
+    int i;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
 
-    v1 = ov9_0224DB04(param1);
-
-    if (v1 == 1) {
-        for (v0 = 0; v0 < 34; v0++) {
-            if (v2->unk_280[v0].unk_00 == 1) {
-                if (v2->unk_280[v0].unk_02 == param1) {
-                    *param2 = 1;
-                    return &v2->unk_280[v0];
-                }
+    if (DistWorldPropAnimInfo_IsStatic(propKind) == TRUE) {
+        for (i = 0; i < GHOST_PROP_RENDERER_COUNT; i++) {
+            if (renderBuffs->renderers[i].valid == TRUE && renderBuffs->renderers[i].propKind == propKind) {
+                *alreadyInit = TRUE;
+                return &renderBuffs->renderers[i];
             }
         }
     }
 
-    for (v0 = 0; v0 < 34; v0++) {
-        if (v2->unk_280[v0].unk_00 == 0) {
-            *param2 = 0;
-            v2->unk_280[v0].unk_00 = 1;
-            v2->unk_280[v0].unk_02 = param1;
-            return &v2->unk_280[v0];
+    for (i = 0; i < GHOST_PROP_RENDERER_COUNT; i++) {
+        if (!renderBuffs->renderers[i].valid) {
+            *alreadyInit = FALSE;
+            renderBuffs->renderers[i].valid = TRUE;
+            renderBuffs->renderers[i].propKind = propKind;
+            return &renderBuffs->renderers[i];
         }
     }
 
@@ -5477,186 +5481,160 @@ static UnkStruct_ov9_0224D928 *ov9_0224D8A4(UnkStruct_ov9_02249B04 *param0, u32 
     return NULL;
 }
 
-static void ov9_0224D928(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D928 *param1)
+static void DistWorldPropRenderer_Invalidate(DistWorldSystem *system, DistWorldPropRenderer *propRenderer)
 {
-    GF_ASSERT(param1 != NULL);
-    param1->unk_00 = 0;
+    GF_ASSERT(propRenderer != NULL);
+    propRenderer->valid = FALSE;
 }
 
-static void ov9_0224D938(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224D928 *param1)
+static void DistWorldPropRenderer_InvalidateAnimated(DistWorldSystem *system, DistWorldPropRenderer *propRenderer)
 {
-    BOOL v0;
-
-    v0 = ov9_0224DB04(param1->unk_02);
-
-    if (v0 == 0) {
-        ov9_0224D928(param0, param1);
+    if (!DistWorldPropAnimInfo_IsStatic(propRenderer->propKind)) {
+        DistWorldPropRenderer_Invalidate(system, propRenderer);
     }
 }
 
-static void ov9_0224D954(UnkStruct_ov9_02249B04 *param0, int param1)
+static void InvalidateAllPropRenderersOfKind(DistWorldSystem *system, int propKind)
 {
-    int v0;
-    UnkStruct_ov9_0224D744 *v1 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
 
-    for (v0 = 0; v0 < 34; v0++) {
-        if (v1->unk_280[v0].unk_00 && (v1->unk_280[v0].unk_02 == param1)) {
-            ov9_0224D928(param0, &v1->unk_280[v0]);
+    for (int i = 0; i < GHOST_PROP_RENDERER_COUNT; i++) {
+        if (renderBuffs->renderers[i].valid && renderBuffs->renderers[i].propKind == propKind) {
+            DistWorldPropRenderer_Invalidate(system, &renderBuffs->renderers[i]);
         }
     }
 }
 
-static void ov9_0224D994(UnkStruct_ov9_02249B04 *param0)
+static void FreePropRenderBuffers(DistWorldSystem *system)
 {
-    int v0;
-    UnkStruct_ov9_0224D744 *v1 = &param0->unk_3A4;
-
-    for (v0 = 0; v0 < 25; v0++) {
-        ov9_0224D7C0(param0, v0);
+    for (int i = 0; i < PROP_KIND_COUNT; i++) {
+        FreeProp3DModel(system, i);
     }
 
-    for (v0 = 0; v0 < 5; v0++) {
-        ov9_0224D874(param0, v0);
+    for (int i = 0; i < PROP_ANIM_KIND_COUNT; i++) {
+        FreePropAnimSet(system, i);
     }
 }
 
-static void ov9_0224D9BC(UnkStruct_ov9_02249B04 *param0, u32 param1, u32 param2, UnkStruct_02073B50 *param3, UnkStruct_02073974 *param4)
+static void LoadRenderBuffersForPropEx(DistWorldSystem *system, u32 propKind, u32 animKind, Simple3DRenderObj *renderObj, Simple3DAnimation *animation)
 {
-    UnkStruct_ov9_0224D744 *v0 = &param0->unk_3A4;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
 
-    if (param1 != 25) {
-        if (v0->unk_00[param1].unk_00 == 25) {
-            ov9_0224D780(param0, param1);
+    if (propKind != PROP_KIND_INVALID) {
+        if (renderBuffs->models[propKind].propKind == PROP_KIND_INVALID) {
+            LoadProp3DModel(system, propKind);
         }
 
-        sub_02073B70(param3, &v0->unk_00[param1].unk_04);
+        Simple3D_CreateRenderObject(renderObj, &renderBuffs->models[propKind].model);
     }
 
-    if (param2 != 5) {
-        if (v0->unk_258[param2].unk_00 == 5) {
-            ov9_0224D814(param0, param2);
+    if (animKind != PROP_ANIM_KIND_INVALID) {
+        if (renderBuffs->animSets[animKind].animKind == PROP_ANIM_KIND_INVALID) {
+            LoadPropAnimSet(system, animKind);
         }
 
-        sub_02073994(param4, v0->unk_258[param2].unk_04, 0);
-        sub_02073A3C(param4, &v0->unk_00[param1].unk_04, 4);
-        sub_02073A5C(param4, &v0->unk_00[param1].unk_04);
-        sub_02073B84(param3, param4);
+        Simple3D_LoadFromAllocatedSet(animation, renderBuffs->animSets[animKind].animSet, 0);
+        Simple3D_BindModelToAnim(animation, &renderBuffs->models[propKind].model, HEAP_ID_FIELD1);
+        Simple3D_InitG3DAnimObject(animation, &renderBuffs->models[propKind].model);
+        Simple3D_BindAnimToRenderObj(renderObj, animation);
     }
 }
 
-static void ov9_0224DA48(UnkStruct_ov9_02249B04 *param0, int param1, UnkStruct_02073B50 *param2, UnkStruct_02073974 *param3)
+static void LoadRenderBuffersForProp(DistWorldSystem *system, int propKind, Simple3DRenderObj *renderObj, Simple3DAnimation *animation)
 {
-    const UnkStruct_ov9_022531D0 *v0 = &Unk_ov9_022531D0[param1];
-    ov9_0224D9BC(param0, v0->unk_00, v0->unk_02, param2, param3);
+    const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[propKind];
+    LoadRenderBuffersForPropEx(system, animInfo->propKind, animInfo->animKind, renderObj, animation);
 }
 
-static void ov9_0224DA64(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3)
+static void SetPropOpacityAndPolygonID(DistWorldSystem *system, int propKind, int opacity, int polygonID)
 {
-    const UnkStruct_ov9_022531D0 *v0 = &Unk_ov9_022531D0[param1];
-    int v1 = v0->unk_00;
-    UnkStruct_ov9_0224D744 *v2 = &param0->unk_3A4;
+    const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[propKind];
+    int propKind2 = animInfo->propKind;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
 
-    NNS_G3dMdlUseMdlAlpha(v2->unk_00[v1].unk_04.unk_0C);
-    NNS_G3dMdlSetMdlAlphaAll(v2->unk_00[v1].unk_04.unk_0C, param2);
+    NNS_G3dMdlUseMdlAlpha(renderBuffs->models[propKind2].model.g3DModel);
+    NNS_G3dMdlSetMdlAlphaAll(renderBuffs->models[propKind2].model.g3DModel, opacity);
 
-    if (param3 != -1) {
-        param3 &= 0x3f;
-        NNS_G3dMdlSetMdlPolygonIDAll(v2->unk_00[v1].unk_04.unk_0C, param3);
+    if (polygonID != -1) {
+        polygonID &= NNS_G3D_POLYGON_ID_MASK;
+        NNS_G3dMdlSetMdlPolygonIDAll(renderBuffs->models[propKind2].model.g3DModel, polygonID);
     }
 }
 
-static void ov9_0224DAAC(UnkStruct_ov9_02249B04 *param0, int param1, int param2)
+static void SetPropOpacity(DistWorldSystem *system, int propKind, int opacity)
 {
-    ov9_0224DA64(param0, param1, param2, -1);
+    SetPropOpacityAndPolygonID(system, propKind, opacity, -1);
 }
 
-static void ov9_0224DAB8(UnkStruct_ov9_02249B04 *param0, int param1, int param2)
+static void SetPropPolygonID(DistWorldSystem *system, int propKind, int polygonID)
 {
-    const UnkStruct_ov9_022531D0 *v0 = &Unk_ov9_022531D0[param1];
-    int v1 = v0->unk_00;
-    UnkStruct_ov9_0224D744 *v2 = &param0->unk_3A4;
+    const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[propKind];
+    int propKind2 = animInfo->propKind;
+    DistWorldPropRenderBuffers *renderBuffs = &system->propRenderBuffs;
 
-    GF_ASSERT(v2->unk_00[v1].unk_00 < 25);
-    param2 &= 0x3f;
+    GF_ASSERT(renderBuffs->models[propKind2].propKind < PROP_KIND_COUNT);
+    polygonID &= NNS_G3D_POLYGON_ID_MASK;
 
-    NNS_G3dMdlSetMdlPolygonIDAll(v2->unk_00[v1].unk_04.unk_0C, param2);
+    NNS_G3dMdlSetMdlPolygonIDAll(renderBuffs->models[propKind2].model.g3DModel, polygonID);
 }
 
-static BOOL ov9_0224DAEC(int param0)
+static BOOL DistWorldPropAnimInfo_IsAnimKindValid(int propKind)
 {
-    const UnkStruct_ov9_022531D0 *v0 = &Unk_ov9_022531D0[param0];
-
-    if (v0->unk_02 != 5) {
-        return 1;
-    }
-
-    return 0;
+    const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[propKind];
+    return animInfo->animKind != PROP_ANIM_KIND_INVALID;
 }
 
-static BOOL ov9_0224DB04(int param0)
+static BOOL DistWorldPropAnimInfo_IsStatic(int propKind)
 {
-    const UnkStruct_ov9_022531D0 *v0 = &Unk_ov9_022531D0[param0];
-
-    if (v0->unk_04 == 1) {
-        return 1;
-    }
-
-    return 0;
+    const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[propKind];
+    return animInfo->isStatic == TRUE;
 }
 
-static void ov9_0224DB1C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224DB1C(DistWorldSystem *system)
 {
-    int v0;
-
-    for (v0 = 0; v0 < 25; v0++) {
-        if ((ov9_0224B8DC(param0, v0) == 0) && (ov9_0224E160(param0, v0) == 0) && (ov9_0224E9F4(param0, v0) == 0) && (ov9_0224ECC0(param0, v0) == 0)) {
-            ov9_0224D954(param0, v0);
+    for (int i = 0; i < PROP_KIND_COUNT; i++) {
+        if (!HasActivePropAnimManager(system, i) && !ov9_0224E160(system, i) && !IsGiratinaShadowPropRendererValid(system, i) && !HasActiveSimpleProp(system, i)) {
+            InvalidateAllPropRenderersOfKind(system, i);
         }
     }
 
-    for (v0 = 0; v0 < 25; v0++) {
-        if ((ov9_0224B7B0(param0, v0) == 0) && (ov9_0224E0E0(param0, v0) == 0) && (ov9_0224E9A4(param0, v0) == 0) && (ov9_0224ECE8(param0, v0) == 0)) {
-            ov9_0224D7C0(param0, v0);
+    for (int i = 0; i < PROP_KIND_COUNT; i++) {
+        if (!ov9_0224B7B0(system, i) && !ov9_0224E0E0(system, i) && !IsGiratinaShadowPropRendererValid2(system, i) && !HasActiveSimpleProp2(system, i)) {
+            FreeProp3DModel(system, i);
         }
     }
 
-    for (v0 = 0; v0 < 5; v0++) {
-        if ((ov9_0224B844(param0, v0) == 0) && (ov9_0224E120(param0, v0) == 0) && (ov9_0224E9CC(param0, v0) == 0) && (ov9_0224ED20(param0, v0) == 0)) {
-            ov9_0224D874(param0, v0);
+    for (int i = 0; i < PROP_ANIM_KIND_COUNT; i++) {
+        if (!ov9_0224B844(system, i) && !ov9_0224E120(system, i) && !IsGiratinaShadowPropRendererAnimValid(system, i) && !HasActiveSimplePropAnim(system, i)) {
+            FreePropAnimSet(system, i);
         }
     }
 }
 
-static BOOL ov9_0224DBE4(UnkStruct_ov9_02249B04 *param0, int param1, VecFx32 *param2)
+static BOOL IsPropInView(DistWorldSystem *system, int propKind, VecFx32 *pos)
 {
-    const VecFx32 *v0 = &Unk_ov9_022533C4[param1];
+    const VecFx32 *scale = &sPropScaleByKind[propKind];
 
-    if (v0->x == 0) {
-        return 1;
+    if (scale->x == 0) {
+        return TRUE;
     }
 
-    {
-        const UnkStruct_ov9_022531D0 *v1 = &Unk_ov9_022531D0[param1];
-        UnkStruct_02073838 *v2 = ov9_0224D7EC(param0, v1->unk_00);
-        MtxFx33 v3;
+    const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[propKind];
+    Simple3DModel *propModel = GetProp3DModel(system, animInfo->propKind);
 
-        MTX_Identity33(&v3);
+    MtxFx33 identityMtx;
+    MTX_Identity33(&identityMtx);
 
-        if (sub_0201CED8(v2->unk_0C, param2, &v3, v0)) {
-            return 1;
-        }
-    }
-
-    return 0;
+    return GFXBoxTest_IsModelInView(propModel->g3DModel, pos, &identityMtx, scale) ? TRUE : FALSE;
 }
 
-static void ov9_0224DC34(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224DC34(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224DC34 *v0 = &param0->unk_1734;
     memset(v0, 0, sizeof(UnkStruct_ov9_0224DC34));
 }
 
-static void ov9_0224DC4C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224DC4C(DistWorldSystem *param0)
 {
     int v0;
     UnkStruct_ov9_0224DC34 *v1 = &param0->unk_1734;
@@ -5668,7 +5646,7 @@ static void ov9_0224DC4C(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224DC74(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224DC74(DistWorldSystem *param0, u32 param1)
 {
     int v0;
     UnkStruct_ov9_0224DC34 *v1 = &param0->unk_1734;
@@ -5686,41 +5664,39 @@ static void ov9_0224DC74(UnkStruct_ov9_02249B04 *param0, u32 param1)
     }
 }
 
-static void ov9_0224DCA8(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224DCA8(DistWorldSystem *param0)
 {
-    if (ov9_02249D38(param0) == 1) {
+    if (IsPersistedDataValid(param0) == 1) {
         int v0 = 0;
         UnkStruct_ov9_0224E0DC *v1;
         MapObject *v2;
         MapObjectManager *v3 = param0->fieldSystem->mapObjMan;
 
-        while (sub_020625B0(v3, &v2, &v0, (1 << 0)) == 1) {
+        while (MapObjectMan_FindObjectWithStatus(v3, &v2, &v0, (1 << 0)) == 1) {
             if (MapObject_GetLocalID(v2) == 0xfd) {
                 v1 = ov9_0224DDDC(param0);
                 ov9_0224DF10(param0, v1, v2);
             }
         }
     } else {
-        u32 v4 = ov9_022510D0(param0);
-        const UnkStruct_ov9_022530A4 *v5 = ov9_0224D720(v4);
+        u32 v4 = DistWorldSystem_GetMapHeaderID(param0);
+        const DistWorldMapConnections *v5 = GetConnectionsForMap(v4);
 
         ov9_0224DD24(param0, v4);
-        ov9_0224DD24(param0, v5->unk_08);
+        ov9_0224DD24(param0, v5->nextID);
     }
 }
 
-static void ov9_0224DD24(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224DD24(DistWorldSystem *param0, u32 param1)
 {
-    const UnkStruct_ov9_02252C38 *v0;
-
-    v0 = ov9_0224DE40(param1);
+    const UnkStruct_ov9_02252C38 *v0 = ov9_0224DE40(param1);
 
     if (v0 != NULL) {
         ov9_0224DD40(param0, v0, param1);
     }
 }
 
-static void ov9_0224DD40(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252C38 *param1, u32 param2)
+static void ov9_0224DD40(DistWorldSystem *param0, const UnkStruct_ov9_02252C38 *param1, u32 param2)
 {
     u32 v0;
     int v1 = 0;
@@ -5744,11 +5720,9 @@ static void ov9_0224DD40(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_022
     }
 }
 
-static void ov9_0224DDA0(UnkStruct_ov9_02249B04 *param0, u32 param1, int param2)
+static void ov9_0224DDA0(DistWorldSystem *param0, u32 param1, int param2)
 {
-    const UnkStruct_ov9_02252C38 *v0;
-
-    v0 = ov9_0224DE40(param1);
+    const UnkStruct_ov9_02252C38 *v0 = ov9_0224DE40(param1);
 
     if (ov9_0224DE08(param0, v0->unk_04[param2]->unk_00, param1) == NULL) {
         UnkStruct_ov9_0224E0DC *v1;
@@ -5758,7 +5732,7 @@ static void ov9_0224DDA0(UnkStruct_ov9_02249B04 *param0, u32 param1, int param2)
     }
 }
 
-static UnkStruct_ov9_0224E0DC *ov9_0224DDDC(UnkStruct_ov9_02249B04 *param0)
+static UnkStruct_ov9_0224E0DC *ov9_0224DDDC(DistWorldSystem *param0)
 {
     int v0 = 0;
     UnkStruct_ov9_0224DC34 *v1 = &param0->unk_1734;
@@ -5775,7 +5749,7 @@ static UnkStruct_ov9_0224E0DC *ov9_0224DDDC(UnkStruct_ov9_02249B04 *param0)
     return NULL;
 }
 
-static UnkStruct_ov9_0224E0DC *ov9_0224DE08(UnkStruct_ov9_02249B04 *param0, u32 param1, u32 param2)
+static UnkStruct_ov9_0224E0DC *ov9_0224DE08(DistWorldSystem *param0, u32 param1, u32 param2)
 {
     int v0 = 0;
     UnkStruct_ov9_0224DC34 *v1 = &param0->unk_1734;
@@ -5810,9 +5784,7 @@ static const UnkStruct_ov9_02252C38 *ov9_0224DE40(u32 param0)
 
 static const UnkStruct_ov9_0224DF10 *ov9_0224DE60(u32 param0, u32 param1)
 {
-    const UnkStruct_ov9_02252C38 *v0;
-
-    v0 = ov9_0224DE40(param0);
+    const UnkStruct_ov9_02252C38 *v0 = ov9_0224DE40(param0);
     return v0->unk_04[param1];
 }
 
@@ -5834,26 +5806,24 @@ static const UnkStruct_ov9_02253830 *ov9_0224DE70(u32 param0)
     return NULL;
 }
 
-static MapObject *ov9_0224DE94(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, int param4, int param5, u32 param6)
+static MapObject *ov9_0224DE94(DistWorldSystem *param0, int param1, int param2, int param3, int param4, int param5, u32 param6)
 {
-    MapObject *v0;
-
-    v0 = MapObjectMan_AddMapObject(param0->fieldSystem->mapObjMan, param1, param3, 0, 0x2000, 0x0, ov9_022510D0(param0));
+    MapObject *v0 = MapObjectMan_AddMapObject(param0->fieldSystem->mapObjMan, param1, param3, 0, 0x2000, 0x0, DistWorldSystem_GetMapHeaderID(param0));
 
     MapObject_SetY(v0, param2);
     MapObject_SetLocalID(v0, 0xfd);
     MapObject_SetDataAt(v0, param4, 0);
     MapObject_SetDataAt(v0, param6, 1);
     MapObject_SetDataAt(v0, param5, 2);
-    sub_02062E5C(v0, 1);
+    MapObject_SetFlagIsPersistent(v0, 1);
     sub_02062D80(v0, 0);
-    sub_02062E28(v0, 1);
+    MapObject_SetHeightCalculationDisabled(v0, TRUE);
     sub_02062FC4(v0, 1);
 
     return v0;
 }
 
-static void ov9_0224DF10(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, MapObject *param2)
+static void ov9_0224DF10(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, MapObject *param2)
 {
     u32 v0, v1, v2, v3;
     const UnkStruct_ov9_0224DF10 *v4;
@@ -5873,15 +5843,15 @@ static void ov9_0224DF10(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC 
     param1->unk_1C = param2;
     param1->unk_20 = ov9_0224DFA0(param0, param1);
 
-    sub_02062E5C(param2, 1);
+    MapObject_SetFlagIsPersistent(param2, 1);
     sub_02062D80(param2, 0);
-    sub_02062E28(param2, 1);
+    MapObject_SetHeightCalculationDisabled(param2, TRUE);
     sub_02062FC4(param2, 1);
 }
 
-static UnkStruct_ov101_021D5D90 *ov9_0224DFA0(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1)
+static OverworldAnimManager *ov9_0224DFA0(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1)
 {
-    UnkStruct_ov101_021D5D90 *v0;
+    OverworldAnimManager *v0;
     UnkStruct_ov9_0224DFA0 v1;
 
     v1.unk_00 = param1->unk_04.unk_02;
@@ -5895,11 +5865,11 @@ static UnkStruct_ov101_021D5D90 *ov9_0224DFA0(UnkStruct_ov9_02249B04 *param0, Un
         v1.unk_08 = 1;
     }
 
-    v0 = ov5_021DF72C(param0->fieldSystem->unk_40, &Unk_ov9_02251468, NULL, 0, &v1, 0);
+    v0 = FieldEffectManager_InitAnimManager(param0->fieldSystem->fieldEffMan, &Unk_ov9_02251468, NULL, 0, &v1, 0);
     return v0;
 }
 
-static void ov9_0224DFF4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, const UnkStruct_ov9_0224DF10 *param2, u32 param3)
+static void ov9_0224DFF4(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, const UnkStruct_ov9_0224DF10 *param2, u32 param3)
 {
     param1->unk_00 = 1;
     param1->unk_02 = param3;
@@ -5908,16 +5878,16 @@ static void ov9_0224DFF4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC 
     param1->unk_20 = ov9_0224DFA0(param0, param1);
 }
 
-static void ov9_0224E044(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1)
+static void ov9_0224E044(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1)
 {
     if (param1->unk_20 != NULL) {
-        sub_0207136C(param1->unk_20);
+        OverworldAnimManager_Finish(param1->unk_20);
     }
 
     memset(param1, 0, sizeof(UnkStruct_ov9_0224E0DC));
 }
 
-static void ov9_0224E060(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1)
+static void ov9_0224E060(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1)
 {
     if (param1->unk_1C != NULL) {
         MapObject_Delete(param1->unk_1C);
@@ -5926,7 +5896,7 @@ static void ov9_0224E060(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC 
     ov9_0224E044(param0, param1);
 }
 
-static void ov9_0224E07C(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2)
+static void ov9_0224E07C(DistWorldSystem *param0, UnkStruct_ov9_0224E0DC *param1, u32 param2)
 {
     param1->unk_02 = param2;
 
@@ -5954,11 +5924,11 @@ static void ov9_0224E0DC(UnkStruct_ov9_0224E0DC *param0, u32 param1)
     param0->unk_01 = param1;
 }
 
-static BOOL ov9_0224E0E0(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL ov9_0224E0E0(DistWorldSystem *param0, u32 param1)
 {
     int v0;
     u16 v1;
-    const UnkStruct_ov9_022531D0 *v2;
+    const DistWorldPropAnimInfo *v2;
     UnkStruct_ov9_0224DC34 *v3 = &param0->unk_1734;
 
     GF_ASSERT(param1 != 25);
@@ -5966,9 +5936,9 @@ static BOOL ov9_0224E0E0(UnkStruct_ov9_02249B04 *param0, u32 param1)
     for (v0 = 0; v0 < 32; v0++) {
         if (v3->unk_00[v0].unk_00) {
             v1 = v3->unk_00[v0].unk_04.unk_10;
-            v2 = &Unk_ov9_022531D0[v1];
+            v2 = &sPropAnimInfoByKind[v1];
 
-            if (param1 == v2->unk_00) {
+            if (param1 == v2->propKind) {
                 return 1;
             }
         }
@@ -5977,11 +5947,11 @@ static BOOL ov9_0224E0E0(UnkStruct_ov9_02249B04 *param0, u32 param1)
     return 0;
 }
 
-static BOOL ov9_0224E120(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL ov9_0224E120(DistWorldSystem *param0, u32 param1)
 {
     int v0;
     u16 v1;
-    const UnkStruct_ov9_022531D0 *v2;
+    const DistWorldPropAnimInfo *v2;
     UnkStruct_ov9_0224DC34 *v3 = &param0->unk_1734;
 
     GF_ASSERT(param1 != 5);
@@ -5989,9 +5959,9 @@ static BOOL ov9_0224E120(UnkStruct_ov9_02249B04 *param0, u32 param1)
     for (v0 = 0; v0 < 32; v0++) {
         if (v3->unk_00[v0].unk_00) {
             v1 = v3->unk_00[v0].unk_04.unk_10;
-            v2 = &Unk_ov9_022531D0[v1];
+            v2 = &sPropAnimInfoByKind[v1];
 
-            if (param1 == v2->unk_02) {
+            if (param1 == v2->animKind) {
                 return 1;
             }
         }
@@ -6000,24 +5970,20 @@ static BOOL ov9_0224E120(UnkStruct_ov9_02249B04 *param0, u32 param1)
     return 0;
 }
 
-static BOOL ov9_0224E160(UnkStruct_ov9_02249B04 *param0, int param1)
+static BOOL ov9_0224E160(DistWorldSystem *system, int propKind)
 {
-    int v0;
-    const UnkStruct_ov9_022531D0 *v1;
-    UnkStruct_ov9_0224DC34 *v2 = &param0->unk_1734;
+    UnkStruct_ov9_0224DC34 *v2 = &system->unk_1734;
 
-    for (v0 = 0; v0 < 32; v0++) {
-        if (v2->unk_00[v0].unk_00) {
-            if (v2->unk_00[v0].unk_04.unk_10 == param1) {
-                return 1;
-            }
+    for (int i = 0; i < 32; i++) {
+        if (v2->unk_00[i].unk_00 && v2->unk_00[i].unk_04.unk_10 == propKind) {
+            return TRUE;
         }
     }
 
-    return 0;
+    return FALSE;
 }
 
-static UnkStruct_ov9_0224E0DC *ov9_0224E188(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3, u32 param4)
+static UnkStruct_ov9_0224E0DC *ov9_0224E188(DistWorldSystem *param0, int param1, int param2, int param3, u32 param4)
 {
     int v0 = 32;
     UnkStruct_ov9_0224E0DC *v1 = param0->unk_1734.unk_00;
@@ -6038,25 +6004,25 @@ static UnkStruct_ov9_0224E0DC *ov9_0224E188(UnkStruct_ov9_02249B04 *param0, int 
     return NULL;
 }
 
-static int ov9_0224E1CC(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static int ov9_0224E1CC(OverworldAnimManager *param0, void *param1)
 {
     int v0;
     UnkStruct_ov9_0224E1CC *v1 = param1;
-    const UnkStruct_ov9_0224DFA0 *v2 = sub_020715BC(param0);
+    const UnkStruct_ov9_0224DFA0 *v2 = OverworldAnimManager_GetUserData(param0);
 
     v1->unk_10 = *v2;
-    v1->unk_20 = ov9_0224D8A4(v2->unk_0C, v2->unk_06, &v0);
+    v1->unk_20 = DistWorldPropRenderer_Init(v2->unk_0C, v2->unk_06, &v0);
 
     if (v0 == 0) {
-        ov9_0224DA48(v2->unk_0C, v2->unk_06, &v1->unk_20->unk_04, &v1->unk_20->unk_58);
+        LoadRenderBuffersForProp(v2->unk_0C, v2->unk_06, &v1->unk_20->renderObj, &v1->unk_20->animation);
     }
 
-    sub_02064450(v2->unk_00, v2->unk_04, &v1->unk_04);
+    VecFx32_SetPosFromMapCoords(v2->unk_00, v2->unk_04, &v1->unk_04);
     v1->unk_04.y = (((v2->unk_02) << 4) * FX32_ONE) + ((16 * FX32_ONE) >> 1);
 
     {
         VecFx32 v3;
-        const VecFx32 *v4 = &Unk_ov9_02253298[v2->unk_06];
+        const VecFx32 *v4 = &sPropInitialPosOffsetByKind[v2->unk_06];
 
         v1->unk_04.x += v4->x;
         v1->unk_04.y += v4->y;
@@ -6079,18 +6045,18 @@ static int ov9_0224E1CC(UnkStruct_ov101_021D5D90 *param0, void *param1)
     return 1;
 }
 
-static void ov9_0224E274(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void ov9_0224E274(OverworldAnimManager *param0, void *param1)
 {
     UnkStruct_ov9_0224E1CC *v0 = param1;
 
-    if (ov9_0224DAEC(v0->unk_10.unk_06) == 1) {
-        sub_02073AA8(&v0->unk_20->unk_58);
+    if (DistWorldPropAnimInfo_IsAnimKindValid(v0->unk_10.unk_06) == 1) {
+        Simple3D_FreeAnimation(&v0->unk_20->animation);
     }
 
-    ov9_0224D938(v0->unk_10.unk_0C, v0->unk_20);
+    DistWorldPropRenderer_InvalidateAnimated(v0->unk_10.unk_0C, v0->unk_20);
 }
 
-static void ov9_0224E294(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void ov9_0224E294(OverworldAnimManager *param0, void *param1)
 {
     UnkStruct_ov9_0224E1CC *v0 = param1;
 
@@ -6104,7 +6070,7 @@ static void ov9_0224E294(UnkStruct_ov101_021D5D90 *param0, void *param1)
 
             if (v0->unk_02 < 31) {
                 if (v0->unk_02 == 0) {
-                    ov9_022511E0(1484);
+                    PlaySoundIfNotActive(SEQ_SE_PL_SYUWA3);
                 }
 
                 v0->unk_03++;
@@ -6119,7 +6085,7 @@ static void ov9_0224E294(UnkStruct_ov101_021D5D90 *param0, void *param1)
     }
 }
 
-static void ov9_0224E2E4(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void ov9_0224E2E4(OverworldAnimManager *param0, void *param1)
 {
     UnkStruct_ov9_0224E1CC *v0 = param1;
 
@@ -6127,18 +6093,18 @@ static void ov9_0224E2E4(UnkStruct_ov101_021D5D90 *param0, void *param1)
         if (v0->unk_00 == 1) {
             const UnkStruct_ov9_0224DFA0 *v1 = &v0->unk_10;
 
-            ov9_0224DA64(v1->unk_0C, v1->unk_06, v0->unk_02, 1);
-            sub_02073BB4(&v0->unk_20->unk_04, &v0->unk_04);
+            SetPropOpacityAndPolygonID(v1->unk_0C, v1->unk_06, v0->unk_02, 1);
+            Simple3D_DrawRenderObjWithPos(&v0->unk_20->renderObj, &v0->unk_04);
 
-            ov9_0224DAB8(v1->unk_0C, v1->unk_06, 0);
-            ov9_0224DAAC(v1->unk_0C, v1->unk_06, 31);
+            SetPropPolygonID(v1->unk_0C, v1->unk_06, 0);
+            SetPropOpacity(v1->unk_0C, v1->unk_06, 31);
         } else {
-            sub_02073BB4(&v0->unk_20->unk_04, &v0->unk_04);
+            Simple3D_DrawRenderObjWithPos(&v0->unk_20->renderObj, &v0->unk_04);
         }
     }
 }
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_02251468 = {
+static const OverworldAnimManagerFuncs Unk_ov9_02251468 = {
     sizeof(UnkStruct_ov9_0224E1CC),
     ov9_0224E1CC,
     ov9_0224E274,
@@ -6146,24 +6112,24 @@ static const UnkStruct_ov101_021D86B0 Unk_ov9_02251468 = {
     ov9_0224E2E4
 };
 
-static VecFx32 *ov9_0224E330(UnkStruct_ov101_021D5D90 *param0)
+static VecFx32 *ov9_0224E330(OverworldAnimManager *param0)
 {
-    UnkStruct_ov9_0224E1CC *v0 = sub_02071598(param0);
+    UnkStruct_ov9_0224E1CC *v0 = OverworldAnimManager_GetFuncsContext(param0);
     return &v0->unk_04;
 }
 
-static void ov9_0224E33C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224E33C(DistWorldSystem *param0)
 {
     UnkFuncPtr_ov9_0224E33C *v0 = &param0->unk_D8;
     memset(v0, 0, sizeof(UnkFuncPtr_ov9_0224E33C));
 }
 
-static void ov9_0224E34C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224E34C(DistWorldSystem *param0)
 {
     return;
 }
 
-static void ov9_0224E350(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02251438 *param1)
+static void ov9_0224E350(DistWorldSystem *param0, const UnkStruct_ov9_02251438 *param1)
 {
     UnkFuncPtr_ov9_0224E33C *v0 = &param0->unk_D8;
 
@@ -6176,7 +6142,7 @@ static void ov9_0224E350(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_022
     v0->unk_08 = param1;
 }
 
-static void *ov9_0224E37C(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void *ov9_0224E37C(DistWorldSystem *param0, u32 param1)
 {
     GF_ASSERT(param1 < 160);
 
@@ -6188,13 +6154,13 @@ static void *ov9_0224E37C(UnkStruct_ov9_02249B04 *param0, u32 param1)
     }
 }
 
-static void *ov9_0224E39C(UnkStruct_ov9_02249B04 *param0)
+static void *ov9_0224E39C(DistWorldSystem *param0)
 {
     u8 *v0 = param0->unk_D8.unk_0C;
     return v0;
 }
 
-static BOOL ov9_0224E3A0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1)
+static BOOL ov9_0224E3A0(DistWorldSystem *param0, FieldTask *param1)
 {
     int v0;
     int v1;
@@ -6244,10 +6210,10 @@ static const UnkStruct_ov9_02252044 *ov9_0224E410(u32 param0)
     return NULL;
 }
 
-static BOOL ov9_0224E434(UnkStruct_ov9_02249B04 *param0, int param1, int param2, int param3)
+static BOOL ov9_0224E434(DistWorldSystem *param0, int param1, int param2, int param3)
 {
     VarsFlags *v0 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
-    const UnkStruct_ov9_02252044 *v1 = ov9_0224E410(ov9_022510D0(param0));
+    const UnkStruct_ov9_02252044 *v1 = ov9_0224E410(DistWorldSystem_GetMapHeaderID(param0));
 
     if (v1 != NULL) {
         u16 v2, v3;
@@ -6257,7 +6223,7 @@ static BOOL ov9_0224E434(UnkStruct_ov9_02249B04 *param0, int param1, int param2,
                 v2 = v1->unk_08;
                 v3 = v1->unk_0A;
 
-                if (ov9_02251104(param0, v2, v3) == 1) {
+                if (CheckFlagCondition(param0, v2, v3) == 1) {
                     ov9_0224E4B0(param0, v1);
                     return 1;
                 }
@@ -6270,20 +6236,20 @@ static BOOL ov9_0224E434(UnkStruct_ov9_02249B04 *param0, int param1, int param2,
     return 0;
 }
 
-static void ov9_0224E498(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02251438 *param1)
+static void ov9_0224E498(DistWorldSystem *param0, const UnkStruct_ov9_02251438 *param1)
 {
     ov9_0224E350(param0, param1);
     FieldSystem_CreateTask(param0->fieldSystem, ov9_0224E4BC, param0);
 }
 
-static void ov9_0224E4B0(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252044 *param1)
+static void ov9_0224E4B0(DistWorldSystem *param0, const UnkStruct_ov9_02252044 *param1)
 {
     ov9_0224E498(param0, param1->unk_0C);
 }
 
 static BOOL ov9_0224E4BC(FieldTask *param0)
 {
-    UnkStruct_ov9_02249B04 *v0 = FieldTask_GetEnv(param0);
+    DistWorldSystem *v0 = FieldTask_GetEnv(param0);
 
     if (ov9_0224E3A0(v0, param0) == 1) {
         return 1;
@@ -6292,7 +6258,7 @@ static BOOL ov9_0224E4BC(FieldTask *param0)
     return 0;
 }
 
-static int ov9_0224E4D8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E4D8(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_0224E4D8 *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_0224E4D8));
 
@@ -6300,7 +6266,7 @@ static int ov9_0224E4D8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 1;
 }
 
-static int ov9_0224E4E8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E4E8(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     MapObject *v0;
     const UnkStruct_ov9_0224E4E8 *v1 = param3;
@@ -6317,7 +6283,7 @@ static int ov9_0224E4E8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_0224E520(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E520(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     MapObject *v0;
     const UnkStruct_ov9_0224E4E8 *v1 = param3;
@@ -6339,12 +6305,12 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251360[3] = {
     ov9_0224E520
 };
 
-static int ov9_0224E550(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E550(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_0224E550 *v0 = param3;
     UnkStruct_ov9_0224E5EC *v1 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_0224E5EC));
 
-    v1->unk_24 = ov9_0224DE08(param0, v0->unk_00, ov9_022510D0(param0));
+    v1->unk_24 = ov9_0224DE08(param0, v0->unk_00, DistWorldSystem_GetMapHeaderID(param0));
     GF_ASSERT(v1->unk_24 != NULL);
 
     v1->unk_0C.x = (((v0->unk_06) << 4) * FX32_ONE);
@@ -6364,19 +6330,19 @@ static int ov9_0224E550(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         VecFx32 v3;
         MapObject *v4 = Player_MapObject(param0->fieldSystem->playerAvatar);
 
-        sub_02062E28(v4, 1);
-        sub_0206309C(v4, &v3);
+        MapObject_SetHeightCalculationDisabled(v4, TRUE);
+        MapObject_GetSpritePosOffset(v4, &v3);
 
         v1->unk_28 = v3.y;
     }
 
-    Sound_PlayEffect(1482);
+    Sound_PlayEffect(SEQ_SE_PL_FW089B);
 
     *param2 = 1;
     return 0;
 }
 
-static int ov9_0224E5EC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E5EC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     MapObject *v0 = NULL;
     const UnkStruct_ov9_0224E550 *v1 = param3;
@@ -6392,10 +6358,10 @@ static int ov9_0224E5EC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     if (v0 != NULL) {
         VecFx32 v4;
 
-        sub_0206309C(v0, &v4);
+        MapObject_GetSpritePosOffset(v0, &v4);
         v4.y = v2->unk_28 + v2->unk_30;
 
-        sub_020630AC(v0, &v4);
+        MapObject_SetSpritePosOffset(v0, &v4);
         MapObject_GetPosPtr(v0, &v4);
         ov9_022511F4(v0, &v4);
     }
@@ -6419,9 +6385,9 @@ static int ov9_0224E5EC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
             if (v0 != NULL) {
                 VecFx32 v5;
 
-                sub_0206309C(v0, &v5);
+                MapObject_GetSpritePosOffset(v0, &v5);
                 v5.y = v2->unk_28;
-                sub_020630AC(v0, &v5);
+                MapObject_SetSpritePosOffset(v0, &v5);
 
                 MapObject_GetPosPtr(v0, &v5);
                 ov9_022511F4(v0, &v5);
@@ -6434,7 +6400,7 @@ static int ov9_0224E5EC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_0224E6B0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E6B0(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     VecFx32 v0 = { 0, 0, 0 };
     const UnkStruct_ov9_0224E550 *v1 = param3;
@@ -6488,7 +6454,7 @@ static int ov9_0224E6B0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_0224E798(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E798(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_0224E550 *v0 = param3;
 
@@ -6508,15 +6474,15 @@ static int ov9_0224E798(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
             PlayerAvatar *playerAvatar = param0->fieldSystem->playerAvatar;
 
             v3 = ((v3) / 2);
-            ov9_0224C378(param0, v2, v3, v4, 4);
-            v5 = ov9_0224C4B8(param0, v2, v3, v4);
-            v5 = ov9_022510D8(v5);
+            FindAndPrepareNewCurrentFloatingPlatform(param0, v2, v3, v4, 4);
+            v5 = GetCurrentFloatingPlatformKindSafely(param0, v2, v3, v4);
+            v5 = GetAvatarDistortionStateForFloatingPlatformKind(v5);
             PlayerAvatar_SetDistortionState(playerAvatar, v5);
 
             if (v5 == 1) {
-                sub_02062E28(v1, 0);
+                MapObject_SetHeightCalculationDisabled(v1, FALSE);
             } else {
-                sub_02062E28(v1, 1);
+                MapObject_SetHeightCalculationDisabled(v1, TRUE);
             }
         }
     }
@@ -6532,7 +6498,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_022513E8[4] = {
     ov9_0224E798
 };
 
-static int ov9_0224E860(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E860(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_0224E860 *v0 = param3;
 
@@ -6544,7 +6510,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251258[1] = {
     ov9_0224E860
 };
 
-static int ov9_0224E870(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224E870(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_0224E870 *v0 = param3;
 
@@ -6556,538 +6522,493 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_0225126C[1] = {
     ov9_0224E870
 };
 
-static const UnkStruct_ov9_02252414 Unk_ov9_02252414[1] = {
+static const DistWorldGiratinaShadowTemplate sGiratinaShadowExternal[GIRATINA_SHADOW_EXTERNAL_COUNT] = {
     {
-        0x6,
-        0x129,
-        0x2A,
-        0x3,
-        0x1,
-        { FX32_ONE, FX32_ONE, FX32_ONE },
-        { (FX32_ONE * 48), 0x0, 0x0 },
-        0x40,
+        .initialTileX = 6,
+        .initialTileY = 297,
+        .initialTileZ = 42,
+        .rotAnglesIndex = 3,
+        .soundKind = GIRATINA_SHADOW_PROP_SFX_KIND_CRY,
+        .scale = { FX32_ONE, FX32_ONE, FX32_ONE },
+        .posDelta = { FX32_ONE * 48, 0, 0 },
+        .movementAnimSteps = 64,
     },
 };
 
-void ov9_0224E884(FieldSystem *fieldSystem, u16 param1)
+void DistWorld_StartGiratinaShadowEvent(FieldSystem *fieldSystem, u16 eventIndex)
 {
-    UnkStruct_ov9_02249B04 *v0;
+    GF_ASSERT(eventIndex < GIRATINA_SHADOW_EXTERNAL_COUNT);
 
-    GF_ASSERT(param1 < 1);
-    v0 = fieldSystem->unk_04->unk_24;
-    ov9_0224E91C(v0, &Unk_ov9_02252414[param1]);
+    DistWorldSystem *dwSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    LoadGiratinaShadowPropAnimation(dwSystem, &sGiratinaShadowExternal[eventIndex]);
 }
 
-void ov9_0224E8A8(FieldSystem *fieldSystem)
+void DistWorld_FinishGiratinaShadowEvent(FieldSystem *fieldSystem)
 {
-    UnkStruct_ov9_02249B04 *v0;
-
-    v0 = fieldSystem->unk_04->unk_24;
-    ov9_0224E988(v0);
+    DistWorldSystem *dwSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    FinishGiratinaShadowPropRenderer(dwSystem);
 }
 
-static void ov9_0224E8B4(UnkStruct_ov9_02249B04 *param0)
+static void LoadGiratinaShadowPropRenderer(DistWorldSystem *system)
 {
-    int v0;
-    UnkStruct_ov9_0224E8B4 *v1 = &param0->unk_1EA4;
+    int rendererAlreadyInit;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
 
-    if (v1->unk_00 == 0) {
-        v1->unk_04 = ov9_0224D8A4(param0, 20, &v0);
+    if (giratinaRenderer->valid == FALSE) {
+        giratinaRenderer->renderer = DistWorldPropRenderer_Init(system, PROP_KIND_GIRATINA_SHADOW, &rendererAlreadyInit);
 
-        if (v0 == 0) {
-            ov9_0224DA48(param0, 20, &v1->unk_04->unk_04, &v1->unk_04->unk_58);
+        if (!rendererAlreadyInit) {
+            LoadRenderBuffersForProp(system, PROP_KIND_GIRATINA_SHADOW, &giratinaRenderer->renderer->renderObj, &giratinaRenderer->renderer->animation);
         }
 
-        v1->unk_00 = 1;
+        giratinaRenderer->valid = TRUE;
     }
 }
 
-static void ov9_0224E8EC(UnkStruct_ov9_02249B04 *param0)
+static void FreeGiratinaShadowPropRenderer(DistWorldSystem *system)
 {
-    int v0;
-    UnkStruct_ov9_0224E8B4 *v1 = &param0->unk_1EA4;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
 
-    if (v1->unk_00 == 1) {
-        ov9_0224D938(param0, v1->unk_04);
-        ov9_0224D874(param0, 0);
-        ov9_0224D7C0(param0, 20);
-        v1->unk_00 = 0;
+    if (giratinaRenderer->valid == TRUE) {
+        DistWorldPropRenderer_InvalidateAnimated(system, giratinaRenderer->renderer);
+        FreePropAnimSet(system, PROP_ANIM_KIND_GIRATINA_SHADOW);
+        FreeProp3DModel(system, PROP_KIND_GIRATINA_SHADOW);
+        giratinaRenderer->valid = FALSE;
     }
 }
 
-static void ov9_0224E91C(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252414 *param1)
+static void LoadGiratinaShadowPropAnimation(DistWorldSystem *system, const DistWorldGiratinaShadowTemplate *giratinaTemplate)
 {
-    UnkStruct_ov9_0224E91C v0;
-    UnkStruct_ov9_0224E8B4 *v1 = &param0->unk_1EA4;
+    DistWorldGiratinaShadowPropUserData userData;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
 
-    ov9_0224E8B4(param0);
+    LoadGiratinaShadowPropRenderer(system);
 
-    v0.unk_00 = param0;
-    v0.unk_08 = *param1;
-    v0.unk_04 = v1->unk_04;
+    userData.system = system;
+    userData.template = *giratinaTemplate;
+    userData.renderer = giratinaRenderer->renderer;
 
-    v1->unk_08 = ov5_021DF72C(param0->fieldSystem->unk_40, &Unk_ov9_022514B8, NULL, 0, &v0, 0);
+    giratinaRenderer->animMan = FieldEffectManager_InitAnimManager(system->fieldSystem->fieldEffMan, &sGiratinaShadowPropAnimFuncs, NULL, 0, &userData, 0);
 }
 
-static BOOL ov9_0224E964(UnkStruct_ov9_02249B04 *param0)
+static BOOL IsGiratinaShadowAnimationFinished(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224E964 *v0;
-    UnkStruct_ov9_0224E8B4 *v1 = &param0->unk_1EA4;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
 
-    GF_ASSERT(v1->unk_08 != NULL);
+    GF_ASSERT(giratinaRenderer->animMan != NULL);
 
-    v0 = sub_02071598(v1->unk_08);
-    return v0->unk_34;
+    DistWorldGiratinaShadowProp *giratinaProp = OverworldAnimManager_GetFuncsContext(giratinaRenderer->animMan);
+    return giratinaProp->animFinished;
 }
 
-static void ov9_0224E984(UnkStruct_ov9_02249B04 *param0)
+static void Dummy0224E984(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224E8B4 *v0 = &param0->unk_1EA4;
 }
 
-static void ov9_0224E988(UnkStruct_ov9_02249B04 *param0)
+static void FinishGiratinaShadowPropRenderer(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224E8B4 *v0 = &param0->unk_1EA4;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
 
-    if (v0->unk_08 != NULL) {
-        sub_0207136C(v0->unk_08);
+    if (giratinaRenderer->animMan != NULL) {
+        OverworldAnimManager_Finish(giratinaRenderer->animMan);
     }
 
-    ov9_0224E8EC(param0);
+    FreeGiratinaShadowPropRenderer(system);
 }
 
-static BOOL ov9_0224E9A4(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL IsGiratinaShadowPropRendererValid2(DistWorldSystem *system, u32 propKind)
 {
-    UnkStruct_ov9_0224E8B4 *v0 = &param0->unk_1EA4;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
+    GF_ASSERT(propKind != PROP_KIND_INVALID);
 
-    GF_ASSERT(param1 != 25);
-
-    if (v0->unk_00 == 1) {
-        if (param1 == 20) {
-            return 1;
-        }
-    }
-
-    return 0;
+    return giratinaRenderer->valid == TRUE && propKind == PROP_KIND_GIRATINA_SHADOW;
 }
 
-static BOOL ov9_0224E9CC(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL IsGiratinaShadowPropRendererAnimValid(DistWorldSystem *system, u32 animKind)
 {
-    UnkStruct_ov9_0224E8B4 *v0 = &param0->unk_1EA4;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
+    GF_ASSERT(animKind != PROP_ANIM_KIND_INVALID);
 
-    GF_ASSERT(param1 != 5);
-
-    if (v0->unk_00 == 1) {
-        if (param1 == 0) {
-            return 1;
-        }
-    }
-
-    return 0;
+    return giratinaRenderer->valid == TRUE && animKind == PROP_ANIM_KIND_GIRATINA_SHADOW;
 }
 
-static BOOL ov9_0224E9F4(UnkStruct_ov9_02249B04 *param0, int param1)
+static BOOL IsGiratinaShadowPropRendererValid(DistWorldSystem *system, int propKind)
 {
-    UnkStruct_ov9_0224E8B4 *v0 = &param0->unk_1EA4;
-
-    if (v0->unk_00 == 1) {
-        if (param1 == 20) {
-            return 1;
-        }
-    }
-
-    return 0;
+    DistWorldGiratinaShadowPropRenderer *giratinaRenderer = &system->giratinaShadowPropRenderer;
+    return giratinaRenderer->valid == TRUE && propKind == PROP_KIND_GIRATINA_SHADOW;
 }
 
-static const UnkStruct_ov5_02201C58 Unk_ov9_022529F8[5] = {
-    { 0x0, 0x0, 0x0 },
-    { 0x0, 0xB4, 0x0 },
-    { 0x0, 0x5A, 0x0 },
-    { 0x0, 0x10E, 0x0 },
-    { 0x5A, 0x0, 0x0 }
+static const Simple3DRotationAngles sGiratinaShadowPropRotAngles[5] = {
+    { 0, 0, 0 },
+    { 0, 180, 0 },
+    { 0, 90, 0 },
+    { 0, 270, 0 },
+    { 90, 0, 0 }
 };
 
-static int ov9_0224EA0C(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static BOOL DistWorldGiratinaShadowProp_AnimInit(OverworldAnimManager *animMan, void *context)
 {
-    VecFx32 v0;
-    UnkStruct_ov9_0224E964 *v1 = param1;
-    const UnkStruct_ov9_0224E91C *v2 = sub_020715BC(param0);
-    const UnkStruct_ov9_02252414 *v3;
+    DistWorldGiratinaShadowProp *giratinaProp = context;
+    const DistWorldGiratinaShadowPropUserData *userData = OverworldAnimManager_GetUserData(animMan);
 
-    v1->unk_00 = *v2;
-    v3 = &v1->unk_00.unk_08;
+    giratinaProp->userData = *userData;
+    const DistWorldGiratinaShadowTemplate *template = &giratinaProp->userData.template;
 
-    v1->unk_2E = 1;
-    v1->unk_38 = Unk_ov9_022529F8[v3->unk_06];
+    giratinaProp->animStopped = TRUE;
+    giratinaProp->rotAngles = sGiratinaShadowPropRotAngles[template->rotAnglesIndex];
 
-    v0.x = (((v3->unk_00) << 4) * FX32_ONE);
-    v0.y = (((v3->unk_02) << 4) * FX32_ONE);
-    v0.z = (((v3->unk_04) << 4) * FX32_ONE);
+    VecFx32 pos;
+    pos.x = (template->initialTileX << 4) * FX32_ONE;
+    pos.y = (template->initialTileY << 4) * FX32_ONE;
+    pos.z = (template->initialTileZ << 4) * FX32_ONE;
 
-    if (v3->unk_06 == 4) {
-        v0.x += (FX32_ONE * 8);
+    if (template->rotAnglesIndex == 4) {
+        pos.x += FX32_ONE * 8;
     }
 
-    sub_020715D4(param0, &v0);
+    OverworldAnimManager_SetPosition(animMan, &pos);
 
-    v1->unk_2E = 0;
-    return 1;
+    giratinaProp->animStopped = FALSE;
+    return TRUE;
 }
 
-static void ov9_0224EA88(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldGiratinaShadowProp_AnimExit(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224E964 *v0 = param1;
-    sub_02073A90(&v0->unk_00.unk_04->unk_58);
+    DistWorldGiratinaShadowProp *giratinaProp = context;
+    Simple3D_FreeAnimObject(&giratinaProp->userData.renderer->animation);
 }
 
-static void ov9_0224EA94(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldGiratinaShadowProp_AnimTick(OverworldAnimManager *animMan, void *context)
 {
-    VecFx32 v0;
-    UnkStruct_ov9_0224E964 *v1 = param1;
-    const UnkStruct_ov9_02252414 *v2 = &v1->unk_00.unk_08;
+    DistWorldGiratinaShadowProp *giratinaProp = context;
+    const DistWorldGiratinaShadowTemplate *template = &giratinaProp->userData.template;
 
-    switch (v1->unk_2C) {
-    case 0:
-        if (v2->unk_07 == 1) {
-            sub_02005844(487, 0);
-        } else if (v2->unk_07 == 2) {
-            Sound_PlayEffect(1609);
+    switch (giratinaProp->state) {
+    case GIRATINA_SHADOW_PROP_STATE_SFX:
+        if (template->soundKind == GIRATINA_SHADOW_PROP_SFX_KIND_CRY) {
+            Sound_PlayPokemonCry(SPECIES_GIRATINA, 0);
+        } else if (template->soundKind == GIRATINA_SHADOW_PROP_SFX_KIND_FLEE) {
+            Sound_PlayEffect(SEQ_SE_DP_FW019);
         }
 
-        v1->unk_2C++;
-    case 1: {
-        VecFx32 v3;
-        const VecFx32 *v4 = &v2->unk_14;
+        giratinaProp->state++;
+        // fallthrough
 
-        sub_020715E4(param0, &v3);
+    case GIRATINA_SHADOW_PROP_STATE_MOVE: {
+        VecFx32 pos;
+        const VecFx32 *posDelta = &template->posDelta;
 
-        v3.x += v4->x;
-        v3.y += v4->y;
-        v3.z += v4->z;
+        OverworldAnimManager_GetPosition(animMan, &pos);
 
-        v1->unk_30++;
+        pos.x += posDelta->x;
+        pos.y += posDelta->y;
+        pos.z += posDelta->z;
 
-        if (v1->unk_30 >= v2->unk_20) {
-            v1->unk_2C++;
-            v1->unk_34 = 1;
-            v1->unk_2E = 1;
+        giratinaProp->movementAnimStep++;
+
+        if (giratinaProp->movementAnimStep >= template->movementAnimSteps) {
+            giratinaProp->state++;
+            giratinaProp->animFinished = TRUE;
+            giratinaProp->animStopped = TRUE;
         }
 
-        sub_020715D4(param0, &v3);
-    } break;
-    case 2:
+        OverworldAnimManager_SetPosition(animMan, &pos);
         break;
     }
 
-    if (v1->unk_2E == 0) {
-        sub_02073AC0(&v1->unk_00.unk_04->unk_58, FX32_ONE, 1);
+    case GIRATINA_SHADOW_PROP_STATE_END:
+        break;
+    }
+
+    if (!giratinaProp->animStopped) {
+        Simple3D_UpdateAnim(&giratinaProp->userData.renderer->animation, FX32_ONE, TRUE);
     }
 }
 
-static void ov9_0224EB34(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldGiratinaShadowProp_AnimRender(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224E964 *v0 = param1;
+    DistWorldGiratinaShadowProp *giratinaProp = context;
 
-    if (v0->unk_2E == 0) {
-        VecFx32 v1;
-        const VecFx32 *v2;
+    if (!giratinaProp->animStopped) {
+        VecFx32 pos;
+        OverworldAnimManager_GetPosition(animMan, &pos);
 
-        sub_020715E4(param0, &v1);
-        v2 = &v0->unk_00.unk_08.unk_08;
+        const VecFx32 *scale = &giratinaProp->userData.template.scale;
 
-        ov9_0224DAB8(v0->unk_00.unk_00, 20, (1 * 8));
-        sub_02073BC8(&v0->unk_00.unk_04->unk_04, &v1, v2, &v0->unk_38);
+        SetPropPolygonID(giratinaProp->userData.system, PROP_KIND_GIRATINA_SHADOW, 1 << 3);
+        Simple3D_DrawRenderObjRotationAngles(&giratinaProp->userData.renderer->renderObj, &pos, scale, &giratinaProp->rotAngles);
     }
 }
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_022514B8 = {
-    sizeof(UnkStruct_ov9_0224E964),
-    ov9_0224EA0C,
-    ov9_0224EA88,
-    ov9_0224EA94,
-    ov9_0224EB34
+static const OverworldAnimManagerFuncs sGiratinaShadowPropAnimFuncs = {
+    sizeof(DistWorldGiratinaShadowProp),
+    DistWorldGiratinaShadowProp_AnimInit,
+    DistWorldGiratinaShadowProp_AnimExit,
+    DistWorldGiratinaShadowProp_AnimTick,
+    DistWorldGiratinaShadowProp_AnimRender
 };
 
-static void ov9_0224EB68(UnkStruct_ov9_02249B04 *param0)
+static void InitSimplePropsForCurrentAndNextMaps(DistWorldSystem *system)
 {
-    UnkStruct_ov9_0224EB68 *v0 = &param0->unk_1BB4;
-    u32 v1 = ov9_022510D0(param0);
-    const UnkStruct_ov9_022530A4 *v2 = ov9_0224D720(v1);
+    u32 mapHeaderID = DistWorldSystem_GetMapHeaderID(system);
+    const DistWorldMapConnections *mapConnections = GetConnectionsForMap(mapHeaderID);
 
-    ov9_0224EC48(param0, v1);
+    InitSimplePropsForMap(system, mapHeaderID);
 
-    if (v2->unk_08 != 593) {
-        ov9_0224EC48(param0, v2->unk_08);
+    if (mapConnections->nextID != MAP_HEADER_INVALID) {
+        InitSimplePropsForMap(system, mapConnections->nextID);
     }
 }
 
-static void ov9_0224EB94(UnkStruct_ov9_02249B04 *param0)
+static void FinishAllSimplePropAnimators(DistWorldSystem *system)
 {
-    int v0 = 0;
-    UnkStruct_ov9_0224EB68 *v1 = &param0->unk_1BB4;
-    UnkStruct_ov9_0224EBB8 *v2 = v1->unk_00;
+    int i = 0;
+    DistWorldSimplePropManager *simplePropMan = &system->simplePropMan;
+    DistWorldSimplePropAnimator *iter = simplePropMan->animators;
 
-    while (v0 < 8) {
-        if (v2->unk_04 != NULL) {
-            ov9_0224EBB8(v2);
+    while (i < SIMPLE_PROP_MANAGER_ANIMATOR_COUNT) {
+        if (iter->animMan != NULL) {
+            DistWorldMapSimplePropAnimator_Finish(iter);
         }
 
-        v2++;
-        v0++;
+        iter++;
+        i++;
     }
 }
 
-static void ov9_0224EBB8(UnkStruct_ov9_0224EBB8 *param0)
+static void DistWorldMapSimplePropAnimator_Finish(DistWorldSimplePropAnimator *animator)
 {
-    if (param0->unk_04 != NULL) {
-        sub_0207136C(param0->unk_04);
+    if (animator->animMan != NULL) {
+        OverworldAnimManager_Finish(animator->animMan);
     }
 
-    param0->unk_04 = NULL;
+    animator->animMan = NULL;
 }
 
-static void ov9_0224EBCC(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224EBB8 *param1, const UnkStruct_ov9_0224EC10 *param2, u32 param3)
+static void InitSimplePropAnimation(DistWorldSystem *system, DistWorldSimplePropAnimator *animator, const DistWorldSimplePropTemplate *simplePropTemplate, u32 mapHeaderID)
 {
-    param1->unk_00 = param3;
-    param1->unk_08 = *param2;
+    animator->mapHeaderID = mapHeaderID;
+    animator->template = *simplePropTemplate;
 
-    {
-        UnkStruct_ov9_0224EBCC v0;
-        const UnkStruct_ov101_021D86B0 *v1;
+    DistWorldSimplePropUserData userData;
+    userData.system = system;
+    userData.animator = animator;
 
-        v0.unk_00 = param0;
-        v0.unk_04 = param1;
-        v1 = Unk_ov9_02252F6C[param2->unk_04];
-
-        param1->unk_04 = ov5_021DF72C(param0->fieldSystem->unk_40, v1, NULL, 0, &v0, 2);
-    }
+    const OverworldAnimManagerFuncs *animFuncs = sPropAnimFuncsByKind[simplePropTemplate->propKind];
+    animator->animMan = FieldEffectManager_InitAnimManager(system->fieldSystem->fieldEffMan, animFuncs, NULL, 0, &userData, 2);
 }
 
-static void ov9_0224EC10(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_02252548 *param1)
+static void InitSimplePropsFromTemplates(DistWorldSystem *system, const DistWorldSimplePropMapTemplates *mapTemplates)
 {
-    u16 v0, v1;
-    const UnkStruct_ov9_0224EC10 *v2 = param1->unk_04;
-    UnkStruct_ov9_0224EBB8 *v3;
+    const DistWorldSimplePropTemplate *iter = mapTemplates->templates;
 
-    while (v2->unk_04 != 25) {
-        v0 = v2->unk_0C;
-        v1 = v2->unk_0E;
-
-        if (ov9_02251104(param0, v0, v1) == 1) {
-            v3 = ov9_0224EC70(param0);
-            ov9_0224EBCC(param0, v3, v2, param1->unk_00);
+    while (iter->propKind != PROP_KIND_INVALID) {
+        if (CheckFlagCondition(system, iter->flagCond, iter->flagCondVal) == TRUE) {
+            DistWorldSimplePropAnimator *animator = FindUnusedSimplePropAnimator(system);
+            InitSimplePropAnimation(system, animator, iter, mapTemplates->mapHeaderID);
         }
 
-        v2++;
+        iter++;
     }
 }
 
-static void ov9_0224EC48(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void InitSimplePropsForMap(DistWorldSystem *system, u32 mapHeaderID)
 {
-    const UnkStruct_ov9_02252548 *v0 = Unk_ov9_02252548;
+    const DistWorldSimplePropMapTemplates *iter = sSimplePropsMapTemplates;
 
-    while (v0->unk_00 != 593) {
-        if (v0->unk_00 == param1) {
-            ov9_0224EC10(param0, v0);
-
+    while (iter->mapHeaderID != MAP_HEADER_INVALID) {
+        if (iter->mapHeaderID == mapHeaderID) {
+            InitSimplePropsFromTemplates(system, iter);
             return;
         }
 
-        v0++;
+        iter++;
     }
 }
 
-static UnkStruct_ov9_0224EBB8 *ov9_0224EC70(UnkStruct_ov9_02249B04 *param0)
+static DistWorldSimplePropAnimator *FindUnusedSimplePropAnimator(DistWorldSystem *system)
 {
-    int v0 = 0;
-    UnkStruct_ov9_0224EB68 *v1 = &param0->unk_1BB4;
-    UnkStruct_ov9_0224EBB8 *v2 = v1->unk_00;
+    int i = 0;
+    DistWorldSimplePropManager *simplePropMan = &system->simplePropMan;
+    DistWorldSimplePropAnimator *iter = simplePropMan->animators;
 
     do {
-        if (v2->unk_04 == NULL) {
-            return v2;
+        if (iter->animMan == NULL) {
+            return iter;
         }
 
-        v2++;
-        v0++;
-    } while (v0 < 8);
+        iter++;
+        i++;
+    } while (i < SIMPLE_PROP_MANAGER_ANIMATOR_COUNT);
 
     GF_ASSERT(FALSE);
     return NULL;
 }
 
-static void ov9_0224EC94(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void FinishSimplePropAnimatorForMap(DistWorldSystem *system, u32 mapHeaderID)
 {
-    int v0 = 0;
-    UnkStruct_ov9_0224EB68 *v1 = &param0->unk_1BB4;
-    UnkStruct_ov9_0224EBB8 *v2 = v1->unk_00;
+    int i = 0;
+    DistWorldSimplePropManager *simplePropMan = &system->simplePropMan;
+    DistWorldSimplePropAnimator *iter = simplePropMan->animators;
 
-    while (v0 < 8) {
-        if ((v2->unk_00 == param1) && (v2->unk_04 != NULL)) {
-            ov9_0224EBB8(v2);
+    while (i < SIMPLE_PROP_MANAGER_ANIMATOR_COUNT) {
+        if (iter->mapHeaderID == mapHeaderID && iter->animMan != NULL) {
+            DistWorldMapSimplePropAnimator_Finish(iter);
         }
 
-        v2++;
-        v0++;
+        iter++;
+        i++;
     }
 }
 
-static BOOL ov9_0224ECC0(UnkStruct_ov9_02249B04 *param0, int param1)
+static BOOL HasActiveSimpleProp(DistWorldSystem *system, int propKind)
 {
-    int v0 = 0;
-    UnkStruct_ov9_0224EB68 *v1 = &param0->unk_1BB4;
-    UnkStruct_ov9_0224EBB8 *v2 = v1->unk_00;
+    int i = 0;
+    DistWorldSimplePropManager *simplePropMan = &system->simplePropMan;
+    DistWorldSimplePropAnimator *iter = simplePropMan->animators;
 
-    while (v0 < 8) {
-        if (v2->unk_04 != NULL) {
-            if (v2->unk_08.unk_04 == param1) {
-                return 1;
+    while (i < SIMPLE_PROP_MANAGER_ANIMATOR_COUNT) {
+        if (iter->animMan != NULL && iter->template.propKind == propKind) {
+            return TRUE;
+        }
+
+        iter++;
+        i++;
+    }
+
+    return FALSE;
+}
+
+static BOOL HasActiveSimpleProp2(DistWorldSystem *system, u32 propKind)
+{
+    int i = 0;
+    DistWorldSimplePropManager *simplePropMan = &system->simplePropMan;
+    DistWorldSimplePropAnimator *iter = simplePropMan->animators;
+
+    while (i < SIMPLE_PROP_MANAGER_ANIMATOR_COUNT) {
+        if (iter->animMan != NULL) {
+            const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[iter->template.propKind];
+
+            if (animInfo->propKind == propKind) {
+                return TRUE;
             }
         }
 
-        v2++;
-        v0++;
+        iter++;
+        i++;
     }
 
-    return 0;
+    return FALSE;
 }
 
-static BOOL ov9_0224ECE8(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL HasActiveSimplePropAnim(DistWorldSystem *system, u32 animKind)
 {
-    int v0 = 0;
-    const UnkStruct_ov9_022531D0 *v1;
-    UnkStruct_ov9_0224EB68 *v2 = &param0->unk_1BB4;
-    UnkStruct_ov9_0224EBB8 *v3 = v2->unk_00;
+    int i = 0;
+    DistWorldSimplePropManager *simplePropMan = &system->simplePropMan;
+    DistWorldSimplePropAnimator *iter = simplePropMan->animators;
 
-    while (v0 < 8) {
-        if (v3->unk_04 != NULL) {
-            v1 = &Unk_ov9_022531D0[v3->unk_08.unk_04];
+    while (i < SIMPLE_PROP_MANAGER_ANIMATOR_COUNT) {
+        if (iter->animMan != NULL) {
+            const DistWorldPropAnimInfo *animInfo = &sPropAnimInfoByKind[iter->template.propKind];
 
-            if (v1->unk_00 == param1) {
-                return 1;
+            if (animInfo->animKind == animKind) {
+                return TRUE;
             }
         }
 
-        v3++;
-        v0++;
+        iter++;
+        i++;
     }
 
-    return 0;
+    return FALSE;
 }
 
-static BOOL ov9_0224ED20(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static BOOL DistWorldSimpleProp_AnimInit(OverworldAnimManager *animMan, void *context)
 {
-    int v0 = 0;
-    const UnkStruct_ov9_022531D0 *v1;
-    UnkStruct_ov9_0224EB68 *v2 = &param0->unk_1BB4;
-    UnkStruct_ov9_0224EBB8 *v3 = v2->unk_00;
+    DistWorldSimpleProp *simpleProp = context;
+    const DistWorldSimplePropUserData *userData = OverworldAnimManager_GetUserData(animMan);
+    const DistWorldSimplePropTemplate *simplePropTemplate = &userData->animator->template;
 
-    while (v0 < 8) {
-        if (v3->unk_04 != NULL) {
-            v1 = &Unk_ov9_022531D0[v3->unk_08.unk_04];
+    simpleProp->userData = *userData;
 
-            if (v1->unk_02 == param1) {
-                return 1;
-            }
-        }
+    BOOL rendererAlreadyInit;
+    simpleProp->renderer = DistWorldPropRenderer_Init(userData->system, simplePropTemplate->propKind, &rendererAlreadyInit);
 
-        v3++;
-        v0++;
+    if (!rendererAlreadyInit) {
+        LoadRenderBuffersForProp(simpleProp->userData.system, simplePropTemplate->propKind, &simpleProp->renderer->renderObj, &simpleProp->renderer->animation);
     }
 
-    return 0;
+    VecFx32_SetPosFromMapCoords(simplePropTemplate->tileX, simplePropTemplate->tileZ, &simpleProp->pos);
+    simpleProp->pos.y = MAP_OBJECT_COORD_TO_FX32(simplePropTemplate->tileY);
+
+    const VecFx32 *initialPosOffset = &sPropInitialPosOffsetByKind[simplePropTemplate->propKind];
+    simpleProp->pos.x += initialPosOffset->x;
+    simpleProp->pos.y += initialPosOffset->y;
+    simpleProp->pos.z += initialPosOffset->z;
+
+    return TRUE;
 }
 
-static int ov9_0224ED58(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldSimpleProp_AnimExit(OverworldAnimManager *animMan, void *context)
 {
-    int v0;
-    UnkStruct_ov9_0224ED58 *v1 = param1;
-    const UnkStruct_ov9_0224EBCC *v2 = sub_020715BC(param0);
-    const UnkStruct_ov9_0224EC10 *v3 = &v2->unk_04->unk_08;
+    DistWorldSimpleProp *simpleProp = context;
+    const DistWorldSimplePropTemplate *template = &simpleProp->userData.animator->template;
 
-    v1->unk_1C = *v2;
-    v1->unk_24 = ov9_0224D8A4(v2->unk_00, v3->unk_04, &v0);
-
-    if (v0 == 0) {
-        ov9_0224DA48(v1->unk_1C.unk_00, v3->unk_04, &v1->unk_24->unk_04, &v1->unk_24->unk_58);
+    if (DistWorldPropAnimInfo_IsAnimKindValid(template->propKind) == TRUE) {
+        Simple3D_FreeAnimation(&simpleProp->renderer->animation);
     }
 
-    sub_02064450(v3->unk_06, v3->unk_0A, &v1->unk_04);
-    v1->unk_04.y = (((v3->unk_08) << 4) * FX32_ONE) + ((16 * FX32_ONE) >> 1);
-
-    {
-        VecFx32 v4;
-        const VecFx32 *v5 = &Unk_ov9_02253298[v3->unk_04];
-
-        v1->unk_04.x += v5->x;
-        v1->unk_04.y += v5->y;
-        v1->unk_04.z += v5->z;
-    }
-
-    return 1;
+    DistWorldPropRenderer_InvalidateAnimated(simpleProp->userData.system, simpleProp->renderer);
 }
 
-static void ov9_0224EDD8(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldSimpleProp_AnimTick(OverworldAnimManager *animMan, void *context)
 {
-    int v0;
-    UnkStruct_ov9_0224ED58 *v1 = param1;
-    const UnkStruct_ov9_0224EC10 *v2 = &v1->unk_1C.unk_04->unk_08;
+    DistWorldSimpleProp *simpleProp = context;
+    int propKind = simpleProp->userData.animator->template.propKind;
 
-    if (ov9_0224DAEC(v2->unk_04) == 1) {
-        sub_02073AA8(&v1->unk_24->unk_58);
+    if (DistWorldPropAnimInfo_IsAnimKindValid(propKind) == TRUE) {
+        Simple3D_UpdateAnim(&simpleProp->renderer->animation, FX32_ONE, TRUE);
     }
 
-    ov9_0224D938(v1->unk_1C.unk_00, v1->unk_24);
+    simpleProp->inView = IsPropInView(simpleProp->userData.system, propKind, &simpleProp->pos);
 }
 
-static void ov9_0224EDFC(UnkStruct_ov101_021D5D90 *param0, void *param1)
+static void DistWorldSimpleProp_AnimRender(OverworldAnimManager *animMan, void *context)
 {
-    UnkStruct_ov9_0224ED58 *v0 = param1;
-    int v1 = v0->unk_1C.unk_04->unk_08.unk_04;
+    DistWorldSimpleProp *simpleProp = context;
 
-    if (ov9_0224DAEC(v1) == 1) {
-        sub_02073AC0(&v0->unk_24->unk_58, FX32_ONE, 1);
-    }
-
-    v0->unk_02 = ov9_0224DBE4(v0->unk_1C.unk_00, v1, &v0->unk_04);
-}
-
-static void ov9_0224EE2C(UnkStruct_ov101_021D5D90 *param0, void *param1)
-{
-    UnkStruct_ov9_0224ED58 *v0 = param1;
-
-    if (v0->unk_02 == 1) {
-        sub_02073BB4(&v0->unk_24->unk_04, &v0->unk_04);
+    if (simpleProp->inView == TRUE) {
+        Simple3D_DrawRenderObjWithPos(&simpleProp->renderer->renderObj, &simpleProp->pos);
     }
 }
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_02251530 = {
-    sizeof(UnkStruct_ov9_0224ED58),
-    ov9_0224ED58,
-    ov9_0224EDD8,
-    ov9_0224EDFC,
-    ov9_0224EE2C
+static const OverworldAnimManagerFuncs sSimplePropAnimFuncs = {
+    sizeof(DistWorldSimpleProp),
+    DistWorldSimpleProp_AnimInit,
+    DistWorldSimpleProp_AnimExit,
+    DistWorldSimpleProp_AnimTick,
+    DistWorldSimpleProp_AnimRender
 };
 
-static void ov9_0224EE40(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224EE40(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224EE40 *v0 = &param0->unk_1C64;
-    u32 v1 = ov9_022510D0(param0);
-    const UnkStruct_ov9_022530A4 *v2 = ov9_0224D720(v1);
+    u32 v1 = DistWorldSystem_GetMapHeaderID(param0);
+    const DistWorldMapConnections *v2 = GetConnectionsForMap(v1);
 
     ov9_0224F078(param0, v1);
 
-    if (v2->unk_08 != 593) {
-        ov9_0224F078(param0, v2->unk_08);
+    if (v2->nextID != MAP_HEADER_INVALID) {
+        ov9_0224F078(param0, v2->nextID);
     }
 }
 
-static void ov9_0224EE6C(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224EE6C(DistWorldSystem *param0)
 {
     return;
 }
 
-static void ov9_0224EE70(UnkStruct_ov9_02249B04 *param0, MapObject *param1)
+static void ov9_0224EE70(DistWorldSystem *param0, MapObject *param1)
 {
     int v0 = 0;
     UnkStruct_ov9_0224EE40 *v1 = &param0->unk_1C64;
@@ -7104,7 +7025,7 @@ static void ov9_0224EE70(UnkStruct_ov9_02249B04 *param0, MapObject *param1)
     GF_ASSERT(0);
 }
 
-static MapObject **ov9_0224EEA0(UnkStruct_ov9_02249B04 *param0)
+static MapObject **ov9_0224EEA0(DistWorldSystem *param0)
 {
     int v0;
     UnkStruct_ov9_0224EE40 *v1 = &param0->unk_1C64;
@@ -7119,14 +7040,14 @@ static MapObject **ov9_0224EEA0(UnkStruct_ov9_02249B04 *param0)
     return NULL;
 }
 
-static MapObject *ov9_0224EECC(UnkStruct_ov9_02249B04 *param0, const ObjectEvent *param1, u32 param2)
+static MapObject *ov9_0224EECC(DistWorldSystem *param0, const ObjectEvent *param1, u32 param2)
 {
     int v0 = 0;
     MapObject *v1;
     const MapObjectManager *v2 = param0->fieldSystem->mapObjMan;
 
-    while (sub_020625B0(v2, &v1, &v0, (1 << 0))) {
-        if (sub_02062918(v1) == param2) {
+    while (MapObjectMan_FindObjectWithStatus(v2, &v1, &v0, (1 << 0))) {
+        if (MapObject_GetMapID(v1) == param2) {
             if (MapObject_GetLocalID(v1) == param1->localID) {
                 GF_ASSERT(param1->graphicsID == MapObject_GetGraphicsID(v1));
                 return v1;
@@ -7137,7 +7058,7 @@ static MapObject *ov9_0224EECC(UnkStruct_ov9_02249B04 *param0, const ObjectEvent
     return NULL;
 }
 
-static BOOL ov9_0224EF30(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224EF30 *param1, u16 param2)
+static BOOL ov9_0224EF30(DistWorldSystem *param0, const UnkStruct_ov9_0224EF30 *param1, u16 param2)
 {
     u16 v0 = param1->unk_00;
     u16 v1 = param1->unk_02;
@@ -7147,18 +7068,16 @@ static BOOL ov9_0224EF30(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_022
         if (param2 == 0) {
             return 0;
         }
-    } else if (ov9_02251104(param0, v0, v1) == 0) {
+    } else if (CheckFlagCondition(param0, v0, v1) == 0) {
         return 0;
     }
 
     return 1;
 }
 
-static BOOL ov9_0224EF64(UnkStruct_ov9_02249B04 *param0, MapObject **param1, const UnkStruct_ov9_0224EF30 *param2, u32 param3, u16 param4)
+static BOOL ov9_0224EF64(DistWorldSystem *param0, MapObject **param1, const UnkStruct_ov9_0224EF30 *param2, u32 param3, u16 param4)
 {
-    MapObject *v0;
-
-    v0 = ov9_0224EECC(param0, &param2->unk_08, param3);
+    MapObject *v0 = ov9_0224EECC(param0, &param2->unk_08, param3);
 
     if (v0 != NULL) {
         if (ov9_0224F1CC(param0, v0) == 1) {
@@ -7167,7 +7086,7 @@ static BOOL ov9_0224EF64(UnkStruct_ov9_02249B04 *param0, MapObject **param1, con
 
         *param1 = v0;
     } else {
-        if ((ov9_0224EF30(param0, param2, param4) == 0) || (FieldSystem_CheckFlag(param0->fieldSystem, param2->unk_08.flag) != 0)) {
+        if ((ov9_0224EF30(param0, param2, param4) == 0) || (FieldSystem_CheckFlag(param0->fieldSystem, param2->unk_08.hiddenFlag) != 0)) {
             return 0;
         }
 
@@ -7182,8 +7101,8 @@ static BOOL ov9_0224EF64(UnkStruct_ov9_02249B04 *param0, MapObject **param1, con
     }
 
     sub_02062FC4(*param1, 1);
-    sub_02062E5C(*param1, 1);
-    sub_02062E28(*param1, 1);
+    MapObject_SetFlagIsPersistent(*param1, 1);
+    MapObject_SetHeightCalculationDisabled(*param1, TRUE);
     MapObject_SetStatusFlagOn(*param1, MAP_OBJ_STATUS_13);
 
     if (v0 == NULL) {
@@ -7205,7 +7124,7 @@ static BOOL ov9_0224EF64(UnkStruct_ov9_02249B04 *param0, MapObject **param1, con
     return 1;
 }
 
-static BOOL ov9_0224F048(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_0224EF30 **param1, u32 param2)
+static BOOL ov9_0224F048(DistWorldSystem *param0, const UnkStruct_ov9_0224EF30 **param1, u32 param2)
 {
     MapObject **v0;
 
@@ -7218,7 +7137,7 @@ static BOOL ov9_0224F048(UnkStruct_ov9_02249B04 *param0, const UnkStruct_ov9_022
     return 0;
 }
 
-static void ov9_0224F078(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224F078(DistWorldSystem *param0, u32 param1)
 {
     const UnkStruct_ov9_02252EB4 *v0 = Unk_ov9_02252EB4;
 
@@ -7232,7 +7151,7 @@ static void ov9_0224F078(UnkStruct_ov9_02249B04 *param0, u32 param1)
     }
 }
 
-static void ov9_0224F0A4(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224F0A4(DistWorldSystem *param0, u32 param1)
 {
     int v0 = 0;
     UnkStruct_ov9_0224EE40 *v1 = &param0->unk_1C64;
@@ -7240,7 +7159,7 @@ static void ov9_0224F0A4(UnkStruct_ov9_02249B04 *param0, u32 param1)
 
     for (v0 = 0; v0 < 19; v0++, v2++) {
         if ((*v2) != NULL) {
-            if (sub_02062918(*v2) == param1) {
+            if (MapObject_GetMapID(*v2) == param1) {
                 MapObject_Delete(*v2);
                 *v2 = NULL;
             }
@@ -7248,7 +7167,7 @@ static void ov9_0224F0A4(UnkStruct_ov9_02249B04 *param0, u32 param1)
     }
 }
 
-static MapObject *ov9_0224F0D4(UnkStruct_ov9_02249B04 *param0, u32 param1, u16 param2)
+static MapObject *ov9_0224F0D4(DistWorldSystem *param0, u32 param1, u16 param2)
 {
     MapObject **v0 = NULL;
     const UnkStruct_ov9_02252EB4 *v1 = Unk_ov9_02252EB4;
@@ -7288,7 +7207,7 @@ static MapObject *ov9_0224F0D4(UnkStruct_ov9_02249B04 *param0, u32 param1, u16 p
 void ov9_0224F158(FieldSystem *fieldSystem, u16 param1)
 {
     u32 v0 = fieldSystem->location->mapId;
-    UnkStruct_ov9_02249B04 *v1 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v1 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
     ov9_0224F0D4(v1, v0, param1);
 }
@@ -7299,12 +7218,12 @@ void ov9_0224F16C(FieldSystem *fieldSystem, u16 param1)
     MapObject *v1;
     u32 v2 = fieldSystem->location->mapId;
     MapObjectManager *v3 = fieldSystem->mapObjMan;
-    UnkStruct_ov9_02249B04 *v4 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v4 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
-    while (sub_020625B0(
+    while (MapObjectMan_FindObjectWithStatus(
                v3, &v1, &v0, (1 << 0))
         == 1) {
-        if ((MapObject_GetLocalID(v1) == param1) && (sub_02062918(v1) == v2)) {
+        if ((MapObject_GetLocalID(v1) == param1) && (MapObject_GetMapID(v1) == v2)) {
             ov9_0224EE70(v4, v1);
             return;
         }
@@ -7313,7 +7232,7 @@ void ov9_0224F16C(FieldSystem *fieldSystem, u16 param1)
     GF_ASSERT(0);
 }
 
-static BOOL ov9_0224F1CC(UnkStruct_ov9_02249B04 *param0, MapObject *param1)
+static BOOL ov9_0224F1CC(DistWorldSystem *param0, MapObject *param1)
 {
     int v0 = 0;
     UnkStruct_ov9_0224EE40 *v1 = &param0->unk_1C64;
@@ -7371,9 +7290,7 @@ BOOL ov9_0224F240(const MapObject *param0, int param1)
 {
     int v0, v1;
     u32 v2, v3;
-    FieldSystem *fieldSystem;
-
-    fieldSystem = MapObject_FieldSystem(param0);
+    FieldSystem *fieldSystem = MapObject_FieldSystem(param0);
     v3 = fieldSystem->location->mapId;
     v0 = MapObject_GetX(param0);
     v1 = MapObject_GetZ(param0);
@@ -7387,9 +7304,7 @@ static BOOL ov9_0224F284(const MapObject *param0, u32 *param1)
 {
     int v0, v1;
     u32 v2;
-    FieldSystem *fieldSystem;
-
-    fieldSystem = MapObject_FieldSystem(param0);
+    FieldSystem *fieldSystem = MapObject_FieldSystem(param0);
     v2 = fieldSystem->location->mapId;
     v0 = MapObject_GetX(param0);
     v1 = MapObject_GetZ(param0);
@@ -7405,12 +7320,10 @@ BOOL ov9_0224F2B0(const MapObject *param0)
 
 UnkStruct_ov9_0224F6EC *ov9_0224F2BC(FieldSystem *fieldSystem, FieldTask *param1, MapObject *param2)
 {
-    UnkStruct_ov9_0224F6EC *v0;
-
-    v0 = Heap_AllocFromHeapAtEnd(4, sizeof(UnkStruct_ov9_0224F6EC));
+    UnkStruct_ov9_0224F6EC *v0 = Heap_AllocAtEnd(HEAP_ID_FIELD1, sizeof(UnkStruct_ov9_0224F6EC));
     memset(v0, 0, sizeof(UnkStruct_ov9_0224F6EC));
 
-    v0->unk_00 = fieldSystem->unk_04->unk_24;
+    v0->unk_00 = fieldSystem->unk_04->dynamicMapFeaturesData;
     v0->fieldSystem = fieldSystem;
     v0->unk_08 = param1;
     v0->unk_0C = param2;
@@ -7451,10 +7364,10 @@ static BOOL ov9_0224F324(UnkStruct_ov9_0224F6EC *param0)
         return 0;
     }
 
-    Sound_PlayEffect(1571);
+    Sound_PlayEffect(SEQ_SE_DP_UG_008);
     v1.y = ((115 << 4) * FX32_ONE);
     MapObject_SetPosDirFromVec(v2, &v1, MapObject_GetFacingDir(v2));
-    sub_02062914(v2, 580);
+    MapObject_SetMapID(v2, 580);
 
     {
         u32 v3, v4;
@@ -7566,12 +7479,12 @@ static BOOL ov9_0224F3BC(UnkStruct_ov9_0224F6EC *param0)
         {
             VecFx32 v11;
 
-            sub_0206309C(param0->unk_0C, &v11);
+            MapObject_GetSpritePosOffset(param0->unk_0C, &v11);
 
             param0->unk_1C = v11.y;
             param0->unk_20 = (FX32_ONE * 1);
 
-            Sound_PlayEffect(1571);
+            Sound_PlayEffect(SEQ_SE_DP_UG_008);
         }
 
         param0->unk_10++;
@@ -7580,10 +7493,10 @@ static BOOL ov9_0224F3BC(UnkStruct_ov9_0224F6EC *param0)
         VecFx32 v12;
         MapObject *v13 = param0->unk_0C;
 
-        sub_0206309C(v13, &v12);
+        MapObject_GetSpritePosOffset(v13, &v12);
         v12.y = param0->unk_1C + param0->unk_20;
 
-        sub_020630AC(v13, &v12);
+        MapObject_SetSpritePosOffset(v13, &v12);
         param0->unk_20 = -param0->unk_20;
     }
 
@@ -7750,16 +7663,16 @@ BOOL ov9_0224F6EC(UnkStruct_ov9_0224F6EC *param0)
     }
 
     if (v0 == 1) {
-        Heap_FreeToHeap(param0);
+        Heap_Free(param0);
     }
 
     return v0;
 }
 
-static void ov9_0224F724(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224F724(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224ADC0 *v0 = &param0->unk_1D00;
-    u32 v1 = ov9_022510D0(param0);
+    u32 v1 = DistWorldSystem_GetMapHeaderID(param0);
 
     if (v1 == 582) {
         VarsFlags *v2 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
@@ -7773,12 +7686,12 @@ static void ov9_0224F724(UnkStruct_ov9_02249B04 *param0)
     v0->unk_02 = -1;
 }
 
-static void ov9_0224F760(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224F760(DistWorldSystem *param0)
 {
     return;
 }
 
-static void ov9_0224F764(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224F764(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224ADC0 *v0 = &param0->unk_1D00;
     PlayerAvatar *playerAvatar = param0->fieldSystem->playerAvatar;
@@ -7816,7 +7729,7 @@ static void ov9_0224F764(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224F804(UnkStruct_ov9_02249B04 *param0)
+static void ov9_0224F804(DistWorldSystem *param0)
 {
     UnkStruct_ov9_0224ADC0 *v0 = &param0->unk_1D00;
 
@@ -7845,13 +7758,13 @@ static void ov9_0224F804(UnkStruct_ov9_02249B04 *param0)
     }
 }
 
-static void ov9_0224F854(UnkStruct_ov9_02249B04 *param0, u32 param1)
+static void ov9_0224F854(DistWorldSystem *param0, u32 param1)
 {
     UnkStruct_ov9_0224ADC0 *v0 = &param0->unk_1D00;
     v0->unk_06 = param1;
 }
 
-static void ov9_0224F860(UnkStruct_ov9_02249B04 *param0, s16 param1)
+static void ov9_0224F860(DistWorldSystem *param0, s16 param1)
 {
     UnkStruct_ov9_0224ADC0 *v0 = &param0->unk_1D00;
     v0->unk_00 = param1;
@@ -7869,7 +7782,7 @@ static void ov9_0224F86C(u16 param0, u16 param1, u16 param2, u16 *param3)
     (*param3) = (v0->unk_00_0 + ((v1->unk_00_0 - v0->unk_00_0) * param2 >> 4)) | ((v0->unk_00_5 + ((v1->unk_00_5 - v0->unk_00_5) * param2 >> 4)) << 5) | ((v0->unk_00_10 + ((v1->unk_00_10 - v0->unk_00_10) * param2 >> 4)) << 10);
 }
 
-static void ov9_0224F8C4(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224F930 *param1, const UnkStruct_ov9_0224F8C4 *param2, const VecFx32 *param3)
+static void ov9_0224F8C4(DistWorldSystem *param0, UnkStruct_ov9_0224F930 *param1, const UnkStruct_ov9_0224F8C4 *param2, const VecFx32 *param3)
 {
     param1->unk_00_3 = param2->unk_00;
     param1->unk_00_1 = param2->unk_04;
@@ -7904,7 +7817,7 @@ static void ov9_0224F930(UnkStruct_ov9_0224F930 *param0, int param1, fx32 param2
     param0->unk_00_2 = 1;
 }
 
-static BOOL ov9_0224F970(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224F930 *param1)
+static BOOL ov9_0224F970(DistWorldSystem *param0, UnkStruct_ov9_0224F930 *param1)
 {
     if (param1->unk_10.x != param1->unk_1C.x) {
         param1->unk_10.x += param1->unk_04.x;
@@ -7978,7 +7891,7 @@ static BOOL ov9_0224F970(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224F930 
     return 0;
 }
 
-static const UnkStruct_ov9_0224A8A0 Unk_ov9_02251E40 = {
+static const DistWorldCameraAngleTemplate Unk_ov9_02251E40 = {
     { 0x0, 0x0, 0x0, 0x0 },
     0xF5,
     0xEF,
@@ -7987,7 +7900,7 @@ static const UnkStruct_ov9_0224A8A0 Unk_ov9_02251E40 = {
     0x48
 };
 
-static const UnkStruct_ov9_0224A8A0 Unk_ov9_02251888 = {
+static const DistWorldCameraAngleTemplate Unk_ov9_02251888 = {
     { 0x0, 0x0, 0x0, 0x0 },
     0x0,
     0x0,
@@ -7996,18 +7909,18 @@ static const UnkStruct_ov9_0224A8A0 Unk_ov9_02251888 = {
     0x20
 };
 
-static void ov9_0224FA94(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224FA94 *param1)
+static void ov9_0224FA94(DistWorldSystem *param0, UnkStruct_ov9_0224FA94 *param1)
 {
     MapObject *v0 = Player_MapObject(param0->fieldSystem->playerAvatar);
     int v1 = (((param1->unk_40.unk_10.y) >> 4) / FX32_ONE);
 
     if ((param1->unk_04 == 0) && (v1 == -20)) {
-        ov9_0224A148(param0, &Unk_ov9_02251E40);
+        DoCameraTransition(param0, &Unk_ov9_02251E40);
         ov9_0224A4D0(param0, v0, -32, 72);
         param1->unk_04++;
     } else if ((param1->unk_04 == 1) && (v1 == -36)) {
         MapObject_TryFace(v0, 2);
-        ov9_0224A148(param0, &Unk_ov9_02251888);
+        DoCameraTransition(param0, &Unk_ov9_02251888);
         ov9_0224A4D0(param0, v0, 32, 31);
         param1->unk_04++;
     }
@@ -8022,16 +7935,14 @@ static void ov9_0224FA94(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_0224FA94 
     }
 }
 
-static int ov9_0224FB3C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224FB3C(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     VecFx32 v0;
     UnkStruct_ov9_0224F930 *v1;
     MapObject *v2;
     PlayerAvatar *playerAvatar;
     UnkStruct_ov9_0224FA94 *v4;
-    const UnkStruct_ov9_02252384 *v5;
-
-    v5 = param3;
+    const UnkStruct_ov9_02252384 *v5 = param3;
     v4 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_0224FA94));
     v1 = &v4->unk_40;
     playerAvatar = param0->fieldSystem->playerAvatar;
@@ -8050,20 +7961,20 @@ static int ov9_0224FB3C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
 
     {
         VecFx32 v6 = { 0, 0, 0 };
-        sub_020630AC(v2, &v6);
+        MapObject_SetSpritePosOffset(v2, &v6);
     }
 
     {
         VecFx32 *v7;
-        UnkStruct_ov101_021D5D90 *v8 = sub_0205EC04(playerAvatar);
-        UnkStruct_ov5_02201C58 *v9 = ov5_021F88A8(v8);
+        OverworldAnimManager *v8 = PlayerAvatar_GetSurfMountAnimManager(playerAvatar);
+        Simple3DRotationAngles *v9 = ov5_021F88A8(v8);
 
         ov5_021F88B4(v8, 2, 5);
         ov5_021F88CC(v8, 1 << 2 | 1 << 4 | 1 << 6 | 1 << 5);
 
-        v4->unk_0C.x = (FX32_ONE * (v9->unk_00));
-        v4->unk_0C.y = (FX32_ONE * (v9->unk_02));
-        v4->unk_0C.z = (FX32_ONE * (v9->unk_04));
+        v4->unk_0C.x = (FX32_ONE * (v9->alpha));
+        v4->unk_0C.y = (FX32_ONE * (v9->beta));
+        v4->unk_0C.z = (FX32_ONE * (v9->gamma));
         v4->unk_18.x = (FX32_ONE * -90) / 32;
         v4->unk_18.y = (FX32_ONE * 180) / 32;
         v4->unk_18.z = 0;
@@ -8079,13 +7990,13 @@ static int ov9_0224FB3C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         v4->unk_24.z = (FX32_ONE * 4) / 32;
     }
 
-    Sound_PlayEffect(1488);
+    Sound_PlayEffect(SEQ_SE_PL_FW463);
 
     *param2 = 1;
     return 0;
 }
 
-static int ov9_0224FC2C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224FC2C(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     MapObject *v0 = Player_MapObject(param0->fieldSystem->playerAvatar);
     UnkStruct_ov9_0224FA94 *v1 = ov9_0224E39C(param0);
@@ -8096,18 +8007,18 @@ static int ov9_0224FC2C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     ov9_0224FA94(param0, v1);
 
     {
-        UnkStruct_ov101_021D5D90 *v3 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+        OverworldAnimManager *v3 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
 
         {
-            UnkStruct_ov5_02201C58 *v4 = ov5_021F88A8(v3);
+            Simple3DRotationAngles *v4 = ov5_021F88A8(v3);
 
             ov9_02250F1C(&v1->unk_0C.x, v1->unk_18.x);
             ov9_02250F1C(&v1->unk_0C.y, v1->unk_18.y);
             ov9_02250F1C(&v1->unk_0C.z, v1->unk_18.z);
 
-            v4->unk_00 = ((v1->unk_0C.x) / FX32_ONE);
-            v4->unk_02 = ((v1->unk_0C.y) / FX32_ONE);
-            v4->unk_04 = ((v1->unk_0C.z) / FX32_ONE);
+            v4->alpha = ((v1->unk_0C.x) / FX32_ONE);
+            v4->beta = ((v1->unk_0C.y) / FX32_ONE);
+            v4->gamma = ((v1->unk_0C.z) / FX32_ONE);
         }
 
         {
@@ -8134,7 +8045,7 @@ static int ov9_0224FC2C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         ov9_0224F930(v2, 0, 0x400, (FX32_ONE * 4));
 
         {
-            UnkStruct_ov101_021D5D90 *v6 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+            OverworldAnimManager *v6 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
             VecFx32 *v7;
 
             v7 = ov5_021F88FC(v6);
@@ -8156,10 +8067,10 @@ static int ov9_0224FC2C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_0224FD74(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224FD74(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     int v0;
-    UnkStruct_ov101_021D5D90 *v1 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+    OverworldAnimManager *v1 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
     MapObject *v2 = Player_MapObject(param0->fieldSystem->playerAvatar);
     UnkStruct_ov9_0224FA94 *v3 = ov9_0224E39C(param0);
     UnkStruct_ov9_0224F930 *v4 = &v3->unk_40;
@@ -8171,7 +8082,7 @@ static int ov9_0224FD74(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         VecFx32 v5 = v4->unk_40;
 
         v5.x += v3->unk_38;
-        sub_02063088(v2, &v5);
+        MapObject_SetSpriteJumpOffset(v2, &v5);
     }
 
     ov9_0224FA94(param0, v3);
@@ -8232,10 +8143,10 @@ static int ov9_0224FD74(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_0224FEDC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0224FEDC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     int v0;
-    UnkStruct_ov101_021D5D90 *v1 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+    OverworldAnimManager *v1 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
     MapObject *v2 = Player_MapObject(param0->fieldSystem->playerAvatar);
     UnkStruct_ov9_0224FA94 *v3 = ov9_0224E39C(param0);
     UnkStruct_ov9_0224F930 *v4 = &v3->unk_40;
@@ -8243,21 +8154,21 @@ static int ov9_0224FEDC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     v0 = ov9_0224F970(param0, v4);
 
     MapObject_SetPos(v2, &v4->unk_34);
-    sub_02063088(v2, &v4->unk_40);
+    MapObject_SetSpriteJumpOffset(v2, &v4->unk_40);
 
     ov9_0224FA94(param0, v3);
 
     {
         VecFx32 *v5;
-        UnkStruct_ov5_02201C58 *v6 = ov5_021F88A8(v1);
+        Simple3DRotationAngles *v6 = ov5_021F88A8(v1);
 
         ov9_02250F1C(&v3->unk_0C.x, v3->unk_18.x);
         ov9_02250F1C(&v3->unk_0C.y, v3->unk_18.y);
         ov9_02250F1C(&v3->unk_0C.z, v3->unk_18.z);
 
-        v6->unk_00 = ((v3->unk_0C.x) / FX32_ONE);
-        v6->unk_02 = ((v3->unk_0C.y) / FX32_ONE);
-        v6->unk_04 = ((v3->unk_0C.z) / FX32_ONE);
+        v6->alpha = ((v3->unk_0C.x) / FX32_ONE);
+        v6->beta = ((v3->unk_0C.y) / FX32_ONE);
+        v6->gamma = ((v3->unk_0C.z) / FX32_ONE);
 
         ov9_02250F1C(&v3->unk_30, v3->unk_34);
         ov5_021F8908(v1, ((v3->unk_30) / FX32_ONE));
@@ -8287,11 +8198,11 @@ static int ov9_0224FEDC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         MapObject_UpdateCoords(v2);
         MapObject_TryFace(v2, 2);
         MapObject_Turn(v2, 2);
-        sub_02063088(v2, &v13);
-        sub_020630AC(v2, &v13);
-        ov9_0224C378(param0, v8, ((v9) / 2), v10, 4);
+        MapObject_SetSpriteJumpOffset(v2, &v13);
+        MapObject_SetSpritePosOffset(v2, &v13);
+        FindAndPrepareNewCurrentFloatingPlatform(param0, v8, ((v9) / 2), v10, 4);
         PlayerAvatar_SetDistortionState(param0->fieldSystem->playerAvatar, AVATAR_DISTORTION_STATE_ACTIVE);
-        sub_02062E28(v2, 0);
+        MapObject_SetHeightCalculationDisabled(v2, FALSE);
 
         {
             {
@@ -8319,7 +8230,7 @@ static int ov9_0224FEDC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_022500E0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022500E0(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     u32 v0[2] = { 0xa, 0x6 };
     UnkStruct_ov9_0224FA94 *v1 = ov9_0224E39C(param0);
@@ -8346,7 +8257,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251544[5] = {
     ov9_022500E0
 };
 
-static const UnkStruct_ov9_0224A8A0 Unk_ov9_02251C48 = {
+static const DistWorldCameraAngleTemplate Unk_ov9_02251C48 = {
     { 0x0, 0x0, 0x0, 0x0 },
     0x37,
     0xF0,
@@ -8355,27 +8266,25 @@ static const UnkStruct_ov9_0224A8A0 Unk_ov9_02251C48 = {
     0x10
 };
 
-static void ov9_02250138(UnkStruct_ov9_02249B04 *param0, UnkStruct_ov9_02250138 *param1)
+static void ov9_02250138(DistWorldSystem *param0, UnkStruct_ov9_02250138 *param1)
 {
     MapObject *v0 = Player_MapObject(param0->fieldSystem->playerAvatar);
     int v1 = (((param1->unk_34.unk_10.y) >> 4) / FX32_ONE);
 
     if ((param1->unk_04 == 0) && (v1 == 20)) {
-        ov9_0224A148(param0, &Unk_ov9_02251C48);
+        DoCameraTransition(param0, &Unk_ov9_02251C48);
         param1->unk_04++;
     }
 }
 
-static int ov9_02250170(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250170(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     VecFx32 v0;
     UnkStruct_ov9_0224F930 *v1;
     MapObject *v2;
     PlayerAvatar *playerAvatar;
     UnkStruct_ov9_02250138 *v4;
-    const UnkStruct_ov9_022523F0 *v5;
-
-    v5 = param3;
+    const UnkStruct_ov9_022523F0 *v5 = param3;
     v4 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250138));
     v1 = &v4->unk_34;
     playerAvatar = param0->fieldSystem->playerAvatar;
@@ -8394,20 +8303,20 @@ static int ov9_02250170(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
 
     {
         VecFx32 v6 = { 0, 0, 0 };
-        sub_020630AC(v2, &v6);
+        MapObject_SetSpritePosOffset(v2, &v6);
     }
 
     {
         VecFx32 *v7;
-        UnkStruct_ov101_021D5D90 *v8 = sub_0205EC04(playerAvatar);
-        UnkStruct_ov5_02201C58 *v9 = ov5_021F88A8(v8);
+        OverworldAnimManager *v8 = PlayerAvatar_GetSurfMountAnimManager(playerAvatar);
+        Simple3DRotationAngles *v9 = ov5_021F88A8(v8);
 
         ov5_021F88B4(v8, 3, 1);
         ov5_021F88CC(v8, 1 << 2 | 1 << 4 | 1 << 6 | 1 << 5);
 
-        v4->unk_08.x = (FX32_ONE * (v9->unk_00));
-        v4->unk_08.y = (FX32_ONE * (v9->unk_02));
-        v4->unk_08.z = (FX32_ONE * (v9->unk_04));
+        v4->unk_08.x = (FX32_ONE * (v9->alpha));
+        v4->unk_08.y = (FX32_ONE * (v9->beta));
+        v4->unk_08.z = (FX32_ONE * (v9->gamma));
         v4->unk_14.x = (FX32_ONE * -90) / 4;
         v4->unk_14.y = (FX32_ONE * 180) / 4;
         v4->unk_14.z = 0;
@@ -8423,13 +8332,13 @@ static int ov9_02250170(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         v4->unk_20.z = (FX32_ONE * 0) / 4;
     }
 
-    Sound_PlayEffect(1488);
+    Sound_PlayEffect(SEQ_SE_PL_FW463);
 
     *param2 = 1;
     return 0;
 }
 
-static int ov9_02250260(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250260(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     MapObject *v0 = Player_MapObject(param0->fieldSystem->playerAvatar);
     UnkStruct_ov9_02250138 *v1 = ov9_0224E39C(param0);
@@ -8440,18 +8349,18 @@ static int ov9_02250260(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     ov9_02250138(param0, v1);
 
     {
-        UnkStruct_ov101_021D5D90 *v3 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+        OverworldAnimManager *v3 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
 
         {
-            UnkStruct_ov5_02201C58 *v4 = ov5_021F88A8(v3);
+            Simple3DRotationAngles *v4 = ov5_021F88A8(v3);
 
             ov9_02250F1C(&v1->unk_08.x, v1->unk_14.x);
             ov9_02250F1C(&v1->unk_08.y, v1->unk_14.y);
             ov9_02250F1C(&v1->unk_08.z, v1->unk_14.z);
 
-            v4->unk_00 = ((v1->unk_08.x) / FX32_ONE);
-            v4->unk_02 = ((v1->unk_08.y) / FX32_ONE);
-            v4->unk_04 = ((v1->unk_08.z) / FX32_ONE);
+            v4->alpha = ((v1->unk_08.x) / FX32_ONE);
+            v4->beta = ((v1->unk_08.y) / FX32_ONE);
+            v4->gamma = ((v1->unk_08.z) / FX32_ONE);
         }
 
         {
@@ -8478,7 +8387,7 @@ static int ov9_02250260(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         ov9_0224F930(v2, 0, 0x200, (FX32_ONE * 4));
 
         {
-            UnkStruct_ov101_021D5D90 *v6 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+            OverworldAnimManager *v6 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
             VecFx32 *v7;
 
             v7 = ov5_021F88FC(v6);
@@ -8497,10 +8406,10 @@ static int ov9_02250260(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250388(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250388(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     int v0;
-    UnkStruct_ov101_021D5D90 *v1 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+    OverworldAnimManager *v1 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
     MapObject *v2 = Player_MapObject(param0->fieldSystem->playerAvatar);
     UnkStruct_ov9_02250138 *v3 = ov9_0224E39C(param0);
     UnkStruct_ov9_0224F930 *v4 = &v3->unk_34;
@@ -8508,7 +8417,7 @@ static int ov9_02250388(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     v0 = ov9_0224F970(param0, v4);
 
     MapObject_SetPos(v2, &v4->unk_34);
-    sub_02063088(v2, &v4->unk_40);
+    MapObject_SetSpriteJumpOffset(v2, &v4->unk_40);
     ov9_02250138(param0, v3);
 
     {
@@ -8550,10 +8459,10 @@ static int ov9_02250388(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250468(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250468(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     int v0;
-    UnkStruct_ov101_021D5D90 *v1 = sub_0205EC04(param0->fieldSystem->playerAvatar);
+    OverworldAnimManager *v1 = PlayerAvatar_GetSurfMountAnimManager(param0->fieldSystem->playerAvatar);
     MapObject *v2 = Player_MapObject(param0->fieldSystem->playerAvatar);
     UnkStruct_ov9_02250138 *v3 = ov9_0224E39C(param0);
     UnkStruct_ov9_0224F930 *v4 = &v3->unk_34;
@@ -8561,21 +8470,21 @@ static int ov9_02250468(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     v0 = ov9_0224F970(param0, v4);
 
     MapObject_SetPos(v2, &v4->unk_34);
-    sub_02063088(v2, &v4->unk_40);
+    MapObject_SetSpriteJumpOffset(v2, &v4->unk_40);
 
     ov9_02250138(param0, v3);
 
     {
         VecFx32 *v5;
-        UnkStruct_ov5_02201C58 *v6 = ov5_021F88A8(v1);
+        Simple3DRotationAngles *v6 = ov5_021F88A8(v1);
 
         ov9_02250F1C(&v3->unk_08.x, v3->unk_14.x);
         ov9_02250F1C(&v3->unk_08.y, v3->unk_14.y);
         ov9_02250F1C(&v3->unk_08.z, v3->unk_14.z);
 
-        v6->unk_00 = ((v3->unk_08.x) / FX32_ONE);
-        v6->unk_02 = ((v3->unk_08.y) / FX32_ONE);
-        v6->unk_04 = ((v3->unk_08.z) / FX32_ONE);
+        v6->alpha = ((v3->unk_08.x) / FX32_ONE);
+        v6->beta = ((v3->unk_08.y) / FX32_ONE);
+        v6->gamma = ((v3->unk_08.z) / FX32_ONE);
 
         ov9_02250F1C(&v3->unk_2C, v3->unk_30);
         ov5_021F8908(v1, ((v3->unk_2C) / FX32_ONE));
@@ -8605,11 +8514,11 @@ static int ov9_02250468(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         MapObject_UpdateCoords(v2);
         MapObject_TryFace(v2, 3);
         MapObject_Turn(v2, 3);
-        sub_02063088(v2, &v13);
-        sub_020630AC(v2, &v13);
-        ov9_0224C378(param0, v8, ((v9) / 2), v10, 4);
+        MapObject_SetSpriteJumpOffset(v2, &v13);
+        MapObject_SetSpritePosOffset(v2, &v13);
+        FindAndPrepareNewCurrentFloatingPlatform(param0, v8, ((v9) / 2), v10, 4);
         PlayerAvatar_SetDistortionState(param0->fieldSystem->playerAvatar, AVATAR_DISTORTION_STATE_CEILING);
-        sub_02062E28(v2, 1);
+        MapObject_SetHeightCalculationDisabled(v2, TRUE);
 
         {
             {
@@ -8632,7 +8541,7 @@ static int ov9_02250468(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250650(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250650(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     u32 v0[3] = { 0x97, 0x93, 0x73 };
     UnkStruct_ov9_02250138 *v1 = ov9_0224E39C(param0);
@@ -8659,7 +8568,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_0225151C[5] = {
     ov9_02250650
 };
 
-static int ov9_022506AC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022506AC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_022506AC *v0 = param3;
 
@@ -8668,7 +8577,7 @@ static int ov9_022506AC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_022506CC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022506CC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     return 2;
 }
@@ -8678,7 +8587,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_022512C0[2] = {
     ov9_022506CC
 };
 
-static int ov9_022506D0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022506D0(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_022506D0 *v0 = param3;
     VarsFlags *v1 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
@@ -8691,7 +8600,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251238[1] = {
     ov9_022506D0
 };
 
-static int ov9_022506EC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022506EC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_022506EC *v0 = param3;
     VarsFlags *v1 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
@@ -8704,7 +8613,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_0225121C[1] = {
     ov9_022506EC
 };
 
-static int ov9_02250704(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250704(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_02250704 *v0 = param3;
 
@@ -8716,7 +8625,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251270[1] = {
     ov9_02250704
 };
 
-static int ov9_02250710(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250710(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     const UnkStruct_ov9_02250704 *v0 = param3;
 
@@ -8728,19 +8637,19 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251254[1] = {
     ov9_02250710
 };
 
-static int ov9_0225071C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0225071C(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    const UnkStruct_ov9_02252414 *v0 = param3;
+    const DistWorldGiratinaShadowTemplate *v0 = param3;
 
-    ov9_0224E91C(param0, v0);
+    LoadGiratinaShadowPropAnimation(param0, v0);
     *param2 = 1;
     return 0;
 }
 
-static int ov9_02250730(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250730(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    if (ov9_0224E964(param0) == 1) {
-        ov9_0224E988(param0);
+    if (IsGiratinaShadowAnimationFinished(param0) == TRUE) {
+        FinishGiratinaShadowPropRenderer(param0);
         return 2;
     }
 
@@ -8782,7 +8691,7 @@ static void ov9_0225074C(UnkStruct_ov9_0225074C *param0)
 
 void ov9_02250780(FieldSystem *fieldSystem)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
     if (v0->unk_1EC0 == 1) {
         UnkStruct_ov9_0225074C *v1 = ov9_0224E39C(v0);
@@ -8796,27 +8705,22 @@ void ov9_02250780(FieldSystem *fieldSystem)
     }
 }
 
-static int ov9_022507C4(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022507C4(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_0225074C *v0;
-
-    v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_0225074C));
+    UnkStruct_ov9_0225074C *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_0225074C));
     v0->unk_18 = ov9_0224F0D4(param0, 582, (0x80 + 0));
     v0->unk_08.y = ((10 << 4) * FX32_ONE);
 
-    sub_020630AC(v0->unk_18, &v0->unk_08);
+    MapObject_SetSpritePosOffset(v0->unk_18, &v0->unk_08);
 
     *param2 = 1;
     return 0;
 }
 
-static int ov9_022507FC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022507FC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_020216E0 *v0;
-    UnkStruct_ov9_0225074C *v1;
-
-    v1 = ov9_0224E39C(param0);
-    v0 = ov5_021EB1A0(v1->unk_18);
+    UnkStruct_ov9_0225074C *v1 = ov9_0224E39C(param0);
+    UnkStruct_020216E0 *v0 = ov5_021EB1A0(v1->unk_18);
 
     if (v0 != NULL) {
         v1->unk_00 = (FX32_ONE * 16);
@@ -8827,7 +8731,7 @@ static int ov9_022507FC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         ov9_0224F854(param0, 1);
 
         param0->unk_1EC2 = 2;
-        Sound_PlayEffect(1489);
+        Sound_PlayEffect(SEQ_SE_PL_GIRA);
         *param2 = 2;
         return 1;
     }
@@ -8835,11 +8739,9 @@ static int ov9_022507FC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250854(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250854(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_0225074C *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_0225074C *v0 = ov9_0224E39C(param0);
     v0->unk_04 += (FX32_ONE * 8) / (3 * 30);
 
     if (v0->unk_04 >= (FX32_ONE * 12)) {
@@ -8859,17 +8761,15 @@ static int ov9_02250854(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         *param2 = 3;
     }
 
-    sub_020630AC(v0->unk_18, &v0->unk_08);
+    MapObject_SetSpritePosOffset(v0->unk_18, &v0->unk_08);
     return 0;
 }
 
-static int ov9_022508C0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022508C0(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_020216E0 *v0;
     NNSG3dResMdl *v1;
-    UnkStruct_ov9_0225074C *v2;
-
-    v2 = ov9_0224E39C(param0);
+    UnkStruct_ov9_0225074C *v2 = ov9_0224E39C(param0);
     v0 = ov5_021EB1A0(v2->unk_18);
     v1 = sub_02021430(v0);
 
@@ -8884,11 +8784,9 @@ static int ov9_022508C0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_022508F4(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022508F4(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_0225074C *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_0225074C *v0 = ov9_0224E39C(param0);
     v0->unk_14++;
 
     if (v0->unk_14 >= 30) {
@@ -8907,21 +8805,19 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251490[5] = {
     ov9_022508F4
 };
 
-static int ov9_02250918(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250918(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250918 *v0;
-
-    v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250918));
+    UnkStruct_ov9_02250918 *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250918));
     v0->unk_20 = ov9_0224F0D4(param0, 579, (0x80 + 3));
 
-    sub_02005844(480, 0);
+    Sound_PlayPokemonCry(SPECIES_UXIE, 0);
 
     v0->unk_04 = 1;
     *param2 = 1;
     return 0;
 }
 
-static int ov9_0225094C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_0225094C(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250918 *v0;
     fx32 v1 = (FX32_ONE * 2);
@@ -8933,7 +8829,7 @@ static int ov9_0225094C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     }
 
     v0->unk_14.y += v1;
-    sub_020630AC(v0->unk_20, &v0->unk_14);
+    MapObject_SetSpritePosOffset(v0->unk_20, &v0->unk_14);
 
     if ((((v0->unk_14.y) >> 4) / FX32_ONE) >= 17) {
         *param2 = 2;
@@ -8942,13 +8838,11 @@ static int ov9_0225094C(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250994(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250994(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250918 *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250918 *v0 = ov9_0224E39C(param0);
     v0->unk_14.z -= (FX32_ONE * 1);
-    sub_020630AC(v0->unk_20, &v0->unk_14);
+    MapObject_SetSpritePosOffset(v0->unk_20, &v0->unk_14);
 
     if ((((v0->unk_14.z) >> 4) / FX32_ONE) <= -2) {
         v0->unk_0C = v0->unk_14.y;
@@ -8958,14 +8852,14 @@ static int ov9_02250994(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_022509D4(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_022509D4(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250918 *v0;
     fx32 v1[8] = { 0x0, 0x800, 0x1000, 0x2000, 0x4000, 0x6000, 0x7000, 0x8000 };
 
     v0 = ov9_0224E39C(param0);
     v0->unk_14.y = v0->unk_0C + v1[v0->unk_00 >> 1];
-    sub_020630AC(v0->unk_20, &v0->unk_14);
+    MapObject_SetSpritePosOffset(v0->unk_20, &v0->unk_14);
 
     v0->unk_00 += v0->unk_04;
 
@@ -8985,14 +8879,12 @@ static int ov9_022509D4(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250A58(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250A58(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250918 *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250918 *v0 = ov9_0224E39C(param0);
     v0->unk_14.z += (FX32_ONE * 1);
 
-    sub_020630AC(v0->unk_20, &v0->unk_14);
+    MapObject_SetSpritePosOffset(v0->unk_20, &v0->unk_14);
 
     if ((((v0->unk_14.z) >> 4) / FX32_ONE) == 1) {
         *param2 = 5;
@@ -9001,18 +8893,16 @@ static int ov9_02250A58(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250A90(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250A90(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250918 *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250918 *v0 = ov9_0224E39C(param0);
 
     if (v0->unk_10 < (FX32_ONE * 2)) {
         v0->unk_10 += 0x200;
     }
 
     v0->unk_14.y -= v0->unk_10;
-    sub_020630AC(v0->unk_20, &v0->unk_14);
+    MapObject_SetSpritePosOffset(v0->unk_20, &v0->unk_14);
 
     if ((((v0->unk_14.y) >> 4) / FX32_ONE) <= 0) {
         ov9_0224EE70(param0, v0->unk_20);
@@ -9044,20 +8934,18 @@ static const MapObjectAnimCmd Unk_ov9_02251E74[] = {
     { 0xfe, 0x0 }
 };
 
-static int ov9_02250AFC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250AFC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250AFC *v0;
-
-    v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250AFC));
+    UnkStruct_ov9_02250AFC *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250AFC));
     v0->unk_14 = ov9_0224F0D4(param0, 579, (0x80 + 4));
 
-    sub_02005844(482, 0);
+    Sound_PlayPokemonCry(SPECIES_AZELF, 0);
 
     *param2 = 1;
     return 0;
 }
 
-static int ov9_02250B30(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250B30(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250AFC *v0;
     fx32 v1 = (FX32_ONE * 2);
@@ -9069,7 +8957,7 @@ static int ov9_02250B30(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     }
 
     v0->unk_04.y += v1;
-    sub_020630AC(v0->unk_14, &v0->unk_04);
+    MapObject_SetSpritePosOffset(v0->unk_14, &v0->unk_04);
 
     if ((((v0->unk_04.y) >> 4) / FX32_ONE) >= 13) {
         v0->unk_10 = MapObject_StartAnimation(
@@ -9080,11 +8968,9 @@ static int ov9_02250B30(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250B84(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250B84(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250AFC *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250AFC *v0 = ov9_0224E39C(param0);
 
     if (MapObject_HasAnimationEnded(v0->unk_10) == 1) {
         MapObject_FinishAnimation(v0->unk_10);
@@ -9095,18 +8981,16 @@ static int ov9_02250B84(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250BAC(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250BAC(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250AFC *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250AFC *v0 = ov9_0224E39C(param0);
 
     if (v0->unk_00 < (FX32_ONE * 2)) {
         v0->unk_00 += 0x200;
     }
 
     v0->unk_04.y -= v0->unk_00;
-    sub_020630AC(v0->unk_14, &v0->unk_04);
+    MapObject_SetSpritePosOffset(v0->unk_14, &v0->unk_04);
 
     if ((((v0->unk_04.y) >> 4) / FX32_ONE) <= 0) {
         ov9_0224EE70(param0, v0->unk_14);
@@ -9215,19 +9099,17 @@ static const MapObjectAnimCmd Unk_ov9_02252E64[] = {
     { 0xfe, 0x0 }
 };
 
-static int ov9_02250C14(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250C14(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250C14 *v0;
-
-    v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250AFC));
+    UnkStruct_ov9_02250C14 *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250AFC));
     v0->unk_18 = ov9_0224F0D4(param0, 579, (0x80 + 5));
 
-    sub_02005844(481, 0);
+    Sound_PlayPokemonCry(SPECIES_MESPRIT, 0);
     *param2 = 1;
     return 0;
 }
 
-static int ov9_02250C48(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250C48(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250C14 *v0;
     fx32 v1 = (FX32_ONE * 2);
@@ -9239,13 +9121,13 @@ static int ov9_02250C48(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     }
 
     v0->unk_04.y += v1;
-    sub_020630AC(v0->unk_18, &v0->unk_04);
+    MapObject_SetSpritePosOffset(v0->unk_18, &v0->unk_04);
 
     if ((((v0->unk_04.y) >> 4) / FX32_ONE) >= 9) {
         int v2, v3, v4;
         const MapObjectAnimCmd *v5, *v6;
 
-        ov9_02250F44(param0, &v2, &v3, &v4);
+        GetPlayerPos(param0, &v2, &v3, &v4);
 
         if (v4 == 67) {
             v5 = Unk_ov9_02252E14;
@@ -9263,11 +9145,9 @@ static int ov9_02250C48(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250CD8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250CD8(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250C14 *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250C14 *v0 = ov9_0224E39C(param0);
 
     if ((MapObject_HasAnimationEnded(v0->unk_10) == 1) && (MapObject_HasAnimationEnded(v0->unk_14) == 1)) {
         MapObject_FinishAnimation(v0->unk_10);
@@ -9279,18 +9159,16 @@ static int ov9_02250CD8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250D10(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250D10(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250C14 *v0;
-
-    v0 = ov9_0224E39C(param0);
+    UnkStruct_ov9_02250C14 *v0 = ov9_0224E39C(param0);
 
     if (v0->unk_00 < (FX32_ONE * 2)) {
         v0->unk_00 += 0x200;
     }
 
     v0->unk_04.y -= v0->unk_00;
-    sub_020630AC(v0->unk_18, &v0->unk_04);
+    MapObject_SetSpritePosOffset(v0->unk_18, &v0->unk_04);
 
     if ((((v0->unk_04.y) >> 4) / FX32_ONE) <= 0) {
         ov9_0224EE70(param0, v0->unk_18);
@@ -9311,7 +9189,7 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251448[4] = {
     ov9_02250D10
 };
 
-const UnkStruct_ov9_0224A8A0 Unk_ov9_02251D68 = {
+const DistWorldCameraAngleTemplate Unk_ov9_02251D68 = {
     { 0x0, 0x0, 0x0, 0x0 },
     0x10,
     0x0,
@@ -9320,13 +9198,11 @@ const UnkStruct_ov9_0224A8A0 Unk_ov9_02251D68 = {
     0x14
 };
 
-static int ov9_02250D78(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250D78(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250D78 *v0;
+    UnkStruct_ov9_02250D78 *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250D78));
 
-    v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250D78));
-
-    ov9_0224A148(param0, &Unk_ov9_02251D68);
+    DoCameraTransition(param0, &Unk_ov9_02251D68);
 
     v0->unk_02 = 20 + 16;
     v0->unk_00 = 1;
@@ -9335,7 +9211,7 @@ static int ov9_02250D78(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 1;
 }
 
-static int ov9_02250DA0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250DA0(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250D78 *v0 = ov9_0224E39C(param0);
 
@@ -9344,7 +9220,7 @@ static int ov9_02250DA0(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     if (v0->unk_02 <= 0) {
         v0->unk_02 = 48;
         Sound_StopEffect(1484, 0);
-        ov9_0224B64C(param0, v0->unk_00);
+        ShowGhostPropGroup(param0, v0->unk_00);
         v0->unk_00++;
 
         if (v0->unk_00 >= 4) {
@@ -9360,11 +9236,9 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_02251340[2] = {
     ov9_02250DA0
 };
 
-static int ov9_02250DE8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250DE8(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
-    UnkStruct_ov9_02250DE8 *v0;
-
-    v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250DE8));
+    UnkStruct_ov9_02250DE8 *v0 = ov9_0224E37C(param0, sizeof(UnkStruct_ov9_02250DE8));
     v0->unk_02 = 16;
     v0->unk_00 = 3;
 
@@ -9372,7 +9246,7 @@ static int ov9_02250DE8(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 1;
 }
 
-static int ov9_02250E00(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250E00(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250DE8 *v0 = ov9_0224E39C(param0);
 
@@ -9382,7 +9256,7 @@ static int ov9_02250E00(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
         if (v0->unk_00 >= 1) {
             v0->unk_02 = 48;
             Sound_StopEffect(1484, 0);
-            ov9_0224B624(param0, v0->unk_00);
+            HideGhostPropGroup(param0, v0->unk_00);
             v0->unk_00--;
         } else {
             v0->unk_02 = 8;
@@ -9393,7 +9267,7 @@ static int ov9_02250E00(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *
     return 0;
 }
 
-static int ov9_02250E50(UnkStruct_ov9_02249B04 *param0, FieldTask *param1, u16 *param2, const void *param3)
+static int ov9_02250E50(DistWorldSystem *param0, FieldTask *param1, u16 *param2, const void *param3)
 {
     UnkStruct_ov9_02250DE8 *v0 = ov9_0224E39C(param0);
 
@@ -9412,35 +9286,41 @@ static const UnkFuncPtr_ov9_02253BE4 Unk_ov9_0225139C[3] = {
     ov9_02250E50
 };
 
-static BOOL ov9_02250E6C(int param0, int param1, int param2, const UnkStruct_ov9_02250E6C *param3)
+static BOOL DistWorldBounds_AreCoordinatesInBounds(int tileX, int tileY, int tileZ, const DistWorldBounds *bounds)
 {
-    if ((param1 >= param3->unk_02) && (param1 <= param3->unk_02 + param3->unk_08) && (param2 >= param3->unk_04) && (param2 <= param3->unk_04 + param3->unk_0A) && (param0 >= param3->unk_00) && (param0 <= param3->unk_00 + param3->unk_06)) {
-        return 1;
+    if (
+        tileY >= bounds->startTileY
+        && tileY <= bounds->startTileY + bounds->sizeY
+        && tileZ >= bounds->startTileZ
+        && tileZ <= bounds->startTileZ + bounds->sizeZ
+        && tileX >= bounds->startTileX
+        && tileX <= bounds->startTileX + bounds->sizeX) {
+        return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
-static int ov9_02250EB0(u16 param0, u16 param1)
+static int CalculateCameraAngleDelta(u16 currentAngleComponent, u16 targetAngleComponent)
 {
-    int v0 = (s16)param1 - (s16)param0;
-    int v1 = v0;
+    int angleComponentDelta = (s16)targetAngleComponent - (s16)currentAngleComponent;
+    int fixedAngleComponentDelta = angleComponentDelta;
 
-    if (v1 < 0) {
-        v1 = -v1;
+    if (fixedAngleComponentDelta < 0) {
+        fixedAngleComponentDelta = -fixedAngleComponentDelta;
     }
 
-    if (v1 > 0x8000) {
-        v1 = (v1 + 0x8000) % 0x8000;
+    if (fixedAngleComponentDelta > S16_SIGN_MASK) {
+        fixedAngleComponentDelta = (fixedAngleComponentDelta + S16_SIGN_MASK) % S16_SIGN_MASK;
 
-        if (param0 < param1) {
-            v1 = -v1;
+        if (currentAngleComponent < targetAngleComponent) {
+            fixedAngleComponentDelta = -fixedAngleComponentDelta;
         }
 
-        v0 = v1;
+        angleComponentDelta = fixedAngleComponentDelta;
     }
 
-    return v0;
+    return angleComponentDelta;
 }
 
 static void ov9_02250EE8(s16 *param0, s16 param1)
@@ -9469,115 +9349,97 @@ static void ov9_02250F1C(fx32 *param0, fx32 param1)
     }
 }
 
-static void ov9_02250F44(UnkStruct_ov9_02249B04 *param0, int *param1, int *param2, int *param3)
+static void GetPlayerPos(DistWorldSystem *system, int *playerX, int *playerY, int *playerZ)
 {
-    MapObject *v0 = Player_MapObject(param0->fieldSystem->playerAvatar);
+    MapObject *playerMapObj = Player_MapObject(system->fieldSystem->playerAvatar);
 
-    *param1 = MapObject_GetX(v0);
-    *param2 = MapObject_GetY(v0);
-    *param2 = ((*param2) / 2);
-    *param3 = MapObject_GetZ(v0);
+    *playerX = MapObject_GetX(playerMapObj);
+    *playerY = MapObject_GetY(playerMapObj) / 2;
+    *playerZ = MapObject_GetZ(playerMapObj);
 }
 
 BOOL ov9_02250F74(FieldSystem *fieldSystem)
 {
-    UnkStruct_02027860 *v0;
+    PersistedMapFeatures *v0 = MiscSaveBlock_GetPersistedMapFeatures(FieldSystem_GetSaveData(fieldSystem));
 
-    v0 = sub_02027860(FieldSystem_GetSaveData(fieldSystem));
-
-    if (sub_02027F80(v0) != 9) {
+    if (PersistedMapFeatures_GetID(v0) != DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) {
         return 0;
     }
 
     return 1;
 }
 
-BOOL ov9_02250F90(FieldSystem *fieldSystem, int param1, int param2, int param3)
+BOOL DistWorld_CheckCollisionOnCurrentFloatingPlatform(FieldSystem *fieldSystem, int tileX, int tileY, int tileZ)
 {
-    u16 v0;
-    UnkStruct_ov9_02249B04 *v1 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *distWorldSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    u16 tileAttributes = GetCurrentFloatingPlatformTileAttributes(distWorldSystem, tileX, tileY, tileZ);
 
-    v0 = ov9_0224C55C(v1, param1, param2, param3);
-
-    if ((v0 == 65535) || (v0 == 65534)) {
-        return 1;
+    if (tileAttributes == (u16)INVALID_TERRAIN_ATTRIBUTES || tileAttributes == (u16)OUT_OF_BOUNDS_TERRAIN_ATTRIBUTES) {
+        return TRUE;
     }
 
-    v0 = (((v0) & 0x8000) >> 15);
-
-    if (v0) {
-        return 1;
-    }
-
-    return 0;
+    u16 hasCollision = (tileAttributes & TERRAIN_ATTRIBUTES_COLLISION_MASK) >> TERRAIN_ATTRIBUTES_COLLISION_SHIFT;
+    return hasCollision ? TRUE : FALSE;
 }
 
-BOOL ov9_02250FBC(FieldSystem *fieldSystem, int param1, int param2, int param3)
+BOOL DistWorld_IsValidTileOnCurrentFloatingPlatform(FieldSystem *fieldSystem, int tileX, int tileY, int tileZ)
 {
-    u16 v0;
-    UnkStruct_ov9_02249B04 *v1 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *distWorldSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    u16 tileAttributes = GetCurrentFloatingPlatformTileAttributes(distWorldSystem, tileX, tileY, tileZ);
 
-    v0 = ov9_0224C55C(v1, param1, param2, param3);
-
-    if ((v0 == 65535) || (v0 == 65534)) {
-        return 0;
+    if (tileAttributes == (u16)INVALID_TERRAIN_ATTRIBUTES || tileAttributes == (u16)OUT_OF_BOUNDS_TERRAIN_ATTRIBUTES) {
+        return FALSE;
     }
 
-    return 1;
+    return TRUE;
 }
 
 BOOL ov9_02250FD8(FieldSystem *fieldSystem, int param1, int param2, int param3)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
-    s16 v1 = ov9_0224C494(v0);
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
+    s16 v1 = GetCurrentFloatingPlatformKind(v0);
 
-    return ov9_0224C324(v0, param1, param2, param3, v1);
+    return HasFloatingPlatformAtCoords(v0, param1, param2, param3, v1);
 }
 
 void ov9_02251000(FieldSystem *fieldSystem, int param1, int param2, int param3)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
-    s16 v1 = ov9_0224C494(v0);
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
+    s16 v1 = GetCurrentFloatingPlatformKind(v0);
 
-    if (ov9_0224C324(v0, param1, param2, param3, v1) == 1) {
-        ov9_0224C378(v0, param1, param2, param3, v1);
+    if (HasFloatingPlatformAtCoords(v0, param1, param2, param3, v1) == TRUE) {
+        FindAndPrepareNewCurrentFloatingPlatform(v0, param1, param2, param3, v1);
         return;
     }
 
     GF_ASSERT(0);
 }
 
-BOOL ov9_02251044(FieldSystem *fieldSystem, int param1, int param2, int param3, u32 *param4)
+BOOL DistWorld_GetTileBehaviorOnCurrentFloatingPlatform(FieldSystem *fieldSystem, int tileX, int tileY, int tileZ, u32 *tileBehavior)
 {
-    UnkStruct_02027860 *v0;
+    PersistedMapFeatures *persistedMapFeatures = MiscSaveBlock_GetPersistedMapFeatures(FieldSystem_GetSaveData(fieldSystem));
 
-    v0 = sub_02027860(FieldSystem_GetSaveData(fieldSystem));
-
-    if (sub_02027F80(v0) != 9) {
+    if (PersistedMapFeatures_GetID(persistedMapFeatures) != DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) {
         GF_ASSERT(0);
-        return 0;
+        return FALSE;
     }
 
-    {
-        u16 v1;
-        UnkStruct_ov9_02249B04 *v2 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *distWorldSystem = fieldSystem->unk_04->dynamicMapFeaturesData;
+    u16 tileAttributes = GetCurrentFloatingPlatformTileAttributes(distWorldSystem, tileX, tileY, tileZ);
 
-        v1 = ov9_0224C55C(v2, param1, param2, param3);
-
-        if ((v1 == 65535) || (v1 == 65534)) {
-            *param4 = GetNullTileBehaviorID();
-            return 0;
-        }
-
-        *param4 = ((v1) & 0xff);
-        return 1;
+    if (tileAttributes == (u16)INVALID_TERRAIN_ATTRIBUTES || tileAttributes == (u16)OUT_OF_BOUNDS_TERRAIN_ATTRIBUTES) {
+        *tileBehavior = GetNullTileBehaviorID();
+        return FALSE;
     }
+
+    *tileBehavior = tileAttributes & TERRAIN_ATTRIBUTES_TILE_BEHAVIOR_MASK;
+    return TRUE;
 }
 
 void ov9_02251094(int param0, int *param1, int *param2, int *param3)
 {
     UnkStruct_ov9_0224BFE0 v0;
-    NARC *v1 = NARC_ctor(NARC_INDEX_FIELDDATA__TORNWORLD__TW_ARC, 4);
+    NARC *v1 = NARC_ctor(NARC_INDEX_FIELDDATA__TORNWORLD__TW_ARC, HEAP_ID_FIELD1);
 
     ov9_0224BF8C(v1, &v0);
     ov9_0224C050(&v0, param0, param1, param2, param3);
@@ -9585,79 +9447,96 @@ void ov9_02251094(int param0, int *param1, int *param2, int *param3)
     NARC_dtor(v1);
 }
 
-static u32 ov9_022510D0(UnkStruct_ov9_02249B04 *param0)
+static u32 DistWorldSystem_GetMapHeaderID(DistWorldSystem *system)
 {
-    return param0->fieldSystem->location->mapId;
+    return system->fieldSystem->location->mapId;
 }
 
-static int ov9_022510D8(u32 param0)
+static enum AvatarDistortionState GetAvatarDistortionStateForFloatingPlatformKind(u32 platformKind)
 {
-    switch (param0) {
-    case 0:
+    switch (platformKind) {
+    case FLOATING_PLATFORM_KIND_FLOOR:
         return AVATAR_DISTORTION_STATE_FLOOR;
-    case 1:
+
+    case FLOATING_PLATFORM_KIND_WEST_WALL:
         return AVATAR_DISTORTION_STATE_WEST_WALL;
-    case 2:
+
+    case FLOATING_PLATFORM_KIND_EAST_WALL:
         return AVATAR_DISTORTION_STATE_EAST_WALL;
-    case 3:
+
+    case FLOATING_PLATFORM_KIND_CEILING:
         return AVATAR_DISTORTION_STATE_CEILING;
     }
 
     return AVATAR_DISTORTION_STATE_ACTIVE;
 }
 
-static BOOL ov9_02251104(UnkStruct_ov9_02249B04 *param0, u32 param1, u32 param2)
+static BOOL CheckFlagCondition(DistWorldSystem *system, enum FlagCondition flagCond, u32 val)
 {
-    VarsFlags *v0 = SaveData_GetVarsFlags(param0->fieldSystem->saveData);
+    VarsFlags *varsFlags = SaveData_GetVarsFlags(system->fieldSystem->saveData);
 
-    switch (param1) {
-    case 0:
-        return 1;
-    case 1:
-        if (ov9_02249E00(param0, param2) != 1) {
-            return 1;
+    switch (flagCond) {
+    case FLAG_COND_NONE:
+        return TRUE;
+
+    case FLAG_COND_1:
+        if (ov9_02249E00(system, val) != TRUE) {
+            return TRUE;
         }
+
         break;
-    case 2:
-        if (ov9_02249E00(param0, param2) == 1) {
-            return 1;
+
+    case FLAG_COND_2:
+        if (ov9_02249E00(system, val) == TRUE) {
+            return TRUE;
         }
+
         break;
-    case 3:
-        if (SystemVars_GetDistortionWorldProgress(v0) == param2) {
-            return 1;
+
+    case FLAG_COND_WORLD_PROGRESS_EQ:
+        if (SystemVars_GetDistortionWorldProgress(varsFlags) == val) {
+            return TRUE;
         }
+
         break;
-    case 4:
-        if (SystemVars_GetDistortionWorldProgress(v0) <= param2) {
-            return 1;
+
+    case FLAG_COND_WORLD_PROGRESS_LEQ:
+        if (SystemVars_GetDistortionWorldProgress(varsFlags) <= val) {
+            return TRUE;
         }
+
         break;
-    case 5:
-        if (SystemVars_GetDistortionWorldProgress(v0) >= param2) {
-            return 1;
+
+    case FLAG_COND_WORLD_PROGRESS_GEQ:
+        if (SystemVars_GetDistortionWorldProgress(varsFlags) >= val) {
+            return TRUE;
         }
+
         break;
-    case 7:
-        if (SystemFlag_HandleGiratinaAnimation(v0, HANDLE_FLAG_CHECK, param2) == FALSE) {
-            return 1;
+
+    case FLAG_COND_GIRATINA_SHADOW:
+        if (!SystemFlag_HandleGiratinaAnimation(varsFlags, HANDLE_FLAG_CHECK, val)) {
+            return TRUE;
         }
+
         break;
-    case 8:
-        if (SystemVars_GetDistortionWorldCyrusApperanceState(v0) == param2) {
-            return 1;
+
+    case FLAG_COND_CYRUS_APPEARANCE:
+        if (SystemVars_GetDistortionWorldCyrusApperanceState(varsFlags) == val) {
+            return TRUE;
         }
+
         break;
     }
 
-    return 0;
+    return FALSE;
 }
 
 BOOL ov9_022511A0(FieldSystem *fieldSystem, int param1, int param2, int param3)
 {
-    UnkStruct_ov9_02249B04 *v0 = fieldSystem->unk_04->unk_24;
+    DistWorldSystem *v0 = fieldSystem->unk_04->dynamicMapFeaturesData;
 
-    if (ov9_022510D0(v0) == 582) {
+    if (DistWorldSystem_GetMapHeaderID(v0) == 582) {
         if ((param2 == 15) && (param1 == 15) && (param3 == 1)) {
             VarsFlags *v1 = SaveData_GetVarsFlags(v0->fieldSystem->saveData);
             u32 v2 = SystemVars_GetDistortionWorldProgress(v1);
@@ -9671,10 +9550,10 @@ BOOL ov9_022511A0(FieldSystem *fieldSystem, int param1, int param2, int param3)
     return 0;
 }
 
-static void ov9_022511E0(u16 param0)
+static void PlaySoundIfNotActive(u16 seqID)
 {
-    if (Sound_IsEffectPlaying(param0) == 0) {
-        Sound_PlayEffect(param0);
+    if (!Sound_IsEffectPlaying(seqID)) {
+        Sound_PlayEffect(seqID);
     }
 }
 
@@ -9709,8 +9588,8 @@ static const fx32 Unk_ov9_02252CF8[16] = {
     0 * FX32_ONE
 };
 
-static void (*const Unk_ov9_02251224[1])(UnkStruct_ov9_02249B04 *, const UnkStruct_ov9_0224AA00 *) = {
-    ov9_0224AA34
+static const FloatingPlatformJumpPointHandler sFloatingPlatformJumpPointHandlers[1] = {
+    CreateJumpOnFloatingPlatformTask
 };
 
 static const int Unk_ov9_02251E58[7] = {
@@ -9856,189 +9735,326 @@ static const fx32 Unk_ov9_02252C08[3][4] = {
     { -0x800 * 4, -0xc00 * 6, -0x1000 * 7, -0x1400 * 10 },
 };
 
-static const u32 Unk_ov9_02252FD0[25] = {
-    0x7C,
-    0x7D,
-    0x7E,
-    0x7F,
-    0x80,
-    0x81,
-    0x82,
-    0x83,
-    0x84,
-    0x85,
-    0x86,
-    0x87,
-    0x88,
-    0x89,
-    0x8A,
-    0x8B,
-    0x8C,
-    0x8D,
-    0x8E,
-    0x8F,
-    0x90,
-    0x91,
-    0x92,
-    0x93,
-    0x94
+static const u32 sProp3DModelNARCIndexByKind[PROP_KIND_COUNT] = {
+    [PROP_KIND_SMALL_PLATFORM] = 0x7C,
+    [PROP_KIND_FLOATING_BLUE_ROCK] = 0x7D,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1] = 0x7E,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2] = 0x7F,
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW] = 0x80,
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1] = 0x81,
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2] = 0x82,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3] = 0x83,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_1] = 0x84,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4] = 0x85,
+    [PROP_KIND_HORIZONTAL_PLATFORM_1] = 0x86,
+    [PROP_KIND_VERTICAL_PLATFORM_1] = 0x87,
+    [PROP_KIND_VERTICAL_PLATFORM_2] = 0x88,
+    [PROP_KIND_HORIZONTAL_PLATFORM_2] = 0x89,
+    [PROP_KIND_ROTATED_PLATFORM_EAST] = 0x8A,
+    [PROP_KIND_ROTATED_PLATFORM_WEST] = 0x8B,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_2] = 0x8C,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_3] = 0x8D,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_4] = 0x8E,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5] = 0x8F,
+    [PROP_KIND_GIRATINA_SHADOW] = 0x90,
+    [PROP_KIND_WATERFALL] = 0x91,
+    [PROP_KIND_LAND_VINE_FLOWER] = 0x92,
+    [PROP_KIND_LAND_ROCK] = 0x93,
+    [PROP_KIND_PORTAL] = 0x94
 };
 
-static const u32 Unk_ov9_022514A4[5] = {
-    0xC6,
-    0xBF,
-    0xC0,
-    0xC8,
-    0xC1
+static const u32 sPropAnimSetNARCIndexByKind[PROP_ANIM_KIND_COUNT] = {
+    [PROP_ANIM_KIND_GIRATINA_SHADOW] = 0xC6,
+    [PROP_ANIM_KIND_LAND_VINE_FLOWER] = 0xBF,
+    [PROP_ANIM_KIND_LAND_ROCK] = 0xC0,
+    [PROP_ANIM_KIND_WATERFALL] = 0xC8,
+    [PROP_ANIM_KIND_PORTAL] = 0xC1
 };
 
-static const UnkStruct_ov9_022531D0 Unk_ov9_022531D0[25] = {
-    { 0x0, 0x5, 0x1 },
-    { 0x1, 0x5, 0x1 },
-    { 0x2, 0x5, 0x1 },
-    { 0x3, 0x5, 0x1 },
-    { 0x4, 0x5, 0x1 },
-    { 0x5, 0x5, 0x1 },
-    { 0x6, 0x5, 0x1 },
-    { 0x7, 0x5, 0x1 },
-    { 0x8, 0x5, 0x1 },
-    { 0x9, 0x5, 0x1 },
-    { 0xA, 0x5, 0x1 },
-    { 0xB, 0x5, 0x1 },
-    { 0xC, 0x5, 0x1 },
-    { 0xD, 0x5, 0x1 },
-    { 0xE, 0x5, 0x1 },
-    { 0xF, 0x5, 0x1 },
-    { 0x10, 0x5, 0x1 },
-    { 0x11, 0x5, 0x1 },
-    { 0x12, 0x5, 0x1 },
-    { 0x13, 0x5, 0x1 },
-    { 0x14, 0x0, 0x0 },
-    { 0x15, 0x3, 0x0 },
-    { 0x16, 0x1, 0x0 },
-    { 0x17, 0x2, 0x0 },
-    { 0x18, 0x4, 0x0 }
+// clang-format off
+static const DistWorldPropAnimInfo sPropAnimInfoByKind[PROP_KIND_COUNT] = {
+    [PROP_KIND_SMALL_PLATFORM] = {
+        .propKind = PROP_KIND_SMALL_PLATFORM,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_FLOATING_BLUE_ROCK] = {
+        .propKind = PROP_KIND_FLOATING_BLUE_ROCK,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1] = {
+        .propKind = PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2] = {
+        .propKind = PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW] = {
+        .propKind = PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1] = {
+        .propKind = PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2] = {
+        .propKind = PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3] = {
+        .propKind = PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_1] = {
+        .propKind = PROP_KIND_LARGE_ELEVATOR_PLATFORM_1,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4] = {
+        .propKind = PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_HORIZONTAL_PLATFORM_1] = {
+        .propKind = PROP_KIND_HORIZONTAL_PLATFORM_1,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_VERTICAL_PLATFORM_1] = {
+        .propKind = PROP_KIND_VERTICAL_PLATFORM_1,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_VERTICAL_PLATFORM_2] = {
+        .propKind = PROP_KIND_VERTICAL_PLATFORM_2,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_HORIZONTAL_PLATFORM_2] = {
+        .propKind = PROP_KIND_HORIZONTAL_PLATFORM_2,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_ROTATED_PLATFORM_EAST] = {
+        .propKind = PROP_KIND_ROTATED_PLATFORM_EAST,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_ROTATED_PLATFORM_WEST] = {
+        .propKind = PROP_KIND_ROTATED_PLATFORM_WEST,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_2] = {
+        .propKind = PROP_KIND_LARGE_ELEVATOR_PLATFORM_2,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_3] = {
+        .propKind = PROP_KIND_LARGE_ELEVATOR_PLATFORM_3,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_4] = {
+        .propKind = PROP_KIND_LARGE_ELEVATOR_PLATFORM_4,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5] = {
+        .propKind = PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5,
+        .animKind = PROP_ANIM_KIND_INVALID,
+        .isStatic = TRUE
+    },
+    [PROP_KIND_GIRATINA_SHADOW] = {
+        .propKind = PROP_KIND_GIRATINA_SHADOW,
+        .animKind = PROP_ANIM_KIND_GIRATINA_SHADOW,
+        .isStatic = FALSE
+    },
+    [PROP_KIND_WATERFALL] = {
+        .propKind = PROP_KIND_WATERFALL,
+        .animKind = PROP_ANIM_KIND_WATERFALL,
+        .isStatic = FALSE
+    },
+    [PROP_KIND_LAND_VINE_FLOWER] = {
+        .propKind = PROP_KIND_LAND_VINE_FLOWER,
+        .animKind = PROP_ANIM_KIND_LAND_VINE_FLOWER,
+        .isStatic = FALSE
+    },
+    [PROP_KIND_LAND_ROCK] = {
+        .propKind = PROP_KIND_LAND_ROCK,
+        .animKind = PROP_ANIM_KIND_LAND_ROCK,
+        .isStatic = FALSE
+    },
+    [PROP_KIND_PORTAL] = {
+        .propKind = PROP_KIND_PORTAL,
+        .animKind = PROP_ANIM_KIND_PORTAL,
+        .isStatic = FALSE
+    }
+};
+// clang-format on
+
+static const VecFx32 sPropInitialPosOffsetByKind[PROP_KIND_COUNT] = {
+    [PROP_KIND_SMALL_PLATFORM] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_FLOATING_BLUE_ROCK] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_1] = { 0 + -FX32_ONE * 8, -FX32_ONE * 25, -FX32_ONE * 6 + FX32_ONE * 8 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_HORIZONTAL_PLATFORM_1] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_VERTICAL_PLATFORM_1] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_VERTICAL_PLATFORM_2] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_HORIZONTAL_PLATFORM_2] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_ROTATED_PLATFORM_EAST] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_ROTATED_PLATFORM_WEST] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_2] = { 0 + -FX32_ONE * 8, -FX32_ONE * 25, -FX32_ONE * 6 + FX32_ONE * 8 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_3] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_4] = { 0 + -FX32_ONE * 8, -FX32_ONE * 25, -FX32_ONE * 6 + FX32_ONE * 16 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5] = { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
+    [PROP_KIND_GIRATINA_SHADOW] = { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
+    [PROP_KIND_WATERFALL] = { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
+    [PROP_KIND_LAND_VINE_FLOWER] = { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
+    [PROP_KIND_LAND_ROCK] = { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
+    [PROP_KIND_PORTAL] = { 0x0, -FX32_ONE * 14, FX32_ONE * 8 }
 };
 
-static const VecFx32 Unk_ov9_02253298[25] = {
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0 + (-FX32_ONE * 8), -FX32_ONE * 25, (-FX32_ONE * 6) + (FX32_ONE * 8) },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0 + (-FX32_ONE * 8), -FX32_ONE * 25, (-FX32_ONE * 6) + (FX32_ONE * 8) },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0 + (-FX32_ONE * 8), -FX32_ONE * 25, (-FX32_ONE * 6) + (FX32_ONE * 16) },
-    { 0x0, -FX32_ONE * 25, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 32, -FX32_ONE * 6 },
-    { 0x0, -FX32_ONE * 14, FX32_ONE * 8 }
+static const VecFx32 sPropScaleByKind[PROP_KIND_COUNT] = {
+    [PROP_KIND_SMALL_PLATFORM] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_FLOATING_BLUE_ROCK] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_1] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_HORIZONTAL_PLATFORM_1] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_VERTICAL_PLATFORM_1] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_VERTICAL_PLATFORM_2] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_HORIZONTAL_PLATFORM_2] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_ROTATED_PLATFORM_EAST] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_ROTATED_PLATFORM_WEST] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_2] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_3] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_4] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_GIRATINA_SHADOW] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_WATERFALL] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4 },
+    [PROP_KIND_LAND_VINE_FLOWER] = { FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 4, FX32_ONE + 0x100 * 8 },
+    [PROP_KIND_LAND_ROCK] = { 0x0, 0x0, 0x0 },
+    [PROP_KIND_PORTAL] = { 0x0, 0x0, 0x0 }
 };
 
-static const VecFx32 Unk_ov9_022533C4[25] = {
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)) },
-    { (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 4)), (FX32_ONE + (0x100 * 8)) },
-    { 0x0, 0x0, 0x0 }
+static const OverworldAnimManagerFuncs sPlatformPropAnimFuncs = {
+    sizeof(DistWorldPlatformProp),
+    DistWorldPlatformProp_AnimInit,
+    DistWorldPlatformProp_AnimExit,
+    DistWorldPlatformProp_AnimTick,
+    DistWorldPlatformProp_AnimRender
 };
 
-static const UnkStruct_ov101_021D86B0 DATA_EoaFStoneHeader = {
-    sizeof(UnkStruct_ov9_0224BA48),
-    ov9_0224B964,
-    ov9_0224BA48,
-    NULL,
-    ov9_0224BBDC,
+static const OverworldAnimManagerFuncs sObstaclePropAnimFuncs = {
+    sizeof(DistWorldObstacleProp),
+    DistWorldObstacleProp_AnimInit,
+    DistWorldObstacleProp_AnimExit,
+    DistWorldObstacleProp_AnimTick,
+    DistWorldObstacleProp_AnimRender
 };
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_022514F4 = {
-    sizeof(UnkStruct_ov9_0224BA48),
-    ov9_0224B964,
-    ov9_0224BA48,
-    ov9_0224BA6C,
-    ov9_0224BBDC
+static const OverworldAnimManagerFuncs *const sPropAnimFuncsByKind[PROP_KIND_COUNT] = {
+    [PROP_KIND_SMALL_PLATFORM] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_FLOATING_BLUE_ROCK] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_1] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_2] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_SW] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_1] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_FLOATING_PLATFORM_NESW_2] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_3] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_1] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_4] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_HORIZONTAL_PLATFORM_1] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_VERTICAL_PLATFORM_1] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_VERTICAL_PLATFORM_2] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_HORIZONTAL_PLATFORM_2] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_ROTATED_PLATFORM_EAST] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_ROTATED_PLATFORM_WEST] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_2] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_3] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_LARGE_ELEVATOR_PLATFORM_4] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_MEDIUM_ELEVATOR_PLATFORM_5] = &sPlatformPropAnimFuncs,
+    [PROP_KIND_GIRATINA_SHADOW] = &sGiratinaShadowPropAnimFuncs,
+    [PROP_KIND_WATERFALL] = &sSimplePropAnimFuncs,
+    [PROP_KIND_LAND_VINE_FLOWER] = &sObstaclePropAnimFuncs,
+    [PROP_KIND_LAND_ROCK] = &sObstaclePropAnimFuncs,
+    [PROP_KIND_PORTAL] = &sSimplePropAnimFuncs
 };
 
-static const UnkStruct_ov101_021D86B0 Unk_ov9_0225147C = {
-    sizeof(UnkStruct_ov9_0224BC08),
-    ov9_0224BC08,
-    ov9_0224BCF4,
-    ov9_0224BD18,
-    ov9_0224BDE8
+// clang-format off
+static const DistWorldMapConnections sDistWorldMapConnectionList[DISTORTION_WORLD_MAP_COUNT] = {
+    {
+        .prevID = MAP_HEADER_INVALID,
+        .currID = MAP_HEADER_DISTORTION_WORLD_1F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B1F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_1F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B1F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B2F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_B1F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B2F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B3F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_B2F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B3F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B4F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_B3F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B4F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B5F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_B4F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B5F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B6F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_B5F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B6F,
+        .nextID = MAP_HEADER_DISTORTION_WORLD_B7F
+    },
+    {
+        .prevID = MAP_HEADER_DISTORTION_WORLD_B6F,
+        .currID = MAP_HEADER_DISTORTION_WORLD_B7F,
+        .nextID = MAP_HEADER_INVALID
+    },
+    {
+        .prevID = MAP_HEADER_INVALID,
+        .currID = MAP_HEADER_DISTORTION_WORLD_TURNBACK_CAVE_ROOM,
+        .nextID = MAP_HEADER_INVALID
+    },
+    {
+        .prevID = MAP_HEADER_INVALID,
+        .currID = MAP_HEADER_DISTORTION_WORLD_GIRATINA_ROOM,
+        .nextID = MAP_HEADER_INVALID
+     }
 };
-
-static const UnkStruct_ov101_021D86B0 *const Unk_ov9_02252F6C[25] = {
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514F4,
-    &Unk_ov9_022514B8,
-    &Unk_ov9_02251530,
-    &Unk_ov9_0225147C,
-    &Unk_ov9_0225147C,
-    &Unk_ov9_02251530
-};
-
-static const UnkStruct_ov9_022530A4 Unk_ov9_022530A4[10] = {
-    { 0x23D, 0x251, 0x23E },
-    { 0x23E, 0x23D, 0x23F },
-    { 0x23F, 0x23E, 0x240 },
-    { 0x240, 0x23F, 0x241 },
-    { 0x241, 0x240, 0x243 },
-    { 0x243, 0x241, 0x244 },
-    { 0x244, 0x243, 0x245 },
-    { 0x245, 0x244, 0x251 },
-    { 0x247, 0x251, 0x251 },
-    { 0x246, 0x251, 0x251 }
-};
+// clang-format on
 
 static const UnkStruct_ov9_0224DF10 Unk_ov9_02251558 = {
     0x0,
@@ -11717,15 +11733,15 @@ static const UnkStruct_ov9_02251438 Unk_ov9_02251438[] = {
     { 0x12, NULL },
 };
 
-static const UnkStruct_ov9_02252414 Unk_ov9_022523A8 = {
-    0x3F,
-    0xA9,
-    0x9,
-    0x1,
-    0x1,
-    { FX32_ONE, FX32_ONE, FX32_ONE },
-    { 0x0, 0x0, (FX32_ONE * 48) },
-    0x40,
+static const DistWorldGiratinaShadowTemplate Unk_ov9_022523A8 = {
+    .initialTileX = 63,
+    .initialTileY = 169,
+    .initialTileZ = 9,
+    .rotAnglesIndex = 1,
+    .soundKind = GIRATINA_SHADOW_PROP_SFX_KIND_CRY,
+    .scale = { FX32_ONE, FX32_ONE, FX32_ONE },
+    .posDelta = { 0, 0, FX32_ONE * 48 },
+    .movementAnimSteps = 64,
 };
 
 static const UnkStruct_ov9_022506EC Unk_ov9_02251274 = {
@@ -11738,15 +11754,15 @@ static const UnkStruct_ov9_02251438 Unk_ov9_02251960[] = {
     { 0x12, NULL }
 };
 
-static const UnkStruct_ov9_02252414 Unk_ov9_022523CC = {
-    0x2A,
-    0x89,
-    0x20,
-    0x3,
-    0x1,
-    { FX32_ONE, FX32_ONE, FX32_ONE },
-    { (FX32_ONE * 48), 0x0, 0x0 },
-    0x48
+static const DistWorldGiratinaShadowTemplate Unk_ov9_022523CC = {
+    .initialTileX = 42,
+    .initialTileY = 137,
+    .initialTileZ = 32,
+    .rotAnglesIndex = 3,
+    .soundKind = GIRATINA_SHADOW_PROP_SFX_KIND_CRY,
+    .scale = { FX32_ONE, FX32_ONE, FX32_ONE },
+    .posDelta = { FX32_ONE * 48, 0, 0 },
+    .movementAnimSteps = 72
 };
 
 static const UnkStruct_ov9_022506EC Unk_ov9_02251228 = {
@@ -11858,15 +11874,15 @@ static const UnkStruct_ov9_022506AC Unk_ov9_02251240 = {
     0x7
 };
 
-static const UnkStruct_ov9_02252414 Unk_ov9_02252438 = {
-    0xFFFFFFFFFFFFFFF7,
-    -4,
-    0x16,
-    0x3,
-    0x0,
-    { FX32_ONE / 4, FX32_ONE / 4, FX32_ONE / 4 },
-    { (FX32_ONE * 16), 0x0, 0x0 },
-    0x30
+static const DistWorldGiratinaShadowTemplate Unk_ov9_02252438 = {
+    .initialTileX = -9,
+    .initialTileY = -4,
+    .initialTileZ = 22,
+    .rotAnglesIndex = 3,
+    .soundKind = GIRATINA_SHADOW_PROP_SFX_KIND_NONE,
+    .scale = { FX32_ONE / 4, FX32_ONE / 4, FX32_ONE / 4 },
+    .posDelta = { FX32_ONE * 16, 0, 0 },
+    .movementAnimSteps = 48
 };
 
 static const UnkStruct_ov9_022506D0 Unk_ov9_02251264 = {
@@ -11880,15 +11896,15 @@ static const UnkStruct_ov9_02251438 Unk_ov9_022522C4[] = {
     { 0x12, NULL }
 };
 
-static const UnkStruct_ov9_02252414 Unk_ov9_0225245C = {
-    0xF,
-    -34,
-    0x8,
-    0x4,
-    0x2,
-    { FX32_ONE / 2, FX32_ONE / 2, FX32_ONE / 2 },
-    { 0x0, (FX32_ONE * 32), (FX32_ONE * 2) },
-    0x20
+static const DistWorldGiratinaShadowTemplate Unk_ov9_0225245C = {
+    .initialTileX = 15,
+    .initialTileY = -34,
+    .initialTileZ = 8,
+    .rotAnglesIndex = 4,
+    .soundKind = GIRATINA_SHADOW_PROP_SFX_KIND_FLEE,
+    .scale = { FX32_ONE / 2, FX32_ONE / 2, FX32_ONE / 2 },
+    .posDelta = { 0, FX32_ONE * 32, FX32_ONE * 2 },
+    .movementAnimSteps = 32
 };
 
 static const UnkStruct_ov9_022506D0 Unk_ov9_02251230 = {
@@ -11937,32 +11953,60 @@ static const UnkStruct_ov9_02252D38 Unk_ov9_02252D38[] = {
     { 0x251, NULL }
 };
 
-static const UnkStruct_ov9_0224EC10 Unk_ov9_02251F24[] = {
-    { 0x0, 0x18, 0x37, 0x121, 0x27, 0x0, 0x0 },
-    { 0x0, 0x19, 0x0, 0x0, 0x0 }
+static const DistWorldSimplePropTemplate sSimpleProps1F[] = {
+    {
+        .propKind = PROP_KIND_PORTAL,
+        .tileX = 55,
+        .tileY = 289,
+        .tileZ = 39,
+        .flagCond = FLAG_COND_NONE,
+        .flagCondVal = 0,
+    },
+    { 0, PROP_KIND_INVALID, 0, 0, 0, FLAG_COND_NONE, 0 }
 };
 
-static const UnkStruct_ov9_0224EC10 Unk_ov9_02251F44[] = {
-    { 0x0, 0x15, 0x6A, 0x99, 0x4E, 0x0, 0x0 },
-    { 0x0, 0x19, 0x0, 0x0, 0x0, 0x0, 0x0 }
+static const DistWorldSimplePropTemplate sSimplePropsB5F[] = {
+    {
+        .propKind = PROP_KIND_WATERFALL,
+        .tileX = 106,
+        .tileY = 153,
+        .tileZ = 78,
+        .flagCond = FLAG_COND_NONE,
+        .flagCondVal = 0,
+    },
+    { 0, PROP_KIND_INVALID, 0, 0, 0, FLAG_COND_NONE, 0 }
 };
 
-static const UnkStruct_ov9_0224EC10 Unk_ov9_02251F84[] = {
-    { 0x0, 0x18, 0xF, 0x1, 0xC, 0x5, 0xE },
-    { 0x0, 0x19, 0x0, 0x0, 0x0, 0x0, 0x0 }
+static const DistWorldSimplePropTemplate sSimplePropsGiratinaRoom[] = {
+    {
+        .propKind = PROP_KIND_PORTAL,
+        .tileX = 15,
+        .tileY = 1,
+        .tileZ = 12,
+        .flagCond = FLAG_COND_WORLD_PROGRESS_GEQ,
+        .flagCondVal = 14,
+    },
+    { 0, PROP_KIND_INVALID, 0, 0, 0, FLAG_COND_NONE, 0 }
 };
 
-static const UnkStruct_ov9_0224EC10 Unk_ov9_02251FA4[] = {
-    { 0x0, 0x18, 0x74, 0x41, 0x4A, 0x0, 0x0 },
-    { 0x0, 0x19, 0x0, 0x0, 0x0 }
+static const DistWorldSimplePropTemplate sSimplePropsTurnbackCaveRoom[] = {
+    {
+        .propKind = PROP_KIND_PORTAL,
+        .tileX = 116,
+        .tileY = 65,
+        .tileZ = 74,
+        .flagCond = FLAG_COND_NONE,
+        .flagCondVal = 0,
+    },
+    { 0, PROP_KIND_INVALID, 0, 0, 0, FLAG_COND_NONE, 0 }
 };
 
-static const UnkStruct_ov9_02252548 Unk_ov9_02252548[] = {
-    { 0x23D, Unk_ov9_02251F24 },
-    { 0x243, Unk_ov9_02251F44 },
-    { 0x246, Unk_ov9_02251F84 },
-    { 0x247, Unk_ov9_02251FA4 },
-    { 0x251, NULL }
+static const DistWorldSimplePropMapTemplates sSimplePropsMapTemplates[] = {
+    { MAP_HEADER_DISTORTION_WORLD_1F, sSimpleProps1F },
+    { MAP_HEADER_DISTORTION_WORLD_B5F, sSimplePropsB5F },
+    { MAP_HEADER_DISTORTION_WORLD_GIRATINA_ROOM, sSimplePropsGiratinaRoom },
+    { MAP_HEADER_DISTORTION_WORLD_TURNBACK_CAVE_ROOM, sSimplePropsTurnbackCaveRoom },
+    { MAP_HEADER_INVALID, NULL }
 };
 
 static const UnkStruct_ov9_0224EF30 Unk_ov9_02252598 = {

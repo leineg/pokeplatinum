@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/resort_area_ribbon_syndicate_2f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _02E8
@@ -13,14 +12,14 @@ _0012:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0xAA5, _00E2
-    GoToIfEq 0x400A, 1, _00E2
-    ScrCmd_247 0x4000
+    GoToIfSet FLAG_UNK_0x0AA5, _00E2
+    GoToIfEq VAR_MAP_LOCAL_A, 1, _00E2
+    GetFirstNonEggInParty VAR_MAP_LOCAL_0
     BufferPlayerName 0
-    BufferPartyMonNickname 1, 0x4000
+    BufferPartyMonNickname 1, VAR_MAP_LOCAL_0
     Message 0
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _0058
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _0058
     GoTo _0063
 
 _0058:
@@ -38,10 +37,10 @@ _0063:
 
 _0074:
     Message 3
-    ScrCmd_1B7 0x800C, 4
-    GoToIfEq 0x800C, 0, _00AA
-    GoToIfEq 0x800C, 1, _00B3
-    GoToIfEq 0x800C, 2, _00BC
+    GetRandom VAR_RESULT, 4
+    GoToIfEq VAR_RESULT, 0, _00AA
+    GoToIfEq VAR_RESULT, 1, _00B3
+    GoToIfEq VAR_RESULT, 2, _00BC
     GoTo _00C5
 
 _00AA:
@@ -77,42 +76,42 @@ _00E2:
     End
 
 _00ED:
-    ScrCmd_1B7 0x800C, 100
-    GoToIfLt 0x800C, 5, _0113
-    GoToIfLt 0x800C, 30, _0124
+    GetRandom VAR_RESULT, 100
+    GoToIfLt VAR_RESULT, 5, _0113
+    GoToIfLt VAR_RESULT, 30, _0124
     GoTo _0135
 
 _0113:
-    ScrCmd_1BA 30, 0x4000
+    IncreasePartyMonFriendship 30, VAR_MAP_LOCAL_0
     Call _0146
     Message 8
     Return
 
 _0124:
-    ScrCmd_1BA 10, 0x4000
+    IncreasePartyMonFriendship 10, VAR_MAP_LOCAL_0
     Call _0146
     Message 10
     Return
 
 _0135:
-    ScrCmd_1BA 5, 0x4000
+    IncreasePartyMonFriendship 5, VAR_MAP_LOCAL_0
     Call _0146
     Message 11
     Return
 
 _0146:
     WaitFanfare SEQ_SE_DP_FW367
-    SetFlag 0xAA5
-    SetVar 0x400A, 1
+    SetFlag FLAG_UNK_0x0AA5
+    SetVar VAR_MAP_LOCAL_A, 1
     ApplyMovement 1, _02DC
     WaitMovement
     Return
 
 _0160:
-    GetPlayerMapPos 0x8005, 0x8006
-    GoToIfEq 0x8005, 11, _0193
-    GoToIfEq 0x8005, 13, _01AB
-    GoToIfEq 0x8006, 4, _01C3
+    GetPlayerMapPos VAR_0x8005, VAR_0x8006
+    GoToIfEq VAR_0x8005, 11, _0193
+    GoToIfEq VAR_0x8005, 13, _01AB
+    GoToIfEq VAR_0x8006, 4, _01C3
     GoTo _01DB
 
 _0193:
@@ -148,92 +147,92 @@ _01F3:
 
     .balign 4, 0
 _0210:
-    MoveAction_015 2
-    MoveAction_013 2
-    MoveAction_015 3
-    MoveAction_034
+    WalkNormalEast 2
+    WalkNormalSouth 2
+    WalkNormalEast 3
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0224:
-    MoveAction_013
-    MoveAction_015
-    MoveAction_013
-    MoveAction_015 4
-    MoveAction_034
+    WalkNormalSouth
+    WalkNormalEast
+    WalkNormalSouth
+    WalkNormalEast 4
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _023C:
-    MoveAction_015 2
-    MoveAction_013 2
-    MoveAction_015 3
-    MoveAction_034
+    WalkNormalEast 2
+    WalkNormalSouth 2
+    WalkNormalEast 3
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0250:
-    MoveAction_015
-    MoveAction_013
-    MoveAction_015 2
-    MoveAction_013
-    MoveAction_015 2
-    MoveAction_034
+    WalkNormalEast
+    WalkNormalSouth
+    WalkNormalEast 2
+    WalkNormalSouth
+    WalkNormalEast 2
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _026C:
-    MoveAction_015 3
-    MoveAction_013 2
-    MoveAction_015 2
-    MoveAction_033
+    WalkNormalEast 3
+    WalkNormalSouth 2
+    WalkNormalEast 2
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0280:
-    MoveAction_063 2
-    MoveAction_013 2
-    MoveAction_015 3
-    MoveAction_033
+    Delay8 2
+    WalkNormalSouth 2
+    WalkNormalEast 3
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0294:
-    MoveAction_013
-    MoveAction_015 3
-    MoveAction_013 2
-    MoveAction_015
-    MoveAction_033
+    WalkNormalSouth
+    WalkNormalEast 3
+    WalkNormalSouth 2
+    WalkNormalEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _02AC:
-    MoveAction_063 2
-    MoveAction_015 3
-    MoveAction_013
-    MoveAction_015
-    MoveAction_033
+    Delay8 2
+    WalkNormalEast 3
+    WalkNormalSouth
+    WalkNormalEast
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _02C4:
-    MoveAction_013
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
 _02CC:
-    MoveAction_015 3
+    WalkNormalEast 3
     EndMovement
 
     .balign 4, 0
 _02D4:
-    MoveAction_012 4
+    WalkNormalNorth 4
     EndMovement
 
     .balign 4, 0
 _02DC:
-    MoveAction_012
-    MoveAction_033
+    WalkNormalNorth
+    WalkOnSpotNormalSouth
     EndMovement
 
 _02E8:
@@ -266,6 +265,4 @@ _030E:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

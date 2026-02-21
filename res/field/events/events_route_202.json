@@ -6,16 +6,17 @@
             "x": 168,
             "z": 795,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 4,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3000,
+            "id": "LOCALID_YOUNGSTER_TRISTAN",
+            "graphics_id": "OBJ_EVENT_GFX_YOUNGSTER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_YOUNGSTER_TRISTAN",
             "initial_dir": 1,
             "data": [
                 5
@@ -27,11 +28,12 @@
             "y": 1
         },
         {
-            "graphics_id": 6,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3002,
+            "id": "LOCALID_LASS_NATALIE",
+            "graphics_id": "OBJ_EVENT_GFX_LASS",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_LASS_NATALIE",
             "initial_dir": 1,
             "data": [
                 4
@@ -43,11 +45,12 @@
             "y": 1
         },
         {
-            "graphics_id": 4,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3001,
+            "id": "LOCALID_YOUNGSTER_LOGAN",
+            "graphics_id": "OBJ_EVENT_GFX_YOUNGSTER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_YOUNGSTER_LOGAN",
             "initial_dir": 1,
             "data": [
                 5
@@ -59,10 +62,11 @@
             "y": 1
         },
         {
-            "graphics_id": 101,
-            "movement_type": 17,
-            "trainer_type": 0,
-            "flag": 392,
+            "id": "LOCALID_COUNTERPART",
+            "graphics_id": "OBJ_EVENT_GFX_COUNTERPART",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_ROUTE_202_COUNTERPART",
             "script": 7,
             "initial_dir": 3,
             "data": [],
@@ -73,10 +77,11 @@
             "y": 1
         },
         {
-            "graphics_id": 94,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ARROW_SIGNPOST_SANDGEM_TOWN",
+            "graphics_id": "OBJ_EVENT_GFX_ARROW_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 0,
             "data": [
@@ -89,10 +94,11 @@
             "y": 0
         },
         {
-            "graphics_id": 94,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_ARROW_SIGNPOST_JUBILIFE_CITY",
+            "graphics_id": "OBJ_EVENT_GFX_ARROW_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 4,
             "initial_dir": 0,
             "data": [
@@ -105,10 +111,11 @@
             "y": 0
         },
         {
-            "graphics_id": 96,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_TRAINER_TIPS_SIGNPOST",
+            "graphics_id": "OBJ_EVENT_GFX_TRAINER_TIPS_SIGNPOST",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 5,
             "initial_dir": 0,
             "data": [],
@@ -119,10 +126,11 @@
             "y": 0
         },
         {
-            "graphics_id": 4,
-            "movement_type": 5,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "LOCALID_YOUNGSTER",
+            "graphics_id": "OBJ_EVENT_GFX_YOUNGSTER",
+            "movement_type": "MOVEMENT_TYPE_WANDER_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 3,
             "data": [],
@@ -133,10 +141,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1014,
+            "id": "LOCALID_POKEBALL",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_OBTAINED_ROUTE_202_POTION",
             "script": 7000,
             "initial_dir": 0,
             "data": [],
@@ -156,7 +165,7 @@
             "y": 0,
             "width": 1,
             "length": 5,
-            "var": 16519,
+            "var": "VAR_ROUTE_202_STATE",
             "value": 0
         }
     ]

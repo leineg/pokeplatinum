@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_222.h"
 
-    .data
 
     ScriptEntry _00D7
     ScriptEntry _007D
@@ -14,36 +13,35 @@
     ScriptEntryEnd
 
 _0022:
-    GetTimeOfDay 0x4000
-    GoToIfEq 0x4000, 0, _0069
-    GoToIfEq 0x4000, 1, _0069
-    GoToIfEq 0x4000, 2, _0069
-    GoToIfEq 0x4000, 3, _0073
-    GoToIfEq 0x4000, 4, _0073
+    GetTimeOfDay VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _0069
+    GoToIfEq VAR_MAP_LOCAL_0, 1, _0069
+    GoToIfEq VAR_MAP_LOCAL_0, 2, _0069
+    GoToIfEq VAR_MAP_LOCAL_0, 3, _0073
+    GoToIfEq VAR_MAP_LOCAL_0, 4, _0073
     End
 
 _0069:
-    ClearFlag 0x26A
-    SetFlag 0x26B
+    ClearFlag FLAG_UNK_0x026A
+    SetFlag FLAG_UNK_0x026B
     End
 
 _0073:
-    ClearFlag 0x26B
-    SetFlag 0x26A
+    ClearFlag FLAG_UNK_0x026B
+    SetFlag FLAG_UNK_0x026A
     End
 
 _007D:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 206, _00C2
+    GoToIfSet FLAG_UNK_0x00CE, _00C2
     Message 0
-    SetVar 0x8004, 0x17F
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _00CD
-    CallCommonScript 0x7FC
-    SetFlag 206
+    SetVar VAR_0x8004, ITEM_TM56
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _00CD
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x00CE
     GoTo _00C2
 
 _00C2:
@@ -54,7 +52,7 @@ _00C2:
     End
 
 _00CD:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
@@ -70,35 +68,19 @@ _00D7:
     End
 
 _00EA:
-    ScrCmd_036 4, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 4
     End
 
 _0101:
-    ScrCmd_036 5, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 5
     End
 
 _0118:
-    ScrCmd_036 6, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 6
     End
 
 _012F:
-    ScrCmd_036 7, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 7
     End
 
 _0146:
@@ -111,6 +93,4 @@ _0146:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

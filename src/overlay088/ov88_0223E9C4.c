@@ -11,10 +11,10 @@
 #include "message.h"
 #include "message_util.h"
 #include "render_window.h"
-#include "strbuf.h"
+#include "sound_playback.h"
+#include "string_gf.h"
 #include "string_list.h"
 #include "text.h"
-#include "unk_02005474.h"
 
 static void ov88_0223EE14(ListMenu *param0, u32 param1, u8 param2);
 
@@ -46,7 +46,7 @@ static const u16 Unk_ov88_0223F170[][2] = {
     { 0x14, 0xA }
 };
 
-void ov88_0223E9C4(BgConfig *param0, Window *param1, Options *param2)
+void ov88_0223E9C4(BgConfig *param0, Window *param1, Options *options)
 {
     int v0;
 
@@ -59,8 +59,8 @@ void ov88_0223E9C4(BgConfig *param0, Window *param1, Options *param2)
     Window_Add(param0, &param1[6], 1, 26, 21, 5, 2, 8, ((1 + (10 * 2)) + (10 * 2)));
     Window_FillTilemap(&param1[6], 0);
 
-    LoadMessageBoxGraphics(param0, 0, (512 - (9 + (18 + 12))), 10, Options_Frame(param2), 26);
-    LoadStandardWindowGraphics(param0, 0, (512 - 9), 11, 0, 26);
+    LoadMessageBoxGraphics(param0, BG_LAYER_MAIN_0, (512 - (9 + (18 + 12))), 10, Options_Frame(options), HEAP_ID_26);
+    LoadStandardWindowGraphics(param0, BG_LAYER_MAIN_0, (512 - 9), 11, 0, HEAP_ID_26);
 
     Window_Add(param0, &param1[21], 0, 2, 21, 20, 2, 13, 1);
     Window_FillTilemap(&param1[21], 0);
@@ -108,14 +108,14 @@ void ov88_0223EC04(Window *param0)
     Window_Remove(&param0[25]);
 }
 
-void ov88_0223EC78(Window *param0, Strbuf *param1, int param2, u32 param3, int param4, int param5)
+void ov88_0223EC78(Window *param0, String *param1, int param2, u32 param3, int param4, int param5)
 {
     int v0 = 0;
 
     if (param4 == 1) {
         int v1;
 
-        v1 = Font_CalcStrbufWidth(FONT_SYSTEM, param1, 0);
+        v1 = Font_CalcStringWidth(FONT_SYSTEM, param1, 0);
         v0 = ((param0->width * 8) - v1) / 2;
     } else {
         v0 = param4;
@@ -126,10 +126,10 @@ void ov88_0223EC78(Window *param0, Strbuf *param1, int param2, u32 param3, int p
 
 int ov88_0223ECBC(Window *param0, int param1, int param2, MessageLoader *param3, StringTemplate *param4)
 {
-    Strbuf *v0;
+    String *v0;
     int v1;
 
-    v0 = MessageUtil_ExpandedStrbuf(param4, param3, param1, 26);
+    v0 = MessageUtil_ExpandedString(param4, param3, param1, HEAP_ID_26);
 
     if (param2 == 1) {
         Window_DrawMessageBoxWithScrollCursor(param0, 0, (512 - (9 + (18 + 12))), 10);
@@ -139,7 +139,7 @@ int ov88_0223ECBC(Window *param0, int param1, int param2, MessageLoader *param3,
 
     Window_FillTilemap(param0, 15);
     v1 = Text_AddPrinterWithParamsAndColor(param0, param2, v0, 0, 0, TEXT_SPEED_INSTANT, TEXT_COLOR(1, 2, 15), NULL);
-    Strbuf_Free(v0);
+    String_Free(v0);
 
     return v1;
 }
@@ -216,7 +216,7 @@ ListMenu *ov88_0223ED94(StringList *param0, int param1, Window *param2, BgConfig
     v1.choices = param0;
     v1.window = param2;
     v1.cursorCallback = ov88_0223EE14;
-    v0 = ListMenu_New(&v1, 0, 0, 26);
+    v0 = ListMenu_New(&v1, 0, 0, HEAP_ID_26);
 
     return v0;
 }
@@ -224,6 +224,6 @@ ListMenu *ov88_0223ED94(StringList *param0, int param1, Window *param2, BgConfig
 static void ov88_0223EE14(ListMenu *param0, u32 param1, u8 param2)
 {
     if (param2 == 0) {
-        Sound_PlayEffect(1500);
+        Sound_PlayEffect(SEQ_SE_CONFIRM);
     }
 }

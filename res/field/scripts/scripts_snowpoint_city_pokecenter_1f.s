@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/snowpoint_city_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _0016
     ScriptEntry _0022
@@ -11,8 +10,7 @@
     ScriptEntryEnd
 
 _0016:
-    SetVar 0x8007, 0
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 0
     End
 
 _0022:
@@ -42,7 +40,7 @@ _0048:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_PSYDUCK
     Message 4
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -52,13 +50,12 @@ _0067:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_ICICLE, 0x800C
-    GoToIfEq 0x800C, 1, _00EC
-    GetPlayerDir 0x8000
-    CallIfEq 0x8000, 0, _00C8
-    CallIfEq 0x8000, 1, _00C8
-    CallIfEq 0x8000, 2, _00D4
-    CallIfEq 0x8000, 3, _00E0
+    GoToIfBadgeAcquired BADGE_ID_ICICLE, _00EC
+    GetPlayerDir VAR_0x8000
+    CallIfEq VAR_0x8000, 0, _00C8
+    CallIfEq VAR_0x8000, 1, _00C8
+    CallIfEq VAR_0x8000, 2, _00D4
+    CallIfEq VAR_0x8000, 3, _00E0
     BufferPlayerName 0
     Message 0
     WaitABXPadPress
@@ -91,15 +88,15 @@ _00EC:
 
     .balign 4, 0
 _00FC:
-    MoveAction_041 2
+    WalkOnSpotFasterSouth 2
     EndMovement
 
     .balign 4, 0
 _0104:
-    MoveAction_043 2
+    WalkOnSpotFasterEast 2
     EndMovement
 
     .balign 4, 0
 _010C:
-    MoveAction_042 2
+    WalkOnSpotFasterWest 2
     EndMovement

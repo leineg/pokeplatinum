@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/grand_lake_route_213_east_house.h"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
@@ -11,10 +10,10 @@ _0006:
     LockAll
     FacePlayer
     Message 0
-    ScrCmd_1B7 0x800C, 4
-    GoToIfEq 0x800C, 0, _0044
-    GoToIfEq 0x800C, 1, _004F
-    GoToIfEq 0x800C, 2, _005A
+    GetRandom VAR_RESULT, 4
+    GoToIfEq VAR_RESULT, 0, _0044
+    GoToIfEq VAR_RESULT, 1, _004F
+    GoToIfEq VAR_RESULT, 2, _005A
     GoTo _0065
 
 _0044:

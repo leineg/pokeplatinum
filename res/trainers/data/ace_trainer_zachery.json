@@ -20,7 +20,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_IRON_TAIL"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         },
         {
@@ -33,8 +33,33 @@
                 "MOVE_TRI_ATTACK",
                 "MOVE_MIRROR_SHOT"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Wow! I’m surprised you’ve come this\n",
+                "far, but you’ll have to turn back.\r",
+                "There isn’t any chance that you\n",
+                "could ever beat me!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "What makes your Pokémon\n",
+                "so special?\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "As a challenger, you’re one tough\n",
+                "Trainer.\n"
+            ]
         }
     ]
 }

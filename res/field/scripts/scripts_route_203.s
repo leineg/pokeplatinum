@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_203.h"
 
-    .data
 
     ScriptEntry _001A
     ScriptEntry _002D
@@ -22,47 +21,31 @@ _001A:
     End
 
 _002D:
-    ScrCmd_036 3, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 3
     End
 
 _0044:
-    ScrCmd_036 4, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 4
     End
 
 _005B:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 5, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 5
     End
 
 _0070:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 6, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 6
     End
 
 _0085:
     LockAll
     ApplyMovement 5, _0268
     WaitMovement
-    CallCommonScript 0x7FA
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 0x2F5, _00D1
-    GoToIfEq 0x8005, 0x2F6, _00E1
-    GoToIfEq 0x8005, 0x2F7, _00F1
-    GoToIfEq 0x8005, 0x2F8, _0101
+    Common_SetRivalBGM
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 0x2F5, _00D1
+    GoToIfEq VAR_0x8005, 0x2F6, _00E1
+    GoToIfEq VAR_0x8005, 0x2F7, _00F1
+    GoToIfEq VAR_0x8005, 0x2F8, _0101
     End
 
 _00D1:
@@ -90,9 +73,9 @@ _0111:
     BufferPlayerName 1
     Message 0
     CloseMessage
-    GetPlayerStarterSpecies 0x800C
-    GoToIfEq 0x800C, SPECIES_TURTWIG, _014C
-    GoToIfEq 0x800C, SPECIES_CHIMCHAR, _0158
+    GetPlayerStarterSpecies VAR_RESULT
+    GoToIfEq VAR_RESULT, SPECIES_TURTWIG, _014C
+    GoToIfEq VAR_RESULT, SPECIES_CHIMCHAR, _0158
     GoTo _0140
 
 _0140:
@@ -108,16 +91,16 @@ _0158:
     GoTo _0164
 
 _0164:
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0207
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0207
     BufferRivalName 0
     Message 1
     CloseMessage
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 0x2F5, _01B9
-    GoToIfEq 0x8005, 0x2F6, _01C9
-    GoToIfEq 0x8005, 0x2F7, _01D9
-    GoToIfEq 0x8005, 0x2F8, _01E9
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 0x2F5, _01B9
+    GoToIfEq VAR_0x8005, 0x2F6, _01C9
+    GoToIfEq VAR_0x8005, 0x2F7, _01D9
+    GoToIfEq VAR_0x8005, 0x2F8, _01E9
     End
 
 _01B9:
@@ -142,7 +125,7 @@ _01E9:
 
 _01F9:
     RemoveObject 5
-    SetVar 0x4088, 1
+    SetVar VAR_UNK_0x4088, 1
     ReleaseAll
     End
 
@@ -153,53 +136,53 @@ _0207:
 
     .balign 4, 0
 _0210:
-    MoveAction_019 10
+    WalkFastEast 10
     EndMovement
 
     .balign 4, 0
 _0218:
-    MoveAction_019 10
+    WalkFastEast 10
     EndMovement
 
     .balign 4, 0
 _0220:
-    MoveAction_019 10
+    WalkFastEast 10
     EndMovement
 
     .balign 4, 0
 _0228:
-    MoveAction_019 10
+    WalkFastEast 10
     EndMovement
 
     .balign 4, 0
 _0230:
-    MoveAction_018 4
+    WalkFastWest 4
     EndMovement
 
     .balign 4, 0
 _0238:
-    MoveAction_018 2
-    MoveAction_017
-    MoveAction_018 2
+    WalkFastWest 2
+    WalkFastSouth
+    WalkFastWest 2
     EndMovement
 
     .balign 4, 0
 _0248:
-    MoveAction_018 2
-    MoveAction_017 2
-    MoveAction_018 2
+    WalkFastWest 2
+    WalkFastSouth 2
+    WalkFastWest 2
     EndMovement
 
     .balign 4, 0
 _0258:
-    MoveAction_018 2
-    MoveAction_017 3
-    MoveAction_018 2
+    WalkFastWest 2
+    WalkFastSouth 3
+    WalkFastWest 2
     EndMovement
 
     .balign 4, 0
 _0268:
-    MoveAction_063
-    MoveAction_075
-    MoveAction_063
+    Delay8
+    EmoteExclamationMark
+    Delay8
     EndMovement

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_205_south.h"
 
-    .data
 
     ScriptEntry _002A
     ScriptEntry _00F8
@@ -37,12 +36,12 @@ _002C:
 
     .balign 4, 0
 _0060:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0068:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
 _0070:
@@ -65,37 +64,37 @@ _0070:
     End
 
 _00B6:
-    SetFlag 127
+    SetFlag FLAG_UNK_0x007F
     Return
 
     .balign 4, 0
 _00BC:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _00C4:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _00CC:
-    MoveAction_019
-    MoveAction_037
-    MoveAction_063 2
-    MoveAction_014
-    MoveAction_033
+    WalkFastEast
+    WalkOnSpotFastSouth
+    Delay8 2
+    WalkNormalWest
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _00E4:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _00EC:
-    MoveAction_013
-    MoveAction_036
+    WalkNormalSouth
+    WalkOnSpotFastNorth
     EndMovement
 
 _00F8:
@@ -122,7 +121,7 @@ _011E:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 145, _0142
+    GoToIfSet FLAG_UNK_0x0091, _0142
     Call _014D
     Message 0
     WaitABXPadPress
@@ -138,19 +137,19 @@ _0142:
     End
 
 _014D:
-    SetFlag 0x1A1
-    SetFlag 145
-    SetVar 0x4089, 1
+    SetFlag FLAG_UNK_0x01A1
+    SetFlag FLAG_UNK_0x0091
+    SetVar VAR_UNK_0x4089, 1
     Return
 
 _015D:
     LockAll
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 0x293, _01A8
-    GoToIfEq 0x8005, 0x294, _01C2
-    GoToIfEq 0x8005, 0x295, _01DC
-    GoToIfEq 0x8005, 0x296, _01E2
-    GoToIfEq 0x8005, 0x297, _01FC
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 0x293, _01A8
+    GoToIfEq VAR_0x8005, 0x294, _01C2
+    GoToIfEq VAR_0x8005, 0x295, _01DC
+    GoToIfEq VAR_0x8005, 0x296, _01E2
+    GoToIfEq VAR_0x8005, 0x297, _01FC
     End
 
 _01A8:
@@ -194,66 +193,54 @@ _0216:
 
     .balign 4, 0
 _0228:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0230:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0238:
-    MoveAction_032
-    MoveAction_075
-    MoveAction_063
-    MoveAction_012
+    WalkOnSpotNormalNorth
+    EmoteExclamationMark
+    Delay8
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
 _024C:
-    MoveAction_032
-    MoveAction_075
-    MoveAction_063
+    WalkOnSpotNormalNorth
+    EmoteExclamationMark
+    Delay8
     EndMovement
 
     .balign 4, 0
 _025C:
-    MoveAction_033
-    MoveAction_075
-    MoveAction_063
+    WalkOnSpotNormalSouth
+    EmoteExclamationMark
+    Delay8
     EndMovement
 
     .balign 4, 0
 _026C:
-    MoveAction_033
-    MoveAction_075
-    MoveAction_063
-    MoveAction_013
+    WalkOnSpotNormalSouth
+    EmoteExclamationMark
+    Delay8
+    WalkNormalSouth
     EndMovement
 
 _0280:
-    ScrCmd_036 7, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 7
     End
 
 _0297:
-    ScrCmd_036 8, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 8
     End
 
 _02AE:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 9, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 9
     End
 
-    .byte 0
+    .balign 4, 0

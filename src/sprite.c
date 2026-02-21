@@ -15,13 +15,13 @@ static void Sprite_SetCellBank(const NNSG2dCellDataBank *cellBank, Sprite *sprit
 static void Sprite_SetCellAnimBank(const NNSG2dCellAnimBankData *cellAnimBank, Sprite *sprite);
 static void Sprite_SetMultiCellBank(const NNSG2dMultiCellDataBank *multiCellBank, Sprite *sprite);
 static void Sprite_SetMultiCellAnimBank(const NNSG2dMultiCellAnimBankData *multiCellAnimBank, Sprite *sprite);
-static void Sprite_CreateCellAnim(Sprite *sprite, enum HeapId heapID);
-static void Sprite_CreateVRamCellAnim(const SpriteResourcesHeader *resourceData, Sprite *sprite, enum HeapId heapID);
-static void Sprite_CreateMultiCellAnim(Sprite *sprite, enum HeapId heapID);
+static void Sprite_CreateCellAnim(Sprite *sprite, enum HeapID heapID);
+static void Sprite_CreateVRamCellAnim(const SpriteResourcesHeader *resourceData, Sprite *sprite, enum HeapID heapID);
+static void Sprite_CreateMultiCellAnim(Sprite *sprite, enum HeapID heapID);
 static BOOL SpriteList_InitSprite(const SpriteList *list,
     const SpriteResourcesHeader *resourceData,
     Sprite *sprite,
-    enum HeapId heapID);
+    enum HeapID heapID);
 static u32 GetPaletteIndexForProxy(const NNSG2dImagePaletteProxy *paletteProxy, u32 vramType);
 static void SpriteList_DrawSprite(const SpriteList *list, Sprite *sprite);
 static void SpriteList_DrawSprite_Stub(const SpriteList *list, Sprite *sprite);
@@ -38,16 +38,16 @@ SpriteList *SpriteList_New(const SpriteListParams *params)
     GF_ASSERT(params);
     GF_ASSERT(params->renderer);
 
-    SpriteList *list = Heap_AllocFromHeap(params->heapID, sizeof(SpriteList));
+    SpriteList *list = Heap_Alloc(params->heapID, sizeof(SpriteList));
     GF_ASSERT(list);
 
     SpriteList_Reset(list);
 
-    list->sprites = Heap_AllocFromHeap(params->heapID, sizeof(Sprite) * params->maxElements);
+    list->sprites = Heap_Alloc(params->heapID, sizeof(Sprite) * params->maxElements);
     GF_ASSERT(list->sprites);
     list->capacity = params->maxElements;
 
-    list->freeSprites = Heap_AllocFromHeap(params->heapID, sizeof(Sprite *) * params->maxElements);
+    list->freeSprites = Heap_Alloc(params->heapID, sizeof(Sprite *) * params->maxElements);
     GF_ASSERT(list->freeSprites);
 
     SpriteList_InitSprites(list);
@@ -76,12 +76,12 @@ BOOL SpriteList_Delete(SpriteList *list)
 
     SpriteList_DeleteAll(list);
 
-    Heap_FreeToHeap(list->rawAnimData);
-    Heap_FreeToHeap(list->freeSprites);
-    Heap_FreeToHeap(list->sprites);
+    Heap_Free(list->rawAnimData);
+    Heap_Free(list->freeSprites);
+    Heap_Free(list->sprites);
 
     SpriteList_Reset(list);
-    Heap_FreeToHeap(list);
+    Heap_Free(list);
 
     list = NULL;
 
@@ -187,7 +187,7 @@ Sprite *SpriteList_AddAffine(const AffineSpriteListTemplate *template)
     sprite->vramType = template->vramType;
     sprite->priority = template->priority;
     sprite->affineOverwriteMode = NNS_G2D_RND_AFFINE_OVERWRITE_NONE;
-    sprite->flip = SPRITE_FLIP_NONE;
+    sprite->flip = NNS_G2D_RENDERERFLIP_NONE;
     sprite->explicitMosaic = FALSE;
     sprite->explicitOamMode = GX_OAM_MODE_NORMAL;
     sprite->overwriteFlags = NNS_G2D_RND_OVERWRITE_PLTTNO_OFFS | NNS_G2D_RND_OVERWRITE_PRIORITY;
@@ -197,8 +197,8 @@ Sprite *SpriteList_AddAffine(const AffineSpriteListTemplate *template)
         sprite->affineOverwriteMode);
     NNS_G2dSetRndCoreFlipMode(
         &template->list->renderer->rendererCore,
-        sprite->flip & SPRITE_FLIP_H,
-        sprite->flip & SPRITE_FLIP_V);
+        sprite->flip & NNS_G2D_RENDERERFLIP_H,
+        sprite->flip & NNS_G2D_RENDERERFLIP_V);
 
     sprite->draw = TRUE;
     sprite->animate = FALSE;
@@ -257,11 +257,11 @@ void Sprite_Delete(Sprite *sprite)
         MultiCellAnimationData *multiCellAnim = (MultiCellAnimationData *)&sprite->animData;
 
         if (multiCellAnim->nodes != NULL) {
-            Heap_FreeToHeap(multiCellAnim->nodes);
+            Heap_Free(multiCellAnim->nodes);
         }
 
         if (multiCellAnim->cellAnims != NULL) {
-            Heap_FreeToHeap(multiCellAnim->cellAnims);
+            Heap_Free(multiCellAnim->cellAnims);
         }
     }
 
@@ -583,26 +583,26 @@ void Sprite_SetExplicitOAMMode(Sprite *sprite, GXOamMode mode)
     }
 }
 
-void Utility_Clear2DMainOAM(enum HeapId heapID)
+void Utility_Clear2DMainOAM(enum HeapID heapID)
 {
-    GXOamAttr *oam = Heap_AllocFromHeap(heapID, sizeof(GXOamAttr) * MAX_SPRITES);
+    GXOamAttr *oam = Heap_Alloc(heapID, sizeof(GXOamAttr) * MAX_SPRITES);
 
     MI_CpuFill16(oam, 0x2C0, sizeof(GXOamAttr) * MAX_SPRITES);
     DC_FlushRange(oam, sizeof(GXOamAttr) * MAX_SPRITES);
     GX_LoadOAM(oam, 0, sizeof(GXOamAttr) * MAX_SPRITES);
 
-    Heap_FreeToHeap(oam);
+    Heap_Free(oam);
 }
 
-void Utility_Clear2DSubOAM(enum HeapId heapID)
+void Utility_Clear2DSubOAM(enum HeapID heapID)
 {
-    GXOamAttr *oam = Heap_AllocFromHeap(heapID, sizeof(GXOamAttr) * MAX_SPRITES);
+    GXOamAttr *oam = Heap_Alloc(heapID, sizeof(GXOamAttr) * MAX_SPRITES);
 
     MI_CpuFill16(oam, 0x2C0, sizeof(GXOamAttr) * MAX_SPRITES);
     // According to the NitroSDK docs there should be a call to DC_FlushRange here.
     GXS_LoadOAM(oam, 0, sizeof(GXOamAttr) * MAX_SPRITES);
 
-    Heap_FreeToHeap(oam);
+    Heap_Free(oam);
 }
 
 u32 Sprite_GetUserAttrForAnimFrame(const Sprite *sprite, u32 animID, u32 frame)
@@ -646,7 +646,7 @@ u32 Sprite_GetUserAttrForCurrentAnimFrame(const Sprite *sprite)
 static BOOL SpriteList_InitSprite(const SpriteList *list,
     const SpriteResourcesHeader *resourceData,
     Sprite *sprite,
-    enum HeapId heapID)
+    enum HeapID heapID)
 {
     sprite->type = SpriteResourcesHeader_GetCellType(resourceData);
     sprite->imageProxy = *resourceData->imageProxy;
@@ -712,7 +712,7 @@ static void Sprite_SetMultiCellAnimBank(const NNSG2dMultiCellAnimBankData *multi
     multiCellAnim->animBank = multiCellAnimBank;
 }
 
-static void Sprite_CreateCellAnim(Sprite *sprite, enum HeapId heapID)
+static void Sprite_CreateCellAnim(Sprite *sprite, enum HeapID heapID)
 {
     CellAnimationData *cellAnim = (CellAnimationData *)&sprite->animData;
     NNS_G2dInitCellAnimation(
@@ -721,7 +721,7 @@ static void Sprite_CreateCellAnim(Sprite *sprite, enum HeapId heapID)
         cellAnim->cellBank);
 }
 
-static void Sprite_CreateVRamCellAnim(const SpriteResourcesHeader *resourceData, Sprite *sprite, enum HeapId heapID)
+static void Sprite_CreateVRamCellAnim(const SpriteResourcesHeader *resourceData, Sprite *sprite, enum HeapID heapID)
 {
     VRamCellAnimationData *vramCellAnim = (VRamCellAnimationData *)&sprite->animData;
     vramCellAnim->transferHandle = NNS_G2dGetNewCellTransferStateHandle();
@@ -740,13 +740,13 @@ static void Sprite_CreateVRamCellAnim(const SpriteResourcesHeader *resourceData,
         charData->szByte);
 }
 
-static void Sprite_CreateMultiCellAnim(Sprite *sprite, enum HeapId heapID)
+static void Sprite_CreateMultiCellAnim(Sprite *sprite, enum HeapID heapID)
 {
     MultiCellAnimationData *multiCellAnim = (MultiCellAnimationData *)&sprite->animData;
     const NNSG2dMultiCellAnimSequence *animSequence = NNS_G2dGetAnimSequenceByIdx(multiCellAnim->animBank, 0);
     u16 maxNodes = NNS_G2dGetMCBankNumNodesRequired(multiCellAnim->cellBank);
-    multiCellAnim->nodes = Heap_AllocFromHeap(heapID, sizeof(NNSG2dNode) * maxNodes);
-    multiCellAnim->cellAnims = Heap_AllocFromHeap(heapID, sizeof(NNSG2dCellAnimation) * maxNodes);
+    multiCellAnim->nodes = Heap_Alloc(heapID, sizeof(NNSG2dNode) * maxNodes);
+    multiCellAnim->cellAnims = Heap_Alloc(heapID, sizeof(NNSG2dCellAnimation) * maxNodes);
 
     NNS_G2dInitMCAnimation(
         &multiCellAnim->anim,
@@ -794,8 +794,8 @@ static void SpriteList_DrawSprite(const SpriteList *list, Sprite *sprite)
     if (sprite->affineOverwriteMode == NNS_G2D_RND_AFFINE_OVERWRITE_NONE) {
         NNS_G2dSetRndCoreFlipMode(
             &list->renderer->rendererCore,
-            sprite->flip & SPRITE_FLIP_H,
-            sprite->flip & SPRITE_FLIP_V);
+            sprite->flip & NNS_G2D_RENDERERFLIP_H,
+            sprite->flip & NNS_G2D_RENDERERFLIP_V);
     } else {
         NNS_G2dSetRndCoreFlipMode(&list->renderer->rendererCore, FALSE, FALSE);
     }

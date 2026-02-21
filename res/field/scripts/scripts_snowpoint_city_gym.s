@@ -1,41 +1,39 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/snowpoint_city_gym.h"
 
-    .data
 
-    ScriptEntry _0012
-    ScriptEntry _0025
-    ScriptEntry _0114
-    ScriptEntry _0148
+    ScriptEntry SnowpointGym_Init
+    ScriptEntry SnowpointGym_Candice
+    ScriptEntry SnowpointGym_GymGuide
+    ScriptEntry SnowpointGym_GymStatue
     ScriptEntryEnd
 
-_0012:
-    GoToIfSet 235, _001F
+SnowpointGym_Init:
+    GoToIfSet FLAG_UNK_0x00EB, _001F
     End
 
 _001F:
-    SetFlag 0x1F3
+    SetFlag FLAG_UNK_0x01F3
     End
 
-_0025:
+SnowpointGym_Candice:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_ICICLE, 0x800C
-    GoToIfEq 0x800C, 1, _00F8
+    GoToIfBadgeAcquired BADGE_ID_ICICLE, SnowpointGym_CandiceAfterBadge
     CreateJournalEvent LOCATION_EVENT_GYM_WAS_TOO_TOUGH, 167, 0, 0, 0
-    Message 0
+    Message SnowpointGym_Text_CandiceIntro
     CloseMessage
     StartTrainerBattle TRAINER_LEADER_CANDICE
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _010E
-    Message 1
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, SnowpointGym_LostBattle
+    Message SnowpointGym_Text_BeatCandice
     BufferPlayerName 0
-    Message 2
+    Message SnowpointGym_Text_CandiceReceiveIciclebadge
     PlaySound SEQ_BADGE
     WaitSound
     GiveBadge BADGE_ID_ICICLE
-    ScrCmd_260 23
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_BADGE_EARNED
     SetTrainerFlag TRAINER_ACE_TRAINER_SERGIO
     SetTrainerFlag TRAINER_ACE_TRAINER_ISAIAH
     SetTrainerFlag TRAINER_ACE_TRAINER_ANTON
@@ -43,86 +41,82 @@ _0025:
     SetTrainerFlag TRAINER_ACE_TRAINER_ALICIA
     SetTrainerFlag TRAINER_ACE_TRAINER_BRENNA
     CreateJournalEvent LOCATION_EVENT_BEAT_GYM_LEADER, 167, TRAINER_LEADER_CANDICE, 0, 0
-    SetFlag 0x1BF
-    Message 3
-    GoTo _00B0
+    SetFlag FLAG_HIDE_VEILSTONE_GALACTIC_GRUNTS
+    Message SnowpointGym_Text_CandiceExplainIcicleBadge
+    GoTo SnowpointGym_CandiceTryGiveTM72
 
-_00B0:
-    SetVar 0x8004, 0x18F
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _00EE
-    CallCommonScript 0x7FC
-    SetFlag 158
-    BufferItemName 0, 0x8004
-    BufferTMHMMoveName 1, 0x8004
-    Message 4
+SnowpointGym_CandiceTryGiveTM72:
+    SetVar VAR_0x8004, ITEM_TM72
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, SnowpointGym_CandiceCannotGiveTM72
+    Common_GiveItemQuantity
+    SetFlag FLAG_OBTAINED_CANDICE_TM72
+    BufferItemName 0, VAR_0x8004
+    BufferTMHMMoveName 1, VAR_0x8004
+    Message SnowpointGym_Text_CandiceExplainTM72
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00EE:
-    CallCommonScript 0x7E1
+SnowpointGym_CandiceCannotGiveTM72:
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
-_00F8:
-    GoToIfUnset 158, _00B0
-    Message 5
+SnowpointGym_CandiceAfterBadge:
+    GoToIfUnset FLAG_OBTAINED_CANDICE_TM72, SnowpointGym_CandiceTryGiveTM72
+    Message SnowpointGym_Text_CandiceAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_010E:
+SnowpointGym_LostBattle:
     BlackOutFromBattle
     ReleaseAll
     End
 
-_0114:
+SnowpointGym_GymGuide:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_ICICLE, 0x800C
-    GoToIfEq 0x800C, 1, _013A
-    Message 6
+    GoToIfBadgeAcquired BADGE_ID_ICICLE, SnowpointGym_GymGuideAfterBadge
+    Message SnowpointGym_Text_GymGuideBeforeBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_013A:
+SnowpointGym_GymGuideAfterBadge:
     BufferPlayerName 0
-    Message 7
+    Message SnowpointGym_Text_GymGuideAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0148:
+SnowpointGym_GymStatue:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    CheckBadgeAcquired BADGE_ID_ICICLE, 0x800C
-    GoToIfEq 0x800C, 1, _0172
+    GoToIfBadgeAcquired BADGE_ID_ICICLE, SnowpointGym_GymStatueAfterBadge
     BufferRivalName 0
     BufferRivalName 1
-    Message 8
+    Message SnowpointGym_Text_GymStatueBeforeBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0172:
+SnowpointGym_GymStatueAfterBadge:
     BufferRivalName 0
     BufferPlayerName 1
     BufferRivalName 2
-    Message 9
+    Message SnowpointGym_Text_GymStatueAfterBadge
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

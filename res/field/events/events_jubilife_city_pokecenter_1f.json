@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 14,
-            "movement_type": 4,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_ACE_TRAINER_F_0",
+            "graphics_id": "OBJ_EVENT_GFX_ACE_TRAINER_F",
+            "movement_type": "MOVEMENT_TYPE_WANDER_NORTH_AND_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 4,
             "initial_dir": 0,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 0
         },
         {
-            "graphics_id": 3,
-            "movement_type": 5,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_SCHOOL_KID_M_1",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_WANDER_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 3,
             "initial_dir": 3,
             "data": [],
@@ -30,10 +32,11 @@
             "y": 0
         },
         {
-            "graphics_id": 2,
-            "movement_type": 2,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_TWIN_2",
+            "graphics_id": "OBJ_EVENT_GFX_TWIN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_AROUND",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -44,10 +47,11 @@
             "y": 0
         },
         {
-            "graphics_id": 26,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_POKECENTER_NURSE_3",
+            "graphics_id": "OBJ_EVENT_GFX_POKECENTER_NURSE",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 1,
             "initial_dir": 1,
             "data": [],
@@ -58,10 +62,11 @@
             "y": 0
         },
         {
-            "graphics_id": 27,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 575,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_TEALA_4",
+            "graphics_id": "OBJ_EVENT_GFX_TEALA",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_BLOCK_POKECENTER_BASEMENT",
             "script": 2035,
             "initial_dir": 2,
             "data": [],
@@ -72,10 +77,11 @@
             "y": 0
         },
         {
-            "graphics_id": 111,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 387,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_UNK_111_5",
+            "graphics_id": "OBJ_EVENT_GFX_UNK_111",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0183",
             "script": 10401,
             "initial_dir": 1,
             "data": [],
@@ -86,10 +92,11 @@
             "y": 0
         },
         {
-            "graphics_id": 112,
-            "movement_type": 15,
-            "trainer_type": 0,
-            "flag": 388,
+            "id": "JUBILIFE_CITY_POKECENTER_1F_UNK_112_6",
+            "graphics_id": "OBJ_EVENT_GFX_UNK_112",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0184",
             "script": 10402,
             "initial_dir": 1,
             "data": [],
@@ -104,19 +111,19 @@
         {
             "x": 8,
             "z": 12,
-            "dest_header_id": 3,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY",
             "dest_warp_id": 2
         },
         {
             "x": 2,
             "z": 10,
-            "dest_header_id": 7,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_POKECENTER_2F",
             "dest_warp_id": 0
         },
         {
             "x": 14,
             "z": 10,
-            "dest_header_id": 474,
+            "dest_header_id": "MAP_HEADER_JUBILIFE_CITY_POKECENTER_B1F",
             "dest_warp_id": 0
         }
     ],

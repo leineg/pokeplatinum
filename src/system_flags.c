@@ -1,6 +1,7 @@
 #include "system_flags.h"
 
 #include "constants/savedata/vars_flags.h"
+#include "generated/first_arrival_to_zones.h"
 #include "generated/map_headers.h"
 #include "generated/pokemon_contest_types.h"
 #include "generated/sdat.h"
@@ -151,12 +152,12 @@ void SystemFlag_SetContestMaster(VarsFlags *varsFlags, enum PokemonContestType c
         SetFlag(varsFlags, FLAG_CONTEST_MASTER_COOL);
         break;
 
-    case CONTEST_TYPE_CUTE:
-        SetFlag(varsFlags, FLAG_CONTEST_MASTER_CUTE);
-        break;
-
     case CONTEST_TYPE_BEAUTY:
         SetFlag(varsFlags, FLAG_CONTEST_MASTER_BEAUTY);
+        break;
+
+    case CONTEST_TYPE_CUTE:
+        SetFlag(varsFlags, FLAG_CONTEST_MASTER_CUTE);
         break;
 
     case CONTEST_TYPE_SMART:
@@ -177,12 +178,12 @@ BOOL SystemFlag_CheckContestMaster(VarsFlags *varsFlags, enum PokemonContestType
         result = CheckFlag(varsFlags, FLAG_CONTEST_MASTER_COOL);
         break;
 
-    case CONTEST_TYPE_CUTE:
-        result = CheckFlag(varsFlags, FLAG_CONTEST_MASTER_CUTE);
-        break;
-
     case CONTEST_TYPE_BEAUTY:
         result = CheckFlag(varsFlags, FLAG_CONTEST_MASTER_BEAUTY);
+        break;
+
+    case CONTEST_TYPE_CUTE:
+        result = CheckFlag(varsFlags, FLAG_CONTEST_MASTER_CUTE);
         break;
 
     case CONTEST_TYPE_SMART:
@@ -492,7 +493,7 @@ void SystemFlag_SetConnectedToWiFi(VarsFlags *varsFlags)
 BOOL SystemFlag_HandleOwnsVillaFurniture(VarsFlags *varsFlags, enum HandleFlagOp op, enum VillaFurniture furniture)
 {
     GF_ASSERT(furniture < VILLA_FURNITURE_MAX);
-    return HandleFlag(varsFlags, op, SYSTEM_FLAGS_VILLA_FURNITURE_START + furniture);
+    return HandleFlag(varsFlags, op, FLAG_VILLA_FURNITURE_START + furniture);
 }
 
 void SystemFlag_ClearVillaVisitorInside(VarsFlags *varsFlags)
@@ -507,7 +508,7 @@ void SystemFlag_ClearVillaVisitorOutside(VarsFlags *varsFlags)
 
 BOOL SystemFlag_HandleGiratinaAnimation(VarsFlags *varsFlags, enum HandleFlagOp op, enum GiratinaShadowAnimation anim)
 {
-    return HandleFlag(varsFlags, op, SYSTEM_FLAGS_GIRATINA_ANIM_START + anim);
+    return HandleFlag(varsFlags, op, FLAG_DISTORTION_WORLD_GIRATINA_SHADOW_1 + anim);
 }
 
 BOOL SystemFlag_HandleDistortionWorldPuzzleFinished(VarsFlags *varsFlags, enum HandleFlagOp op)

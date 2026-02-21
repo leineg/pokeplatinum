@@ -9,7 +9,7 @@
 #include "font.h"
 #include "heap.h"
 #include "message.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
@@ -271,7 +271,7 @@ struct UnkStruct_ov99_021D3E78_t {
     Window *unk_24;
     Window *unk_28;
     MessageLoader *unk_2C;
-    Strbuf *unk_30;
+    String *unk_30;
     SysTask *unk_34;
 };
 
@@ -279,7 +279,7 @@ static void ov99_021D4104(SysTask *param0, void *param1);
 
 UnkStruct_ov99_021D3E78 *ov99_021D3E78(BgConfig *param0, int param1, int param2, int param3, MessageLoader *param4)
 {
-    UnkStruct_ov99_021D3E78 *v0 = Heap_AllocFromHeap(75, sizeof(UnkStruct_ov99_021D3E78));
+    UnkStruct_ov99_021D3E78 *v0 = Heap_Alloc(HEAP_ID_75, sizeof(UnkStruct_ov99_021D3E78));
 
     if (v0) {
         v0->unk_20 = param0;
@@ -292,15 +292,15 @@ UnkStruct_ov99_021D3E78 *ov99_021D3E78(BgConfig *param0, int param1, int param2,
         v0->unk_14 = 0;
         v0->unk_18 = 0;
         v0->unk_1C = 0;
-        v0->unk_30 = Strbuf_Init(256, 75);
-        v0->unk_24 = Window_New(75, 1);
+        v0->unk_30 = String_Init(256, HEAP_ID_75);
+        v0->unk_24 = Window_New(HEAP_ID_75, 1);
 
         Window_Add(param0, v0->unk_24, param2, 0, 0, 32, 32, param3, 0);
         Window_FillTilemap(v0->unk_24, 0x0);
         Window_PutToTilemap(v0->unk_24);
         Window_CopyToVRAM(v0->unk_24);
 
-        v0->unk_28 = Window_New(75, 1);
+        v0->unk_28 = Window_New(HEAP_ID_75, 1);
         Window_Add(param0, v0->unk_28, param2, 0, 0, 32, 2, param3, 0);
         v0->unk_34 = SysTask_ExecuteAfterVBlank(ov99_021D4104, v0, 0);
     }
@@ -314,12 +314,12 @@ void ov99_021D3F38(UnkStruct_ov99_021D3E78 *param0)
         SysTask_Done(param0->unk_34);
     }
 
-    Strbuf_Free(param0->unk_30);
+    String_Free(param0->unk_30);
     Window_Remove(param0->unk_24);
     Window_Remove(param0->unk_28);
-    Heap_FreeToHeap(param0->unk_24);
-    Heap_FreeToHeap(param0->unk_28);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0->unk_24);
+    Heap_Free(param0->unk_28);
+    Heap_Free(param0);
 }
 
 BOOL ov99_021D3F6C(UnkStruct_ov99_021D3E78 *param0, int param1)
@@ -333,10 +333,10 @@ BOOL ov99_021D3F6C(UnkStruct_ov99_021D3E78 *param0, int param1)
             if (v0 >= Unk_ov99_021D4CE4[param0->unk_0C].unk_02) {
                 int v1, v2;
 
-                MessageLoader_GetStrbuf(param0->unk_2C, Unk_ov99_021D4CE4[param0->unk_0C].unk_00, param0->unk_30);
+                MessageLoader_GetString(param0->unk_2C, Unk_ov99_021D4CE4[param0->unk_0C].unk_00, param0->unk_30);
 
                 if (Unk_ov99_021D4CE4[param0->unk_0C].unk_04) {
-                    v1 = (256 - Font_CalcStrbufWidth(FONT_SYSTEM, param0->unk_30, 0)) / 2;
+                    v1 = (256 - Font_CalcStringWidth(FONT_SYSTEM, param0->unk_30, 0)) / 2;
                 } else {
                     v1 = 32;
                 }

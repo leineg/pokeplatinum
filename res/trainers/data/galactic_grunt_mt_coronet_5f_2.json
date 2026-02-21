@@ -13,7 +13,7 @@
             "level": 40,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,36 @@
             "level": 42,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "...Our boss is going to do something\n",
+                "huge at the summit.\r",
+                "But here I am dealing with some pesky\n",
+                "intruder.\r",
+                "You’re spoiling the atmosphere.\n",
+                "You can lose quickly, right?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "You’re not supposed to work me\n",
+                "over like that.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "All my excitement’s gone now...\r",
+                "This whole Mt. Coronet trip is too\n",
+                "rough, long, and draining...\n"
+            ]
         }
     ]
 }

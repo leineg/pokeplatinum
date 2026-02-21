@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/heap.h"
+
 #include "overlay063/struct_ov63_0222CC3C.h"
 #include "overlay066/ov66_02231428.h"
 #include "overlay070/funcptr_ov70_02261C60.h"
@@ -13,7 +15,7 @@
 #include "easy3d_object.h"
 #include "graphics.h"
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
 #include "narc.h"
 
 typedef struct {
@@ -87,15 +89,14 @@ typedef struct UnkStruct_ov70_02260BB8_t {
     NNSFndAllocator unk_494;
 } UnkStruct_ov70_02260BB8;
 
-static UnkStruct_ov70_02261418 *ov70_022613F4(int param0, int param1, u32 param2);
+static UnkStruct_ov70_02261418 *ov70_022613F4(int param0, int param1, enum HeapID heapID);
 static void ov70_02261418(UnkStruct_ov70_02261418 *param0);
-static void ov70_02261420(Easy3DModel *param0, NARC *param1, u32 param2, u32 param3);
 static void ov70_0226146C(Easy3DModel *param0);
 static void ov70_02261474(fx32 *param0, const Easy3DAnim *param1, fx32 param2);
 static BOOL ov70_02261498(fx32 *param0, const Easy3DAnim *param1, fx32 param2);
 static void ov70_022614C0(fx32 *param0, const Easy3DAnim *param1, fx32 param2);
 static BOOL ov70_022614DC(fx32 *param0, const Easy3DAnim *param1, fx32 param2);
-static void ov70_022614F4(UnkStruct_ov70_022615A4 *param0, NARC *param1, const UnkStruct_ov70_02261418 *param2, u32 param3, NNSFndAllocator *param4);
+static void ov70_022614F4(UnkStruct_ov70_022615A4 *param0, NARC *param1, const UnkStruct_ov70_02261418 *param2, u32 heapID, NNSFndAllocator *param4);
 static void ov70_022615A4(UnkStruct_ov70_022615A4 *param0, NNSFndAllocator *param1);
 static void ov70_022615E8(UnkStruct_ov70_022615E8 *param0, UnkStruct_ov70_022615A4 *param1);
 static void ov70_02261664(UnkStruct_ov70_022615E8 *param0, UnkStruct_ov70_022615A4 *param1);
@@ -112,15 +113,13 @@ static void ov70_02261BB4(UnkStruct_ov70_02261BB4 *param0, NNSFndAllocator *para
 static void ov70_02261C04(UnkStruct_ov70_02261BB4 *param0, UnkStruct_ov70_022610B8 *param1);
 static void ov70_02261C60(UnkStruct_ov70_02260BB8 *param0, UnkStruct_ov70_022610B8 *param1);
 
-UnkStruct_ov70_02260BB8 *ov70_02260B44(u32 param0, u32 param1, u32 param2, u32 param3)
+UnkStruct_ov70_02260BB8 *ov70_02260B44(u32 param0, u32 param1, u32 heapID, u32 heapID2)
 {
-    UnkStruct_ov70_02260BB8 *v0;
-
-    v0 = Heap_AllocFromHeap(param2, sizeof(UnkStruct_ov70_02260BB8));
+    UnkStruct_ov70_02260BB8 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov70_02260BB8));
     memset(v0, 0, sizeof(UnkStruct_ov70_02260BB8));
 
-    v0->unk_11C = Heap_AllocFromHeap(param2, sizeof(UnkStruct_ov70_02260E8C) * param0);
-    v0->unk_120 = Heap_AllocFromHeap(param2, sizeof(UnkStruct_ov70_022610B8) * param1);
+    v0->unk_11C = Heap_Alloc(heapID, sizeof(UnkStruct_ov70_02260E8C) * param0);
+    v0->unk_120 = Heap_Alloc(heapID, sizeof(UnkStruct_ov70_022610B8) * param1);
 
     memset(v0->unk_11C, 0, sizeof(UnkStruct_ov70_02260E8C) * param0);
     memset(v0->unk_120, 0, sizeof(UnkStruct_ov70_022610B8) * param1);
@@ -137,9 +136,9 @@ void ov70_02260BB8(UnkStruct_ov70_02260BB8 *param0)
         ov70_02260D80(param0);
     }
 
-    Heap_FreeToHeap(param0->unk_11C);
-    Heap_FreeToHeap(param0->unk_120);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0->unk_11C);
+    Heap_Free(param0->unk_120);
+    Heap_Free(param0);
 }
 
 void ov70_02260BE8(UnkStruct_ov70_02260BB8 *param0)
@@ -187,7 +186,7 @@ void ov70_02260CE0(UnkStruct_ov70_02260BB8 *param0)
     return;
 }
 
-void ov70_02260CE4(UnkStruct_ov70_02260BB8 *param0, int param1, int param2, u32 param3, u32 param4)
+void ov70_02260CE4(UnkStruct_ov70_02260BB8 *param0, int param1, int param2, u32 heapID, u32 heapID2)
 {
     NARC *v0;
     UnkStruct_ov70_02261418 *v1;
@@ -195,14 +194,14 @@ void ov70_02260CE4(UnkStruct_ov70_02260BB8 *param0, int param1, int param2, u32 
     param0->unk_127 = param2;
     param0->unk_126 = param1;
 
-    v1 = ov70_022613F4(param1, param2, param3);
-    v0 = NARC_ctor(NARC_INDEX_GRAPHIC__WIFI_LOBBY, param3);
+    v1 = ov70_022613F4(param1, param2, heapID);
+    v0 = NARC_ctor(NARC_INDEX_GRAPHIC__WIFI_LOBBY, heapID);
 
-    Heap_FndInitAllocatorForExpHeap(&param0->unk_494, param4, 4);
+    HeapExp_FndInitAllocator(&param0->unk_494, heapID2, 4);
 
-    ov70_022614F4(&param0->unk_12C, v0, v1, param4, &param0->unk_494);
-    ov70_02261B24(&param0->unk_29C, v0, &param0->unk_494, v1, param4);
-    ov70_0226174C(&param0->unk_1C4, v0, &param0->unk_494, v1, param4);
+    ov70_022614F4(&param0->unk_12C, v0, v1, heapID2, &param0->unk_494);
+    ov70_02261B24(&param0->unk_29C, v0, &param0->unk_494, v1, heapID2);
+    ov70_0226174C(&param0->unk_1C4, v0, &param0->unk_494, v1, heapID2);
 
     NARC_dtor(v0);
 
@@ -252,7 +251,7 @@ UnkStruct_ov70_02260E8C *ov70_02260E20(UnkStruct_ov70_02260BB8 *param0, int para
     v0 = ov70_02261718(param0);
 
     Easy3DObject_Init(&v0->unk_04, &param0->unk_1C4.unk_00[param1]);
-    Easy3DObject_SetVisibility(&v0->unk_04, 1);
+    Easy3DObject_SetVisible(&v0->unk_04, 1);
 
     ov70_02260EA0(v0, param3);
     {
@@ -274,7 +273,7 @@ UnkStruct_ov70_02260E8C *ov70_02260E20(UnkStruct_ov70_02260BB8 *param0, int para
 
 void ov70_02260E8C(UnkStruct_ov70_02260E8C *param0)
 {
-    Easy3DObject_SetVisibility(&param0->unk_04, 0);
+    Easy3DObject_SetVisible(&param0->unk_04, 0);
 
     param0->unk_00 = 0;
 }
@@ -298,7 +297,7 @@ void ov70_02260F28(const UnkStruct_ov70_02260E8C *param0, VecFx32 *param1)
 
 void ov70_02260F38(UnkStruct_ov70_02260E8C *param0, BOOL param1)
 {
-    Easy3DObject_SetVisibility(&param0->unk_04, param1);
+    Easy3DObject_SetVisible(&param0->unk_04, param1);
 }
 
 BOOL ov70_02260F44(UnkStruct_ov70_02260E8C *param0)
@@ -351,7 +350,7 @@ UnkStruct_ov70_022610B8 *ov70_02260F90(UnkStruct_ov70_02260BB8 *param0, int para
         }
     }
 
-    Easy3DObject_SetVisibility(&v0->unk_04, 1);
+    Easy3DObject_SetVisible(&v0->unk_04, 1);
 
     {
         UnkStruct_ov63_0222CC3C v2;
@@ -377,7 +376,7 @@ void ov70_02261058(UnkStruct_ov70_02260BB8 *param0, UnkStruct_ov70_022610B8 *par
 {
     int v0;
 
-    Easy3DObject_SetVisibility(&param1->unk_04, 0);
+    Easy3DObject_SetVisible(&param1->unk_04, 0);
 
     for (v0 = 0; v0 < 3; v0++) {
         if (param0->unk_29C.unk_120[param1->unk_02][v0] != NULL) {
@@ -526,7 +525,7 @@ fx32 ov70_02261368(const UnkStruct_ov70_022610B8 *param0, int param1)
 
 void ov70_0226138C(UnkStruct_ov70_022610B8 *param0, BOOL param1)
 {
-    Easy3DObject_SetVisibility(&param0->unk_04, param1);
+    Easy3DObject_SetVisible(&param0->unk_04, param1);
 }
 
 void ov70_02261398(UnkStruct_ov70_02260BB8 *param0, UnkStruct_ov70_022610B8 *param1, u32 param2)
@@ -557,26 +556,24 @@ void ov70_022613E8(UnkStruct_ov70_022610B8 *param0, fx32 param1, fx32 param2, fx
     Easy3DObject_SetScale(&param0->unk_04, param1, param2, param3);
 }
 
-static UnkStruct_ov70_02261418 *ov70_022613F4(int param0, int param1, u32 param2)
+static UnkStruct_ov70_02261418 *ov70_022613F4(int param0, int param1, enum HeapID heapID)
 {
     void *v0;
-    u32 v1;
-
-    v1 = (param1 * 5) + param0;
+    u32 v1 = (param1 * 5) + param0;
     GF_ASSERT(v1 < (5 * 5));
-    v0 = LoadMemberFromNARC(174, 1 + v1, 0, param2, 1);
+    v0 = LoadMemberFromNARC(NARC_INDEX_APPLICATION__WIFI_LOBBY__MAP_CONV__WFLBY_MAP, 1 + v1, 0, heapID, 1);
 
     return v0;
 }
 
 static void ov70_02261418(UnkStruct_ov70_02261418 *param0)
 {
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
-static void ov70_02261420(Easy3DModel *param0, NARC *param1, u32 param2, u32 param3)
+static void ov70_02261420(Easy3DModel *param0, NARC *param1, u32 param2, u32 heapID)
 {
-    ov70_0225C730(&param0->data, param1, param2, param3);
+    ov70_0225C730(&param0->data, param1, param2, heapID);
 
     {
         param0->set = NNS_G3dGetMdlSet(param0->data);
@@ -653,12 +650,12 @@ static BOOL ov70_022614DC(fx32 *param0, const Easy3DAnim *param1, fx32 param2)
     return v0;
 }
 
-static void ov70_022614F4(UnkStruct_ov70_022615A4 *param0, NARC *param1, const UnkStruct_ov70_02261418 *param2, u32 param3, NNSFndAllocator *param4)
+static void ov70_022614F4(UnkStruct_ov70_022615A4 *param0, NARC *param1, const UnkStruct_ov70_02261418 *param2, u32 heapID, NNSFndAllocator *param4)
 {
     int v0, v1;
 
     for (v0 = 0; v0 < 2; v0++) {
-        ov70_02261420(&param0->unk_00[v0], param1, param2->unk_180[v0], param3);
+        ov70_02261420(&param0->unk_00[v0], param1, param2->unk_180[v0], heapID);
         ov66_02231668(param0->unk_00[v0].data);
     }
 
@@ -669,9 +666,9 @@ static void ov70_022614F4(UnkStruct_ov70_022615A4 *param0, NARC *param1, const U
             param0->unk_84[v0] = 1;
 
             if (v0 != 3) {
-                Easy3DAnim_LoadFrom(&param0->unk_20[v0], &param0->unk_00[0], param1, param2->unk_18C[v0], param3, param4);
+                Easy3DAnim_LoadFrom(&param0->unk_20[v0], &param0->unk_00[0], param1, param2->unk_18C[v0], heapID, param4);
             } else {
-                Easy3DAnim_LoadFrom(&param0->unk_20[v0], &param0->unk_00[1], param1, param2->unk_18C[v0], param3, param4);
+                Easy3DAnim_LoadFrom(&param0->unk_20[v0], &param0->unk_00[1], param1, param2->unk_18C[v0], heapID, param4);
             }
         }
     }
@@ -701,7 +698,7 @@ static void ov70_022615E8(UnkStruct_ov70_022615E8 *param0, UnkStruct_ov70_022615
 
     for (v0 = 0; v0 < 2; v0++) {
         Easy3DObject_Init(&param0->unk_04[v0], &param1->unk_00[v0]);
-        Easy3DObject_SetVisibility(&param0->unk_04[v0], 1);
+        Easy3DObject_SetVisible(&param0->unk_04[v0], 1);
     }
 
     for (v0 = 0; v0 < 5 - 1; v0++) {
@@ -773,21 +770,21 @@ static UnkStruct_ov70_02260E8C *ov70_02261718(UnkStruct_ov70_02260BB8 *param0)
     return NULL;
 }
 
-static void ov70_0226174C(UnkStruct_ov70_022618C8 *param0, NARC *param1, NNSFndAllocator *param2, const UnkStruct_ov70_02261418 *param3, u32 param4)
+static void ov70_0226174C(UnkStruct_ov70_022618C8 *param0, NARC *param1, NNSFndAllocator *param2, const UnkStruct_ov70_02261418 *param3, u32 heapID)
 {
     int v0, v1, v2;
 
     {
         for (v0 = 0; v0 < 2; v0++) {
             for (v1 = 0; v1 < 3; v1++) {
-                ov70_0225C730(&param0->unk_20[v0][v1], param1, param3->unk_128[v0][v1], param4);
+                ov70_0225C730(&param0->unk_20[v0][v1], param1, param3->unk_128[v0][v1], heapID);
             }
         }
     }
 
     {
         for (v0 = 0; v0 < 2; v0++) {
-            param0->unk_00[v0].data = LoadMemberFromOpenNARC(param1, param3->unk_120[v0], 0, param4, 0);
+            param0->unk_00[v0].data = LoadMemberFromOpenNARC(param1, param3->unk_120[v0], 0, heapID, 0);
             param0->unk_00[v0].set = NNS_G3dGetMdlSet(param0->unk_00[v0].data);
             param0->unk_00[v0].model = NNS_G3dGetMdlByIdx(param0->unk_00[v0].set, 0);
             param0->unk_00[v0].texture = NNS_G3dGetTex(param0->unk_20[v0][0]);
@@ -798,7 +795,7 @@ static void ov70_0226174C(UnkStruct_ov70_022618C8 *param0, NARC *param1, NNSFndA
         for (v0 = 0; v0 < 2; v0++) {
             for (v1 = 0; v1 < 4; v1++) {
                 if (param3->unk_120[0] != param3->unk_140[v0][v1]) {
-                    Easy3DAnim_LoadFrom(&param0->unk_38[v0][v1], &param0->unk_00[v0], param1, param3->unk_140[v0][v1], param4, param2);
+                    Easy3DAnim_LoadFrom(&param0->unk_38[v0][v1], &param0->unk_00[v0], param1, param3->unk_140[v0][v1], heapID, param2);
 
                     if (v1 >= 1) {
                         for (v2 = 0; v2 < param3->unk_160[v0]; v2++) {
@@ -827,7 +824,7 @@ static void ov70_022618C8(UnkStruct_ov70_022618C8 *param0, NNSFndAllocator *para
 
     {
         for (v0 = 0; v0 < 2; v0++) {
-            Heap_FreeToHeap(param0->unk_00[v0].data);
+            Heap_Free(param0->unk_00[v0].data);
         }
     }
 
@@ -848,7 +845,7 @@ static void ov70_022618C8(UnkStruct_ov70_022618C8 *param0, NNSFndAllocator *para
                 v4 = NNS_G3dPlttReleasePlttKey(v5);
                 NNS_GfdFreePlttVram(v4);
 
-                Heap_FreeToHeap(param0->unk_20[v0][v1]);
+                Heap_Free(param0->unk_20[v0][v1]);
             }
         }
     }
@@ -941,12 +938,12 @@ static UnkStruct_ov70_022610B8 *ov70_02261AF0(UnkStruct_ov70_02260BB8 *param0)
     return NULL;
 }
 
-static void ov70_02261B24(UnkStruct_ov70_02261BB4 *param0, NARC *param1, NNSFndAllocator *param2, const UnkStruct_ov70_02261418 *param3, u32 param4)
+static void ov70_02261B24(UnkStruct_ov70_02261BB4 *param0, NARC *param1, NNSFndAllocator *param2, const UnkStruct_ov70_02261418 *param3, u32 heapID)
 {
     int v0, v1;
 
     for (v0 = 0; v0 < 18; v0++) {
-        ov70_02261420(&param0->unk_00[v0], param1, param3->unk_00[v0], param4);
+        ov70_02261420(&param0->unk_00[v0], param1, param3->unk_00[v0], heapID);
 
         if ((v0 != 11) && (v0 != 12)) {
             ov66_02231668(param0->unk_00[v0].data);
@@ -954,7 +951,7 @@ static void ov70_02261B24(UnkStruct_ov70_02261BB4 *param0, NARC *param1, NNSFndA
 
         for (v1 = 0; v1 < 3; v1++) {
             if (param3->unk_48[v0][v1] != param3->unk_00[v0]) {
-                param0->unk_120[v0][v1] = LoadMemberFromOpenNARC(param1, param3->unk_48[v0][v1], 0, param4, 0);
+                param0->unk_120[v0][v1] = LoadMemberFromOpenNARC(param1, param3->unk_48[v0][v1], 0, heapID, 0);
             } else {
                 param0->unk_120[v0][v1] = NULL;
             }
@@ -969,7 +966,7 @@ static void ov70_02261BB4(UnkStruct_ov70_02261BB4 *param0, NNSFndAllocator *para
     for (v0 = 0; v0 < 18; v0++) {
         for (v1 = 0; v1 < 3; v1++) {
             if (param0->unk_120[v0][v1] != NULL) {
-                Heap_FreeToHeap(param0->unk_120[v0][v1]);
+                Heap_Free(param0->unk_120[v0][v1]);
                 param0->unk_120[v0][v1] = NULL;
             }
         }

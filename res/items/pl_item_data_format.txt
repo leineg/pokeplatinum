@@ -10,8 +10,8 @@ naturalGiftType:u16.5:generated/pokemon_types.h:TYPE_
 prevent_toss:u16.1:bool
 selectable:u16.1:bool
 fieldPocket:u16.4:constants/items.h:POCKET_
-battlePocket:u16.5
-fieldUseFunc:u8
+battlePocket:u16.5:constants/items.h:BATTLE_POCKET_MASK_
+fieldUseFunc:u8:constants/items.h:ITEM_USE_FUNC_
 battleUseFunc:u8
 partyUse:u8
 padding_0D:pad1

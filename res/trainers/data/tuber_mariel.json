@@ -13,7 +13,7 @@
             "level": 31,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,37 @@
             "level": 33,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I can’t swim without my inflatable tube.\n",
+                "But my Pokémon might be strong!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "They weren’t tough, my Pokémon...\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "My mommy said that Professor Rowan\n",
+                "is really kindhearted."
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Oh! You’re the Trainer who played\n",
+                "with us before!\r",
+                "Can you see if my Pokémon have grown\n",
+                "stronger?\r"
+            ]
         }
     ]
 }

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_206.h"
 
-    .data
 
     ScriptEntry _0016
     ScriptEntry _001C
@@ -11,28 +10,28 @@
     ScriptEntryEnd
 
 _0016:
-    SetFlag 0x9E6
+    SetFlag FLAG_FIRST_ARRIVAL_CYCLING_ROAD_UNUSED
     End
 
 _001C:
-    CallIfSet 0x994, _009F
-    GetPreviousMapID 0x4000
-    GoToIfEq 0x4000, MAP_HEADER_ROUTE_206_CYCLING_ROAD_NORTH_GATE, _0047
-    GoToIfEq 0x4000, MAP_HEADER_ROUTE_206_CYCLING_ROAD_SOUTH_GATE, _0047
+    CallIfSet FLAG_ON_CYCLING_ROAD, _009F
+    GetPreviousMapID VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, MAP_HEADER_ROUTE_206_CYCLING_ROAD_NORTH_GATE, _0047
+    GoToIfEq VAR_MAP_LOCAL_0, MAP_HEADER_ROUTE_206_CYCLING_ROAD_SOUTH_GATE, _0047
     End
 
 _0047:
-    GoToIfSet 3, _009D
-    GetPlayerMapPos 0x4000, 0x4001
-    GoToIfLt 0x4000, 0x12B, _009D
-    GoToIfGt 0x4000, 0x132, _009D
-    GoToIfEq 0x4001, 0x240, _008E
-    GoToIfEq 0x4001, 0x2A9, _008E
+    GoToIfSet FLAG_UNK_0x0003, _009D
+    GetPlayerMapPos VAR_MAP_LOCAL_0, VAR_MAP_LOCAL_1
+    GoToIfLt VAR_MAP_LOCAL_0, 0x12B, _009D
+    GoToIfGt VAR_MAP_LOCAL_0, 0x132, _009D
+    GoToIfEq VAR_MAP_LOCAL_1, 0x240, _008E
+    GoToIfEq VAR_MAP_LOCAL_1, 0x2A9, _008E
     End
 
 _008E:
-    SetFlag 3
-    SetFlag 0x994
+    SetFlag FLAG_UNK_0x0003
+    SetFlag FLAG_ON_CYCLING_ROAD
     ScrCmd_2BF
     ScrCmd_0C9 1
     End
@@ -55,21 +54,11 @@ _00A4:
     End
 
 _00B7:
-    ScrCmd_036 1, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 1
     End
 
 _00CE:
-    ScrCmd_036 2, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 2
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

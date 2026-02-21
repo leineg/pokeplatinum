@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/stark_mountain_outside.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0018
@@ -10,15 +9,11 @@
     ScriptEntryEnd
 
 _0012:
-    SetFlag 0x9D1
+    SetFlag FLAG_FIRST_ARRIVAL_STARK_MOUNTAIN_EXTERIOR
     End
 
 _0018:
-    ScrCmd_036 9, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 9
     End
 
 _002F:
@@ -46,75 +41,70 @@ _002F:
     RemoveObject 6
     RemoveObject 7
     WaitFanfare SEQ_SE_DP_KAIDAN2
-    SetVar 0x40A0, 1
+    SetVar VAR_UNK_0x40A0, 1
     ReleaseAll
     End
 
     .balign 4, 0
 _00A4:
-    MoveAction_015 4
+    WalkNormalEast 4
     EndMovement
 
     .balign 4, 0
 _00AC:
-    MoveAction_013 2
-    MoveAction_015 4
-    MoveAction_012
+    WalkNormalSouth 2
+    WalkNormalEast 4
+    WalkNormalNorth
     EndMovement
 
-    .byte 34
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+StarkMountainOutside_UnusedMovement:
+    WalkOnSpotNormalWest
+    EndMovement
 
     .balign 4, 0
 _00C4:
-    MoveAction_034
-    MoveAction_063 2
-    MoveAction_032
+    WalkOnSpotNormalWest
+    Delay8 2
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _00D4:
-    MoveAction_012 2
-    MoveAction_069
+    WalkNormalNorth 2
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _00E0:
-    MoveAction_012
-    MoveAction_015 3
+    WalkNormalNorth
+    WalkNormalEast 3
     EndMovement
 
     .balign 4, 0
 _00EC:
-    MoveAction_015
-    MoveAction_013 2
-    MoveAction_015 3
-    MoveAction_012
+    WalkNormalEast
+    WalkNormalSouth 2
+    WalkNormalEast 3
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
 _0100:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0108:
-    MoveAction_015
-    MoveAction_012 2
-    MoveAction_069
+    WalkNormalEast
+    WalkNormalNorth 2
+    SetInvisible
     EndMovement
 
 _0118:
     LockAll
     Message 3
     CloseMessage
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     Message 4
     ApplyMovement 5, _01F0
     WaitMovement
@@ -127,7 +117,7 @@ _0118:
     BufferPlayerName 0
     Message 6
     CloseMessage
-    WaitTime 15, 0x800C
+    WaitTime 15, VAR_RESULT
     ApplyMovement 5, _0204
     ApplyMovement 4, _01DC
     WaitMovement
@@ -144,69 +134,69 @@ _0118:
     BufferPlayerName 0
     Message 8
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     RemoveObject 4
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
-    SetVar 0x40A0, 3
+    SetVar VAR_UNK_0x40A0, 3
     ReleaseAll
     End
 
     .balign 4, 0
 _01CC:
-    MoveAction_034
-    MoveAction_063 2
-    MoveAction_033
+    WalkOnSpotNormalWest
+    Delay8 2
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01DC:
-    MoveAction_063
-    MoveAction_034
+    Delay8
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _01E8:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01F0:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _01F8:
-    MoveAction_012 2
-    MoveAction_069
+    WalkNormalNorth 2
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _0204:
-    MoveAction_070
-    MoveAction_013
-    MoveAction_035
+    SetVisible
+    WalkNormalSouth
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0214:
-    MoveAction_013 2
-    MoveAction_014 5
-    MoveAction_012 2
-    MoveAction_014 3
-    MoveAction_021 9
-    MoveAction_023 10
-    MoveAction_012 6
-    MoveAction_015 8
+    WalkNormalSouth 2
+    WalkNormalWest 5
+    WalkNormalNorth 2
+    WalkNormalWest 3
+    WalkFasterSouth 9
+    WalkFasterEast 10
+    WalkNormalNorth 6
+    WalkNormalEast 8
     EndMovement
 
     .balign 4, 0
 _0238:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0240:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement

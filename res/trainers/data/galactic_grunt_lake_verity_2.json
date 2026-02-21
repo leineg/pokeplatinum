@@ -18,7 +18,7 @@
                 "MOVE_GROWL",
                 "MOVE_FAKE_OUT"
             ],
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -32,7 +32,7 @@
                 "MOVE_BITE",
                 "MOVE_SUPERSONIC"
             ],
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -45,8 +45,30 @@
                 "MOVE_NIGHT_SHADE",
                 "MOVE_WING_ATTACK"
             ],
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "In order for us to bring peace to\n",
+                "the world, we must control it!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "You’re too young to understand.\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Our boss always had plans for\n",
+                "the three lakes...\r",
+                "While you were blissfully ignorant,\n",
+                "our work went ahead...\n"
+            ]
         }
     ]
 }

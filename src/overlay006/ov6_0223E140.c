@@ -3,22 +3,22 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/species.h"
+#include "generated/movement_actions.h"
+
 #include "struct_decls/struct_0205E884_decl.h"
 #include "struct_decls/struct_02061AB4_decl.h"
-#include "struct_defs/struct_02099F80.h"
 
 #include "field/field_system.h"
 #include "field/field_system_sub2_t.h"
+#include "overlay005/area_light.h"
 #include "overlay005/fieldmap.h"
 #include "overlay005/motion_blur.h"
 #include "overlay005/ov5_021D1A94.h"
-#include "overlay005/ov5_021D521C.h"
 #include "overlay005/struct_ov5_021D1BEC_decl.h"
-#include "overlay005/struct_ov5_021D52F4.h"
 #include "overlay006/funcptr_ov6_0223E6EC.h"
 #include "overlay006/struct_ov6_0223E6EC.h"
 #include "overlay006/struct_ov6_0223FDE4_decl.h"
-#include "overlay115/camera_angle.h"
 
 #include "bg_window.h"
 #include "camera.h"
@@ -29,20 +29,20 @@
 #include "gx_layers.h"
 #include "heap.h"
 #include "map_object.h"
-#include "math.h"
+#include "math_util.h"
 #include "narc.h"
 #include "player_avatar.h"
+#include "sound_playback.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "system.h"
-#include "unk_02005474.h"
 #include "unk_020655F4.h"
 
 void include_unk_ov6_02248F30();
 
 typedef struct {
     FieldSystem *fieldSystem;
-    UnkStruct_02099F80 unk_04;
+    GXBanks unk_04;
     MotionBlur *motionBlur;
     int unk_30;
     int unk_34;
@@ -210,7 +210,7 @@ typedef struct UnkStruct_ov6_022401B8_t {
     UnkStruct_ov6_02240240 unk_08;
     UnkStruct_ov6_02240260 unk_34;
     NNSFndAllocator unk_10C;
-    u32 unk_11C;
+    enum HeapID heapID;
 } UnkStruct_ov6_022401B8;
 
 typedef struct {
@@ -282,16 +282,16 @@ static void ov6_0223FDC4(Easy3DObject *param0, BOOL param1);
 static void ov6_0223FDCC(Easy3DObject *param0, fx32 param1, fx32 param2, fx32 param3);
 static void ov6_0223FDD4(Easy3DObject *param0, fx32 param1, fx32 param2, fx32 param3);
 static void ov6_0223FDDC(Easy3DObject *param0, u16 param1, u32 param2);
+static UnkStruct_ov6_0223FDE4 *ov6_0223FDE4(enum HeapID heapID);
 static void ov6_0223FF7C(UnkStruct_ov6_0223FDE4 *param0);
 static BOOL ov6_0223FFC8(UnkStruct_ov6_0223FDE4 *param0);
 static void ov6_0223FFE4(UnkStruct_ov6_0223FDE4 *param0, fx32 param1, fx32 param2);
 static void ov6_02240064(SysTask *param0, void *param1);
 static void ov6_02240240(UnkStruct_ov6_02240240 *param0, FieldSystem *fieldSystem, u32 param2);
-static void ov6_02240260(UnkStruct_ov6_02240260 *param0, u32 param1, NNSFndAllocator *param2);
+static void ov6_02240260(UnkStruct_ov6_02240260 *param0, enum HeapID heapID, NNSFndAllocator *param2);
 static void ov6_022402E4(UnkStruct_ov6_02240260 *param0, fx32 param1, fx32 param2, fx32 param3);
 static void ov6_02240340(UnkStruct_ov6_02240260 *param0, NNSFndAllocator *param1);
 static void ov6_02240600(UnkStruct_ov6_02240260 *param0);
-static UnkStruct_ov6_02240774 *ov6_0224060C(u32 param0, u32 param1);
 static void ov6_02240654(UnkStruct_ov6_02240774 *param0);
 static void ov6_0224067C(UnkStruct_ov6_02240774 *param0, fx32 param1, fx32 param2, fx32 param3, s32 param4, u16 param5, u16 param6, u16 param7);
 static void ov6_022406D8(UnkStruct_ov6_02240774 *param0);
@@ -302,7 +302,7 @@ static void ov6_022407E8(UnkStruct_ov6_022407B8 *param0, fx32 param1, fx32 param
 static void ov6_0224085C(UnkStruct_ov6_022407B8 *param0);
 static void ov6_0224089C(UnkStruct_ov6_022407B8 *param0);
 static UnkStruct_ov6_022407B8 *ov6_022408A8(UnkStruct_ov6_02240774 *param0);
-static UnkStruct_ov6_02240A00 *ov6_022408C8(u32 param0, u32 param1);
+static UnkStruct_ov6_02240A00 *ov6_022408C8(enum HeapID heapID, u32 param1);
 static void ov6_02240968(UnkStruct_ov6_02240A00 *param0);
 static void ov6_02240994(UnkStruct_ov6_02240A00 *param0, fx32 param1, fx32 param2, fx32 param3, u16 param4, u16 param5, u16 param6);
 static void ov6_022409D4(UnkStruct_ov6_02240A00 *param0);
@@ -347,7 +347,7 @@ static u32 ov6_0223E1AC(const UnkStruct_ov6_0223E140 *param0)
 
 static void ov6_0223E1B0(void)
 {
-    UnkStruct_02099F80 v0 = {
+    GXBanks v0 = {
         GX_VRAM_BG_32_FG,
         GX_VRAM_BGEXTPLTT_NONE,
         GX_VRAM_SUB_BG_32_H,
@@ -381,24 +381,23 @@ static void ov6_0223E1D0(BgConfig *param0)
 
     {
         BgTemplate v1 = {
-            0,
-            0,
-            0x800,
-            0,
-            1,
-            GX_BG_COLORMODE_16,
-            GX_BG_SCRBASE_0x4000,
-            GX_BG_CHARBASE_0x00000,
-            GX_BG_EXTPLTT_23,
-            0,
-            0,
-            0,
-            0
+            .x = 0,
+            .y = 0,
+            .bufferSize = 0x800,
+            .baseTile = 0,
+            .screenSize = BG_SCREEN_SIZE_256x256,
+            .colorMode = GX_BG_COLORMODE_16,
+            .screenBase = GX_BG_SCRBASE_0x4000,
+            .charBase = GX_BG_CHARBASE_0x00000,
+            .bgExtPltt = GX_BG_EXTPLTT_23,
+            .priority = 0,
+            .areaOver = 0,
+            .mosaic = FALSE,
         };
 
-        Bg_InitFromTemplate(param0, 3, &v1, 0);
-        Bg_ClearTilesRange(3, 32, 0, 4);
-        Bg_ClearTilemap(param0, 3);
+        Bg_InitFromTemplate(param0, BG_LAYER_MAIN_3, &v1, 0);
+        Bg_ClearTilesRange(BG_LAYER_MAIN_3, 32, 0, HEAP_ID_FIELD1);
+        Bg_ClearTilemap(param0, BG_LAYER_MAIN_3);
     }
 }
 
@@ -487,9 +486,7 @@ static void ov6_0223E2FC(SysTask *param0, void *param1)
 
 static void ov6_0223E318(FieldSystem *fieldSystem, u32 param1, BOOL param2)
 {
-    MapObject *v0;
-
-    v0 = MapObjMan_LocalMapObjByIndex(fieldSystem->mapObjMan, param1);
+    MapObject *v0 = MapObjMan_LocalMapObjByIndex(fieldSystem->mapObjMan, param1);
 
     if (param2 == 1) {
         MapObject_SetStatusFlagOn(v0, MAP_OBJ_STATUS_HIDE_SHADOW);
@@ -513,7 +510,7 @@ static BOOL ov6_0223E33C(FieldTask *taskMan)
         break;
     case 1:
         ov6_0223FE08(v1->unk_00);
-        Heap_FreeToHeap(v1);
+        Heap_Free(v1);
         return 1;
     }
 
@@ -523,12 +520,12 @@ static BOOL ov6_0223E33C(FieldTask *taskMan)
 void ov6_0223E384(FieldTask *taskMan)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(taskMan);
-    UnkStruct_ov6_0223E33C *v1 = Heap_AllocFromHeap(4, sizeof(UnkStruct_ov6_0223E33C));
+    UnkStruct_ov6_0223E33C *v1 = Heap_Alloc(HEAP_ID_FIELD1, sizeof(UnkStruct_ov6_0223E33C));
 
     memset(v1, 0, sizeof(UnkStruct_ov6_0223E33C));
-    v1->unk_00 = ov6_0223FDE4(4);
+    v1->unk_00 = ov6_0223FDE4(HEAP_ID_FIELD1);
 
-    ov6_0223FE1C(v1->unk_00, (FX32_CONST(2.0f)), 0, 1, 16, fieldSystem->camera);
+    ov6_0223FE1C(v1->unk_00, FX32_CONST(2.0f), 0, 1, 16, fieldSystem->camera);
     FieldTask_InitCall(taskMan, ov6_0223E33C, v1);
 }
 
@@ -541,7 +538,7 @@ static void ov6_0223E3D8(UnkStruct_ov6_0223E33C *param0)
     if (param0->unk_08 != v2) {
         param0->unk_08 = v2;
 
-        v1 = FX_Div(v0, (8 * FX32_ONE));
+        v1 = FX_Div(v0, 8 * FX32_ONE);
         v1 = v0 - v1;
 
         ov6_0223FFFC(param0->unk_00, v1);
@@ -555,11 +552,11 @@ static BOOL ov6_0223E408(FieldTask *param0)
 
     switch (v1->unk_0C) {
     case 0:
-        sub_0200564C(0, 1);
+        Sound_FadeOutBGM(0, 1);
         v1->unk_0C++;
         break;
     case 1:
-        if (Sound_CheckFade() == 0) {
+        if (Sound_IsFadeActive() == FALSE) {
             v1->unk_0C++;
             v1->unk_04 = 16;
         }
@@ -569,7 +566,7 @@ static BOOL ov6_0223E408(FieldTask *param0)
 
         if (v1->unk_04 <= 0) {
             v1->unk_0C++;
-            Sound_PlayEffect(1628);
+            Sound_PlayEffect(SEQ_SE_DP_FW089);
         }
         break;
     case 3:
@@ -590,17 +587,17 @@ static BOOL ov6_0223E408(FieldTask *param0)
         }
         break;
     case 5:
-        sub_0200560C(127, 16, 0);
+        Sound_FadeInBGM(127, 16, BGM_FADE_IN_TYPE_FROM_ZERO);
         v1->unk_0C++;
         break;
     case 6:
-        if (Sound_CheckFade() == 0) {
+        if (Sound_IsFadeActive() == FALSE) {
             v1->unk_0C++;
         }
         break;
     case 7:
         ov6_0223FE08(v1->unk_00);
-        Heap_FreeToHeap(v1);
+        Heap_Free(v1);
         return 1;
     }
 
@@ -610,12 +607,12 @@ static BOOL ov6_0223E408(FieldTask *param0)
 void ov6_0223E4EC(FieldTask *param0)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_ov6_0223E33C *v1 = Heap_AllocFromHeap(4, sizeof(UnkStruct_ov6_0223E33C));
+    UnkStruct_ov6_0223E33C *v1 = Heap_Alloc(HEAP_ID_FIELD1, sizeof(UnkStruct_ov6_0223E33C));
 
     memset(v1, 0, sizeof(UnkStruct_ov6_0223E33C));
-    v1->unk_00 = ov6_0223FDE4(4);
+    v1->unk_00 = ov6_0223FDE4(HEAP_ID_FIELD1);
 
-    ov6_0223FE1C(v1->unk_00, (FX32_CONST(4.0f)), 0, 1, 24, fieldSystem->camera);
+    ov6_0223FE1C(v1->unk_00, FX32_CONST(4.0f), 0, 1, 24, fieldSystem->camera);
 
     v1->unk_08 = ov6_0223FFF4(v1->unk_00);
     FieldTask_InitCall(param0, ov6_0223E408, v1);
@@ -627,7 +624,7 @@ static void ov6_0223E548(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 
     memset(v0, 0, sizeof(UnkStruct_ov6_0223E548));
 
-    v0->unk_48 = ov6_02240104(4, fieldSystem);
+    v0->unk_48 = ov6_02240104(HEAP_ID_FIELD1, fieldSystem);
     v0->unk_00 = 0;
 }
 
@@ -686,7 +683,7 @@ static void ov6_0223E574(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 
         if (v0->unk_6C.unk_00 == 3) {
             if (ov6_02240060(v0->unk_6C.unk_08) == 13) {
-                v0->unk_54 = ov6_02240B9C(4, fieldSystem);
+                v0->unk_54 = ov6_02240B9C(HEAP_ID_FIELD1, fieldSystem);
             }
         }
 
@@ -753,9 +750,7 @@ UnkStruct_ov5_021D1BEC *ov6_0223E6EC(FieldSystem *fieldSystem)
         ov6_0223E574,
         ov6_0223E6D4
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -833,7 +828,7 @@ static void ov6_0223E7B4(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     v3 = 0;
     v4 = MapObject_GetZ(v1);
 
-    v0->unk_00 = ov6_02240768(4);
+    v0->unk_00 = ov6_02240768(HEAP_ID_FIELD1);
     ov6_0224077C(v0->unk_00, v2, v3, v4);
 }
 
@@ -865,9 +860,7 @@ UnkStruct_ov5_021D1BEC *ov6_0223E814(FieldSystem *fieldSystem)
         ov6_0223E7FC,
         ov6_0223E808
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -882,7 +875,7 @@ static void ov6_0223E830(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     VecFx32 v1;
     CameraAngle v2;
 
-#if (GAME_VERSION == 10 || GAME_VERSION == 12)
+#if (GAME_VERSION == VERSION_DIAMOND || GAME_VERSION == VERSION_PLATINUM)
     Camera_SetFOV(0x1701, fieldSystem->camera);
     Camera_SetDistance(0xc8a55, fieldSystem->camera);
     v1.x = 0x2280ef;
@@ -895,7 +888,7 @@ static void ov6_0223E830(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     Camera_SetAngleAroundTarget(&v2, fieldSystem->camera);
 
     Camera_SetClipping(2 * FX32_ONE, 2000 * FX32_ONE, fieldSystem->camera);
-#elif (GAME_VERSION == 11)
+#elif (GAME_VERSION == VERSION_PEARL)
     Camera_SetFOV(0x10c1, fieldSystem->camera);
     Camera_SetDistance(0xD5052, fieldSystem->camera);
     v1.x = 0x1bffbd;
@@ -910,8 +903,8 @@ static void ov6_0223E830(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     Camera_SetClipping(14 * FX32_ONE, 2031 * FX32_ONE, fieldSystem->camera);
 #endif
 
-    v0->unk_04 = ov6_022409F4(4);
-    v0->unk_08 = ov6_02240AC8(4);
+    v0->unk_04 = ov6_022409F4(HEAP_ID_FIELD1);
+    v0->unk_08 = ov6_02240AC8(HEAP_ID_FIELD1);
 
     v1 = Camera_GetTarget(fieldSystem->camera);
 
@@ -940,12 +933,12 @@ static void ov6_0223E8D0(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 
     Camera_SetAngleAroundTarget(&v2, fieldSystem->camera);
     Camera_SetClipping(88 * FX32_ONE, 2000 * FX32_ONE, fieldSystem->camera);
-    ov5_021D5278(&fieldSystem->unk_4C);
+    AreaLightManager_Free(&fieldSystem->areaLightMan);
 
-    fieldSystem->unk_4C = ov5_021D521C(fieldSystem->unk_44, 3);
+    fieldSystem->areaLightMan = AreaLightManager_New(fieldSystem->areaModelAttrs, 3);
 
-    v0->unk_04 = ov6_022409F4(4);
-    v0->unk_08 = ov6_02240AC8(4);
+    v0->unk_04 = ov6_022409F4(HEAP_ID_FIELD1);
+    v0->unk_08 = ov6_02240AC8(HEAP_ID_FIELD1);
 
     v1 = Camera_GetTarget(fieldSystem->camera);
 
@@ -974,12 +967,12 @@ static void ov6_0223E984(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 
     Camera_SetAngleAroundTarget(&v2, fieldSystem->camera);
     Camera_SetClipping(176 * FX32_ONE, 1480 * FX32_ONE, fieldSystem->camera);
-    ov5_021D5278(&fieldSystem->unk_4C);
+    AreaLightManager_Free(&fieldSystem->areaLightMan);
 
-    fieldSystem->unk_4C = ov5_021D521C(fieldSystem->unk_44, 3);
+    fieldSystem->areaLightMan = AreaLightManager_New(fieldSystem->areaModelAttrs, 3);
 
-    v0->unk_04 = ov6_022409F4(4);
-    v0->unk_08 = ov6_02240AC8(4);
+    v0->unk_04 = ov6_022409F4(HEAP_ID_FIELD1);
+    v0->unk_08 = ov6_02240AC8(HEAP_ID_FIELD1);
 
     v1 = Camera_GetTarget(fieldSystem->camera);
 
@@ -1044,15 +1037,15 @@ static void ov6_0223EA98(UnkStruct_ov6_0223EA98 *param0)
         { 10, 9 }
     };
 
-    v2 = NARC_ctor(NARC_INDEX_ARC__DEMO_TENGAN_GRA, 4);
+    v2 = NARC_ctor(NARC_INDEX_ARC__DEMO_TENGAN_GRA, HEAP_ID_FIELD1);
     v0 = v3[param0->unk_10][0];
     v1 = v3[param0->unk_10][1];
 
-    Easy3DModel_LoadFrom(&param0->unk_9C, v2, v0, 4);
+    Easy3DModel_LoadFrom(&param0->unk_9C, v2, v0, HEAP_ID_FIELD1);
     Easy3DObject_Init(&param0->unk_24, &param0->unk_9C);
     Easy3DObject_SetPosition(&param0->unk_24, 0, 0, 0);
     Easy3DObject_SetScale(&param0->unk_24, FX32_CONST(1.00f), FX32_CONST(1.00f), FX32_CONST(1.00f));
-    Easy3DObject_SetVisibility(&param0->unk_24, 1);
+    Easy3DObject_SetVisible(&param0->unk_24, 1);
     Easy3DAnim_LoadFrom(&param0->unk_AC, &param0->unk_9C, v2, v1, 4, &param0->unk_C0);
     Easy3DAnim_SetFrame(&param0->unk_AC, 0);
     Easy3DObject_AddAnim(&param0->unk_24, &param0->unk_AC);
@@ -1079,9 +1072,9 @@ static void ov6_0223EB4C(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
     v0->fieldSystem = fieldSystem;
     v0->unk_108 = MapObjMan_LocalMapObjByIndex(v0->fieldSystem->mapObjMan, 1);
     v0->unk_10C = MapObjMan_LocalMapObjByIndex(v0->fieldSystem->mapObjMan, 0);
-    v0->unk_110 = Player_MapObject(sub_0205EF3C(v0->fieldSystem));
+    v0->unk_110 = Player_MapObject(FieldSystem_GetPlayerAvatar(v0->fieldSystem));
 
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_C0, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_C0, HEAP_ID_FIELD1, 32);
     ov6_0223EA98(v0);
     GX_SetMasterBrightness(v0->unk_0C);
 
@@ -1123,7 +1116,7 @@ static BOOL ov6_0223EBDC(UnkStruct_ov6_0223EA98 *param0)
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00, v2, param0->unk_F4.unk_00);
 
         if (v0[0] && v0[1]) {
-            Sound_PlayPokemonCry(0, 480, 0, 100, 4, 0);
+            Sound_PlayPokemonCryEx(POKECRY_NORMAL, SPECIES_UXIE, 0, 100, HEAP_ID_FIELD1, 0);
             param0->unk_18++;
         }
         break;
@@ -1262,7 +1255,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
     case 8:
         param0->unk_D0 = 0;
         MapObject_Face(param0->unk_10C, 2);
-        LocalMapObj_SetAnimationCode(param0->unk_110, 0x2);
+        LocalMapObj_SetAnimationCode(param0->unk_110, MOVEMENT_ACTION_FACE_WEST);
         Easy3DObject_GetPosition(&param0->unk_24, &v1, &v2, &param0->unk_D8);
         param0->unk_18++;
     case 9:
@@ -1335,7 +1328,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         }
 
         MapObject_SetHidden(param0->unk_108, 0);
-        Easy3DObject_SetVisibility(&param0->unk_24, 0);
+        Easy3DObject_SetVisible(&param0->unk_24, 0);
         param0->unk_18++;
         break;
     case 15:
@@ -1346,7 +1339,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         }
 
         param0->unk_D0 = 0;
-        Sound_PlayPokemonCry(0, 481, 0, 100, 4, 0);
+        Sound_PlayPokemonCryEx(POKECRY_NORMAL, SPECIES_MESPRIT, 0, 100, HEAP_ID_FIELD1, 0);
         param0->unk_18++;
         break;
     case 16:
@@ -1364,7 +1357,7 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
         }
 
         MapObject_SetHidden(param0->unk_108, 1);
-        Easy3DObject_SetVisibility(&param0->unk_24, 1);
+        Easy3DObject_SetVisible(&param0->unk_24, 1);
 
         param0->unk_18++;
     case 18:
@@ -1425,17 +1418,17 @@ static BOOL ov6_0223EE5C(UnkStruct_ov6_0223EA98 *param0)
     if (param0->unk_1C != 0) {
         if (param0->unk_1C == 20) {
             MapObject_Face(param0->unk_10C, 1);
-            LocalMapObj_SetAnimationCode(param0->unk_110, 0x1);
+            LocalMapObj_SetAnimationCode(param0->unk_110, MOVEMENT_ACTION_FACE_SOUTH);
         }
 
         if (param0->unk_1C == 40) {
             MapObject_Face(param0->unk_10C, 2);
-            LocalMapObj_SetAnimationCode(param0->unk_110, 0x3);
+            LocalMapObj_SetAnimationCode(param0->unk_110, MOVEMENT_ACTION_FACE_EAST);
         }
 
         if (param0->unk_1C == 50) {
             MapObject_Face(param0->unk_10C, 0);
-            LocalMapObj_SetAnimationCode(param0->unk_110, 0x0);
+            LocalMapObj_SetAnimationCode(param0->unk_110, MOVEMENT_ACTION_FACE_NORTH);
         }
 
         param0->unk_1C++;
@@ -1487,7 +1480,7 @@ static BOOL ov6_0223F744(UnkStruct_ov6_0223EA98 *param0)
         Easy3DObject_SetPosition(&param0->unk_24, param0->unk_E4.unk_00, v2, param0->unk_F4.unk_00);
 
         if (v0[0] && v0[1]) {
-            Sound_PlayPokemonCry(0, 482, 0, 100, 4, 0);
+            Sound_PlayPokemonCryEx(POKECRY_NORMAL, SPECIES_AZELF, 0, 100, HEAP_ID_FIELD1, 0);
             param0->unk_18++;
         }
 
@@ -1615,7 +1608,7 @@ static void ov6_0223FAF8(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
         break;
     case 1:
         if (ov6_0223F9F4(v0)) {
-            Sound_PlayEffect(1750);
+            Sound_PlayEffect(SEQ_SE_DP_CLIMAX10);
             v0->unk_20 = 0;
             v0->unk_00++;
         } else {
@@ -1687,9 +1680,7 @@ UnkStruct_ov5_021D1BEC *ov6_0223FCCC(FieldSystem *fieldSystem)
     static const UnkStruct_ov6_0223E6EC v0 = {
         1024, sizeof(UnkStruct_ov6_0223EA98), ov6_0223EB4C, ov6_0223EBD0, ov6_0223FAF8, ov6_0223FCC0
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -1755,9 +1746,9 @@ static void ov6_0223FD58(Easy3DModel *param0, u32 param1, u32 param2, u32 param3
     Easy3DModel_Load(param0, param1, param2, param3);
 }
 
-static void ov6_0223FD60(Easy3DModel *param0, NARC *param1, u32 param2, u32 param3)
+static void ov6_0223FD60(Easy3DModel *param0, NARC *param1, u32 param2, enum HeapID heapID)
 {
-    Easy3DModel_LoadFrom(param0, param1, param2, param3);
+    Easy3DModel_LoadFrom(param0, param1, param2, heapID);
 }
 
 static void ov6_0223FD68(Easy3DModel *param0)
@@ -1807,7 +1798,7 @@ static void ov6_0223FDBC(Easy3DObject *param0)
 
 static void ov6_0223FDC4(Easy3DObject *param0, BOOL param1)
 {
-    Easy3DObject_SetVisibility(param0, param1);
+    Easy3DObject_SetVisible(param0, param1);
 }
 
 static void ov6_0223FDCC(Easy3DObject *param0, fx32 param1, fx32 param2, fx32 param3)
@@ -1825,13 +1816,11 @@ static void ov6_0223FDDC(Easy3DObject *param0, u16 param1, u32 param2)
     Easy3DObject_SetRotation(param0, param1, param2);
 }
 
-UnkStruct_ov6_0223FDE4 *ov6_0223FDE4(u32 param0)
+UnkStruct_ov6_0223FDE4 *ov6_0223FDE4(enum HeapID heapID)
 {
-    UnkStruct_ov6_0223FDE4 *v0;
-
-    v0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov6_0223FDE4));
+    UnkStruct_ov6_0223FDE4 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov6_0223FDE4));
     memset(v0, 0, sizeof(UnkStruct_ov6_0223FDE4));
-    v0->camera1 = Camera_Alloc(param0);
+    v0->camera1 = Camera_Alloc(heapID);
     v0->unk_40 = 5;
 
     return v0;
@@ -1840,7 +1829,7 @@ UnkStruct_ov6_0223FDE4 *ov6_0223FDE4(u32 param0)
 void ov6_0223FE08(UnkStruct_ov6_0223FDE4 *param0)
 {
     Camera_Delete(param0->camera1);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov6_0223FE1C(UnkStruct_ov6_0223FDE4 *param0, fx32 param1, fx32 param2, u32 param3, u32 param4, Camera *camera)
@@ -1861,7 +1850,7 @@ void ov6_0223FE1C(UnkStruct_ov6_0223FDE4 *param0, fx32 param1, fx32 param2, u32 
 
     param0->unk_48 = param4;
 
-    Sound_PlayEffect(1749);
+    Sound_PlayEffect(SEQ_SE_DP_CLIMAX09);
 }
 
 void ov6_0223FE9C(UnkStruct_ov6_0223FDE4 *param0)
@@ -1945,9 +1934,7 @@ static void ov6_0223FF7C(UnkStruct_ov6_0223FDE4 *param0)
 
 static BOOL ov6_0223FFC8(UnkStruct_ov6_0223FDE4 *param0)
 {
-    BOOL v0;
-
-    v0 = ov6_0223FD18(&param0->unk_08, param0->unk_44);
+    BOOL v0 = ov6_0223FD18(&param0->unk_08, param0->unk_44);
     ov6_0223FD18(&param0->unk_18, param0->unk_44);
 
     return v0;
@@ -1993,7 +1980,7 @@ void ov6_02240000(UnkStruct_ov6_02240000 *param0, u32 param1, u32 param2, u32 pa
     GX_SetMasterBrightness(param0->unk_00.unk_00);
 
     param0->unk_20 = SysTask_ExecuteAfterVBlank(ov6_02240064, param0, 1024);
-    Sound_PlayEffect(1748);
+    Sound_PlayEffect(SEQ_SE_DP_CLIMAX06);
 }
 
 int ov6_02240060(const UnkStruct_ov6_02240000 *param0)
@@ -2009,14 +1996,12 @@ static void ov6_02240064(SysTask *param0, void *param1)
 
 UnkStruct_ov6_022400A8 *ov6_02240074(FieldSystem *fieldSystem)
 {
-    UnkStruct_ov6_022400A8 *v0;
-
-    v0 = Heap_AllocFromHeap(4, sizeof(UnkStruct_ov6_022400A8));
+    UnkStruct_ov6_022400A8 *v0 = Heap_Alloc(HEAP_ID_FIELD1, sizeof(UnkStruct_ov6_022400A8));
     memset(v0, 0, sizeof(UnkStruct_ov6_022400A8));
     v0->fieldSystem = fieldSystem;
     v0->unk_12C = 5;
 
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_11C, 4, 32);
+    HeapExp_FndInitAllocator(&v0->unk_11C, HEAP_ID_FIELD1, 32);
 
     return v0;
 }
@@ -2024,7 +2009,7 @@ UnkStruct_ov6_022400A8 *ov6_02240074(FieldSystem *fieldSystem)
 void ov6_022400A8(UnkStruct_ov6_022400A8 *param0)
 {
     GF_ASSERT(param0->unk_12C == 5);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov6_022400C4(UnkStruct_ov6_022400A8 *param0)
@@ -2043,26 +2028,24 @@ void ov6_022400C4(UnkStruct_ov6_022400A8 *param0)
     NNS_G3dGePopMtx(1);
 }
 
-UnkStruct_ov6_022401B8 *ov6_02240104(u32 param0, FieldSystem *fieldSystem)
+UnkStruct_ov6_022401B8 *ov6_02240104(enum HeapID heapID, FieldSystem *fieldSystem)
 {
-    UnkStruct_ov6_022401B8 *v0;
-
-    v0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov6_022401B8));
+    UnkStruct_ov6_022401B8 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov6_022401B8));
     memset(v0, 0, sizeof(UnkStruct_ov6_022401B8));
     v0->fieldSystem = fieldSystem;
     v0->unk_00 = 0;
-    v0->unk_11C = param0;
+    v0->heapID = heapID;
 
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_10C, param0, 32);
-    ov6_02240260(&v0->unk_34, v0->unk_11C, &v0->unk_10C);
+    HeapExp_FndInitAllocator(&v0->unk_10C, heapID, 32);
+    ov6_02240260(&v0->unk_34, v0->heapID, &v0->unk_10C);
 
     {
         BgConfig *v1 = FieldSystem_GetBgConfig(v0->fieldSystem);
 
-        Graphics_LoadTilesToBgLayer(172, 74, v1, 2, 0, 0, 0, param0);
-        Graphics_LoadTilemapToBgLayer(172, 76, v1, 2, 0, 0, 0, param0);
-        Graphics_LoadPalette(172, 75, 0, 0x20 * 6, 0x20, param0);
-        Bg_SetPriority(2, 1);
+        Graphics_LoadTilesToBgLayer(NARC_INDEX_ARC__DEMO_TENGAN_GRA, 74, v1, 2, 0, 0, 0, heapID);
+        Graphics_LoadTilemapToBgLayer(NARC_INDEX_ARC__DEMO_TENGAN_GRA, 76, v1, 2, 0, 0, 0, heapID);
+        Graphics_LoadPalette(NARC_INDEX_ARC__DEMO_TENGAN_GRA, 75, 0, 0x20 * 6, 0x20, heapID);
+        Bg_SetPriority(BG_LAYER_MAIN_2, 1);
 
         v0->unk_34.unk_00 = 0;
         v0->unk_34.unk_04 = 31;
@@ -2076,7 +2059,7 @@ UnkStruct_ov6_022401B8 *ov6_02240104(u32 param0, FieldSystem *fieldSystem)
 void ov6_022401B8(UnkStruct_ov6_022401B8 *param0)
 {
     ov6_02240340(&param0->unk_34, &param0->unk_10C);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov6_022401D0(UnkStruct_ov6_022401B8 *param0, u32 param1)
@@ -2118,17 +2101,15 @@ static void ov6_02240240(UnkStruct_ov6_02240240 *param0, FieldSystem *fieldSyste
     param0->unk_28 = 0;
 }
 
-static void ov6_02240260(UnkStruct_ov6_02240260 *param0, u32 param1, NNSFndAllocator *param2)
+static void ov6_02240260(UnkStruct_ov6_02240260 *param0, enum HeapID heapID, NNSFndAllocator *param2)
 {
     int v0;
-    NARC *v1;
+    NARC *v1 = NARC_ctor(NARC_INDEX_ARC__DEMO_TENGAN_GRA, heapID);
 
-    v1 = NARC_ctor(NARC_INDEX_ARC__DEMO_TENGAN_GRA, param1);
-
-    ov6_0223FD60(&param0->unk_80, v1, 6, param1);
+    ov6_0223FD60(&param0->unk_80, v1, 6, heapID);
 
     for (v0 = 0; v0 < 2; v0++) {
-        ov6_0223FD70(&param0->unk_90[v0], &param0->unk_80, v1, 4 + v0, param1, param2);
+        ov6_0223FD70(&param0->unk_90[v0], &param0->unk_80, v1, 4 + v0, heapID, param2);
     }
 
     ov6_0223FDAC(&param0->unk_08, &param0->unk_80);
@@ -2401,18 +2382,15 @@ static void ov6_02240600(UnkStruct_ov6_02240260 *param0)
     ov6_0223FDBC(&param0->unk_08);
 }
 
-static UnkStruct_ov6_02240774 *ov6_0224060C(u32 param0, u32 param1)
+static UnkStruct_ov6_02240774 *ov6_0224060C(enum HeapID heapID, u32 param1)
 {
-    UnkStruct_ov6_02240774 *v0;
-    int v1;
-
-    v0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov6_02240774));
+    UnkStruct_ov6_02240774 *v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov6_02240774));
     memset(v0, 0, sizeof(UnkStruct_ov6_02240774));
 
-    ov6_0223FD58(&v0->unk_00, 98, param1, param0);
+    ov6_0223FD58(&v0->unk_00, 98, param1, heapID);
 
-    for (v1 = 0; v1 < 3; v1++) {
-        ov6_022407B8(&v0->unk_10[v1], &v0->unk_00);
+    for (int i = 0; i < 3; i++) {
+        ov6_022407B8(&v0->unk_10[i], &v0->unk_00);
     }
 
     v0->unk_1C0 = 0;
@@ -2429,7 +2407,7 @@ static void ov6_02240654(UnkStruct_ov6_02240774 *param0)
     }
 
     ov6_0223FD68(&param0->unk_00);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static void ov6_0224067C(UnkStruct_ov6_02240774 *param0, fx32 param1, fx32 param2, fx32 param3, s32 param4, u16 param5, u16 param6, u16 param7)
@@ -2460,7 +2438,7 @@ static void ov6_022406D8(UnkStruct_ov6_02240774 *param0)
         v1 = ov6_022408A8(param0);
         GF_ASSERT(v1);
 
-        ov6_022407E8(v1, 0, (FX32_CONST(16)), 96, param0->unk_1CC, param0->unk_1D0, param0->unk_1D4, param0->unk_1D8, param0->unk_1DA, param0->unk_1DC);
+        ov6_022407E8(v1, 0, FX32_CONST(16), 96, param0->unk_1CC, param0->unk_1D0, param0->unk_1D4, param0->unk_1D8, param0->unk_1DA, param0->unk_1DC);
     }
 
     for (v0 = 0; v0 < 3; v0++) {
@@ -2477,9 +2455,9 @@ static void ov6_02240750(UnkStruct_ov6_02240774 *param0)
     }
 }
 
-UnkStruct_ov6_02240774 *ov6_02240768(u32 param0)
+UnkStruct_ov6_02240774 *ov6_02240768(enum HeapID heapID)
 {
-    return ov6_0224060C(param0, 6);
+    return ov6_0224060C(heapID, 6);
 }
 
 void ov6_02240774(UnkStruct_ov6_02240774 *param0)
@@ -2569,21 +2547,21 @@ static UnkStruct_ov6_022407B8 *ov6_022408A8(UnkStruct_ov6_02240774 *param0)
     return NULL;
 }
 
-static UnkStruct_ov6_02240A00 *ov6_022408C8(u32 param0, u32 param1)
+static UnkStruct_ov6_02240A00 *ov6_022408C8(enum HeapID heapID, u32 param1)
 {
     UnkStruct_ov6_02240A00 *v0;
     int v1;
     NARC *v2;
 
-    v0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov6_02240A00));
+    v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov6_02240A00));
     memset(v0, 0, sizeof(UnkStruct_ov6_02240A00));
 
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_C4, param0, 32);
-    v2 = NARC_ctor(NARC_INDEX_DATA__DEMO_CLIMAX, param0);
-    ov6_0223FD60(&v0->unk_78, v2, param1, param0);
+    HeapExp_FndInitAllocator(&v0->unk_C4, heapID, 32);
+    v2 = NARC_ctor(NARC_INDEX_DATA__DEMO_CLIMAX, heapID);
+    ov6_0223FD60(&v0->unk_78, v2, param1, heapID);
 
     for (v1 = 0; v1 < 3; v1++) {
-        ov6_0223FD70(&v0->unk_88[v1], &v0->unk_78, v2, 1 + v1, param0, &v0->unk_C4);
+        ov6_0223FD70(&v0->unk_88[v1], &v0->unk_78, v2, 1 + v1, heapID, &v0->unk_C4);
     }
 
     ov6_0223FDAC(&v0->unk_00, &v0->unk_78);
@@ -2608,7 +2586,7 @@ static void ov6_02240968(UnkStruct_ov6_02240A00 *param0)
         ov6_0223FD84(&param0->unk_88[v0], &param0->unk_C4);
     }
 
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static void ov6_02240994(UnkStruct_ov6_02240A00 *param0, fx32 param1, fx32 param2, fx32 param3, u16 param4, u16 param5, u16 param6)
@@ -2634,9 +2612,9 @@ static void ov6_022409EC(UnkStruct_ov6_02240A00 *param0)
     ov6_0223FDBC(&param0->unk_00);
 }
 
-UnkStruct_ov6_02240A00 *ov6_022409F4(u32 param0)
+UnkStruct_ov6_02240A00 *ov6_022409F4(enum HeapID heapID)
 {
-    return ov6_022408C8(param0, 0);
+    return ov6_022408C8(heapID, 0);
 }
 
 void ov6_02240A00(UnkStruct_ov6_02240A00 *param0)
@@ -2670,9 +2648,9 @@ void ov6_02240A8C(UnkStruct_ov6_02240A00 *param0, fx32 param1, fx32 param2, fx32
     ov6_02240994(param0, param1 + -811008, param2 + 356351, param3 + -2162696, 59165, 21301, 31122);
 }
 
-UnkStruct_ov6_02240774 *ov6_02240AC8(u32 param0)
+UnkStruct_ov6_02240774 *ov6_02240AC8(enum HeapID heapID)
 {
-    return ov6_0224060C(param0, 6);
+    return ov6_0224060C(heapID, 6);
 }
 
 void ov6_02240AD4(UnkStruct_ov6_02240774 *param0)
@@ -2705,7 +2683,7 @@ void ov6_02240B60(UnkStruct_ov6_02240774 *param0, fx32 param1, fx32 param2, fx32
     ov6_0224067C(param0, param1 + 0xffeb4000, param2 + 0xffff3000, param3 + 0xffe3c000, 64, 59165, 21301, 31122);
 }
 
-static const UnkStruct_ov5_021D52F4 Unk_ov6_02248F30[3] = {
+static const AreaLightTemplate Unk_ov6_02248F30[3] = {
     {
         8,
         0xD,
@@ -2773,23 +2751,23 @@ void include_unk_ov6_02248F30(void)
     Unk_ov6_02248F30[0];
 }
 
-UnkStruct_ov6_02240C44 *ov6_02240B9C(u32 param0, FieldSystem *fieldSystem)
+UnkStruct_ov6_02240C44 *ov6_02240B9C(enum HeapID heapID, FieldSystem *fieldSystem)
 {
     UnkStruct_ov6_02240C44 *v0;
     int v1;
     NARC *v2;
 
-    v0 = Heap_AllocFromHeap(param0, sizeof(UnkStruct_ov6_02240C44));
+    v0 = Heap_Alloc(heapID, sizeof(UnkStruct_ov6_02240C44));
     memset(v0, 0, sizeof(UnkStruct_ov6_02240C44));
 
-    v2 = NARC_ctor(NARC_INDEX_DATA__DEMO_CLIMAX, param0);
+    v2 = NARC_ctor(NARC_INDEX_DATA__DEMO_CLIMAX, heapID);
     v0->fieldSystem = fieldSystem;
 
-    Heap_FndInitAllocatorForExpHeap(&v0->unk_DC, param0, 32);
-    ov6_0223FD60(&v0->unk_78, v2, 15, param0);
+    HeapExp_FndInitAllocator(&v0->unk_DC, heapID, 32);
+    ov6_0223FD60(&v0->unk_78, v2, 15, heapID);
 
     for (v1 = 0; v1 < 4; v1++) {
-        ov6_0223FD70(&v0->unk_88[v1], &v0->unk_78, v2, 16 + v1, param0, &v0->unk_DC);
+        ov6_0223FD70(&v0->unk_88[v1], &v0->unk_78, v2, 16 + v1, heapID, &v0->unk_DC);
     }
 
     ov6_0223FDAC(&v0->unk_00, &v0->unk_78);
@@ -2807,16 +2785,14 @@ UnkStruct_ov6_02240C44 *ov6_02240B9C(u32 param0, FieldSystem *fieldSystem)
 void ov6_02240C44(UnkStruct_ov6_02240C44 *param0, u32 param1)
 {
     VecFx32 v0;
-    MapObject *v1;
-
-    v1 = MapObjMan_LocalMapObjByIndex(param0->fieldSystem->mapObjMan, param1);
+    MapObject *v1 = MapObjMan_LocalMapObjByIndex(param0->fieldSystem->mapObjMan, param1);
 
     MapObject_GetPosPtr(v1, &v0);
 
     ov6_0223FDCC(&param0->unk_00, v0.x, v0.y, v0.z);
     ov6_0223FDC4(&param0->unk_00, 1);
 
-    Sound_PlayEffect(1752);
+    Sound_PlayEffect(SEQ_SE_DP_CLIMAX15);
 }
 
 BOOL ov6_02240C7C(UnkStruct_ov6_02240C44 *param0)

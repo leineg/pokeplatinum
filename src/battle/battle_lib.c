@@ -4,30 +4,28 @@
 #include <string.h>
 
 #include "constants/battle.h"
+#include "constants/battle/battle_script.h"
 #include "constants/flavor.h"
 #include "constants/heap.h"
 #include "constants/items.h"
 #include "constants/sound.h"
 #include "constants/species.h"
 #include "constants/string.h"
-#include "constants/trainer.h"
 #include "generated/abilities.h"
 #include "generated/game_records.h"
 #include "generated/genders.h"
 
 #include "struct_decls/battle_system.h"
-#include "struct_decls/struct_02098700_decl.h"
 #include "struct_defs/fraction.h"
 
 #include "battle/battle_context.h"
 #include "battle/battle_controller.h"
+#include "battle/battle_controller_player.h"
 #include "battle/battle_display.h"
-#include "battle/battle_io.h"
 #include "battle/battle_message.h"
 #include "battle/battle_mon.h"
+#include "battle/battle_system.h"
 #include "battle/common.h"
-#include "battle/ov16_0223DF00.h"
-#include "battle/scripts/sub_seq.naix"
 #include "battle/struct_ov16_0225BFFC_decl.h"
 
 #include "charcode_util.h"
@@ -40,11 +38,18 @@
 #include "pokedex_data_index.h"
 #include "pokedex_heightweight.h"
 #include "pokemon.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "trainer_data.h"
 #include "trainer_info.h"
 #include "unk_020366A0.h"
 #include "unk_0208C098.h"
+
+#include "res/battle/scripts/sub_seq.naix.h"
+#include "res/text/bank/battle_strings.h"
+
+#define TRMSG_ACTIVE_BATTLER_HALF_HP_FLAG 2
+#define TRMSG_LAST_BATTLER_FLAG           3
+#define TRMSG_LAST_BATTLER_HALF_HP_FLAG   4
 
 static BOOL BasicTypeMulApplies(BattleContext *battleCtx, int attacker, int defender, int chartEntry);
 static int MapSideEffectToSubscript(BattleContext *battleCtx, enum BattleSideEffectType type, u32 effect);
@@ -64,7 +69,7 @@ static const Fraction sStatStageBoosts[];
 
 void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCtx, int battler, int partySlot)
 {
-    Pokemon *mon = BattleSystem_PartyPokemon(battleSys, battler, partySlot);
+    Pokemon *mon = BattleSystem_GetPartyPokemon(battleSys, battler, partySlot);
 
     battleCtx->battleMons[battler].species = Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL);
     battleCtx->battleMons[battler].attack = Pokemon_GetValue(mon, MON_DATA_ATK, NULL);
@@ -76,7 +81,7 @@ void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCt
     int i;
     for (i = 0; i < LEARNED_MOVES_MAX; i++) {
         battleCtx->battleMons[battler].moves[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1 + i, NULL);
-        battleCtx->battleMons[battler].ppCur[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1_CUR_PP + i, NULL);
+        battleCtx->battleMons[battler].ppCur[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1_PP + i, NULL);
         battleCtx->battleMons[battler].ppUps[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1_PP_UPS + i, NULL);
     }
 
@@ -91,7 +96,7 @@ void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCt
 
     if ((battleCtx->battleStatusMask & SYSCTL_BATON_PASS) == FALSE) {
         for (i = 0; i < BATTLE_STAT_MAX; i++) {
-            battleCtx->battleMons[battler].statBoosts[i] = 6;
+            battleCtx->battleMons[battler].statBoosts[i] = DEFAULT_STAT_STAGE;
         }
     }
 
@@ -111,17 +116,17 @@ void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCt
     battleCtx->battleMons[battler].gender = Pokemon_GetGender(mon);
     battleCtx->battleMons[battler].isShiny = Pokemon_IsShiny(mon);
 
-    if (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_NO_ABILITIES) {
+    if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_NO_ABILITIES) {
         battleCtx->battleMons[battler].ability = ABILITY_NONE;
         battleCtx->battleMons[battler].status = MON_CONDITION_NONE;
         battleCtx->battleMons[battler].heldItem = ITEM_NONE;
     } else {
         battleCtx->battleMons[battler].ability = Pokemon_GetValue(mon, MON_DATA_ABILITY, NULL);
-        battleCtx->battleMons[battler].status = Pokemon_GetValue(mon, MON_DATA_STATUS_CONDITION, NULL);
+        battleCtx->battleMons[battler].status = Pokemon_GetValue(mon, MON_DATA_STATUS, NULL);
         battleCtx->battleMons[battler].heldItem = Pokemon_GetValue(mon, MON_DATA_HELD_ITEM, NULL);
     }
 
-    if ((BattleSystem_BattleType(battleSys) & BATTLE_TYPE_NO_ABILITIES) && Battler_Side(battleSys, battler) == BATTLER_US) {
+    if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_NO_ABILITIES) && BattleSystem_GetBattlerSide(battleSys, battler) == BATTLER_US) {
         battleCtx->battleMons[battler].formNum = 0;
     } else {
         battleCtx->battleMons[battler].formNum = Pokemon_GetValue(mon, MON_DATA_FORM, NULL);
@@ -129,9 +134,9 @@ void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCt
 
     battleCtx->battleMons[battler].level = Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL);
     battleCtx->battleMons[battler].friendship = Pokemon_GetValue(mon, MON_DATA_FRIENDSHIP, NULL);
-    battleCtx->battleMons[battler].curHP = Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL);
+    battleCtx->battleMons[battler].curHP = Pokemon_GetValue(mon, MON_DATA_HP, NULL);
     battleCtx->battleMons[battler].maxHP = Pokemon_GetValue(mon, MON_DATA_MAX_HP, NULL);
-    battleCtx->battleMons[battler].exp = Pokemon_GetValue(mon, MON_DATA_EXP, NULL);
+    battleCtx->battleMons[battler].exp = Pokemon_GetValue(mon, MON_DATA_EXPERIENCE, NULL);
     battleCtx->battleMons[battler].personality = Pokemon_GetValue(mon, MON_DATA_PERSONALITY, NULL);
     battleCtx->battleMons[battler].OTId = Pokemon_GetValue(mon, MON_DATA_OT_ID, NULL);
     battleCtx->battleMons[battler].OTGender = Pokemon_GetValue(mon, MON_DATA_OT_GENDER, NULL);
@@ -147,12 +152,12 @@ void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCt
     Pokedex_HeightWeightData_Release(heightWeightData);
     Pokedex_HeightWeightData_Free(heightWeightData);
     Pokemon_GetValue(mon, MON_DATA_NICKNAME, battleCtx->battleMons[battler].nickname);
-    Pokemon_GetValue(mon, MON_DATA_OTNAME, battleCtx->battleMons[battler].OTName);
+    Pokemon_GetValue(mon, MON_DATA_OT_NAME, battleCtx->battleMons[battler].OTName);
 
     battleCtx->battleMons[battler].timesDamaged = 0;
     battleCtx->battleMons[battler].trainerMessageFlags = 0;
 
-    int side = Battler_Side(battleSys, battler);
+    int side = BattleSystem_GetBattlerSide(battleSys, battler);
     if (battleCtx->sideConditions[side].knockedOffItemsMask & FlagIndex(battleCtx->selectedPartySlot[battler])) {
         battleCtx->battleMons[battler].heldItem = ITEM_NONE;
         battleCtx->battleMons[battler].moveEffectsData.canUnburden = FALSE;
@@ -163,7 +168,7 @@ void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCt
 
 void BattleSystem_ReloadPokemon(BattleSystem *battleSys, BattleContext *battleCtx, int battler, int partySlot)
 {
-    Pokemon *mon = BattleSystem_PartyPokemon(battleSys, battler, partySlot);
+    Pokemon *mon = BattleSystem_GetPartyPokemon(battleSys, battler, partySlot);
 
     battleCtx->battleMons[battler].attack = Pokemon_GetValue(mon, MON_DATA_ATK, NULL);
     battleCtx->battleMons[battler].defense = Pokemon_GetValue(mon, MON_DATA_DEF, NULL);
@@ -172,47 +177,47 @@ void BattleSystem_ReloadPokemon(BattleSystem *battleSys, BattleContext *battleCt
     battleCtx->battleMons[battler].spDefense = Pokemon_GetValue(mon, MON_DATA_SP_DEF, NULL);
     battleCtx->battleMons[battler].level = Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL);
     battleCtx->battleMons[battler].friendship = Pokemon_GetValue(mon, MON_DATA_FRIENDSHIP, NULL);
-    battleCtx->battleMons[battler].curHP = Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL);
+    battleCtx->battleMons[battler].curHP = Pokemon_GetValue(mon, MON_DATA_HP, NULL);
     battleCtx->battleMons[battler].maxHP = Pokemon_GetValue(mon, MON_DATA_MAX_HP, NULL);
 
     if ((battleCtx->battleMons[battler].statusVolatile & VOLATILE_CONDITION_TRANSFORM) == FALSE) {
         for (int i = 0; i < LEARNED_MOVES_MAX; i++) {
             if ((battleCtx->battleMons[battler].moveEffectsData.mimickedMoveSlot & FlagIndex(i)) == FALSE) {
                 battleCtx->battleMons[battler].moves[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1 + i, NULL);
-                battleCtx->battleMons[battler].ppCur[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1_CUR_PP + i, NULL);
+                battleCtx->battleMons[battler].ppCur[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1_PP + i, NULL);
                 battleCtx->battleMons[battler].ppUps[i] = Pokemon_GetValue(mon, MON_DATA_MOVE1_PP_UPS + i, NULL);
             }
         }
 
-        battleCtx->battleMons[battler].exp = Pokemon_GetValue(mon, MON_DATA_EXP, NULL);
+        battleCtx->battleMons[battler].exp = Pokemon_GetValue(mon, MON_DATA_EXPERIENCE, NULL);
     }
 }
 
-void BattleSystem_LoadScript(BattleContext *battleCtx, int narc, int file)
+void BattleSystem_LoadScript(BattleContext *battleCtx, enum NarcID narcID, int file)
 {
-    GF_ASSERT(NARC_GetMemberSizeByIndexPair(narc, file) < BATTLE_SCRIPT_SIZE_MAX * sizeof(u32));
+    GF_ASSERT(NARC_GetMemberSizeByIndexPair(narcID, file) < BATTLE_SCRIPT_SIZE_MAX * sizeof(u32));
 
-    battleCtx->scriptNarc = narc;
+    battleCtx->scriptNarc = narcID;
     battleCtx->scriptFile = file;
     battleCtx->scriptCursor = 0;
 
-    NARC_ReadWholeMemberByIndexPair(&battleCtx->battleScript, narc, file);
+    NARC_ReadWholeMemberByIndexPair(&battleCtx->battleScript, narcID, file);
 }
 
-void BattleSystem_CallScript(BattleContext *battleCtx, int narc, int file)
+void BattleSystem_CallScript(BattleContext *battleCtx, enum NarcID narcID, int file)
 {
-    GF_ASSERT(NARC_GetMemberSizeByIndexPair(narc, file) < 400 * 4);
+    GF_ASSERT(NARC_GetMemberSizeByIndexPair(narcID, file) < 400 * 4);
     GF_ASSERT(battleCtx->scriptStackPointer < 4);
 
     battleCtx->scriptStackNarc[battleCtx->scriptStackPointer] = battleCtx->scriptNarc;
     battleCtx->scriptStackFile[battleCtx->scriptStackPointer] = battleCtx->scriptFile;
     battleCtx->scriptStackCursor[battleCtx->scriptStackPointer] = battleCtx->scriptCursor;
     battleCtx->scriptStackPointer++;
-    battleCtx->scriptNarc = narc;
+    battleCtx->scriptNarc = narcID;
     battleCtx->scriptFile = file;
     battleCtx->scriptCursor = 0;
 
-    NARC_ReadWholeMemberByIndexPair(&battleCtx->battleScript, narc, file);
+    NARC_ReadWholeMemberByIndexPair(&battleCtx->battleScript, narcID, file);
 }
 
 BOOL BattleSystem_PopScript(BattleContext *battleCtx)
@@ -402,8 +407,8 @@ int BattleMon_Get(BattleContext *battleCtx, int battler, enum BattleMonParam par
         }
     } break;
 
-    case BATTLEMON_NICKNAME_STRBUF:
-        Strbuf_CopyChars((Strbuf *)buf, battleMon->nickname);
+    case BATTLEMON_NICKNAME_STRING:
+        String_CopyChars((String *)buf, battleMon->nickname);
         break;
 
     case BATTLEMON_CUR_HP:
@@ -1166,14 +1171,14 @@ static const u8 sSpeedHalvingItemEffects[] = {
 static inline int CompareSpeed_ApplySimple(BattleContext *battleCtx, int battler, int stage)
 {
     if (Battler_Ability(battleCtx, battler) == ABILITY_SIMPLE) {
-        stage = 6 + ((stage - 6) * 2);
+        stage = DEFAULT_STAT_STAGE + ((stage - DEFAULT_STAT_STAGE) * 2);
 
-        if (stage > 12) {
-            stage = 12;
+        if (stage > MAX_STAT_STAGE) {
+            stage = MAX_STAT_STAGE;
         }
 
-        if (stage < 0) {
-            stage = 0;
+        if (stage < MIN_STAT_STAGE) {
+            stage = MIN_STAT_STAGE;
         }
     }
 
@@ -1266,7 +1271,7 @@ u8 BattleSystem_CompareBattlerSpeed(BattleSystem *battleSys, BattleContext *batt
         battler1Speed *= 2;
     }
 
-    if (battleCtx->sideConditionsMask[Battler_Side(battleSys, battler1)] & SIDE_CONDITION_TAILWIND) {
+    if (battleCtx->sideConditionsMask[BattleSystem_GetBattlerSide(battleSys, battler1)] & SIDE_CONDITION_TAILWIND) {
         battler1Speed *= 2;
     }
 
@@ -1332,7 +1337,7 @@ u8 BattleSystem_CompareBattlerSpeed(BattleSystem *battleSys, BattleContext *batt
         battler2Speed *= 2;
     }
 
-    if (battleCtx->sideConditionsMask[Battler_Side(battleSys, battler2)] & SIDE_CONDITION_TAILWIND) {
+    if (battleCtx->sideConditionsMask[BattleSystem_GetBattlerSide(battleSys, battler2)] & SIDE_CONDITION_TAILWIND) {
         battler2Speed *= 2;
     }
 
@@ -1456,7 +1461,7 @@ void BattleSystem_ClearSideExpGain(BattleContext *battleCtx, int battler)
 void BattleSystem_FlagBattlerExpGain(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
 {
     int side = 0;
-    u32 battleType = BattleSystem_BattleType(battleSys);
+    u32 battleType = BattleSystem_GetBattleType(battleSys);
 
     while (side <= 2) {
         if ((battleCtx->battlersSwitchingMask & FlagIndex(side)) == FALSE
@@ -1604,8 +1609,8 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
     }
 
     if (range == RANGE_ADJACENT_OPPONENTS) { // e.g., Acid, Blizzard
-        int maxBattlers = BattleSystem_MaxBattlers(battleSys);
-        BattlerData *battlerData = BattleSystem_BattlerData(battleSys, attacker);
+        int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
+        BattlerData *battlerData = BattleSystem_GetBattlerData(battleSys, attacker);
         u8 attackerType = Battler_Type(battlerData);
 
         // Assign the first possible living target based on speed order
@@ -1614,7 +1619,7 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
 
             // Check that this battler is an enemy of the attacker
             if (battleCtx->battleMons[battler].curHP != 0) {
-                battlerData = BattleSystem_BattlerData(battleSys, battler);
+                battlerData = BattleSystem_GetBattlerData(battleSys, battler);
                 if (((attackerType & BATTLER_TYPE_SOLO_ENEMY) && (Battler_Type(battlerData) & BATTLER_TYPE_SOLO_ENEMY) == FALSE)
                     || ((attackerType & BATTLER_TYPE_SOLO_ENEMY) == FALSE) && (Battler_Type(battlerData) & BATTLER_TYPE_SOLO_ENEMY)) {
                     defender = battler;
@@ -1627,7 +1632,7 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
             battleCtx->battlerCounter++;
         }
     } else if (range == RANGE_ALL_ADJACENT) { // e.g., Earthquake, Surf
-        int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+        int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
         // Assign the first possible living target based on speed order
         for (battleCtx->battlerCounter = 0; battleCtx->battlerCounter < maxBattlers; battleCtx->battlerCounter++) {
@@ -1644,9 +1649,9 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
             battleCtx->battlerCounter++;
         }
     } else if (range == RANGE_USER_OR_ALLY && randomize == TRUE) { // e.g., Acupressure
-        if ((BattleSystem_BattleType(battleSys) & BATTLE_TYPE_DOUBLES)
+        if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_DOUBLES)
             && BattleSystem_RandNext(battleSys) % 2 == 0) {
-            defender = BattleSystem_Partner(battleSys, attacker);
+            defender = BattleSystem_GetPartner(battleSys, attacker);
             if (battleCtx->battleMons[defender].curHP == 0) {
                 defender = attacker;
             }
@@ -1663,13 +1668,13 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
         || range == RANGE_FIELD) { // e.g., Sunny Day
         defender = attacker;
     } else if (range == RANGE_ALLY) { // e.g., Helping Hand
-        if (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
-            defender = BattleSystem_Partner(battleSys, attacker);
+        if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
+            defender = BattleSystem_GetPartner(battleSys, attacker);
         } else {
             defender = attacker;
         }
     } else if (range == RANGE_USER_OR_ALLY) { // e.g., Acupressure
-        if (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
+        if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
             defender = battleCtx->battlerActions[attacker][BATTLE_ACTION_CHOOSE_TARGET];
             if (battleCtx->battleMons[defender].curHP == 0) {
                 defender = attacker;
@@ -1679,11 +1684,11 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
         }
     } else if (range == RANGE_RANDOM_OPPONENT || randomize == TRUE) { // e.g., Outrage, Thrash, any other reason the move should be randomly targeted
         int opponents[2];
-        int battleType = BattleSystem_BattleType(battleSys);
-        int enemySide = Battler_Side(battleSys, attacker) ^ 1;
+        int battleType = BattleSystem_GetBattleType(battleSys);
+        int enemySide = BattleSystem_GetBattlerSide(battleSys, attacker) ^ 1;
 
-        opponents[0] = BattleSystem_EnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_RIGHT);
-        opponents[1] = BattleSystem_EnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_LEFT);
+        opponents[0] = BattleSystem_GetEnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_RIGHT);
+        opponents[1] = BattleSystem_GetEnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_LEFT);
 
         if (battleType & BATTLE_TYPE_DOUBLES) {
             if (battleCtx->sideConditions[enemySide].followMe
@@ -1702,9 +1707,9 @@ int BattleSystem_Defender(BattleSystem *battleSys, BattleContext *battleCtx, int
             defender = attacker ^ 1;
         }
     } else { // the usual single-target moves, e.g., Flamethrower, Thunderbolt
-        int enemySide = Battler_Side(battleSys, attacker) ^ 1;
+        int enemySide = BattleSystem_GetBattlerSide(battleSys, attacker) ^ 1;
         int target = battleCtx->battlerActions[attacker][BATTLE_ACTION_CHOOSE_TARGET];
-        int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+        int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
         if (battleCtx->sideConditions[enemySide].followMe
             && battleCtx->battleMons[battleCtx->sideConditions[enemySide].followMeUser].curHP) {
@@ -1734,7 +1739,7 @@ void BattleSystem_CheckRedirectionAbilities(BattleSystem *battleSys, BattleConte
         return;
     }
 
-    int defSide = Battler_Side(battleSys, attacker) ^ 1;
+    int defSide = BattleSystem_GetBattlerSide(battleSys, attacker) ^ 1;
     if (battleCtx->sideConditions[defSide].followMe && FOLLOW_ME_MON(defSide).curHP) {
         return;
     }
@@ -1744,7 +1749,7 @@ void BattleSystem_CheckRedirectionAbilities(BattleSystem *battleSys, BattleConte
         moveType = MOVE_DATA(move).type;
     }
 
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
     if (moveType == TYPE_ELECTRIC
         && (MOVE_DATA(move).range == RANGE_SINGLE_TARGET || MOVE_DATA(move).range == RANGE_RANDOM_OPPONENT)
         && (battleCtx->battleStatusMask & SYSCTL_FIRST_OF_MULTI_TURN) == FALSE
@@ -1817,7 +1822,7 @@ void BattleMon_CopyToParty(BattleSystem *battleSys, BattleContext *battleCtx, in
         BattleAI_ClearKnownItem(battleCtx, battler);
     }
 
-    BattleIO_UpdatePartyMon(battleSys, battleCtx, battler);
+    BattleController_EmitUpdatePartyMon(battleSys, battleCtx, battler);
 }
 
 void Battler_LockMoveChoice(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
@@ -1854,7 +1859,7 @@ enum BattleSubAnimation Battler_StatusCondition(BattleContext *battleCtx, int ba
     return BATTLE_ANIMATION_NONE;
 }
 
-enum {
+enum CheckTrainerMessageState {
     CHECK_TRMSG_START = 0,
 
     CHECK_TRMSG_FIRST_DAMAGE = CHECK_TRMSG_START,
@@ -1867,7 +1872,7 @@ enum {
 
 BOOL BattleSystem_CheckTrainerMessage(BattleSystem *battleSys, BattleContext *battleCtx)
 {
-    int battleType = BattleSystem_BattleType(battleSys);
+    int battleType = BattleSystem_GetBattleType(battleSys);
 
     if (battleType & BATTLE_TYPE_NO_TRAINER_MESSAGES) {
         return FALSE;
@@ -1881,7 +1886,7 @@ BOOL BattleSystem_CheckTrainerMessage(BattleSystem *battleSys, BattleContext *ba
         return FALSE;
     }
 
-    int trID = Battler_TrainerID(battleSys, BATTLER_THEM);
+    int trID = Battler_GetTrainerID(battleSys, BATTLER_THEM);
     int state = CHECK_TRMSG_START;
 
     do {
@@ -1912,13 +1917,13 @@ BOOL BattleSystem_CheckTrainerMessage(BattleSystem *battleSys, BattleContext *ba
 
         case CHECK_TRMSG_LAST_BATTLER:
             if ((battleCtx->battleMons[BATTLER_THEM].trainerMessageFlags & TRMSG_LAST_BATTLER_FLAG) == FALSE) {
-                Party *party = BattleSystem_Party(battleSys, BATTLER_THEM);
+                Party *party = BattleSystem_GetParty(battleSys, BATTLER_THEM);
                 int alive = 0;
 
                 for (int i = 0; i < Party_GetCurrentCount(party); i++) {
                     Pokemon *mon = Party_GetPokemonBySlotIndex(party, i);
 
-                    if (Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL)) {
+                    if (Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
                         alive++;
                     }
                 }
@@ -1935,13 +1940,13 @@ BOOL BattleSystem_CheckTrainerMessage(BattleSystem *battleSys, BattleContext *ba
 
         case CHECK_TRMSG_LAST_BATTLER_HALF_HP:
             if ((battleCtx->battleMons[BATTLER_THEM].trainerMessageFlags & TRMSG_LAST_BATTLER_HALF_HP_FLAG) == FALSE) {
-                Party *party = BattleSystem_Party(battleSys, BATTLER_THEM);
+                Party *party = BattleSystem_GetParty(battleSys, BATTLER_THEM);
                 int alive = 0;
 
                 for (int i = 0; i < Party_GetCurrentCount(party); i++) {
                     Pokemon *mon = Party_GetPokemonBySlotIndex(party, i);
 
-                    if (Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL)) {
+                    if (Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
                         alive++;
                     }
                 }
@@ -2022,7 +2027,7 @@ void BattleContext_InitCounters(BattleSystem *battleSys, BattleContext *battleCt
     battleCtx->prizeMoneyMul = 1;
     battleCtx->meFirstTurnOrder = 1;
 
-    int battleType = BattleSystem_BattleType(battleSys);
+    int battleType = BattleSystem_GetBattleType(battleSys);
     if ((battleType & BATTLE_TYPE_DOUBLES) == FALSE) {
         battleCtx->battlersSwitchingMask |= FlagIndex(BATTLER_PLAYER_2);
         battleCtx->battlersSwitchingMask |= FlagIndex(BATTLER_ENEMY_2);
@@ -2041,8 +2046,8 @@ void BattleSystem_UpdateAfterSwitch(BattleSystem *battleSys, BattleContext *batt
     MoveEffectsData moveEffects;
 
     moveEffects = battleCtx->battleMons[battler].moveEffectsData;
-    maxBattlers = BattleSystem_MaxBattlers(battleSys);
-    battleType = BattleSystem_BattleType(battleSys);
+    maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
+    battleType = BattleSystem_GetBattleType(battleSys);
 
     // Forcefully end the battler's turn after the replacement
     battleCtx->battlerActions[battler][BATTLE_ACTION_PICK_COMMAND] = BATTLE_CONTROL_MOVE_END;
@@ -2136,7 +2141,7 @@ void BattleSystem_UpdateAfterSwitch(BattleSystem *battleSys, BattleContext *batt
     }
 
     for (i = 0; i < maxBattlers; i++) {
-        if (i != battler && Battler_Side(battleSys, i) != Battler_Side(battleSys, battler)) {
+        if (i != battler && BattleSystem_GetBattlerSide(battleSys, i) != BattleSystem_GetBattlerSide(battleSys, battler)) {
             battleCtx->moveCopied[i] = MOVE_NONE;
         }
 
@@ -2150,11 +2155,11 @@ void BattleSystem_UpdateAfterSwitch(BattleSystem *battleSys, BattleContext *batt
 
 void BattleSystem_CleanupFaintedMon(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
 {
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
     int i;
 
     for (i = BATTLE_STAT_HP; i < BATTLE_STAT_MAX; i++) {
-        battleCtx->battleMons[battler].statBoosts[i] = 6;
+        battleCtx->battleMons[battler].statBoosts[i] = DEFAULT_STAT_STAGE;
     }
 
     battleCtx->battleMons[battler].statusVolatile = 0;
@@ -2208,7 +2213,7 @@ void BattleSystem_CleanupFaintedMon(BattleSystem *battleSys, BattleContext *batt
     battleCtx->fieldConditionsMask &= (FlagIndex(battler) << FIELD_CONDITION_UPROAR_SHIFT) ^ 0xFFFFFFFF;
 
     for (i = 0; i < maxBattlers; i++) {
-        if (i != battler && Battler_Side(battleSys, i) != Battler_Side(battleSys, battler)) {
+        if (i != battler && BattleSystem_GetBattlerSide(battleSys, i) != BattleSystem_GetBattlerSide(battleSys, battler)) {
             battleCtx->moveCopied[i] = MOVE_NONE;
         }
         battleCtx->moveCopiedHit[i][battler] = 0;
@@ -2319,49 +2324,49 @@ BOOL BattleSystem_CanUseMove(BattleSystem *battleSys, BattleContext *battleCtx, 
 
     if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_DISABLED) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NICKNAME_MOVE;
-        msgOut->id = 609; // "{0}'s {1} is disabled!"
+        msgOut->id = BattleStrings_Text_PokemonsMoveIsDisabled_Ally; // "{0}'s {1} is disabled!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, battler);
         msgOut->params[1] = battleCtx->battleMons[battler].moves[moveSlot];
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_TORMENTED) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NICKNAME;
-        msgOut->id = 612; // "{0} can't use the same move twice in a row due to the torment!"
+        msgOut->id = BattleStrings_Text_PokemonCantUseTheSameMoveTwiceInARowDueToTheTorment; // "{0} can't use the same move twice in a row due to the torment!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, battler);
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_TAUNTED) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NICKNAME_MOVE;
-        msgOut->id = 613; // "{0} can't use {1} after the taunt!"
+        msgOut->id = BattleStrings_Text_PokemonCantUseMoveAfterTheTaunt_Ally; // "{0} can't use {1} after the taunt!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, battler);
         msgOut->params[1] = battleCtx->battleMons[battler].moves[moveSlot];
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_IMPRISONED) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NICKNAME_MOVE;
-        msgOut->id = 616; // "{0} can't use the sealed {1}!"
+        msgOut->id = BattleStrings_Text_PokemonCantUseTheSealedMove_Ally; // "{0} can't use the sealed {1}!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, battler);
         msgOut->params[1] = battleCtx->battleMons[battler].moves[moveSlot];
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_GRAVITY) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NICKNAME_MOVE;
-        msgOut->id = 1001; // "{0} can't use {1} because of gravity!"
+        msgOut->id = BattleStrings_Text_PokemonCantUseMoveBecauseOfGravity_Ally; // "{0} can't use {1} because of gravity!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, battler);
         msgOut->params[1] = battleCtx->battleMons[battler].moves[moveSlot];
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_HEAL_BLOCK) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NICKNAME_MOVE_MOVE;
-        msgOut->id = 1057; // "{0} can't use {2} because of {1}!"
+        msgOut->id = BattleStrings_Text_PokemonCantUseMoveBecauseOfMove_Ally; // "{0} can't use {2} because of {1}!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, battler);
         msgOut->params[1] = MOVE_HEAL_BLOCK;
         msgOut->params[2] = battleCtx->battleMons[battler].moves[moveSlot];
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_CHOICE_ITEM) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_ITEM_MOVE;
-        msgOut->id = 911; // "The {0} allows the use of only {1}!"
+        msgOut->id = BattleStrings_Text_TheItemAllowsTheUseOfOnlyMove; // "The {0} allows the use of only {1}!"
         msgOut->params[0] = battleCtx->battleMons[battler].heldItem;
         msgOut->params[1] = battleCtx->battleMons[battler].moveEffectsData.choiceLockedMove;
         result = FALSE;
     } else if (BattleSystem_CheckInvalidMoves(battleSys, battleCtx, battler, 0, CHECK_INVALID_NO_PP) & FlagIndex(moveSlot)) {
         msgOut->tags = TAG_NONE;
-        msgOut->id = 823; // "There's no PP left for this move!"
+        msgOut->id = BattleStrings_Text_TheresNoPPLeftForThisMove; // "There's no PP left for this move!"
         result = FALSE;
     }
 
@@ -2820,7 +2825,7 @@ BOOL BattleContext_MoveFailed(BattleContext *battleCtx, int battler)
 u8 BattleSystem_CountAliveBattlers(BattleSystem *battleSys, BattleContext *battleCtx, BOOL sameSide, int defender)
 {
     u8 count = 0;
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     // no clue why they used a switch statement for this, but changing it to an if-else doesn't match
     switch (sameSide) {
@@ -2834,7 +2839,7 @@ u8 BattleSystem_CountAliveBattlers(BattleSystem *battleSys, BattleContext *battl
 
     case TRUE:
         for (int i = 0; i < maxBattlers; i++) {
-            if (Battler_Side(battleSys, i) == Battler_Side(battleSys, defender)
+            if (BattleSystem_GetBattlerSide(battleSys, i) == BattleSystem_GetBattlerSide(battleSys, defender)
                 && battleCtx->battleMons[i].curHP) {
                 count++;
             }
@@ -2866,12 +2871,12 @@ int BattleSystem_CountAbility(BattleSystem *battleSys, BattleContext *battleCtx,
 {
     int result = 0;
     int i;
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     switch (mode) {
     case COUNT_ALL_BATTLERS_OUR_SIDE:
         for (i = 0; i < maxBattlers; i++) {
-            if (Battler_Side(battleSys, i) == Battler_Side(battleSys, battler)
+            if (BattleSystem_GetBattlerSide(battleSys, i) == BattleSystem_GetBattlerSide(battleSys, battler)
                 && Battler_Ability(battleCtx, i) == ability) {
                 result++;
             }
@@ -2880,7 +2885,7 @@ int BattleSystem_CountAbility(BattleSystem *battleSys, BattleContext *battleCtx,
 
     case COUNT_ALIVE_BATTLERS_OUR_SIDE:
         for (i = 0; i < maxBattlers; i++) {
-            if (Battler_Side(battleSys, i) == Battler_Side(battleSys, battler)
+            if (BattleSystem_GetBattlerSide(battleSys, i) == BattleSystem_GetBattlerSide(battleSys, battler)
                 && battleCtx->battleMons[i].curHP
                 && Battler_Ability(battleCtx, i) == ability) {
                 result++;
@@ -2890,7 +2895,7 @@ int BattleSystem_CountAbility(BattleSystem *battleSys, BattleContext *battleCtx,
 
     case COUNT_ALL_BATTLERS_THEIR_SIDE:
         for (i = 0; i < maxBattlers; i++) {
-            if (Battler_Side(battleSys, i) != Battler_Side(battleSys, battler)
+            if (BattleSystem_GetBattlerSide(battleSys, i) != BattleSystem_GetBattlerSide(battleSys, battler)
                 && Battler_Ability(battleCtx, i) == ability) {
                 result++;
             }
@@ -2899,7 +2904,7 @@ int BattleSystem_CountAbility(BattleSystem *battleSys, BattleContext *battleCtx,
 
     case COUNT_ALIVE_BATTLERS_THEIR_SIDE:
         for (i = 0; i < maxBattlers; i++) {
-            if (Battler_Side(battleSys, i) != Battler_Side(battleSys, battler)
+            if (BattleSystem_GetBattlerSide(battleSys, i) != BattleSystem_GetBattlerSide(battleSys, battler)
                 && battleCtx->battleMons[i].curHP
                 && Battler_Ability(battleCtx, i) == ability) {
                 result++;
@@ -2909,7 +2914,7 @@ int BattleSystem_CountAbility(BattleSystem *battleSys, BattleContext *battleCtx,
 
     case COUNT_ALIVE_BATTLERS_THEIR_SIDE_FLAG:
         for (i = 0; i < maxBattlers; i++) {
-            if (Battler_Side(battleSys, i) != Battler_Side(battleSys, battler)
+            if (BattleSystem_GetBattlerSide(battleSys, i) != BattleSystem_GetBattlerSide(battleSys, battler)
                 && battleCtx->battleMons[i].curHP
                 && Battler_Ability(battleCtx, i) == ability) {
                 result |= FlagIndex(i);
@@ -3048,7 +3053,7 @@ BOOL Move_IsGhostCurse(BattleContext *battleCtx, u16 move, int battler)
 BOOL BattleSystem_CanStealItem(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
 {
     BOOL result = FALSE;
-    int side = Battler_Side(battleSys, battler);
+    int side = BattleSystem_GetBattlerSide(battleSys, battler);
 
     if (battleCtx->battleMons[battler].heldItem
         && (battleCtx->sideConditions[side].knockedOffItemsMask & FlagIndex(battleCtx->selectedPartySlot[battler])) == FALSE
@@ -3122,7 +3127,7 @@ BOOL BattleSystem_AnyReplacementMons(BattleSystem *battleSys, BattleContext *bat
     // Declarations here are done C89-style to match.
     BOOL result;
     Party *party;
-    Pokemon *pokemon;
+    Pokemon *mon;
     int partySize;
     int aliveMons = 0, neededAliveMons;
     int start, end;
@@ -3130,13 +3135,13 @@ BOOL BattleSystem_AnyReplacementMons(BattleSystem *battleSys, BattleContext *bat
     u32 battleType;
 
     result = FALSE;
-    battleType = BattleSystem_BattleType(battleSys);
-    party = BattleSystem_Party(battleSys, battler);
-    partySize = BattleSystem_PartyCount(battleSys, battler);
+    battleType = BattleSystem_GetBattleType(battleSys);
+    party = BattleSystem_GetParty(battleSys, battler);
+    partySize = BattleSystem_GetPartyCount(battleSys, battler);
 
     if ((battleType & BATTLE_TYPE_2vs2)
         || ((battleType & BATTLE_TYPE_TAG)
-            && (BattleSystem_BattlerSlot(battleSys, battler) & BATTLER_THEM))) {
+            && (BattleSystem_GetBattlerType(battleSys, battler) & BATTLER_THEM))) {
         // have to copy these 4 identical assignments across each branch to match
         start = 0;
         end = partySize;
@@ -3148,7 +3153,7 @@ BOOL BattleSystem_AnyReplacementMons(BattleSystem *battleSys, BattleContext *bat
         end = partySize;
         neededAliveMons = 1;
         selectedSlot1 = battleCtx->selectedPartySlot[battler];
-        selectedSlot2 = battleCtx->selectedPartySlot[BattleSystem_Partner(battleSys, battler)];
+        selectedSlot2 = battleCtx->selectedPartySlot[BattleSystem_GetPartner(battleSys, battler)];
     } else {
         start = 0;
         end = partySize;
@@ -3158,10 +3163,10 @@ BOOL BattleSystem_AnyReplacementMons(BattleSystem *battleSys, BattleContext *bat
     }
 
     for (int i = start; i < end; i++) {
-        pokemon = Party_GetPokemonBySlotIndex(party, i);
-        if (Pokemon_GetValue(pokemon, MON_DATA_SPECIES, NULL)
-            && Pokemon_GetValue(pokemon, MON_DATA_IS_EGG, NULL) == FALSE
-            && Pokemon_GetValue(pokemon, MON_DATA_CURRENT_HP, NULL)
+        mon = Party_GetPokemonBySlotIndex(party, i);
+        if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
+            && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
+            && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
             && selectedSlot1 != i
             && selectedSlot2 != i) {
             aliveMons++;
@@ -3181,9 +3186,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
     int maxBattlers;
     u8 side;
     int itemEffect;
-    u32 battleType;
-
-    battleType = BattleSystem_BattleType(battleSys);
+    u32 battleType = BattleSystem_GetBattleType(battleSys);
     itemEffect = Battler_HeldItemEffect(battleCtx, battler);
 
     if (itemEffect == HOLD_EFFECT_FLEE
@@ -3192,8 +3195,8 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
         return FALSE;
     }
 
-    side = Battler_Side(battleSys, battler);
-    maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    side = BattleSystem_GetBattlerSide(battleSys, battler);
+    maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     if ((tmp = BattleSystem_CountAbility(battleSys, battleCtx, COUNT_ALIVE_BATTLERS_EXCEPT_ME, battler, ABILITY_SHADOW_TAG))
         && Battler_Ability(battleCtx, battler) != ABILITY_SHADOW_TAG) {
@@ -3202,7 +3205,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
         }
 
         msgOut->tags = TAG_NICKNAME_ABILITY;
-        msgOut->id = 39; // "{0} prevents escape with {1}!"
+        msgOut->id = BattleStrings_Text_PokemonPreventsEscapeWithAbility_Ally; // "{0} prevents escape with {1}!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, tmp);
         msgOut->params[1] = ABILITY_SHADOW_TAG;
         return TRUE;
@@ -3218,7 +3221,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
                 }
 
                 msgOut->tags = TAG_NICKNAME_ABILITY;
-                msgOut->id = 39; // "{0} prevents escape with {1}!"
+                msgOut->id = BattleStrings_Text_PokemonPreventsEscapeWithAbility_Ally; // "{0} prevents escape with {1}!"
                 msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, tmp);
                 msgOut->params[1] = ABILITY_ARENA_TRAP;
                 return TRUE;
@@ -3229,7 +3232,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
             }
 
             msgOut->tags = TAG_NICKNAME_ABILITY;
-            msgOut->id = 39; // "{0} prevents escape with {1}!"
+            msgOut->id = BattleStrings_Text_PokemonPreventsEscapeWithAbility_Ally; // "{0} prevents escape with {1}!"
             msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, tmp);
             msgOut->params[1] = ABILITY_ARENA_TRAP;
             return TRUE;
@@ -3243,7 +3246,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
         }
 
         msgOut->tags = TAG_NICKNAME_ABILITY;
-        msgOut->id = 39; // "{0} prevents escape with {1}!"
+        msgOut->id = BattleStrings_Text_PokemonPreventsEscapeWithAbility_Ally; // "{0} prevents escape with {1}!"
         msgOut->params[0] = BattleSystem_NicknameTag(battleCtx, tmp);
         msgOut->params[1] = ABILITY_MAGNET_PULL;
         return TRUE;
@@ -3256,7 +3259,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
         }
 
         msgOut->tags = TAG_NONE;
-        msgOut->id = 794; // "Can't escape!"
+        msgOut->id = BattleStrings_Text_CantEscape2; // "Can't escape!"
         return TRUE;
     }
 
@@ -3265,7 +3268,7 @@ BOOL Battler_IsTrappedMsg(BattleSystem *battleSys, BattleContext *battleCtx, int
 
 BOOL Battler_CanEscape(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
 {
-    u32 battleType = BattleSystem_BattleType(battleSys);
+    u32 battleType = BattleSystem_GetBattleType(battleSys);
     int itemEffect = Battler_HeldItemEffect(battleCtx, battler);
     BOOL result = FALSE;
 
@@ -3289,7 +3292,7 @@ BOOL Battler_CanEscape(BattleSystem *battleSys, BattleContext *battleCtx, int ba
         }
 
         if (result == FALSE) {
-            BattleIO_IncrementRecord(battleSys, battler, 0, RECORD_FAILED_ESCAPE);
+            BattleController_EmitIncrementRecord(battleSys, battler, 0, RECORD_FAILED_ESCAPE);
         }
 
         battleCtx->runAttempts++;
@@ -3314,14 +3317,12 @@ BOOL Move_Imprisoned(BattleSystem *battleSys, BattleContext *battleCtx, int batt
 {
     // must declare C89-style to match
     int i, maxBattlers, side, j;
-    BOOL result;
-
-    result = FALSE;
-    maxBattlers = BattleSystem_MaxBattlers(battleSys);
-    side = Battler_Side(battleSys, battler);
+    BOOL result = FALSE;
+    maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
+    side = BattleSystem_GetBattlerSide(battleSys, battler);
 
     for (i = 0; i < maxBattlers; i++) {
-        if (side != Battler_Side(battleSys, i)
+        if (side != BattleSystem_GetBattlerSide(battleSys, i)
             && (battleCtx->battleMons[i].moveEffectsMask & MOVE_EFFECT_IMPRISON)) {
             for (j = 0; j < LEARNED_MOVES_MAX; j++) {
                 if (move == battleCtx->battleMons[i].moves[j]) {
@@ -3341,7 +3342,7 @@ BOOL Move_Imprisoned(BattleSystem *battleSys, BattleContext *battleCtx, int batt
 BOOL BattleSystem_AnyBattlersWithMoveEffect(BattleSystem *battleSys, BattleContext *battleCtx, int effectMask)
 {
     BOOL result = FALSE;
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     for (int i = 0; i < maxBattlers; i++) {
         if (battleCtx->battleMons[i].moveEffectsMask & effectMask) {
@@ -3362,7 +3363,7 @@ void BattleSystem_SetupLoop(BattleSystem *battleSys, BattleContext *battleCtx)
 
 void BattleSystem_SortMonSpeedOrder(BattleSystem *battleSys, BattleContext *battleCtx)
 {
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     for (int i = 0; i < maxBattlers; i++) {
         battleCtx->monSpeedOrder[i] = i;
@@ -3553,7 +3554,7 @@ BOOL BattleSystem_TriggerTurnEndAbility(BattleSystem *battleSys, BattleContext *
     switch (Battler_Ability(battleCtx, battler)) {
     case ABILITY_SPEED_BOOST:
         if (battleCtx->battleMons[battler].curHP
-            && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SPEED] < 12
+            && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SPEED] < MAX_STAT_STAGE
             && battleCtx->battleMons[battler].moveEffectsData.fakeOutTurnNumber != battleCtx->totalTurns + 1) {
             battleCtx->sideEffectParam = MOVE_SUBSCRIPT_PTR_SPEED_UP_1_STAGE;
             battleCtx->sideEffectType = SIDE_EFFECT_TYPE_ABILITY;
@@ -3617,7 +3618,7 @@ int BattleSystem_Divide(int dividend, int divisor)
     return dividend;
 }
 
-enum {
+enum SwitchInCheckState {
     SWITCH_IN_CHECK_STATE_START = 0,
 
     SWITCH_IN_CHECK_STATE_FIELD_WEATHER = SWITCH_IN_CHECK_STATE_START,
@@ -3639,7 +3640,7 @@ enum {
     SWITCH_IN_CHECK_STATE_DONE,
 };
 
-enum {
+enum SwitchInCheckResult {
     SWITCH_IN_CHECK_RESULT_CONTINUE = 0,
     SWITCH_IN_CHECK_RESULT_BREAK,
     SWITCH_IN_CHECK_RESULT_DONE,
@@ -3652,9 +3653,7 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
     int subscript;
     int result;
     int battler;
-    int maxBattlers;
-
-    maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
     subscript = NULL;
     result = SWITCH_IN_CHECK_RESULT_CONTINUE;
 
@@ -3662,7 +3661,7 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
         switch (battleCtx->switchInCheckState) {
         case SWITCH_IN_CHECK_STATE_FIELD_WEATHER:
             if (battleCtx->fieldWeatherChecked == FALSE) {
-                switch (BattleSystem_FieldWeather(battleSys)) {
+                switch (BattleSystem_GetFieldWeather(battleSys)) {
                 case OVERWORLD_WEATHER_RAINING:
                 case OVERWORLD_WEATHER_HEAVY_RAIN:
                 case OVERWORLD_WEATHER_THUNDERSTORM:
@@ -3713,8 +3712,8 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
         case SWITCH_IN_CHECK_STATE_TRACE:
             for (i = 0; i < maxBattlers; i++) {
                 battler = battleCtx->monSpeedOrder[i];
-                int defender1 = BattleSystem_EnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_RIGHT);
-                int defender2 = BattleSystem_EnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_LEFT);
+                int defender1 = BattleSystem_GetEnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_RIGHT);
+                int defender2 = BattleSystem_GetEnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_LEFT);
 
                 battleCtx->msgDefender = ChooseTraceTarget(battleSys, battleCtx, defender1, defender2);
 
@@ -3824,7 +3823,7 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
                     int sumDef = 0, sumSpDef = 0;
 
                     for (j = 0; j < maxBattlers; j++) {
-                        if (Battler_Side(battleSys, battler) != Battler_Side(battleSys, j)
+                        if (BattleSystem_GetBattlerSide(battleSys, battler) != BattleSystem_GetBattlerSide(battleSys, j)
                             && (battleCtx->battleMons[j].statusVolatile & VOLATILE_CONDITION_SUBSTITUTE) == FALSE
                             && battleCtx->battleMons[j].curHP) {
                             sumDef += battleCtx->battleMons[j].defense
@@ -3873,8 +3872,8 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
                     battleCtx->battleMons[battler].anticipationAnnounced = TRUE;
 
                     for (j = 0; j < maxBattlers; j++) {
-                        if (Battler_Side(battleSys, battler) != Battler_Side(battleSys, j) && battleCtx->battleMons[j].curHP) {
-                            for (k = 0; k < 4; k++) {
+                        if (BattleSystem_GetBattlerSide(battleSys, battler) != BattleSystem_GetBattlerSide(battleSys, j) && battleCtx->battleMons[j].curHP) {
+                            for (k = 0; k < LEARNED_MOVES_MAX; k++) {
                                 move = battleCtx->battleMons[j].moves[k];
 
                                 if (move) {
@@ -3928,11 +3927,11 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
                     sumEnemyHP = 0;
 
                     for (j = 0; j < maxBattlers; j++) {
-                        if (Battler_Side(battleSys, battler) != Battler_Side(battleSys, j)
+                        if (BattleSystem_GetBattlerSide(battleSys, battler) != BattleSystem_GetBattlerSide(battleSys, j)
                             && battleCtx->battleMons[j].curHP) {
                             sumEnemyHP += battleCtx->battleMons[j].curHP;
 
-                            for (k = 0; k < 4; k++) {
+                            for (k = 0; k < LEARNED_MOVES_MAX; k++) {
                                 move = battleCtx->battleMons[j].moves[k];
                                 movePower = MOVE_DATA(move).power;
 
@@ -4002,10 +4001,10 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
                     && Battler_Ability(battleCtx, battler) == ABILITY_FRISK) {
                     battleCtx->battleMons[battler].friskAnnounced = TRUE;
 
-                    if (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
+                    if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
                         int enemies[] = {
-                            BattleSystem_EnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_RIGHT),
-                            BattleSystem_EnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_LEFT),
+                            BattleSystem_GetEnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_RIGHT),
+                            BattleSystem_GetEnemyInSlot(battleSys, battler, ENEMY_IN_SLOT_LEFT),
                         };
 
                         if (battleCtx->battleMons[enemies[0]].curHP
@@ -4056,7 +4055,10 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
                     break;
                 }
 
-                if ((battleCtx->battleMons[battler].slowStartFinished == 0) && (battleCtx->battleMons[battler].curHP) && (Battler_Ability(battleCtx, battler) == 112) && ((battleCtx->totalTurns - battleCtx->battleMons[battler].moveEffectsData.slowStartTurnNumber) == 5)) {
+                if (battleCtx->battleMons[battler].slowStartFinished == 0
+                    && battleCtx->battleMons[battler].curHP
+                    && Battler_Ability(battleCtx, battler) == ABILITY_SLOW_START
+                    && (battleCtx->totalTurns - battleCtx->battleMons[battler].moveEffectsData.slowStartTurnNumber) == 5) {
                     battleCtx->battleMons[battler].slowStartFinished = 1;
                     battleCtx->msgBattlerTemp = battler;
                     subscript = subscript_slow_start_end;
@@ -4175,12 +4177,12 @@ int BattleSystem_TriggerEffectOnSwitch(BattleSystem *battleSys, BattleContext *b
 int BattleSystem_RandomOpponent(BattleSystem *battleSys, BattleContext *battleCtx, int attacker)
 {
     int opponents[2];
-    u32 battleType = BattleSystem_BattleType(battleSys);
+    u32 battleType = BattleSystem_GetBattleType(battleSys);
 
     int chosen;
     if (battleType & BATTLE_TYPE_DOUBLES) {
-        opponents[0] = BattleSystem_EnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_RIGHT);
-        opponents[1] = BattleSystem_EnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_LEFT);
+        opponents[0] = BattleSystem_GetEnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_RIGHT);
+        opponents[1] = BattleSystem_GetEnemyInSlot(battleSys, attacker, ENEMY_IN_SLOT_LEFT);
 
         int rnd = BattleSystem_RandNext(battleSys) & 1;
         chosen = opponents[rnd];
@@ -4244,8 +4246,8 @@ BOOL BattleSystem_TriggerAbilityOnHit(BattleSystem *battleSys, BattleContext *ba
             && (DEFENDER_SELF_TURN_FLAGS.physicalDamageTaken || DEFENDER_SELF_TURN_FLAGS.specialDamageTaken)
             && (battleCtx->battleStatusMask2 & SYSCTL_UTURN_ACTIVE) == FALSE
             && CURRENT_MOVE_DATA.power
-            && BattleMon_Get(battleCtx, battleCtx->defender, 27, NULL) != moveType
-            && BattleMon_Get(battleCtx, battleCtx->defender, 28, NULL) != moveType) {
+            && BattleMon_Get(battleCtx, battleCtx->defender, BATTLEMON_TYPE_1, NULL) != moveType
+            && BattleMon_Get(battleCtx, battleCtx->defender, BATTLEMON_TYPE_2, NULL) != moveType) {
             *subscript = subscript_color_change;
             battleCtx->msgTemp = moveType;
             result = TRUE;
@@ -4774,7 +4776,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_ATTACK;
                 subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -4787,7 +4789,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_DEFENSE] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_DEFENSE] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_DEFENSE;
                 subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -4800,7 +4802,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SPEED] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SPEED] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_SPEED;
                 subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -4813,7 +4815,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_ATTACK] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_ATTACK] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_SP_ATTACK;
                 subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -4826,7 +4828,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_DEFENSE] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_DEFENSE] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_SP_DEFENSE;
                 subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -4853,7 +4855,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
             if (battleCtx->battleMons[battler].curHP <= (battleCtx->battleMons[battler].maxHP / itemPower)) {
                 int i;
                 for (i = 0; i < 5; i++) {
-                    if (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] < 12) {
+                    if (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] < MAX_STAT_STAGE) {
                         break;
                     }
                 }
@@ -4861,7 +4863,7 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
                 if (i != 5) {
                     do {
                         i = BattleSystem_RandNext(battleSys) % 5;
-                    } while (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] == 12);
+                    } while (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] == MAX_STAT_STAGE);
 
                     battleCtx->msgTemp = BATTLE_STAT_ATTACK + i;
                     subscript = subscript_held_item_sharply_raise_stat;
@@ -4872,8 +4874,8 @@ BOOL BattleSystem_TriggerHeldItem(BattleSystem *battleSys, BattleContext *battle
 
         case HOLD_EFFECT_STATDOWN_RESTORE: {
             for (int i = BATTLE_STAT_HP; i < BATTLE_STAT_MAX; i++) {
-                if (battleCtx->battleMons[battler].statBoosts[i] < 6) {
-                    battleCtx->battleMons[battler].statBoosts[i] = 6;
+                if (battleCtx->battleMons[battler].statBoosts[i] < DEFAULT_STAT_STAGE) {
+                    battleCtx->battleMons[battler].statBoosts[i] = DEFAULT_STAT_STAGE;
                     result = TRUE;
                 }
             }
@@ -5085,8 +5087,8 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
 
         case HOLD_EFFECT_STATDOWN_RESTORE: {
             for (int i = BATTLE_STAT_HP; i < BATTLE_STAT_MAX; i++) {
-                if (battleCtx->battleMons[battler].statBoosts[i] < 6) {
-                    battleCtx->battleMons[battler].statBoosts[i] = 6;
+                if (battleCtx->battleMons[battler].statBoosts[i] < DEFAULT_STAT_STAGE) {
+                    battleCtx->battleMons[battler].statBoosts[i] = DEFAULT_STAT_STAGE;
                     result = TRUE;
                 }
             }
@@ -5197,7 +5199,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_ATTACK;
                 *subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -5210,7 +5212,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_DEFENSE] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_DEFENSE] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_DEFENSE;
                 *subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -5223,7 +5225,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SPEED] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SPEED] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_SPEED;
                 *subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -5236,7 +5238,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_ATTACK] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_ATTACK] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_SP_ATTACK;
                 *subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -5249,7 +5251,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
             }
 
             if (battleCtx->battleMons[battler].curHP <= battleCtx->battleMons[battler].maxHP / itemPower
-                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_DEFENSE] < 12) {
+                && battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_SP_DEFENSE] < MAX_STAT_STAGE) {
                 battleCtx->msgTemp = BATTLE_STAT_SP_DEFENSE;
                 *subscript = subscript_held_item_raise_stat;
                 result = TRUE;
@@ -5276,7 +5278,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
             if (battleCtx->battleMons[battler].curHP <= (battleCtx->battleMons[battler].maxHP / itemPower)) {
                 int i;
                 for (i = 0; i < 5; i++) {
-                    if (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] < 12) {
+                    if (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] < MAX_STAT_STAGE) {
                         break;
                     }
                 }
@@ -5284,7 +5286,7 @@ BOOL BattleSystem_TriggerHeldItemOnStatus(BattleSystem *battleSys, BattleContext
                 if (i != 5) {
                     do {
                         i = BattleSystem_RandNext(battleSys) % 5;
-                    } while (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] == 12);
+                    } while (battleCtx->battleMons[battler].statBoosts[BATTLE_STAT_ATTACK + i] == MAX_STAT_STAGE);
 
                     battleCtx->msgTemp = BATTLE_STAT_ATTACK + i;
                     *subscript = subscript_held_item_sharply_raise_stat;
@@ -5379,7 +5381,7 @@ BOOL BattleSystem_TriggerHeldItemOnHit(BattleSystem *battleSys, BattleContext *b
 
     int itemEffect = Battler_HeldItemEffect(battleCtx, battleCtx->defender);
     int itemPower = Battler_HeldItemPower(battleCtx, battleCtx->defender, 0);
-    int side = Battler_Side(battleSys, battleCtx->attacker);
+    int side = BattleSystem_GetBattlerSide(battleSys, battleCtx->attacker);
 
     switch (itemEffect) {
     case HOLD_EFFECT_DMG_USER_CONTACT_XFR:
@@ -5749,7 +5751,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
         break;
 
     case PLUCK_EFFECT_ATK_UP:
-        if (ATTACKING_MON.statBoosts[BATTLE_STAT_ATTACK] < 12) {
+        if (ATTACKING_MON.statBoosts[BATTLE_STAT_ATTACK] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_ATTACK;
             nextSeq = subscript_held_item_raise_stat;
         }
@@ -5758,7 +5760,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
         break;
 
     case PLUCK_EFFECT_DEF_UP:
-        if (ATTACKING_MON.statBoosts[BATTLE_STAT_DEFENSE] < 12) {
+        if (ATTACKING_MON.statBoosts[BATTLE_STAT_DEFENSE] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_DEFENSE;
             nextSeq = subscript_held_item_raise_stat;
         }
@@ -5767,7 +5769,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
         break;
 
     case PLUCK_EFFECT_SPEED_UP:
-        if (ATTACKING_MON.statBoosts[BATTLE_STAT_SPEED] < 12) {
+        if (ATTACKING_MON.statBoosts[BATTLE_STAT_SPEED] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_SPEED;
             nextSeq = subscript_held_item_raise_stat;
         }
@@ -5776,7 +5778,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
         break;
 
     case PLUCK_EFFECT_SPATK_UP:
-        if (ATTACKING_MON.statBoosts[BATTLE_STAT_SP_ATTACK] < 12) {
+        if (ATTACKING_MON.statBoosts[BATTLE_STAT_SP_ATTACK] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_SP_ATTACK;
             nextSeq = subscript_held_item_raise_stat;
         }
@@ -5785,7 +5787,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
         break;
 
     case PLUCK_EFFECT_SPDEF_UP:
-        if (ATTACKING_MON.statBoosts[BATTLE_STAT_SP_DEFENSE] < 12) {
+        if (ATTACKING_MON.statBoosts[BATTLE_STAT_SP_DEFENSE] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_SP_DEFENSE;
             nextSeq = subscript_held_item_raise_stat;
         }
@@ -5796,7 +5798,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
     case PLUCK_EFFECT_RANDOM_UP2: {
         int stat;
         for (stat = 0; stat < 5; stat++) {
-            if (ATTACKING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] < 12) {
+            if (ATTACKING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] < MAX_STAT_STAGE) {
                 break;
             }
         }
@@ -5804,7 +5806,7 @@ BOOL BattleSystem_PluckBerry(BattleSystem *battleSys, BattleContext *battleCtx, 
         if (stat != 5) {
             do {
                 stat = BattleSystem_RandNext(battleSys) % 5;
-            } while (ATTACKING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] == 12);
+            } while (ATTACKING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] == MAX_STAT_STAGE);
 
             battleCtx->msgTemp = BATTLE_STAT_ATTACK + stat;
             nextSeq = subscript_held_item_sharply_raise_stat;
@@ -6026,8 +6028,8 @@ BOOL BattleSystem_FlingItem(BattleSystem *battleSys, BattleContext *battleCtx, i
 
     case FLING_EFFECT_STATDOWN_RESTORE:
         for (int i = BATTLE_STAT_HP; i < BATTLE_STAT_MAX; i++) {
-            if (DEFENDING_MON.statBoosts[i] < 6) {
-                DEFENDING_MON.statBoosts[i] = 6;
+            if (DEFENDING_MON.statBoosts[i] < DEFAULT_STAT_STAGE) {
+                DEFENDING_MON.statBoosts[i] = DEFAULT_STAT_STAGE;
                 battleCtx->flingScript = subscript_held_item_statdown_restore;
             }
         }
@@ -6071,35 +6073,35 @@ BOOL BattleSystem_FlingItem(BattleSystem *battleSys, BattleContext *battleCtx, i
         break;
 
     case FLING_EFFECT_ATK_UP:
-        if (DEFENDING_MON.statBoosts[BATTLE_STAT_ATTACK] < 12) {
+        if (DEFENDING_MON.statBoosts[BATTLE_STAT_ATTACK] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_ATTACK;
             battleCtx->flingScript = subscript_held_item_raise_stat;
         }
         break;
 
     case FLING_EFFECT_DEF_UP:
-        if (DEFENDING_MON.statBoosts[BATTLE_STAT_DEFENSE] < 12) {
+        if (DEFENDING_MON.statBoosts[BATTLE_STAT_DEFENSE] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_DEFENSE;
             battleCtx->flingScript = subscript_held_item_raise_stat;
         }
         break;
 
     case FLING_EFFECT_SPEED_UP:
-        if (DEFENDING_MON.statBoosts[BATTLE_STAT_SPEED] < 12) {
+        if (DEFENDING_MON.statBoosts[BATTLE_STAT_SPEED] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_SPEED;
             battleCtx->flingScript = subscript_held_item_raise_stat;
         }
         break;
 
     case FLING_EFFECT_SPATK_UP:
-        if (DEFENDING_MON.statBoosts[BATTLE_STAT_SP_ATTACK] < 12) {
+        if (DEFENDING_MON.statBoosts[BATTLE_STAT_SP_ATTACK] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_SP_ATTACK;
             battleCtx->flingScript = subscript_held_item_raise_stat;
         }
         break;
 
     case FLING_EFFECT_SPDEF_UP:
-        if (DEFENDING_MON.statBoosts[BATTLE_STAT_SP_DEFENSE] < 12) {
+        if (DEFENDING_MON.statBoosts[BATTLE_STAT_SP_DEFENSE] < MAX_STAT_STAGE) {
             battleCtx->msgTemp = BATTLE_STAT_SP_DEFENSE;
             battleCtx->flingScript = subscript_held_item_raise_stat;
         }
@@ -6109,7 +6111,7 @@ BOOL BattleSystem_FlingItem(BattleSystem *battleSys, BattleContext *battleCtx, i
         int stat;
 
         for (stat = 0; stat < 5; stat++) {
-            if (DEFENDING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] < 12) {
+            if (DEFENDING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] < MAX_STAT_STAGE) {
                 break;
             }
         }
@@ -6117,7 +6119,7 @@ BOOL BattleSystem_FlingItem(BattleSystem *battleSys, BattleContext *battleCtx, i
         if (stat != 5) {
             do {
                 stat = BattleSystem_RandNext(battleSys) % 5;
-            } while (DEFENDING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] == 12);
+            } while (DEFENDING_MON.statBoosts[BATTLE_STAT_ATTACK + stat] == MAX_STAT_STAGE);
 
             battleCtx->msgTemp = BATTLE_STAT_ATTACK + stat;
             battleCtx->flingScript = subscript_held_item_sharply_raise_stat;
@@ -6235,12 +6237,12 @@ BOOL Battler_CanPickCommand(BattleContext *battleSys, int battler)
 
 void BattleSystem_SetPokemonCatchData(BattleSystem *battleSys, BattleContext *battleCtx, Pokemon *mon)
 {
-    TrainerInfo *trInfo = BattleSystem_TrainerInfo(battleSys, BATTLER_US);
-    int mapHeader = BattleSystem_MapHeader(battleSys);
-    int terrain = BattleSystem_Terrain(battleSys);
+    TrainerInfo *trInfo = BattleSystem_GetTrainerInfo(battleSys, BATTLER_US);
+    int mapHeader = BattleSystem_GetMapHeader(battleSys);
+    int terrain = BattleSystem_GetTerrain(battleSys);
 
     int ball;
-    if (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_PAL_PARK) {
+    if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_PAL_PARK) {
         ball = Pokemon_GetValue(mon, MON_DATA_POKEBALL, NULL);
     } else {
         ball = battleCtx->msgItemTemp;
@@ -6267,7 +6269,7 @@ BOOL Battler_SubstituteWasHit(BattleContext *battleCtx, int battler)
 
 BOOL BattleSystem_TrainerIsOT(BattleSystem *battleSys, BattleContext *battleCtx)
 {
-    TrainerInfo *trInfo = BattleSystem_TrainerInfo(battleSys, BATTLER_US);
+    TrainerInfo *trInfo = BattleSystem_GetTrainerInfo(battleSys, BATTLER_US);
     u32 trID = TrainerInfo_ID(trInfo);
     u32 trGender = TrainerInfo_Gender(trInfo);
     const charcode_t *trName = TrainerInfo_Name(trInfo);
@@ -6283,13 +6285,13 @@ BOOL BattleSystem_TrainerIsOT(BattleSystem *battleSys, BattleContext *battleCtx)
 
 BOOL BattleSystem_PokemonIsOT(BattleSystem *battleSys, Pokemon *mon)
 {
-    TrainerInfo *trInfo = BattleSystem_TrainerInfo(battleSys, BATTLER_US);
+    TrainerInfo *trInfo = BattleSystem_GetTrainerInfo(battleSys, BATTLER_US);
     u32 trID = TrainerInfo_ID(trInfo);
     u32 trGender = TrainerInfo_Gender(trInfo);
     const charcode_t *trName = TrainerInfo_Name(trInfo);
 
     charcode_t monOTName[TRAINER_NAME_LEN + 1];
-    Pokemon_GetValue(mon, MON_DATA_OTNAME, monOTName);
+    Pokemon_GetValue(mon, MON_DATA_OT_NAME, monOTName);
 
     if (trID == Pokemon_GetValue(mon, MON_DATA_OT_ID, NULL)
         && trGender == Pokemon_GetValue(mon, MON_DATA_OT_GENDER, NULL)
@@ -6306,7 +6308,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
     int arceusForm;
     BOOL result = FALSE;
 
-    for (i = 0; i < BattleSystem_MaxBattlers(battleSys); i++) {
+    for (i = 0; i < BattleSystem_GetMaxBattlers(battleSys); i++) {
         battleCtx->msgBattlerTemp = battleCtx->monSpeedOrder[i];
 
         if (battleCtx->battleMons[battleCtx->msgBattlerTemp].species == SPECIES_CASTFORM
@@ -6318,7 +6320,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
                     && battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 != TYPE_NORMAL) {
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type1 = TYPE_NORMAL;
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 = TYPE_NORMAL;
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CASTFORM_FORM_NORMAL;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
@@ -6327,7 +6329,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
                     && battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 != TYPE_FIRE) {
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type1 = TYPE_FIRE;
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 = TYPE_FIRE;
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 1;
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CASTFORM_FORM_SUNNY;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
@@ -6336,7 +6338,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
                     && battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 != TYPE_WATER) {
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type1 = TYPE_WATER;
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 = TYPE_WATER;
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 2;
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CASTFORM_FORM_RAINY;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
@@ -6345,7 +6347,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
                     && battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 != TYPE_ICE) {
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type1 = TYPE_ICE;
                     battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 = TYPE_ICE;
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 3;
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CASTFORM_FORM_SNOWY;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
@@ -6354,7 +6356,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
                 && battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 != TYPE_NORMAL) {
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].type1 = TYPE_NORMAL;
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].type2 = TYPE_NORMAL;
-                battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CASTFORM_FORM_NORMAL;
                 *subscript = subscript_form_change;
                 result = TRUE;
                 break;
@@ -6365,29 +6367,29 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
             && battleCtx->battleMons[battleCtx->msgBattlerTemp].curHP) {
             if (NO_CLOUD_NINE) {
                 if ((battleCtx->fieldConditionsMask & FIELD_CONDITION_CASTFORM) == FALSE
-                    && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == 1) {
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                    && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == CHERRIM_FORM_SUNSHINE) {
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CHERRIM_FORM_OVERCAST;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
-                } else if (WEATHER_IS_SUN && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == 0) {
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 1;
+                } else if (WEATHER_IS_SUN && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == CHERRIM_FORM_OVERCAST) {
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CHERRIM_FORM_SUNSHINE;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
-                } else if (WEATHER_IS_RAIN && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == 1) {
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                } else if (WEATHER_IS_RAIN && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == CHERRIM_FORM_SUNSHINE) {
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CHERRIM_FORM_OVERCAST;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
-                } else if (WEATHER_IS_HAIL && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == 1) {
-                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                } else if (WEATHER_IS_HAIL && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == CHERRIM_FORM_SUNSHINE) {
+                    battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CHERRIM_FORM_OVERCAST;
                     *subscript = subscript_form_change;
                     result = TRUE;
                     break;
                 }
             } else if (battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == 1) {
-                battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = CHERRIM_FORM_OVERCAST;
                 *subscript = subscript_form_change;
                 result = TRUE;
                 break;
@@ -6409,30 +6411,30 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
 
         if (battleCtx->battleMons[battleCtx->msgBattlerTemp].species == SPECIES_GIRATINA
             && battleCtx->battleMons[battleCtx->msgBattlerTemp].curHP
-            && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == 1
+            && battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum == GIRATINA_FORM_ORIGIN
             && ((battleCtx->battleMons[battleCtx->msgBattlerTemp].statusVolatile & VOLATILE_CONDITION_TRANSFORM)
-                || ((BattleSystem_BattleStatus(battleSys) & BATTLE_STATUS_DISTORTION) == FALSE
+                || ((BattleSystem_GetBattleStatusMask(battleSys) & BATTLE_STATUS_DISTORTION) == FALSE
                     && battleCtx->battleMons[battleCtx->msgBattlerTemp].heldItem != ITEM_GRISEOUS_ORB))) {
             if (battleCtx->battleMons[battleCtx->msgBattlerTemp].statusVolatile & VOLATILE_CONDITION_TRANSFORM) {
                 Pokemon *mon = Pokemon_New(HEAP_ID_BATTLE);
 
                 int target;
-                if (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
+                if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_DOUBLES) {
                     target = battleCtx->battlerActions[battleCtx->msgBattlerTemp][BATTLE_ACTION_CHOOSE_TARGET];
                 } else {
                     target = battleCtx->msgBattlerTemp ^ 1;
                 }
 
-                Pokemon_Copy(BattleSystem_PartyPokemon(battleSys, target, battleCtx->selectedPartySlot[target]), mon);
+                Pokemon_Copy(BattleSystem_GetPartyPokemon(battleSys, target, battleCtx->selectedPartySlot[target]), mon);
 
                 // Don't copy the Griseous Orb
                 int tmp = ITEM_NONE;
                 Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &tmp);
 
                 // Force Giratina-Altered form
-                tmp = 0;
+                tmp = GIRATINA_FORM_ALTERED;
                 Pokemon_SetValue(mon, MON_DATA_FORM, &tmp);
-                Pokemon_SetGiratinaForm(mon);
+                Pokemon_SetGiratinaFormByHeldItem(mon);
 
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].attack = Pokemon_GetValue(mon, MON_DATA_ATK, 0);
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].defense = Pokemon_GetValue(mon, MON_DATA_DEF, 0);
@@ -6440,11 +6442,11 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].spAttack = Pokemon_GetValue(mon, MON_DATA_SP_ATK, 0);
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].spDefense = Pokemon_GetValue(mon, MON_DATA_SP_DEF, 0);
                 battleCtx->battleMons[battleCtx->msgBattlerTemp].ability = Pokemon_GetValue(mon, MON_DATA_ABILITY, 0);
-                battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = 0;
+                battleCtx->battleMons[battleCtx->msgBattlerTemp].formNum = GIRATINA_FORM_ALTERED;
                 battleCtx->battleStatusMask2 |= SYSCTL_FORM_CHANGE;
 
-                BattleIO_UpdatePartyMon(battleSys, battleCtx, battleCtx->msgBattlerTemp);
-                Heap_FreeToHeap(mon);
+                BattleController_EmitUpdatePartyMon(battleSys, battleCtx, battleCtx->msgBattlerTemp);
+                Heap_Free(mon);
 
                 *subscript = subscript_form_change;
                 result = TRUE;
@@ -6462,7 +6464,7 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
 
 void BattleSystem_InitPartyOrder(BattleSystem *battleSys, BattleContext *battleCtx)
 {
-    for (int i = 0; i < BattleSystem_MaxBattlers(battleSys); i++) {
+    for (int i = 0; i < BattleSystem_GetMaxBattlers(battleSys); i++) {
         for (int j = 0; j < MAX_PARTY_SIZE; j++) {
             battleCtx->partyOrder[i][j] = j;
         }
@@ -6477,12 +6479,12 @@ void BattleSystem_SwitchSlots(BattleSystem *battleSys, BattleContext *battleCtx,
     int i;
     int tmp;
     int targetSlot;
-    u32 battleType = BattleSystem_BattleType(battleSys);
+    u32 battleType = BattleSystem_GetBattleType(battleSys);
 
     if (((battleType & BATTLE_TYPE_DOUBLES) && (battleType & BATTLE_TYPE_2vs2_TAG) == FALSE)
-        || ((battleType & BATTLE_TYPE_TAG) && (BattleSystem_BattlerSlot(battleSys, battler) & BATTLER_TYPE_SOLO_ENEMY) == FALSE)) {
-        if (BattleSystem_BattlerSlot(battleSys, battler) == BATTLER_TYPE_PLAYER_SIDE_SLOT_2
-            || BattleSystem_BattlerSlot(battleSys, battler) == BATTLER_TYPE_ENEMY_SIDE_SLOT_2) {
+        || ((battleType & BATTLE_TYPE_TAG) && (BattleSystem_GetBattlerType(battleSys, battler) & BATTLER_TYPE_SOLO_ENEMY) == FALSE)) {
+        if (BattleSystem_GetBattlerType(battleSys, battler) == BATTLER_TYPE_PLAYER_SIDE_SLOT_2
+            || BattleSystem_GetBattlerType(battleSys, battler) == BATTLER_TYPE_ENEMY_SIDE_SLOT_2) {
             targetSlot = 1;
         } else {
             targetSlot = 0;
@@ -6634,10 +6636,10 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
     defenseStat = BattleMon_Get(battleCtx, defender, BATTLEMON_DEFENSE, NULL);
     spAttackStat = BattleMon_Get(battleCtx, attacker, BATTLEMON_SP_ATTACK, NULL);
     spDefenseStat = BattleMon_Get(battleCtx, defender, BATTLEMON_SP_DEFENSE, NULL);
-    attackStage = BattleMon_Get(battleCtx, attacker, BATTLEMON_ATTACK_STAGE, NULL) - 6;
-    defenseStage = BattleMon_Get(battleCtx, defender, BATTLEMON_DEFENSE_STAGE, NULL) - 6;
-    spAttackStage = BattleMon_Get(battleCtx, attacker, BATTLEMON_SP_ATTACK_STAGE, NULL) - 6;
-    spDefenseStage = BattleMon_Get(battleCtx, defender, BATTLEMON_SP_DEFENSE_STAGE, NULL) - 6;
+    attackStage = BattleMon_Get(battleCtx, attacker, BATTLEMON_ATTACK_STAGE, NULL) - DEFAULT_STAT_STAGE;
+    defenseStage = BattleMon_Get(battleCtx, defender, BATTLEMON_DEFENSE_STAGE, NULL) - DEFAULT_STAT_STAGE;
+    spAttackStage = BattleMon_Get(battleCtx, attacker, BATTLEMON_SP_ATTACK_STAGE, NULL) - DEFAULT_STAT_STAGE;
+    spDefenseStage = BattleMon_Get(battleCtx, defender, BATTLEMON_SP_DEFENSE_STAGE, NULL) - DEFAULT_STAT_STAGE;
     attackerLevel = BattleMon_Get(battleCtx, attacker, BATTLEMON_LEVEL, NULL);
 
     attackerParams.species = BattleMon_Get(battleCtx, attacker, BATTLEMON_SPECIES, NULL);
@@ -6665,7 +6667,7 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
     defenderParams.heldItemEffect = BattleSystem_GetItemData(battleCtx, itemTmp, ITEM_PARAM_HOLD_EFFECT);
     defenderParams.heldItemPower = BattleSystem_GetItemData(battleCtx, itemTmp, ITEM_PARAM_HOLD_EFFECT_PARAM);
 
-    battleType = BattleSystem_BattleType(battleSys);
+    battleType = BattleSystem_GetBattleType(battleSys);
 
     // Assign power; prefer the input power (used by variable-power moves, e.g. Gyro Ball)
     if (inPower == 0) {
@@ -6847,37 +6849,37 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
 
     if (attackerParams.ability == ABILITY_SIMPLE) {
         attackStage *= 2;
-        if (attackStage < -6) {
-            attackStage = -6;
+        if (attackStage < MIN_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            attackStage = MIN_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
-        if (attackStage > 6) {
-            attackStage = 6;
+        if (attackStage > MAX_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            attackStage = MAX_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
 
         spAttackStage *= 2;
-        if (spAttackStage < -6) {
-            spAttackStage = -6;
+        if (spAttackStage < MIN_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            spAttackStage = MIN_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
-        if (spAttackStage > 6) {
-            spAttackStage = 6;
+        if (spAttackStage > MAX_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            spAttackStage = MAX_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
     }
 
     if (Battler_IgnorableAbility(battleCtx, attacker, defender, ABILITY_SIMPLE) == TRUE) {
         defenseStage *= 2;
-        if (defenseStage < -6) {
-            defenseStage = -6;
+        if (defenseStage < MIN_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            defenseStage = MIN_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
-        if (defenseStage > 6) {
-            defenseStage = 6;
+        if (defenseStage > MAX_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            defenseStage = MAX_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
 
         spDefenseStage *= 2;
-        if (spDefenseStage < -6) {
-            spDefenseStage = -6;
+        if (spDefenseStage < MIN_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            spDefenseStage = MIN_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
-        if (spDefenseStage > 6) {
-            spDefenseStage = 6;
+        if (spDefenseStage > MAX_STAT_STAGE - DEFAULT_STAT_STAGE) {
+            spDefenseStage = MAX_STAT_STAGE - DEFAULT_STAT_STAGE;
         }
     }
 
@@ -6891,10 +6893,10 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
         spDefenseStage = 0;
     }
 
-    attackStage += 6;
-    defenseStage += 6;
-    spAttackStage += 6;
-    spDefenseStage += 6;
+    attackStage += DEFAULT_STAT_STAGE;
+    defenseStage += DEFAULT_STAT_STAGE;
+    spAttackStage += DEFAULT_STAT_STAGE;
+    spDefenseStage += DEFAULT_STAT_STAGE;
 
     if (attackerParams.ability == ABILITY_RIVALRY
         && attackerParams.gender == defenderParams.gender
@@ -6944,7 +6946,7 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
 
     if (moveClass == CLASS_PHYSICAL) {
         if (criticalMul > 1) {
-            if (attackStage > 6) {
+            if (attackStage > DEFAULT_STAT_STAGE) {
                 damage = attackStat * sStatStageBoosts[attackStage].numerator;
                 damage /= sStatStageBoosts[attackStage].denominator;
             } else {
@@ -6959,7 +6961,7 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
         damage *= (attackerLevel * 2 / 5 + 2);
 
         if (criticalMul > 1) {
-            if (defenseStage < 6) {
+            if (defenseStage < DEFAULT_STAT_STAGE) {
                 stageDivisor = defenseStat * sStatStageBoosts[defenseStage].numerator;
                 stageDivisor /= sStatStageBoosts[defenseStage].denominator;
             } else {
@@ -6989,7 +6991,7 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
         }
     } else if (moveClass == CLASS_SPECIAL) {
         if (criticalMul > 1) {
-            if (spAttackStage > 6) {
+            if (spAttackStage > DEFAULT_STAT_STAGE) {
                 damage = spAttackStat * sStatStageBoosts[spAttackStage].numerator;
                 damage /= sStatStageBoosts[spAttackStage].denominator;
             } else {
@@ -7004,7 +7006,7 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
         damage *= (attackerLevel * 2 / 5 + 2);
 
         if (criticalMul > 1) {
-            if (spDefenseStage < 6) {
+            if (spDefenseStage < DEFAULT_STAT_STAGE) {
                 stageDivisor = spDefenseStat * sStatStageBoosts[spDefenseStage].numerator;
                 stageDivisor /= sStatStageBoosts[spDefenseStage].denominator;
             } else {
@@ -7260,10 +7262,10 @@ s32 BattleSystem_GetItemData(BattleContext *battleCtx, u16 item, enum ItemDataPa
 int BattleSystem_SideToBattler(BattleSystem *battleSys, BattleContext *battleCtx, int side)
 {
     int battler;
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     for (battler = 0; battler < maxBattlers; battler++) {
-        if (Battler_Side(battleSys, battler) == side) {
+        if (BattleSystem_GetBattlerSide(battleSys, battler) == side) {
             break;
         }
     }
@@ -7276,7 +7278,7 @@ void BattleSystem_SortMonActionOrder(BattleSystem *battleSys, BattleContext *bat
     int i, j;
     int battler1, battler2;
     int ignoreQuickClaw;
-    int maxBattlers = BattleSystem_MaxBattlers(battleSys);
+    int maxBattlers = BattleSystem_GetMaxBattlers(battleSys);
 
     for (i = 0; i < maxBattlers - 1; i++) {
         for (j = i + 1; j < maxBattlers; j++) {
@@ -7338,7 +7340,7 @@ BOOL BattleSystem_TriggerHeldItemOnPivotMove(BattleSystem *battleSys, BattleCont
     int attackerItemPower = Battler_HeldItemPower(battleCtx, battleCtx->attacker, ITEM_POWER_CHECK_ALL);
     int defenderItemEffect = Battler_HeldItemEffect(battleCtx, battleCtx->defender);
     int defenderItemPower = Battler_HeldItemPower(battleCtx, battleCtx->defender, ITEM_POWER_CHECK_ALL);
-    int attackingSide = Battler_Side(battleSys, battleCtx->attacker);
+    int attackingSide = BattleSystem_GetBattlerSide(battleSys, battleCtx->attacker);
 
     if (attackerItemEffect == HOLD_EFFECT_HP_RESTORE_ON_DMG
         && (battleCtx->battleStatusMask & SYSCTL_MOVE_HIT)
@@ -7394,9 +7396,9 @@ void BattleSystem_DecPPForPressure(BattleContext *battleCtx, int attacker, int d
     }
 }
 
-BOOL Battle_RecordingStopped(BattleSystem *battleSys, BattleContext *battleCtx)
+BOOL BattleSystem_IsRecordingStopped(BattleSystem *battleSys, BattleContext *battleCtx)
 {
-    if (BattleSystem_RecordingStopped(battleSys)) {
+    if (BattleSystem_GetRecordingStopped(battleSys)) {
         battleCtx->command = BATTLE_CONTROL_SCREEN_WIPE;
         return TRUE;
     }
@@ -7409,11 +7411,11 @@ int BattleContext_Get(BattleSystem *battleSys, BattleContext *battleCtx, enum Ba
     int side;
     switch (paramID) {
     case BATTLECTX_SIDE_CONDITIONS_MASK:
-        side = Battler_Side(battleSys, battler);
+        side = BattleSystem_GetBattlerSide(battleSys, battler);
         return battleCtx->sideConditionsMask[side];
 
     case BATTLECTX_SIDE_MIST_TURNS:
-        side = Battler_Side(battleSys, battler);
+        side = BattleSystem_GetBattlerSide(battleSys, battler);
         return battleCtx->sideConditions[side].mistTurns;
 
     case BATTLECTX_SELECTED_PARTY_SLOT:
@@ -7465,12 +7467,12 @@ void BattleContext_Set(BattleSystem *battleSys, BattleContext *battleCtx, enum B
     int side;
     switch (paramID) {
     case BATTLECTX_SIDE_CONDITIONS_MASK:
-        side = Battler_Side(battleSys, battler);
+        side = BattleSystem_GetBattlerSide(battleSys, battler);
         battleCtx->sideConditionsMask[side] = val;
         break;
 
     case BATTLECTX_SIDE_MIST_TURNS:
-        side = Battler_Side(battleSys, battler);
+        side = BattleSystem_GetBattlerSide(battleSys, battler);
         battleCtx->sideConditions[side].mistTurns = val;
         break;
 
@@ -7934,20 +7936,18 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
     u32 moveStatusFlags;
     int partySize;
     Pokemon *mon;
-    BattleContext *battleCtx;
-
-    battleCtx = BattleSystem_Context(battleSys);
+    BattleContext *battleCtx = BattleSystem_GetBattleContext(battleSys);
 
     slot1 = battler;
-    if ((BattleSystem_BattleType(battleSys) & BATTLE_TYPE_TAG)
-        || (BattleSystem_BattleType(battleSys) & BATTLE_TYPE_2vs2)) {
+    if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_TAG)
+        || (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_2vs2)) {
         slot2 = slot1;
     } else {
-        slot2 = BattleSystem_Partner(battleSys, battler);
+        slot2 = BattleSystem_GetPartner(battleSys, battler);
     }
 
     defender = BattleSystem_RandomOpponent(battleSys, battleCtx, battler);
-    partySize = BattleSystem_PartyCount(battleSys, battler);
+    partySize = BattleSystem_GetPartyCount(battleSys, battler);
     battlersDisregarded = 0;
 
     // Stage 1: Loop through all the party slots and find the one with the most favorable
@@ -7961,12 +7961,12 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
         picked = 6;
 
         for (i = 0; i < partySize; i++) {
-            mon = BattleSystem_PartyPokemon(battleSys, battler, i);
-            monSpecies = Pokemon_GetValue(mon, MON_DATA_SPECIES_EGG, NULL);
+            mon = BattleSystem_GetPartyPokemon(battleSys, battler, i);
+            monSpecies = Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL);
 
             if (monSpecies != SPECIES_NONE
                 && monSpecies != SPECIES_EGG
-                && Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL)
+                && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
                 && (battlersDisregarded & FlagIndex(i)) == FALSE
                 && battleCtx->selectedPartySlot[slot1] != i
                 && battleCtx->selectedPartySlot[slot2] != i
@@ -7991,7 +7991,7 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
 
         if (picked != 6) {
             // Determine if this mon has any super-effective moves against the defender
-            mon = BattleSystem_PartyPokemon(battleSys, battler, picked);
+            mon = BattleSystem_GetPartyPokemon(battleSys, battler, picked);
 
             for (i = 0; i < LEARNED_MOVES_MAX; i++) {
                 move = Pokemon_GetValue(mon, MON_DATA_MOVE1 + i, NULL);
@@ -8036,12 +8036,12 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
     // which just fainted. Choose the Pokemon with the highest such score, breaking ties by
     // party-order.
     for (i = 0; i < partySize; i++) {
-        mon = BattleSystem_PartyPokemon(battleSys, battler, i);
-        monSpecies = Pokemon_GetValue(mon, MON_DATA_SPECIES_EGG, NULL);
+        mon = BattleSystem_GetPartyPokemon(battleSys, battler, i);
+        monSpecies = Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL);
 
         if (monSpecies != SPECIES_NONE
             && monSpecies != SPECIES_EGG
-            && Pokemon_GetValue(mon, MON_DATA_CURRENT_HP, NULL)
+            && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
             && battleCtx->selectedPartySlot[slot1] != i
             && battleCtx->selectedPartySlot[slot2] != i
             && i != battleCtx->aiSwitchedPartySlot[slot1]
@@ -8054,7 +8054,7 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
                     score = BattleSystem_CalcMoveDamage(battleSys,
                         battleCtx,
                         move,
-                        battleCtx->sideConditionsMask[Battler_Side(battleSys, defender)],
+                        battleCtx->sideConditionsMask[BattleSystem_GetBattlerSide(battleSys, defender)],
                         battleCtx->fieldConditionsMask,
                         0,
                         0,
@@ -8090,7 +8090,7 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
 
 int BattleAI_SwitchedSlot(BattleSystem *battleSys, int battler)
 {
-    BattleContext *battleCtx = BattleSystem_Context(battleSys);
+    BattleContext *battleCtx = BattleSystem_GetBattleContext(battleSys);
     return battleCtx->aiSwitchedPartySlot[battler];
 }
 

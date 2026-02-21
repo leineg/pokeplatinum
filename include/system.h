@@ -2,6 +2,7 @@
 #define POKEPLATINUM_SYSTEM_H
 
 #include "constants/heap.h"
+#include "constants/system.h"
 
 #include "sys_task_manager.h"
 
@@ -19,10 +20,12 @@ enum SleepType {
     SLEEP_TYPE_SAVE_DATA = 1,
 };
 
-#define PAD_KEY             (PAD_KEY_UP | PAD_KEY_DOWN | PAD_KEY_LEFT | PAD_KEY_RIGHT)
-#define JOY_NEW(buttons)    (gSystem.pressedKeys & (buttons))
-#define JOY_HELD(buttons)   (gSystem.heldKeys & (buttons))
-#define JOY_REPEAT(buttons) (gSystem.pressedKeysRepeatable & (buttons))
+#define PAD_KEY                (PAD_KEY_UP | PAD_KEY_DOWN | PAD_KEY_LEFT | PAD_KEY_RIGHT)
+#define JOY_NEW(buttons)       (gSystem.pressedKeys & (buttons))
+#define JOY_HELD(buttons)      (gSystem.heldKeys & (buttons))
+#define JOY_REPEAT(buttons)    (gSystem.pressedKeysRepeatable & (buttons))
+#define JOY_NEW_ONLY(buttons)  (JOY_NEW(buttons) == (buttons))
+#define JOY_HELD_ONLY(buttons) (JOY_HELD(buttons) == (buttons))
 
 typedef struct System {
     Callback vblankCallback;
@@ -58,7 +61,7 @@ typedef struct System {
     u8 inhibitSleep;
     u8 inhibitReset;
     u8 padding_69[3];
-    BOOL unk_6C;
+    BOOL showTitleScreenIntro;
     u32 *heapCanary;
 } System;
 
@@ -70,7 +73,7 @@ void DisableHBlank(void);
 BOOL SetHBlankCallback(Callback cb, void *data);
 void InitSystem(void);
 void InitVRAM(void);
-void *ReadFileToHeap(int heapID, const char *filename);
+void *ReadFileToHeap(enum HeapID heapID, const char *filename);
 void ReadFileToBuffer(const char *filename, void **buf);
 void ClearUnusedSystemCache(void);
 void InitKeypadAndTouchpad(void);
@@ -81,7 +84,7 @@ void ReadKeypadAndTouchpad(void);
 void SetAutorepeat(int rate, int delay);
 void ResetLock(u8 mask);
 void ResetUnlock(u8 mask);
-void InitHeapCanary(enum HeapId param0);
+void InitHeapCanary(enum HeapID param0);
 void FreeHeapCanary(void);
 BOOL HeapCanaryOK(void);
 

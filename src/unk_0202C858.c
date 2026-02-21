@@ -3,119 +3,117 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_defs/struct_0202C878.h"
+#include "struct_defs/wi_fi_history.h"
 
 #include "savedata.h"
 
+#include "res/text/bank/country_names.h"
+
 int WiFiHistory_SaveSize(void)
 {
-    return sizeof(UnkStruct_0202C878);
+    return sizeof(WiFiHistory);
 }
 
-void WiFiHistory_Init(UnkStruct_0202C878 *param0)
+void WiFiHistory_Init(WiFiHistory *wiFiHistory)
 {
-    MI_CpuClear32(param0, sizeof(UnkStruct_0202C878));
-    SaveData_SetChecksum(30);
+    MI_CpuClear32(wiFiHistory, sizeof(WiFiHistory));
+    SaveData_SetChecksum(SAVE_TABLE_ENTRY_WIFI_HISTORY);
 }
 
-UnkStruct_0202C878 *sub_0202C878(SaveData *param0)
+WiFiHistory *SaveData_WiFiHistory(SaveData *saveData)
 {
-    SaveData_Checksum(30);
-    return (UnkStruct_0202C878 *)SaveData_SaveTable(param0, 30);
+    SaveData_Checksum(SAVE_TABLE_ENTRY_WIFI_HISTORY);
+    return SaveData_SaveTable(saveData, SAVE_TABLE_ENTRY_WIFI_HISTORY);
 }
 
-void sub_0202C88C(UnkStruct_0202C878 *param0, int param1, int param2)
+void WiFiHistory_SetCountryAndRegion(WiFiHistory *wiFiHistory, int country, int region)
 {
-    GF_ASSERT(param1 < 256);
-    GF_ASSERT(param2 < 64);
+    GF_ASSERT(country < 256);
+    GF_ASSERT(region < 64);
 
-    param0->unk_05 = param1;
-    param0->unk_06 = param2;
+    wiFiHistory->country = country;
+    wiFiHistory->region = region;
 
-    sub_0202C918(param0, param1, param2, 3);
-    SaveData_SetChecksum(30);
+    WiFiHistory_SetGeonetCommunicatedWith(wiFiHistory, country, region, 3);
+    SaveData_SetChecksum(SAVE_TABLE_ENTRY_WIFI_HISTORY);
 }
 
-int sub_0202C8C0(const UnkStruct_0202C878 *param0)
+int WiFiHistory_GetCountry(const WiFiHistory *wiFiHistory)
 {
-    return param0->unk_05;
+    return wiFiHistory->country;
 }
 
-int sub_0202C8C4(const UnkStruct_0202C878 *param0)
+int WiFiHistory_GetRegion(const WiFiHistory *wiFiHistory)
 {
-    return param0->unk_06;
+    return wiFiHistory->region;
 }
 
-int sub_0202C8C8(const UnkStruct_0202C878 *param0, int param1, int param2)
+int WiFiHistory_GetGeonetCommunicatedWith(const WiFiHistory *wiFiHistory, int country, int region)
 {
-    int v0;
+    GF_ASSERT(country < 256);
+    GF_ASSERT(region < 64);
 
-    GF_ASSERT(param1 < 256);
-    GF_ASSERT(param2 < 64);
-
-    if (param1 == 0) {
+    if (country == 0) {
         return 0;
     }
 
-    v0 = (param0->unk_07[(param1 - 1) * 16 + param2 / 4] >> ((param2 % 4) * 2)) & 3;
-
-    return v0;
+    return (wiFiHistory->geonetCommunicationMap[(country - 1) * 16 + region / 4] >> ((region % 4) * 2)) & 3;
 }
 
-void sub_0202C918(UnkStruct_0202C878 *param0, int param1, int param2, int param3)
-{
+void WiFiHistory_SetGeonetCommunicatedWith(WiFiHistory *wiFiHistory, int country, int region, int recency)
+{ // 1 = today, 2 = at some point, 3 = self
     u8 *v0;
     u8 v1 = 3;
     u8 v2;
 
-    GF_ASSERT(param3 < 4);
-    GF_ASSERT(param1 < 256);
-    GF_ASSERT(param2 < 64);
+    GF_ASSERT(recency < 4);
+    GF_ASSERT(country < 256);
+    GF_ASSERT(region < 64);
 
-    if (param1 == 0) {
+    if (country == Country_Text_None) {
         return;
     }
 
-    v0 = &param0->unk_07[(param1 - 1) * 16 + param2 / 4];
+    v0 = &wiFiHistory->geonetCommunicationMap[(country - 1) * 16 + region / 4];
 
-    *v0 &= ((v1 << ((param2 % 4) * 2)) ^ 0xff);
-    *v0 |= param3 << ((param2 % 4) * 2);
+    *v0 &= ((v1 << ((region % 4) * 2)) ^ 0xff);
+    *v0 |= recency << ((region % 4) * 2);
 
-    if (param1 != 103) {
-        sub_0202C994(param0, 1);
+    if (country != Country_Text_Japan) {
+        WiFiHistory_SetInteractedOutsideJapan(wiFiHistory, TRUE);
     }
 
-    SaveData_SetChecksum(30);
+    SaveData_SetChecksum(SAVE_TABLE_ENTRY_WIFI_HISTORY);
 }
 
-BOOL sub_0202C990(const UnkStruct_0202C878 *param0)
+BOOL WiFiHistory_HasInteractedOutsideJapan(const WiFiHistory *wiFiHistory)
 {
-    return param0->unk_04;
+    return wiFiHistory->hasInteractedOutsideOfJapan;
 }
 
-void sub_0202C994(UnkStruct_0202C878 *param0, BOOL param1)
+void WiFiHistory_SetInteractedOutsideJapan(WiFiHistory *wiFiHistory, BOOL interactedOutsideJapan)
 {
-    param0->unk_04 = param1;
-    SaveData_SetChecksum(30);
+    wiFiHistory->hasInteractedOutsideOfJapan = interactedOutsideJapan;
+    SaveData_SetChecksum(SAVE_TABLE_ENTRY_WIFI_HISTORY);
 }
 
-void sub_0202C9A0(UnkStruct_0202C878 *param0)
+void WiFiHistory_UpdateGeonetCommunicationMap(WiFiHistory *wiFiHistory)
 {
-    int v0, v1;
-    u8 v2;
+    int j; // has to be here for checksum
 
-    for (v0 = 0; v0 < (256 - 1) * 16; v0++) {
-        v2 = param0->unk_07[v0];
+    for (int i = 0; i < (256 - 1) * 16; i++) {
+        u8 bits = wiFiHistory->geonetCommunicationMap[i];
 
-        for (v1 = 0; v1 < 8; v1 += 2) {
-            if (((v2 >> v1) & 3) == 1) {
-                v2 &= ((3 << v1) ^ 0xff);
-                v2 |= (2 << v1);
+        // loop through every 2 bits to update values set to 1 (interacted today) to 2 (interacted in the past)
+        for (j = 0; j < 8; j += 2) {
+            if (((bits >> j) & 3) == 1) {
+                bits &= ((3 << j) ^ 0xff);
+                bits |= (2 << j);
             }
         }
 
-        param0->unk_07[v0] = v2;
+        wiFiHistory->geonetCommunicationMap[i] = bits;
     }
 
-    SaveData_SetChecksum(30);
+    SaveData_SetChecksum(SAVE_TABLE_ENTRY_WIFI_HISTORY);
 }

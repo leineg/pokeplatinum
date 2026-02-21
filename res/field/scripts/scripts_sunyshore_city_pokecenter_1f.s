@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/sunyshore_city_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _001E
@@ -10,8 +9,7 @@
     ScriptEntryEnd
 
 _0012:
-    SetVar 0x8007, 0
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 0
     End
 
 _001E:
@@ -28,8 +26,7 @@ _0031:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckBadgeAcquired BADGE_ID_BEACON, 0x800C
-    GoToIfEq 0x800C, 1, _0057
+    GoToIfBadgeAcquired BADGE_ID_BEACON, _0057
     Message 1
     WaitABXPadPress
     CloseMessage
@@ -53,6 +50,4 @@ _0062:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

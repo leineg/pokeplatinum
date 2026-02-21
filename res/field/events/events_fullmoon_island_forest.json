@@ -2,10 +2,11 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 159,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 591,
+            "id": "FULLMOON_ISLAND_FOREST_CRESSELIA_0",
+            "graphics_id": "OBJ_EVENT_GFX_CRESSELIA",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_HIDE_FULLMOON_ISLAND_FOREST_CRESSELIA",
             "script": 2,
             "initial_dir": 1,
             "data": [],
@@ -16,10 +17,11 @@
             "y": 1
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1106,
+            "id": "FULLMOON_ISLAND_FOREST_POKEBALL_1",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0452",
             "script": 7092,
             "initial_dir": 0,
             "data": [],
@@ -34,13 +36,13 @@
         {
             "x": 16,
             "z": 21,
-            "dest_header_id": 260,
+            "dest_header_id": "MAP_HEADER_FULLMOON_ISLAND",
             "dest_warp_id": 0
         },
         {
             "x": 17,
             "z": 21,
-            "dest_header_id": 260,
+            "dest_header_id": "MAP_HEADER_FULLMOON_ISLAND",
             "dest_warp_id": 1
         }
     ],

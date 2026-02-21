@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/cycle_shop.h"
 
-    .data
 
     ScriptEntry _0016
     ScriptEntry _005D
@@ -14,13 +13,13 @@ _0016:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 130, _0052
+    GoToIfSet FLAG_UNK_0x0082, _0052
     Message 0
-    SetVar 0x8004, 0x1C2
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
-    SetFlag 130
-    SetVar 0x4114, 1
+    SetVar VAR_0x8004, ITEM_BICYCLE
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x0082
+    SetVar VAR_UNK_0x4114, 1
     ScrCmd_14C 9
     GoTo _0052
     End
@@ -39,7 +38,7 @@ _005D:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_CLEFAIRY
     Message 2
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -49,7 +48,7 @@ _007C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 129, _009A
+    GoToIfSet FLAG_UNK_0x0081, _009A
     Message 3
     WaitABXPadPress
     CloseMessage
@@ -81,4 +80,4 @@ _00B6:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

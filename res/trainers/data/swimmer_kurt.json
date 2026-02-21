@@ -13,7 +13,7 @@
             "level": 51,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,7 +22,7 @@
             "level": 51,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -31,8 +31,41 @@
             "level": 54,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Check out my physique! The rough\n",
+                "seas sculpted this awesome body!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "I’ve got a muscular physique, but\n",
+                "there’s no strength behind it...\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Seeing a Pokémon use Surf to carry you\n",
+                "out on the sea...\r",
+                "It strikes an emotional chord with me\n",
+                "somewhere deep down.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "The rough seas almost drowned...\n",
+                "...I mean, sculpted this awesome body!\r",
+                "Let my chiseled physique inspire you!\r"
+            ]
         }
     ]
 }

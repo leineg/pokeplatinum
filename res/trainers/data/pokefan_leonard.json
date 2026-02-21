@@ -16,7 +16,7 @@
             "level": 19,
             "item": "ITEM_SITRUS_BERRY",
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -25,7 +25,7 @@
             "level": 19,
             "item": "ITEM_SITRUS_BERRY",
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -34,8 +34,32 @@
             "level": 22,
             "item": "ITEM_SITRUS_BERRY",
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 7
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "I can’t explain it...\n",
+                "Being here compels me to battle!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Hunh?!\n",
+                "What was I just doing?!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "The desire to do battle lingers on...\r",
+                "Do such spirits of Pokémon still roam\n",
+                "within these walls?\n"
+            ]
         }
     ]
 }

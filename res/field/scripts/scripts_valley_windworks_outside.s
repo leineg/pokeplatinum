@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/valley_windworks_outside.h"
 
-    .data
 
     ScriptEntry _0024
     ScriptEntry _008A
@@ -17,37 +16,37 @@ _0022:
     End
 
 _0024:
-    CallIfEq 0x40CF, 2, _0082
-    CallIfSet 0x10F, _00BB
-    CallIfUnset 0x10F, _00C5
-    GoToIfLt 0x4089, 2, _007C
-    GoToIfSet 0xAA8, _007C
-    GetDayOfWeek 0x4000
-    GoToIfNe 0x4000, 5, _007C
+    CallIfEq VAR_UNK_0x40CF, 2, _0082
+    CallIfSet FLAG_UNK_0x010F, _00BB
+    CallIfUnset FLAG_UNK_0x010F, _00C5
+    GoToIfLt VAR_UNK_0x4089, 2, _007C
+    GoToIfSet FLAG_UNK_0x0AA8, _007C
+    GetDayOfWeek VAR_MAP_LOCAL_0
+    GoToIfNe VAR_MAP_LOCAL_0, 5, _007C
     GoTo _0076
 
 _0076:
-    ClearFlag 0x20B
+    ClearFlag FLAG_UNK_0x020B
     End
 
 _007C:
-    SetFlag 0x20B
+    SetFlag FLAG_UNK_0x020B
     End
 
 _0082:
-    SetVar 0x40CF, 3
+    SetVar VAR_UNK_0x40CF, 3
     Return
 
 _008A:
-    CallIfSet 0x10F, _00BB
-    CallIfUnset 0x10F, _00C5
-    GoToIfSet 142, _00AD
+    CallIfSet FLAG_UNK_0x010F, _00BB
+    CallIfUnset FLAG_UNK_0x010F, _00C5
+    GoToIfSet FLAG_MAP_LOCAL, _00AD
     End
 
 _00AD:
-    SetFlag 0x20B
+    SetFlag FLAG_UNK_0x020B
     RemoveObject 4
-    ClearFlag 142
+    ClearFlag FLAG_MAP_LOCAL
     End
 
 _00BB:
@@ -65,20 +64,20 @@ _00CF:
     Message 0
     CloseMessage
     StartTrainerBattle TRAINER_GALACTIC_GRUNT_VALLEY_WINDWORKS_1
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0133
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0133
     Message 1
     CloseMessage
     ApplyMovement 0, _013C
     WaitMovement
-    ScrCmd_168 7, 20, 19, 14, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
+    LoadDoorAnimation 7, 20, 19, 14, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
     ApplyMovement 0, _0144
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
     Message 4
     RemoveObject 0
     CloseMessage
@@ -92,19 +91,19 @@ _0133:
 
     .balign 4, 0
 _013C:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0144:
-    MoveAction_012
-    MoveAction_069
+    WalkNormalNorth
+    SetInvisible
     EndMovement
 
 _0150:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 159, _016C
+    GoToIfSet FLAG_UNK_0x009F, _016C
     Message 5
     WaitABXPadPress
     CloseMessage
@@ -114,9 +113,9 @@ _0150:
 _016C:
     BufferItemName 0, 0x1B6
     Message 6
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _01A2
-    SetFlag 0x10F
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _01A2
+    SetFlag FLAG_UNK_0x010F
     Call _00BB
     SetWarpEventPos 0, 243, 0x28E
     Message 7
@@ -131,11 +130,7 @@ _01A2:
     End
 
 _01A8:
-    ScrCmd_036 9, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 9
     End
 
 _01BF:
@@ -145,13 +140,13 @@ _01BF:
     PlayCry SPECIES_DRIFLOON
     Message 8
     CloseMessage
-    ScrCmd_04D
-    SetFlag 142
+    WaitCry
+    SetFlag FLAG_MAP_LOCAL
     StartLegendaryBattle SPECIES_DRIFLOON, 15
-    ClearFlag 142
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _01FB
-    SetFlag 0xAA8
+    ClearFlag FLAG_MAP_LOCAL
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _01FB
+    SetFlag FLAG_UNK_0x0AA8
     ReleaseAll
     End
 
@@ -170,23 +165,23 @@ _0201:
     ApplyMovement LOCALID_PLAYER, _02BC
     ApplyMovement 6, _02EC
     WaitMovement
-    ScrCmd_168 7, 20, 19, 14, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
+    LoadDoorAnimation 7, 20, 19, 14, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
     ApplyMovement 6, _0300
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
-    WaitTime 120, 0x800C
-    ScrCmd_168 7, 20, 19, 14, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
+    WaitTime 120, VAR_RESULT
+    LoadDoorAnimation 7, 20, 19, 14, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
     ApplyMovement 6, _0310
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
     ApplyMovement 6, _031C
     WaitMovement
     Message 3
@@ -195,68 +190,68 @@ _0201:
     ApplyMovement 6, _0324
     WaitMovement
     RemoveObject 6
-    SetVar 0x411E, 2
+    SetVar VAR_UNK_0x411E, 2
     ReleaseAll
     End
 
     .balign 4, 0
 _02AC:
-    MoveAction_063 5
-    MoveAction_062
-    MoveAction_034
+    Delay8 5
+    Delay4
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _02BC:
-    MoveAction_013
-    MoveAction_032
+    WalkNormalSouth
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02C8:
-    MoveAction_063
-    MoveAction_034
-    MoveAction_033
+    Delay8
+    WalkOnSpotNormalWest
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _02D8:
-    MoveAction_075
-    MoveAction_063
-    MoveAction_016 4
-    MoveAction_039
+    EmoteExclamationMark
+    Delay8
+    WalkFastNorth 4
+    WalkOnSpotFastEast
     EndMovement
 
     .balign 4, 0
 _02EC:
-    MoveAction_063
-    MoveAction_062
-    MoveAction_015
-    MoveAction_032
+    Delay8
+    Delay4
+    WalkNormalEast
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _0300:
-    MoveAction_012
-    MoveAction_069
-    MoveAction_001
+    WalkNormalNorth
+    SetInvisible
+    FaceSouth
     EndMovement
 
     .balign 4, 0
 _0310:
-    MoveAction_070
-    MoveAction_017
+    SetVisible
+    WalkFastSouth
     EndMovement
 
     .balign 4, 0
 _031C:
-    MoveAction_037
+    WalkOnSpotFastSouth
     EndMovement
 
     .balign 4, 0
 _0324:
-    MoveAction_018
-    MoveAction_017
-    MoveAction_017 6
-    MoveAction_018 9
+    WalkFastWest
+    WalkFastSouth
+    WalkFastSouth 6
+    WalkFastWest 9
     EndMovement

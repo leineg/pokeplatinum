@@ -1,134 +1,134 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/veilstone_store_4f.h"
+#include "res/text/bank/menu_entries.h"
 
-    .data
 
-    ScriptEntry _001E
-    ScriptEntry _00EE
-    ScriptEntry _0101
-    ScriptEntry _0114
-    ScriptEntry _0127
-    ScriptEntry _013D
-    ScriptEntry _0153
+    ScriptEntry VeilstoneStore4F_Attendant
+    ScriptEntry VeilstoneStore4F_NinjaBoy
+    ScriptEntry VeilstoneStore4F_Pokefan
+    ScriptEntry VeilstoneStore4F_SchoolBoy
+    ScriptEntry VeilstoneStore4F_TopDecorVendor
+    ScriptEntry VeilstoneStore4F_BottomDecorVendor
+    ScriptEntry VeilstoneStore4F_Directory
     ScriptEntryEnd
 
-_001E:
+VeilstoneStore4F_Attendant:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckIsDepartmentStoreRegular 0x800C
-    GoToIfEq 0x800C, TRUE, _005F
-    Message 0
-    ScrCmd_040 1, 1, 0, 1, 0x800C
-    ScrCmd_042 229, 1
-    ScrCmd_042 228, 0
-    ScrCmd_043
-    GoToIfEq 0x800C, 1, _00C2
-    GoTo _00B7
+    CheckIsDepartmentStoreRegular VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, VeilstoneStore4F_AttendantPersonalized
+    Message VeilstoneStore4F_Text_MayIHelpYou
+    InitGlobalTextMenu 1, 1, 0, VAR_RESULT
+    AddMenuEntryImm MenuEntries_Text_WhatIsRecommended, 1
+    AddMenuEntryImm MenuEntries_Text_NothingThanks, 0
+    ShowMenu
+    GoToIfEq VAR_RESULT, 1, VeilstoneStore4F_AttendantYellowCushion
+    GoTo VeilstoneStore4F_AttendantPleaseEnjoyYourself
 
-_005F:
+VeilstoneStore4F_AttendantPersonalized:
     BufferPlayerName 0
-    Message 1
-    ScrCmd_040 1, 1, 0, 1, 0x800C
-    ScrCmd_042 229, 0
-    ScrCmd_042 228, 1
-    ScrCmd_043
-    GoToIfNe 0x800C, 0, _00B7
-    ScrCmd_1B7 0x800C, 4
-    GoToIfEq 0x800C, 0, _00C2
-    GoToIfEq 0x800C, 1, _00CD
-    GoToIfEq 0x800C, 2, _00D8
-    GoTo _00E3
+    Message VeilstoneStore4F_Text_MayIHelpYouPersonalized
+    InitGlobalTextMenu 1, 1, 0, VAR_RESULT
+    AddMenuEntryImm MenuEntries_Text_WhatIsRecommended, 0
+    AddMenuEntryImm MenuEntries_Text_NothingThanks, 1
+    ShowMenu
+    GoToIfNe VAR_RESULT, 0, VeilstoneStore4F_AttendantPleaseEnjoyYourself
+    GetRandom VAR_RESULT, 4
+    GoToIfEq VAR_RESULT, 0, VeilstoneStore4F_AttendantYellowCushion
+    GoToIfEq VAR_RESULT, 1, VeilstoneStore4F_AttendantCupboards
+    GoToIfEq VAR_RESULT, 2, VeilstoneStore4F_AttendantBuizelDoll
+    GoTo VeilstoneStore4F_AttendantMantykeDoll
 
-_00B7:
-    Message 2
+VeilstoneStore4F_AttendantPleaseEnjoyYourself:
+    Message VeilstoneStore4F_Text_PleaseEnjoyYourself
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00C2:
-    Message 3
+VeilstoneStore4F_AttendantYellowCushion:
+    Message VeilstoneStore4F_Text_YellowCushionIsSoftAndFirm
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00CD:
-    Message 4
+VeilstoneStore4F_AttendantCupboards:
+    Message VeilstoneStore4F_Text_SurprisedHowManyBuyCupboards
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00D8:
-    Message 5
+VeilstoneStore4F_AttendantBuizelDoll:
+    Message VeilstoneStore4F_Text_BuizelDollIsVeryPopular
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00E3:
-    Message 6
+VeilstoneStore4F_AttendantMantykeDoll:
+    Message VeilstoneStore4F_Text_MantykeDollHasBeenHotSeller
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00EE:
+VeilstoneStore4F_NinjaBoy:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 7
+    Message VeilstoneStore4F_Text_ChuckAQuickBallOrTimerBall
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0101:
+VeilstoneStore4F_Pokefan:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 8
+    Message VeilstoneStore4F_Text_ThatBoySaysHeIsTrainingHisImage
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0114:
+VeilstoneStore4F_SchoolBoy:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 9
+    Message VeilstoneStore4F_Text_NeedAnotherCopyOfGameToChallengePapa
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0127:
+VeilstoneStore4F_TopDecorVendor:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_149 0
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartDecor MART_DECOR_ID_VEILSTONE_4F_UP
     ReleaseAll
     End
 
-_013D:
+VeilstoneStore4F_BottomDecorVendor:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_149 1
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartDecor MART_DECOR_ID_VEILSTONE_4F_DOWN
     ReleaseAll
     End
 
-_0153:
+VeilstoneStore4F_Directory:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    Message 10
+    Message VeilstoneStore4F_Text_Directory
     WaitABXPadPress
     CloseMessage
     ReleaseAll

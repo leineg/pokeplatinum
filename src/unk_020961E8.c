@@ -11,8 +11,8 @@
 #include "overlay059/struct_ov59_021D30E0.h"
 
 #include "communication_system.h"
-#include "math.h"
-#include "unk_02005474.h"
+#include "math_util.h"
+#include "sound_playback.h"
 #include "unk_02030EE0.h"
 #include "unk_02032798.h"
 #include "unk_020366A0.h"
@@ -187,7 +187,7 @@ void sub_0209621C(int param0, int param1, void *param2, void *param3)
     ov59_021D2204(v0, 25, param0);
 
     CommMan_SetErrorHandling(1, 1);
-    Sound_PlayEffect(1624);
+    Sound_PlayEffect(SEQ_SE_DP_F209);
 }
 
 void sub_02096264(int param0, int param1, void *param2, void *param3)
@@ -200,9 +200,7 @@ void sub_02096274(int param0, int param1, void *param2, void *param3)
 {
     UnkStruct_020961E8 *v0 = (UnkStruct_020961E8 *)param3;
     UnkStruct_02096274 v1;
-    UnkStruct_02096274 *v2;
-
-    v2 = param2;
+    UnkStruct_02096274 *v2 = param2;
 
     if (param0 != 0) {
         if (CommSys_CurNetId() == 0) {
@@ -249,9 +247,7 @@ void sub_02096274(int param0, int param1, void *param2, void *param3)
 void sub_02096360(int param0, int param1, void *param2, void *param3)
 {
     UnkStruct_020961E8 *v0 = (UnkStruct_020961E8 *)param3;
-    u8 v1;
-
-    v1 = *(u8 *)param2;
+    u8 v1 = *(u8 *)param2;
 
     ov59_021D22EC(v0, 1, v1);
 

@@ -3,11 +3,11 @@
 
 #include "struct_decls/battle_system.h"
 
-#include "overlay012/struct_ov12_02237F98_decl.h"
-#include "overlay012/struct_ov12_02238004_decl.h"
+#include "battle_anim/struct_ov12_02237F98_decl.h"
+#include "battle_anim/struct_ov12_02238004_decl.h"
 
 typedef struct {
-    BattleSystem *unk_00;
+    BattleSystem *battleSys;
     UnkStruct_ov12_02237F98 *unk_04;
     UnkStruct_ov12_02238004 *unk_08[3];
     u8 unk_14;

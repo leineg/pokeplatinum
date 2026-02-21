@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/celestic_town.h"
 
-    .data
 
     ScriptEntry _0032
     ScriptEntry _026C
@@ -26,9 +25,9 @@ _0038:
     LockAll
     FacePlayer
     Message 1
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _006E
-    GoToIfEq 0x800C, MENU_NO, _0063
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _006E
+    GoToIfEq VAR_RESULT, MENU_NO, _0063
     End
 
 _0063:
@@ -42,14 +41,14 @@ _006E:
     Message 2
     CloseMessage
     StartTrainerBattle TRAINER_GALACTIC_GRUNT_CELESTIC_TOWN
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0191
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0191
     Message 4
     CloseMessage
-    GetPlayerDir 0x800C
-    GoToIfEq 0x800C, 0, _00BC
-    GoToIfEq 0x800C, 2, _00EC
-    GoToIfEq 0x800C, 3, _0114
+    GetPlayerDir VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _00BC
+    GoToIfEq VAR_RESULT, 2, _00EC
+    GoToIfEq VAR_RESULT, 3, _0114
     End
 
 _00BC:
@@ -84,11 +83,11 @@ _013C:
     RemoveObject 2
     RemoveObject 3
     SetObjectEventPos 3, 0x1D2, 0x213
-    ScrCmd_189 3, 0
-    ScrCmd_188 3, 14
-    ClearFlag 0x1AC
+    SetObjectEventDir 3, DIR_NORTH
+    SetObjectEventMovementType 3, MOVEMENT_TYPE_LOOK_NORTH
+    ClearFlag FLAG_UNK_0x01AC
     AddObject 3
-    ScrCmd_062 3
+    LockObject 3
     Return
 
 _0166:
@@ -98,8 +97,8 @@ _0166:
     PlaySound SEQ_FANFA4
     Message 6
     WaitSound
-    RemoveItem ITEM_OLD_CHARM, 1, 0x800C
-    SetFlag 166
+    RemoveItem ITEM_OLD_CHARM, 1, VAR_RESULT
+    SetFlag FLAG_UNK_0x00A6
     Message 7
     WaitABXPadPress
     CloseMessage
@@ -113,86 +112,71 @@ _0191:
 
     .balign 4, 0
 _0198:
-    MoveAction_018 3
-    MoveAction_017 9
+    WalkFastWest 3
+    WalkFastSouth 9
     EndMovement
 
     .balign 4, 0
 _01A4:
-    MoveAction_017 2
-    MoveAction_018 3
-    MoveAction_017 7
+    WalkFastSouth 2
+    WalkFastWest 3
+    WalkFastSouth 7
     EndMovement
 
     .balign 4, 0
 _01B4:
-    MoveAction_012 8
-    MoveAction_014 2
+    WalkNormalNorth 8
+    WalkNormalWest 2
     EndMovement
 
     .balign 4, 0
 _01C0:
-    MoveAction_012 8
-    MoveAction_014 2
-    MoveAction_032
+    WalkNormalNorth 8
+    WalkNormalWest 2
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _01D0:
-    MoveAction_012 8
-    MoveAction_014 4
-    MoveAction_032
+    WalkNormalNorth 8
+    WalkNormalWest 4
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _01E0:
-    MoveAction_034
-    MoveAction_063
-    MoveAction_033
+    WalkOnSpotNormalWest
+    Delay8
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01F0:
-    MoveAction_063 3
-    MoveAction_033
+    Delay8 3
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _01FC:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _0204:
-    MoveAction_063 8
-    MoveAction_062
-    MoveAction_035
+    Delay8 8
+    Delay4
+    WalkOnSpotNormalEast
     EndMovement
 
-    .byte 63
-    .byte 0
-    .byte 8
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 63
-    .byte 0
-    .byte 9
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+CelesticTown_UnusedMovement:
+    Delay8 8
+    WalkOnSpotNormalSouth
+    EndMovement
+
+CelesticTown_UnusedMovement2:
+    Delay8 9
+    WalkOnSpotNormalSouth
+    EndMovement
 
 _022C:
     LockAll
@@ -204,7 +188,7 @@ _022C:
     End
 
 _024A:
-    SetVar 0x40F1, 1
+    SetVar VAR_UNK_0x40F1, 1
     Message 0
     WaitABXPadPress
     CloseMessage
@@ -212,19 +196,19 @@ _024A:
 
     .balign 4, 0
 _025C:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0264:
-    MoveAction_002
+    FaceWest
     EndMovement
 
 _026C:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 166, _0289
+    GoToIfSet FLAG_UNK_0x00A6, _0289
     Call _024A
     ReleaseAll
     End
@@ -248,9 +232,9 @@ _0294:
     CloseMessage
     ApplyMovement 4, _02FC
     WaitMovement
-    SetVar 0x4074, 2
-    SetFlag 0x299
-    WaitTime 12, 0x800C
+    SetVar VAR_UNK_0x4074, 2
+    SetFlag FLAG_UNK_0x0299
+    WaitTime 12, VAR_RESULT
     Message 11
     WaitABXPadPress
     CloseMessage
@@ -259,23 +243,23 @@ _0294:
 
     .balign 4, 0
 _02E0:
-    MoveAction_035
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _02E8:
-    MoveAction_075
-    MoveAction_014 2
+    EmoteExclamationMark
+    WalkNormalWest 2
     EndMovement
 
     .balign 4, 0
 _02F4:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _02FC:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
 _0304:
@@ -319,11 +303,7 @@ _033D:
     End
 
 _0350:
-    ScrCmd_036 15, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 15
     End
 
 _0367:
@@ -344,6 +324,4 @@ _0378:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

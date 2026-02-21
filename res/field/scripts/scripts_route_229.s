@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_229.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _008E
@@ -11,20 +10,18 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 218, _0079
+    GoToIfSet FLAG_UNK_0x00DA, _0079
     Message 0
-    SetVar 0x8004, 92
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0084
-    CallCommonScript 0x7FC
-    SetFlag 218
-    SetVar 0x8004, 92
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0079
+    SetVar VAR_0x8004, ITEM_NUGGET
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0084
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x00DA
+    SetVar VAR_0x8004, ITEM_NUGGET
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0079
     Message 1
-    CallCommonScript 0x7FC
+    Common_GiveItemQuantity
     GoTo _0079
     End
 
@@ -36,19 +33,13 @@ _0079:
     End
 
 _0084:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
 _008E:
-    ScrCmd_036 3, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 3
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

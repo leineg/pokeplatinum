@@ -10,7 +10,7 @@
 #include "easy3d_object.h"
 #include "graphics.h"
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
 #include "palette.h"
 #include "sprite.h"
 #include "sprite_system.h"
@@ -100,13 +100,13 @@ void ov99_021D4170(UnkStruct_ov99_021D2CB0 *param0)
         for (v0 = 0; v0 < v2->unk_00; v0++) {
             Easy3DObject_SetPosition(&param0->unk_6C[v1][v0], v2->unk_04 - v2->unk_08 * v0, v2->unk_0C - v2->unk_10 * v0, v2->unk_14 - v2->unk_18 * v0);
             Easy3DObject_SetScale(&param0->unk_6C[v1][v0], FX32_ONE, FX32_ONE, FX32_ONE);
-            Easy3DObject_SetVisibility(&param0->unk_6C[v1][v0], 1);
+            Easy3DObject_SetVisible(&param0->unk_6C[v1][v0], 1);
         }
 
         for (; v0 < 16; v0++) {
             Easy3DObject_SetPosition(&param0->unk_6C[v1][v0], 0, (-64 * FX32_ONE), (-50 * FX32_ONE));
             Easy3DObject_SetScale(&param0->unk_6C[v1][v0], FX32_ONE, FX32_ONE, FX32_ONE);
-            Easy3DObject_SetVisibility(&param0->unk_6C[v1][v0], 0);
+            Easy3DObject_SetVisible(&param0->unk_6C[v1][v0], 0);
         }
     }
 }
@@ -142,7 +142,7 @@ BOOL ov99_021D425C(UnkStruct_ov99_021D2CB0 *param0, s32 param1)
                 Easy3DObject_SetPosition(&param0->unk_6C[v6][v7], v3 + v0, v4 + v1, v5 + v2);
             }
 
-            Easy3DObject_SetVisibility(&param0->unk_6C[v6][v7], 1);
+            Easy3DObject_SetVisible(&param0->unk_6C[v6][v7], 1);
         }
     }
 
@@ -163,7 +163,7 @@ void ov99_021D439C(UnkStruct_ov99_021D2CB0 *param0, int param1, int param2, int 
     case 0:
         GF_ASSERT(NELEMS(Unk_ov99_021D5394) > param1);
 
-        if (param0->unk_00->unk_00 == 0) {
+        if (param0->unk_00->gender == 0) {
             v3 = &Unk_ov99_021D5394[param1];
         } else {
             v3 = &Unk_ov99_021D52F4[param1];
@@ -172,7 +172,7 @@ void ov99_021D439C(UnkStruct_ov99_021D2CB0 *param0, int param1, int param2, int 
     case 1:
         GF_ASSERT(NELEMS(Unk_ov99_021D52F4) > param1);
 
-        if (param0->unk_00->unk_00 == 0) {
+        if (param0->unk_00->gender == 0) {
             v3 = &Unk_ov99_021D5274[param1];
         } else {
             v3 = &Unk_ov99_021D52B4[param1];
@@ -180,7 +180,7 @@ void ov99_021D439C(UnkStruct_ov99_021D2CB0 *param0, int param1, int param2, int 
         break;
     }
 
-    v2 = Graphics_GetPlttDataFromOpenNARC(param0->unk_10F8, v3->unk_04, &v1, 75);
+    v2 = Graphics_GetPlttDataFromOpenNARC(param0->unk_10F8, v3->unk_04, &v1, HEAP_ID_75);
 
     DC_FlushRange(v1->pRawData, v1->szByte);
     GX_BeginLoadBGExtPltt();
@@ -193,11 +193,11 @@ void ov99_021D439C(UnkStruct_ov99_021D2CB0 *param0, int param1, int param2, int 
 
     GX_EndLoadBGExtPltt();
 
-    Heap_FreeToHeap(v2);
+    Heap_Free(v2);
     PaletteData_FillBufferRange(param0->unk_0C, 0, 2, 0x0, 0, 1);
     PaletteData_FillBufferRange(param0->unk_0C, 1, 2, 0x0, 0, 1);
-    Graphics_LoadTilesToBgLayerFromOpenNARC(param0->unk_10F8, v3->unk_00, param0->unk_08, param2, 0, 0, 0, 75);
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(param0->unk_10F8, v3->unk_02, param0->unk_08, param2, 0, 0, 0, 75);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(param0->unk_10F8, v3->unk_00, param0->unk_08, param2, 0, 0, 0, HEAP_ID_75);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(param0->unk_10F8, v3->unk_02, param0->unk_08, param2, 0, 0, 0, HEAP_ID_75);
     Bg_SetOffset(v0, param2, 0, v3->unk_06);
     Bg_SetOffset(v0, param2, 3, v3->unk_08);
 }
@@ -219,7 +219,7 @@ void ov99_021D44CC(UnkStruct_ov99_021D2CB0 *param0, ManagedSprite *param1)
             v0 = G2_GetOBJCharPtr();
             v2 = Sprite_GetImageProxy(param1->sprite);
 
-            if (param0->unk_00->unk_00 == 0) {
+            if (param0->unk_00->gender == 0) {
                 MI_CpuCopy32(&param0->unk_10F4[param0->unk_1114.unk_02 * ((0x20 * 8) / 2)], (void *)((u32)v0 + 0x1d * 0x20 + v2->vramLocation.baseAddrOfVram[NNS_G2D_VRAM_TYPE_2DMAIN]), 0x20);
                 MI_CpuCopy32(&param0->unk_10F4[param0->unk_1114.unk_02 * ((0x20 * 8) / 2) + 0x20], (void *)((u32)v0 + 0x1e * 0x20 + v2->vramLocation.baseAddrOfVram[NNS_G2D_VRAM_TYPE_2DMAIN]), 0x20);
                 MI_CpuCopy32(&param0->unk_10F4[param0->unk_1114.unk_02 * ((0x20 * 8) / 2) + 0x40], (void *)((u32)v0 + 0x25 * 0x20 + v2->vramLocation.baseAddrOfVram[NNS_G2D_VRAM_TYPE_2DMAIN]), 0x20);

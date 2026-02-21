@@ -13,7 +13,7 @@
             "level": 38,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,31 @@
             "level": 40,
             "item": null,
             "moves": null,
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Are you enjoying your unescorted,\n",
+                "unauthorized, and unsettling tour\f",
+                "of Team Galactic HQ?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Let me do what I want!\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "It doesn’t matter what happens to\n",
+                "the Team Galactic HQ building.\r",
+                "Soon, all will belong to Team\n",
+                "Galactic, anyway!\n"
+            ]
         }
     ]
 }

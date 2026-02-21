@@ -1,762 +1,726 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/sandgem_town.h"
+#include "res/field/events/events_sandgem_town.h"
 
-    .data
 
-    ScriptEntry _0032
-    ScriptEntry _0085
-    ScriptEntry _057C
-    ScriptEntry _0840
-    ScriptEntry _0853
-    ScriptEntry _0866
-    ScriptEntry _0879
-    ScriptEntry _088C
-    ScriptEntry _08A3
-    ScriptEntry _08BA
-    ScriptEntry _08D4
-    ScriptEntry _08EB
+    ScriptEntry SandgemTown_OnTransition
+    ScriptEntry SandgemTown_TriggerCounterpartLeadToLab
+    ScriptEntry SandgemTown_OnFrameExitLab
+    ScriptEntry SandgemTown_Youngster
+    ScriptEntry SandgemTown_PokemonBreederM
+    ScriptEntry SandgemTown_PokemonBreederF
+    ScriptEntry SandgemTown_Unused
+    ScriptEntry SandgemTown_MapSign
+    ScriptEntry SandgemTown_LandmarkSignPokemonResearchLab
+    ScriptEntry SandgemTown_LandmarkSignCounterpartMailbox
+    ScriptEntry SandgemTown_LandmarkSignPokeMart
+    ScriptEntry SandgemTown_LandmarkSignPokemonCenter
     ScriptEntryEnd
 
-_0032:
-    CallIfEq 0x4071, 1, _005F
-    GetPlayerGender 0x4000
-    GoToIfEq 0x4000, GENDER_MALE, _0075
-    GoToIfEq 0x4000, GENDER_FEMALE, _007D
+SandgemTown_OnTransition:
+    CallIfEq VAR_SANDGEM_TOWN_STATE, 1, SandgemTown_SetCounterpartPositionExitLab
+    GetPlayerGender VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_MALE, SandgemTown_SetCounterpartGraphicsDawn
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_FEMALE, SandgemTown_SetCounterpartGraphicsLucas
     End
 
-_005F:
-    SetObjectEventPos 4, 168, 0x34D
-    ScrCmd_189 4, 0
-    ScrCmd_188 4, 14
+SandgemTown_SetCounterpartPositionExitLab:
+    SetObjectEventPos LOCALID_COUNTERPART, 168, 845
+    SetObjectEventDir LOCALID_COUNTERPART, DIR_NORTH
+    SetObjectEventMovementType LOCALID_COUNTERPART, MOVEMENT_TYPE_LOOK_NORTH
     Return
 
-_0075:
-    SetVar 0x4020, 97
+SandgemTown_SetCounterpartGraphicsDawn:
+    SetVar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_PLAYER_F
     End
 
-_007D:
-    SetVar 0x4020, 0
+SandgemTown_SetCounterpartGraphicsLucas:
+    SetVar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_PLAYER_M
     End
 
-_0085:
+SandgemTown_TriggerCounterpartLeadToLab:
     LockAll
-    ApplyMovement 4, _03AC
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartNoticePlayer
     WaitMovement
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 0x34B, _00E7
-    GoToIfEq 0x8005, 0x34C, _00FF
-    GoToIfEq 0x8005, 0x34D, _010F
-    GoToIfEq 0x8005, 0x34E, _011F
-    GoToIfEq 0x8005, 0x34F, _0137
-    GoToIfEq 0x8005, 0x350, _014F
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 843, SandgemTown_CounterpartWalkToPlayerZ843
+    GoToIfEq VAR_0x8005, 844, SandgemTown_CounterpartWalkToPlayerZ844
+    GoToIfEq VAR_0x8005, 845, SandgemTown_CounterpartWalkToPlayerZ845
+    GoToIfEq VAR_0x8005, 846, SandgemTown_CounterpartWalkToPlayerZ846
+    GoToIfEq VAR_0x8005, 847, SandgemTown_CounterpartWalkToPlayerZ847
+    GoToIfEq VAR_0x8005, 848, SandgemTown_CounterpartWalkToPlayerZ848
     End
 
-_00E7:
-    ApplyMovement 4, _03B8
-    ApplyMovement LOCALID_PLAYER, _047C
+SandgemTown_CounterpartWalkToPlayerZ843:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPlayerZ843
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerFaceCounterpartZ843
     WaitMovement
-    GoTo _0169
+    GoTo SandgemTown_TheProfessorIsWaiting
 
-_00FF:
-    ApplyMovement 4, _03C4
+SandgemTown_CounterpartWalkToPlayerZ844:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPlayerZ844
     WaitMovement
-    GoTo _0169
+    GoTo SandgemTown_TheProfessorIsWaiting
 
-_010F:
-    ApplyMovement 4, _03D4
+SandgemTown_CounterpartWalkToPlayerZ845:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPlayerZ845
     WaitMovement
-    GoTo _0169
+    GoTo SandgemTown_TheProfessorIsWaiting
 
-_011F:
-    ApplyMovement 4, _03DC
-    ApplyMovement LOCALID_PLAYER, _04A0
+SandgemTown_CounterpartWalkToPlayerZ846:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPlayerZ846
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerFaceCounterpartZ846
     WaitMovement
-    GoTo _0169
+    GoTo SandgemTown_TheProfessorIsWaiting
 
-_0137:
-    ApplyMovement 4, _03E8
-    ApplyMovement LOCALID_PLAYER, _04AC
+SandgemTown_CounterpartWalkToPlayerZ847:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPlayerZ847
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerFaceCounterpartZ847
     WaitMovement
-    GoTo _0169
+    GoTo SandgemTown_TheProfessorIsWaiting
 
-_014F:
-    ApplyMovement 4, _03F4
-    ApplyMovement LOCALID_PLAYER, _04B8
+SandgemTown_CounterpartWalkToPlayerZ848:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPlayerZ848
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerFaceCounterpartZ848
     WaitMovement
-    GoTo _0169
+    GoTo SandgemTown_TheProfessorIsWaiting
     End
 
-_0169:
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0189
-    GoToIfEq 0x800C, GENDER_FEMALE, _0195
+SandgemTown_TheProfessorIsWaiting:
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnTheProfessorIsWaiting
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasTheProfsWaitingToSeeYou
     End
 
-_0189:
+SandgemTown_DawnTheProfessorIsWaiting:
     BufferCounterpartName 0
-    Message 0
-    GoTo _01A1
+    Message SandgemTown_Text_DawnTheProfessorIsWaiting
+    GoTo SandgemTown_WalkToPokemonResearchLab
 
-_0195:
+SandgemTown_LucasTheProfsWaitingToSeeYou:
     BufferCounterpartName 0
-    Message 2
-    GoTo _01A1
+    Message SandgemTown_Text_LucasTheProfsWaitingToSeeYou
+    GoTo SandgemTown_WalkToPokemonResearchLab
 
-_01A1:
+SandgemTown_WalkToPokemonResearchLab:
     CloseMessage
-    GoToIfEq 0x8005, 0x34B, _01F3
-    GoToIfEq 0x8005, 0x34C, _020B
-    GoToIfEq 0x8005, 0x34D, _0223
-    GoToIfEq 0x8005, 0x34E, _023B
-    GoToIfEq 0x8005, 0x34F, _0253
-    GoToIfEq 0x8005, 0x350, _026B
+    GoToIfEq VAR_0x8005, 843, SandgemTown_WalkToPokemonResearchLabZ843
+    GoToIfEq VAR_0x8005, 844, SandgemTown_WalkToPokemonResearchLabZ844
+    GoToIfEq VAR_0x8005, 845, SandgemTown_WalkToPokemonResearchLabZ845
+    GoToIfEq VAR_0x8005, 846, SandgemTown_WalkToPokemonResearchLabZ846
+    GoToIfEq VAR_0x8005, 847, SandgemTown_WalkToPokemonResearchLabZ847
+    GoToIfEq VAR_0x8005, 848, SandgemTown_WalkToPokemonResearchLabZ848
     End
 
-_01F3:
-    ApplyMovement 4, _0400
-    ApplyMovement LOCALID_PLAYER, _04C4
+SandgemTown_WalkToPokemonResearchLabZ843:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ843
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ843
     WaitMovement
-    GoTo _0283
+    GoTo SandgemTown_ThisIsOurPokemonResearchLab
 
-_020B:
-    ApplyMovement 4, _040C
-    ApplyMovement LOCALID_PLAYER, _04D4
+SandgemTown_WalkToPokemonResearchLabZ844:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ844
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ844
     WaitMovement
-    GoTo _0283
+    GoTo SandgemTown_ThisIsOurPokemonResearchLab
 
-_0223:
-    ApplyMovement 4, _0418
-    ApplyMovement LOCALID_PLAYER, _04E4
+SandgemTown_WalkToPokemonResearchLabZ845:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ845
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ845
     WaitMovement
-    GoTo _0283
+    GoTo SandgemTown_ThisIsOurPokemonResearchLab
 
-_023B:
-    ApplyMovement 4, _0428
-    ApplyMovement LOCALID_PLAYER, _04F8
+SandgemTown_WalkToPokemonResearchLabZ846:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ846
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ846
     WaitMovement
-    GoTo _0283
+    GoTo SandgemTown_ThisIsOurPokemonResearchLab
 
-_0253:
-    ApplyMovement 4, _043C
-    ApplyMovement LOCALID_PLAYER, _0510
+SandgemTown_WalkToPokemonResearchLabZ847:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ847
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ847
     WaitMovement
-    GoTo _0283
+    GoTo SandgemTown_ThisIsOurPokemonResearchLab
 
-_026B:
-    ApplyMovement 4, _044C
-    ApplyMovement LOCALID_PLAYER, _0520
+SandgemTown_WalkToPokemonResearchLabZ848:
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ848
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ848
     WaitMovement
-    GoTo _0283
+    GoTo SandgemTown_ThisIsOurPokemonResearchLab
 
-_0283:
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _02A3
-    GoToIfEq 0x800C, GENDER_FEMALE, _02AC
+SandgemTown_ThisIsOurPokemonResearchLab:
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnThisIsItOurPokemonResearchLab
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasSeeThisIsIsOurPokemonResearchLab
     End
 
-_02A3:
-    Message 1
-    GoTo _02B5
+SandgemTown_DawnThisIsItOurPokemonResearchLab:
+    Message SandgemTown_Text_DawnThisIsItOurPokemonResearchLab
+    GoTo SandgemTown_RivalExitLab
 
-_02AC:
-    Message 3
-    GoTo _02B5
+SandgemTown_LucasSeeThisIsIsOurPokemonResearchLab:
+    Message SandgemTown_Text_LucasSeeThisIsIsOurPokemonResearchLab
+    GoTo SandgemTown_RivalExitLab
 
-_02B5:
-    ScrCmd_168 5, 26, 8, 10, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
-    ClearFlag 0x197
-    AddObject 3
-    ApplyMovement 3, _0554
+SandgemTown_RivalExitLab:
+    LoadDoorAnimation 5, 26, 8, 10, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    ClearFlag FLAG_HIDE_SANDGEM_TOWN_RIVAL
+    AddObject LOCALID_RIVAL
+    ApplyMovement LOCALID_RIVAL, SandgemTown_Movement_RivalExitLab
     WaitMovement
-    ApplyMovement 3, _055C
+    ApplyMovement LOCALID_RIVAL, SandgemTown_Movement_RivalWalkOnSpotFastSouth
     WaitMovement
     PlayFanfare SEQ_SE_DP_WALL_HIT2
-    Message 4
-    ApplyMovement 3, _0564
+    Message SandgemTown_Text_BigThud
+    ApplyMovement LOCALID_RIVAL, SandgemTown_Movement_RivalNoticePlayer
     WaitMovement
-    CallCommonScript 0x7FA
+    Common_SetRivalBGM
     BufferRivalName 0
     BufferPlayerName 1
-    Message 5
+    Message SandgemTown_Text_OhItsYouPlayer
     CloseMessage
-    ApplyMovement LOCALID_PLAYER, _0548
-    ApplyMovement 4, _0470
-    ApplyMovement 3, _056C
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWatchRivalLeave
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWatchRivalLeave
+    ApplyMovement LOCALID_RIVAL, SandgemTown_Movement_RivalLeave
     WaitMovement
-    RemoveObject 3
-    CallCommonScript 0x7FB
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0344
-    GoToIfEq 0x800C, GENDER_FEMALE, _0352
+    RemoveObject LOCALID_RIVAL
+    Common_FadeToDefaultMusic2
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnLetsGoInside
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasLetsGoIn
     End
 
-_0344:
+SandgemTown_DawnLetsGoInside:
     BufferCounterpartName 0
-    Message 6
-    GoTo _035E
+    Message SandgemTown_Text_DawnLetsGoInside
+    GoTo SandgemTown_EnterPokemonResearchLab
     End
 
-_0352:
+SandgemTown_LucasLetsGoIn:
     BufferCounterpartName 0
-    Message 7
-    GoTo _035E
+    Message SandgemTown_Text_LucasLetsGoIn
+    GoTo SandgemTown_EnterPokemonResearchLab
 
-_035E:
+SandgemTown_EnterPokemonResearchLab:
     CloseMessage
-    ApplyMovement 4, _045C
-    ApplyMovement LOCALID_PLAYER, _0530
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartEnterLab
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerEnterLab
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
-    RemoveObject 4
-    SetVar 0x4071, 1
-    FadeScreen 6, 1, 0, 0
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
+    RemoveObject LOCALID_COUNTERPART
+    SetVar VAR_SANDGEM_TOWN_STATE, 1
+    FadeScreenOut
     WaitFadeScreen
     Warp MAP_HEADER_SANDGEM_TOWN_POKEMON_RESEARCH_LAB, 0, 7, 15, 0
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     End
 
     .balign 4, 0
-_03AC:
-    MoveAction_075
-    MoveAction_065
+SandgemTown_Movement_CounterpartNoticePlayer:
+    EmoteExclamationMark
+    Delay16
     EndMovement
 
     .balign 4, 0
-_03B8:
-    MoveAction_014 4
-    MoveAction_012
+SandgemTown_Movement_CounterpartWalkToPlayerZ843:
+    WalkNormalWest 4
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
-_03C4:
-    MoveAction_014 2
-    MoveAction_012
-    MoveAction_014
+SandgemTown_Movement_CounterpartWalkToPlayerZ844:
+    WalkNormalWest 2
+    WalkNormalNorth
+    WalkNormalWest
     EndMovement
 
     .balign 4, 0
-_03D4:
-    MoveAction_014 3
+SandgemTown_Movement_CounterpartWalkToPlayerZ845:
+    WalkNormalWest 3
     EndMovement
 
     .balign 4, 0
-_03DC:
-    MoveAction_014 4
-    MoveAction_001
+SandgemTown_Movement_CounterpartWalkToPlayerZ846:
+    WalkNormalWest 4
+    FaceSouth
     EndMovement
 
     .balign 4, 0
-_03E8:
-    MoveAction_014 4
-    MoveAction_013
+SandgemTown_Movement_CounterpartWalkToPlayerZ847:
+    WalkNormalWest 4
+    WalkNormalSouth
     EndMovement
 
     .balign 4, 0
-_03F4:
-    MoveAction_014 4
-    MoveAction_013 2
+SandgemTown_Movement_CounterpartWalkToPlayerZ848:
+    WalkNormalWest 4
+    WalkNormalSouth 2
     EndMovement
 
     .balign 4, 0
-_0400:
-    MoveAction_015 5
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ843:
+    WalkNormalEast 5
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_040C:
-    MoveAction_015 4
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ844:
+    WalkNormalEast 4
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0418:
-    MoveAction_012
-    MoveAction_015 4
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ845:
+    WalkNormalNorth
+    WalkNormalEast 4
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0428:
-    MoveAction_015 2
-    MoveAction_012
-    MoveAction_015 3
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ846:
+    WalkNormalEast 2
+    WalkNormalNorth
+    WalkNormalEast 3
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_043C:
-    MoveAction_012 2
-    MoveAction_015 5
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ847:
+    WalkNormalNorth 2
+    WalkNormalEast 5
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_044C:
-    MoveAction_012 2
-    MoveAction_015 5
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonResearchLabZ848:
+    WalkNormalNorth 2
+    WalkNormalEast 5
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_045C:
-    MoveAction_012
-    MoveAction_014
-    MoveAction_012
-    MoveAction_069
+SandgemTown_Movement_CounterpartEnterLab:
+    WalkNormalNorth
+    WalkNormalWest
+    WalkNormalNorth
+    SetInvisible
     EndMovement
 
     .balign 4, 0
-_0470:
-    MoveAction_062
-    MoveAction_035
+SandgemTown_Movement_CounterpartWatchRivalLeave:
+    Delay4
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
-_047C:
-    MoveAction_063 3
-    MoveAction_001
+SandgemTown_Movement_PlayerFaceCounterpartZ843:
+    Delay8 3
+    FaceSouth
     EndMovement
 
-    .byte 63
-    .byte 0
-    .byte 3
-    .byte 0
-    .byte 33
-    .byte 0
-    .byte 1
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 15
-    .byte 0
-    .byte 4
-    .byte 0
-    .byte 12
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 254
-    .byte 0
-    .byte 0
-    .byte 0
+SandgemTown_UnusedMovement:
+    Delay8 3
+    WalkOnSpotNormalSouth
+    EndMovement
 
-    .balign 4, 0
-_04A0:
-    MoveAction_063 3
-    MoveAction_032
+SandgemTown_UnusedMovement2:
+    WalkNormalEast 4
+    WalkNormalNorth 2
     EndMovement
 
     .balign 4, 0
-_04AC:
-    MoveAction_063 3
-    MoveAction_032
+SandgemTown_Movement_PlayerFaceCounterpartZ846:
+    Delay8 3
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_04B8:
-    MoveAction_063 3
-    MoveAction_032
+SandgemTown_Movement_PlayerFaceCounterpartZ847:
+    Delay8 3
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_04C4:
-    MoveAction_013
-    MoveAction_015 4
-    MoveAction_032
+SandgemTown_Movement_PlayerFaceCounterpartZ848:
+    Delay8 3
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_04D4:
-    MoveAction_015 2
-    MoveAction_015 2
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ843:
+    WalkNormalSouth
+    WalkNormalEast 4
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_04E4:
-    MoveAction_015
-    MoveAction_012
-    MoveAction_015 3
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ844:
+    WalkNormalEast 2
+    WalkNormalEast 2
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_04F8:
-    MoveAction_012
-    MoveAction_015 2
-    MoveAction_012
-    MoveAction_015 2
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ845:
+    WalkNormalEast
+    WalkNormalNorth
+    WalkNormalEast 3
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0510:
-    MoveAction_012 3
-    MoveAction_015 4
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ846:
+    WalkNormalNorth
+    WalkNormalEast 2
+    WalkNormalNorth
+    WalkNormalEast 2
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0520:
-    MoveAction_012 4
-    MoveAction_015 4
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ847:
+    WalkNormalNorth 3
+    WalkNormalEast 4
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0530:
-    MoveAction_063
-    MoveAction_032
-    MoveAction_063 2
-    MoveAction_012 2
-    MoveAction_069
+SandgemTown_Movement_PlayerWalkToPokemonResearchLabZ848:
+    WalkNormalNorth 4
+    WalkNormalEast 4
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0548:
-    MoveAction_063
-    MoveAction_035
+SandgemTown_Movement_PlayerEnterLab:
+    Delay8
+    WalkOnSpotNormalNorth
+    Delay8 2
+    WalkNormalNorth 2
+    SetInvisible
     EndMovement
 
     .balign 4, 0
-_0554:
-    MoveAction_017
+SandgemTown_Movement_PlayerWatchRivalLeave:
+    Delay8
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
-_055C:
-    MoveAction_037 2
+SandgemTown_Movement_RivalExitLab:
+    WalkFastSouth
     EndMovement
 
     .balign 4, 0
-_0564:
-    MoveAction_075
+SandgemTown_Movement_RivalWalkOnSpotFastSouth:
+    WalkOnSpotFastSouth 2
     EndMovement
 
     .balign 4, 0
-_056C:
-    MoveAction_019 2
-    MoveAction_017
-    MoveAction_019 7
+SandgemTown_Movement_RivalNoticePlayer:
+    EmoteExclamationMark
     EndMovement
 
-_057C:
+    .balign 4, 0
+SandgemTown_Movement_RivalLeave:
+    WalkFastEast 2
+    WalkFastSouth
+    WalkFastEast 7
+    EndMovement
+
+SandgemTown_OnFrameExitLab:
     LockAll
-    ScrCmd_168 5, 26, 8, 10, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
-    ClearFlag 0x2C4
-    AddObject 14
-    ApplyMovement 14, _0798
+    LoadDoorAnimation 5, 26, 8, 10, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    ClearFlag FLAG_HIDE_SANDGEM_TOWN_PROF_ROWAN
+    AddObject LOCALID_PROF_ROWAN
+    ApplyMovement LOCALID_PROF_ROWAN, SandgemTown_Movement_ProfRowanExitLab
     WaitMovement
     BufferPlayerName 0
-    Message 8
+    Message SandgemTown_Text_BigPlayer
     CloseMessage
-    ApplyMovement LOCALID_PLAYER, _07AC
-    ApplyMovement 4, _07F8
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerNoticeProfRowan
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartNoticeProfRowan
     WaitMovement
-    Message 9
-    SetVar 0x8004, 0x162
-    SetVar 0x8005, 1
-    CallCommonScript 0x7FC
-    Message 10
+    Message SandgemTown_Text_YouShouldTakeThisAsWell
+    SetVar VAR_0x8004, ITEM_TM27
+    SetVar VAR_0x8005, 1
+    Common_GiveItemQuantity
+    Message SandgemTown_Text_ThatContainsTheMoveReturn
     CloseMessage
-    ApplyMovement 14, _07A0
+    ApplyMovement LOCALID_PROF_ROWAN, SandgemTown_Movement_ProfRowanEnterLab
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
-    RemoveObject 14
-    WaitTime 30, 0x800C
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0610
-    GoToIfEq 0x800C, GENDER_FEMALE, _061D
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
+    RemoveObject LOCALID_PROF_ROWAN
+    WaitTime 30, VAR_RESULT
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnIDidntKnowTheProfessorHadTMs
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasWellIllBeTheProfessorHadTMs
     End
 
-_0610:
-    Message 11
+SandgemTown_DawnIDidntKnowTheProfessorHadTMs:
+    Message SandgemTown_Text_DawnIDidntKnowTheProfessorHadTMs
     CloseMessage
-    GoTo _062A
+    GoTo SandgemTown_CounterpartWillShowYouAround
     End
 
-_061D:
-    Message 12
+SandgemTown_LucasWellIllBeTheProfessorHadTMs:
+    Message SandgemTown_Text_LucasWellIllBeTheProfessorHadTMs
     CloseMessage
-    GoTo _062A
+    GoTo SandgemTown_CounterpartWillShowYouAround
     End
 
-_062A:
-    ApplyMovement LOCALID_PLAYER, _07B8
-    ApplyMovement 4, _0800
+SandgemTown_CounterpartWillShowYouAround:
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerFaceCounterpartSouth
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkNorthToPlayer
     WaitMovement
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _065C
-    GoToIfEq 0x800C, GENDER_FEMALE, _066B
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnIllActAsYourMentor
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasIWantToShowYouAFewThings
     End
 
-_065C:
+SandgemTown_DawnIllActAsYourMentor:
     BufferCounterpartName 0
     BufferPlayerName 1
-    Message 13
-    GoTo _067A
+    Message SandgemTown_Text_DawnIllActAsYourMentor
+    GoTo SandgemTown_WalkToPokemonCenter
 
-_066B:
+SandgemTown_LucasIWantToShowYouAFewThings:
     BufferCounterpartName 0
     BufferPlayerName 1
-    Message 17
-    GoTo _067A
+    Message SandgemTown_Text_LucasIWantToShowYouAFewThings
+    GoTo SandgemTown_WalkToPokemonCenter
 
-_067A:
+SandgemTown_WalkToPokemonCenter:
     CloseMessage
-    CallCommonScript 0x800
-    ApplyMovement 4, _0808
-    ApplyMovement LOCALID_PLAYER, _07C0
+    Common_SetFollowMeBGM
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokemonCenter
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokemonCenter
     WaitMovement
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _06B2
-    GoToIfEq 0x800C, GENDER_FEMALE, _06C1
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnThisIsThePokemonCenter
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasThisIsThePokemonCenter
     End
 
-_06B2:
+SandgemTown_DawnThisIsThePokemonCenter:
     BufferCounterpartName 0
     BufferPlayerName 1
-    Message 14
-    GoTo _06D0
+    Message SandgemTown_Text_DawnThisIsThePokemonCenter
+    GoTo SandgemTown_WalkToPokeMart
 
-_06C1:
+SandgemTown_LucasThisIsThePokemonCenter:
     BufferCounterpartName 0
     BufferPlayerName 1
-    Message 18
-    GoTo _06D0
+    Message SandgemTown_Text_LucasThisIsThePokemonCenter
+    GoTo SandgemTown_WalkToPokeMart
 
-_06D0:
+SandgemTown_WalkToPokeMart:
     CloseMessage
-    ApplyMovement 4, _0814
-    ApplyMovement LOCALID_PLAYER, _07D0
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartWalkToPokeMart
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWalkToPokeMart
     WaitMovement
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0704
-    GoToIfEq 0x800C, GENDER_FEMALE, _0710
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnThisIsThePokeMart
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasThisIsThePokeMart
     End
 
-_0704:
+SandgemTown_DawnThisIsThePokeMart:
     BufferPlayerName 0
-    Message 15
-    GoTo _071C
+    Message SandgemTown_Text_DawnThisIsThePokeMart
+    GoTo SandgemTown_LetYourFamilyKnowYoureHelpingProfRowan
 
-_0710:
+SandgemTown_LucasThisIsThePokeMart:
     BufferPlayerName 0
-    Message 19
-    GoTo _071C
+    Message SandgemTown_Text_LucasThisIsThePokeMart
+    GoTo SandgemTown_LetYourFamilyKnowYoureHelpingProfRowan
 
-_071C:
+SandgemTown_LetYourFamilyKnowYoureHelpingProfRowan:
     CloseMessage
-    ApplyMovement 4, _0820
-    ApplyMovement LOCALID_PLAYER, _07DC
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_CounterpartFacePlayerWest
+    ApplyMovement LOCALID_PLAYER, SandgemTown_PlayerFaceCounterpartEast
     WaitMovement
-    ApplyMovement 4, _0828
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_CounterpartExclamationMark
     WaitMovement
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _075A
-    GoToIfEq 0x800C, GENDER_FEMALE, _0766
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, SandgemTown_DawnLetYourFamilyKnowYoureHelpingProfRowan
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, SandgemTown_LucasLetYourFamilyKnowYoureHelpingProfRowan
     End
 
-_075A:
+SandgemTown_DawnLetYourFamilyKnowYoureHelpingProfRowan:
     BufferPlayerName 1
-    Message 16
-    GoTo _0772
+    Message SandgemTown_Text_DawnLetYourFamilyKnowYoureHelpingProfRowan
+    GoTo SandgemTown_CounterpartLeave
 
-_0766:
+SandgemTown_LucasLetYourFamilyKnowYoureHelpingProfRowan:
     BufferPlayerName 1
-    Message 20
-    GoTo _0772
+    Message SandgemTown_Text_LucasLetYourFamilyKnowYoureHelpingProfRowan
+    GoTo SandgemTown_CounterpartLeave
 
-_0772:
+SandgemTown_CounterpartLeave:
     CloseMessage
-    ApplyMovement 4, _0830
-    ApplyMovement LOCALID_PLAYER, _07E4
+    ApplyMovement LOCALID_COUNTERPART, SandgemTown_Movement_CounterpartLeave
+    ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerWatchCounterpartLeave
     WaitMovement
-    CallCommonScript 0x801
-    RemoveObject 4
-    SetVar 0x4071, 2
+    Common_FadeToDefaultMusic3
+    RemoveObject LOCALID_COUNTERPART
+    SetVar VAR_SANDGEM_TOWN_STATE, 2
     ReleaseAll
     End
 
     .balign 4, 0
-_0798:
-    MoveAction_033
+SandgemTown_Movement_ProfRowanExitLab:
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
-_07A0:
-    MoveAction_032
-    MoveAction_069
+SandgemTown_Movement_ProfRowanEnterLab:
+    WalkOnSpotNormalNorth
+    SetInvisible
     EndMovement
 
     .balign 4, 0
-_07AC:
-    MoveAction_075
-    MoveAction_032
+SandgemTown_Movement_PlayerNoticeProfRowan:
+    EmoteExclamationMark
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_07B8:
-    MoveAction_033
+SandgemTown_Movement_PlayerFaceCounterpartSouth:
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
-_07C0:
-    MoveAction_013
-    MoveAction_015 9
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokemonCenter:
+    WalkNormalSouth
+    WalkNormalEast 9
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_07D0:
-    MoveAction_015 10
-    MoveAction_032
+SandgemTown_Movement_PlayerWalkToPokeMart:
+    WalkNormalEast 10
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_07DC:
-    MoveAction_035
+SandgemTown_PlayerFaceCounterpartEast:
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
-_07E4:
-    MoveAction_063
-    MoveAction_033
-    MoveAction_062
-    MoveAction_034
+SandgemTown_Movement_PlayerWatchCounterpartLeave:
+    Delay8
+    WalkOnSpotNormalSouth
+    Delay4
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
-_07F8:
-    MoveAction_075
+SandgemTown_Movement_CounterpartNoticeProfRowan:
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
-_0800:
-    MoveAction_012
+SandgemTown_Movement_CounterpartWalkNorthToPlayer:
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
-_0808:
-    MoveAction_015 10
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokemonCenter:
+    WalkNormalEast 10
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0814:
-    MoveAction_015 10
-    MoveAction_032
+SandgemTown_Movement_CounterpartWalkToPokeMart:
+    WalkNormalEast 10
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0820:
-    MoveAction_034
+SandgemTown_CounterpartFacePlayerWest:
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
-_0828:
-    MoveAction_075
+SandgemTown_CounterpartExclamationMark:
+    EmoteExclamationMark
     EndMovement
 
     .balign 4, 0
-_0830:
-    MoveAction_013
-    MoveAction_014 5
-    MoveAction_012 10
+SandgemTown_Movement_CounterpartLeave:
+    WalkNormalSouth
+    WalkNormalWest 5
+    WalkNormalNorth 10
     EndMovement
 
-_0840:
+SandgemTown_Youngster:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 21
+    Message SandgemTown_Text_PokemonAreSoCool
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0853:
+SandgemTown_PokemonBreederM:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 22
+    Message SandgemTown_Text_TheThingYouHaveItsAPokedexIsntIt
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0866:
+SandgemTown_PokemonBreederF:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 23
+    Message SandgemTown_Text_IdBetterSaveThis
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0879:
+SandgemTown_Unused:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 24
+    Message SandgemTown_Text_ProfessorRowansComeBackToTown
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_088C:
-    ScrCmd_036 25, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+SandgemTown_MapSign:
+    ShowMapSign SandgemTown_Text_MapSign
     End
 
-_08A3:
-    ScrCmd_036 26, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+SandgemTown_LandmarkSignPokemonResearchLab:
+    ShowLandmarkSign SandgemTown_Text_PokemonResearchLabSign
     End
 
-_08BA:
+SandgemTown_LandmarkSignCounterpartMailbox:
     BufferCounterpartName 0
-    ScrCmd_036 27, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign SandgemTown_Text_CounterpartMailbox
     End
 
-_08D4:
-    ScrCmd_036 28, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+SandgemTown_LandmarkSignPokeMart:
+    ShowLandmarkSign SandgemTown_Text_PokeMartSign
     End
 
-_08EB:
-    ScrCmd_036 29, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+SandgemTown_LandmarkSignPokemonCenter:
+    ShowLandmarkSign SandgemTown_Text_PokemonCenterSign
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

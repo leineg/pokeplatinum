@@ -13,7 +13,7 @@
             "level": 50,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,7 +22,7 @@
             "level": 50,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -31,7 +31,7 @@
             "level": 50,
             "item": null,
             "moves": null,
-            "power": 100,
+            "iv_scale": 100,
             "ball_seal": 0
         },
         {
@@ -40,8 +40,22 @@
             "level": 50,
             "item": null,
             "moves": null,
-            "power": 150,
+            "iv_scale": 150,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I’m always with my Pokémon.\r",
+                "Actually, you’re always with your\n",
+                "Pokémon too, aren’t you?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "I’m so beyond bummed out now...\n"
         }
     ]
 }

@@ -2,11 +2,12 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 3,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3339,
+            "id": "HEARTHOME_CITY_DP_GYM_TRAINER_ROOM_3_SCHOOL_KID_CHANCE",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_SCHOOL_KID_CHANCE",
             "initial_dir": 1,
             "data": [
                 4
@@ -22,7 +23,7 @@
         {
             "x": 7,
             "z": 10,
-            "dest_header_id": 93,
+            "dest_header_id": "MAP_HEADER_HEARTHOME_CITY_DP_GYM_ELEVATOR_ROOM_1",
             "dest_warp_id": 0
         }
     ],

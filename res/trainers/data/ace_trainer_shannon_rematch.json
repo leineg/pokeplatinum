@@ -20,7 +20,7 @@
                 "MOVE_PETAL_DANCE",
                 "MOVE_SUNNY_DAY"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -34,7 +34,7 @@
                 "MOVE_AQUA_TAIL",
                 "MOVE_AQUA_RING"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -48,8 +48,24 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_BOUNCE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Ace Trainers always work to improve\n",
+                "their natural-born talents.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "I see...\n",
+                "I have to concede defeat.\n"
+            ]
         }
     ]
 }

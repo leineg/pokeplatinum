@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/eterna_city_east_house.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0021
@@ -33,11 +32,11 @@ _0034:
     LockAll
     FacePlayer
     Message 2
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _006F
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _006F
     Message 3
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_NO, _006F
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_NO, _006F
     Message 4
     GoTo _007A
     End
@@ -53,5 +52,4 @@ _007A:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

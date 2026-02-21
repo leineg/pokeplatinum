@@ -2,11 +2,12 @@
     "bg_events": [],
     "object_events": [
         {
-            "graphics_id": 3,
-            "movement_type": 14,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3340,
+            "id": "SUNYSHORE_CITY_GYM_ROOM_2_SCHOOL_KID_FORREST",
+            "graphics_id": "OBJ_EVENT_GFX_SCHOOL_KID_M",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_SCHOOL_KID_FORREST",
             "initial_dir": 0,
             "data": [
                 3
@@ -18,11 +19,12 @@
             "y": 0
         },
         {
-            "graphics_id": 10,
-            "movement_type": 15,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3300,
+            "id": "SUNYSHORE_CITY_GYM_ROOM_2_GUITARIST_JERRY",
+            "graphics_id": "OBJ_EVENT_GFX_GUITARIST",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_GUITARIST_JERRY",
             "initial_dir": 1,
             "data": [
                 2
@@ -34,11 +36,12 @@
             "y": 0
         },
         {
-            "graphics_id": 71,
-            "movement_type": 45,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3330,
+            "id": "SUNYSHORE_CITY_GYM_ROOM_2_POKE_KID_MEGHAN",
+            "graphics_id": "OBJ_EVENT_GFX_PIKACHU",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_AND_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_POKE_KID_MEGHAN",
             "initial_dir": 1,
             "data": [
                 1
@@ -54,13 +57,13 @@
         {
             "x": 9,
             "z": 21,
-            "dest_header_id": 154,
+            "dest_header_id": "MAP_HEADER_SUNYSHORE_CITY_GYM_ROOM_1",
             "dest_warp_id": 1
         },
         {
             "x": 9,
             "z": 2,
-            "dest_header_id": 156,
+            "dest_header_id": "MAP_HEADER_SUNYSHORE_CITY_GYM_ROOM_3",
             "dest_warp_id": 0
         }
     ],
@@ -72,7 +75,7 @@
             "y": 0,
             "width": 1,
             "length": 1,
-            "var": 16384,
+            "var": "VAR_MAP_LOCAL_0",
             "value": 0
         },
         {
@@ -82,7 +85,7 @@
             "y": 0,
             "width": 1,
             "length": 1,
-            "var": 16384,
+            "var": "VAR_MAP_LOCAL_0",
             "value": 0
         },
         {
@@ -92,7 +95,7 @@
             "y": 0,
             "width": 1,
             "length": 1,
-            "var": 16384,
+            "var": "VAR_MAP_LOCAL_0",
             "value": 0
         }
     ]

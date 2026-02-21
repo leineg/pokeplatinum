@@ -1,47 +1,46 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/twinleaf_town_southwest_house.h"
 
-    .data
 
-    ScriptEntry _000A
-    ScriptEntry _0033
+    ScriptEntry TwinleafTownSouthwestHouse_ExpertF
+    ScriptEntry TwinleafTownSouthwestHouse_Twin
     ScriptEntryEnd
 
-_000A:
+TwinleafTownSouthwestHouse_ExpertF:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 144, _0028
-    Message 0
+    GoToIfSet FLAG_HAS_POKEDEX, TwinleafTownSouthwestHouse_ProfRowanGaveYouAPokedexDidHe
+    Message TwinleafTownSouthwestHouse_Text_ThePokemonProfessorReturned
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0028:
-    Message 1
+TwinleafTownSouthwestHouse_ProfRowanGaveYouAPokedexDidHe:
+    Message TwinleafTownSouthwestHouse_Text_ProfRowanGaveYouAPokedexDidHe
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0033:
+TwinleafTownSouthwestHouse_Twin:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
     BufferPlayerName 0
-    GoToIfSet 144, _0054
-    Message 2
+    GoToIfSet FLAG_HAS_POKEDEX, TwinleafTownSouthwestHouse_DoYouThinkICanBeFriendsWithPokemon
+    Message TwinleafTownSouthwestHouse_Text_IWantACutePokemon
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0054:
-    Message 3
+TwinleafTownSouthwestHouse_DoYouThinkICanBeFriendsWithPokemon:
+    Message TwinleafTownSouthwestHouse_Text_DoYouThinkICanBeFriendsWithPokemon
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

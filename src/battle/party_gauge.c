@@ -4,22 +4,20 @@
 #include <string.h>
 
 #include "constants/heap.h"
-#include "generated/sdat.h"
 
-#include "struct_defs/battle_io.h"
-
-#include "battle/ov16_0223DF00.h"
+#include "battle/battle_system.h"
+#include "battle/message_defs.h"
 
 #include "assert.h"
 #include "enums.h"
 #include "heap.h"
 #include "narc.h"
 #include "palette.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "sprite_system.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
-#include "unk_02005474.h"
 
 typedef struct {
     ManagedSprite *managedSprite;
@@ -80,7 +78,7 @@ static void ShowPokeballsStartOfBattleTask(SysTask *task, void *data);
 static void ShowPokeballsMidBattleTask(SysTask *task, void *data);
 static void HidePokeballsStartOfBattleTask(SysTask *task, void *data);
 static void HidePokeballsMidBattleTask(SysTask *task, void *data);
-static int PokeballsAnimationFrame(enum PartyGaugeBallStatus status, enum PartyGaugeSide side);
+static int PokeballsAnimationFrame(enum PartyStockStatus status, enum PartyGaugeSide side);
 static int FlippedAnimationFrame(int frame);
 static PartyGauge *NewPartyGauge(void);
 static void FreePartyGauge(PartyGauge *partyGauge);
@@ -220,7 +218,7 @@ void PartyGauge_FreeGraphics(SpriteManager *spriteMan)
 
 static PartyGauge *NewPartyGauge()
 {
-    PartyGauge *gauge = Heap_AllocFromHeap(HEAP_ID_BATTLE, sizeof(PartyGauge));
+    PartyGauge *gauge = Heap_Alloc(HEAP_ID_BATTLE, sizeof(PartyGauge));
     MI_CpuClear8(gauge, sizeof(PartyGauge));
     return gauge;
 }
@@ -228,7 +226,7 @@ static PartyGauge *NewPartyGauge()
 static void FreePartyGauge(PartyGauge *gauge)
 {
     GF_ASSERT(gauge->arrow.task == NULL);
-    Heap_FreeToHeap(gauge);
+    Heap_Free(gauge);
 }
 
 PartyGauge *PartyGauge_Show(u8 ballStatus[], enum PartyGaugeSide side, enum ShowPartyGaugeType showType, enum PartyGaugePosition pos, SpriteSystem *spriteSys, SpriteManager *spriteMan)
@@ -447,7 +445,7 @@ static void HideArrowTask(SysTask *task, void *data)
     }
 }
 
-enum {
+enum ShowPokeballsState {
     SHOW_POKEBALLS_INIT = 0,
     SHOW_POKEBALLS_DELAY,
     SHOW_POKEBALLS_DRAW,
@@ -672,7 +670,7 @@ static void HidePokeballs(PartyGaugePokeballs *pokeballs, int slot, enum HidePar
     }
 }
 
-enum {
+enum HidePokeballsState {
     HIDE_POKEBALLS_INIT = 0,
     HIDE_POKEBALLS_DELAY,
     HIDE_POKEBALLS_FADE,
@@ -760,20 +758,20 @@ static void HidePokeballsMidBattleTask(SysTask *task, void *data)
     }
 }
 
-static int PokeballsAnimationFrame(enum PartyGaugeBallStatus status, enum PartyGaugeSide side)
+static int PokeballsAnimationFrame(enum PartyStockStatus status, enum PartyGaugeSide side)
 {
     switch (status) {
-    case BALL_STATUS_NO_MON:
+    case STOCK_STATUS_NO_MON:
     default:
         return PGANM_POKEBALL_EMPTY_SLOT;
 
-    case BALL_STATUS_MON_ALIVE:
+    case STOCK_STATUS_MON_ALIVE:
         return (side == PARTY_GAUGE_OURS) ? PGANM_POKEBALL_HEALTHY_OURS : PGANM_POKEBALL_HEALTHY_THEIRS;
 
-    case BALL_STATUS_MON_FAINTED:
+    case STOCK_STATUS_MON_FAINTED:
         return (side == PARTY_GAUGE_OURS) ? PGANM_POKEBALL_FAINTED_OURS : PGANM_POKEBALL_FAINTED_THEIRS;
 
-    case BALL_STATUS_HAS_STATUS_CONDITION:
+    case STOCK_STATUS_HAS_STATUS_CONDITION:
         return (side == PARTY_GAUGE_OURS) ? PGANM_POKEBALL_STATUSED_OURS : PGANM_POKEBALL_STATUSED_THEIRS;
     }
 }

@@ -1,172 +1,172 @@
 #include "macros/scrcmd.inc"
 #include "generated/hidden_locations.h"
 #include "res/text/bank/pokemon_league_hall_of_fame.h"
+#include "res/field/events/events_pokemon_league_hall_of_fame.h"
 
-    .data
 
-    ScriptEntry _0006
+    ScriptEntry PokemonLeagueHallOfFame_OnFrame
     ScriptEntryEnd
 
-_0006:
+PokemonLeagueHallOfFame_OnFrame:
     LockAll
-    ApplyMovement LOCALID_PLAYER, _0124
+    ApplyMovement LOCALID_PLAYER, PokemonLeague_HallOfFame_Movement_WalkUp
     WaitMovement
-    ApplyMovement 1, _0134
+    ApplyMovement LOCALID_PROF_ROWAN, PokemonLeague_HallOfFame_Movement_TurnAroundInPlace
     WaitMovement
-    ScrCmd_28F 0x800C
-    CallIfEq 0x800C, 0, _0111
-    CallIfNe 0x800C, 0, _0119
+    GetLeagueVictories VAR_RESULT
+    CallIfEq VAR_RESULT, 0, PokemonLeagueHallOfFame_FirstVictoryMessages
+    CallIfNe VAR_RESULT, 0, PokemonLeagueHallOfFame_RepeatVictoryMessages
     CloseMessage
-    ApplyMovement 1, _0144
-    ApplyMovement 0, _015C
+    ApplyMovement LOCALID_PROF_ROWAN, PokemonLeagueHallOfFame_Movement_RowanFacePlayer
+    ApplyMovement LOCALID_CYNTHIA, PokemonLeagueHallOfFame_Movement_CynthiaFacePlayer
     WaitMovement
-    WaitTime 15, 0x800C
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0074
-    GoToIfEq 0x800C, GENDER_FEMALE, _0080
+    WaitTime 15, VAR_RESULT
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, PokemonLeagueHallOfFame_WelcomeToTheHallOfFameMale
+    GoToIfEq VAR_RESULT, GENDER_FEMALE, PokemonLeagueHallOfFame_WelcomeToTheHallOfFameFemale
     End
 
-_0074:
+PokemonLeagueHallOfFame_WelcomeToTheHallOfFameMale:
     BufferPlayerName 0
-    Message 4
-    GoTo _008C
+    Message PokemonLeagueHallOfFame_Text_WelcomeToTheHallOfFameMale
+    GoTo PokemonLeagueHallOfFame_EnterHallOfFame
 
-_0080:
+PokemonLeagueHallOfFame_WelcomeToTheHallOfFameFemale:
     BufferPlayerName 0
-    Message 5
-    GoTo _008C
+    Message PokemonLeagueHallOfFame_Text_WelcomeToTheHallOfFameFemale
+    GoTo PokemonLeagueHallOfFame_EnterHallOfFame
 
-_008C:
+PokemonLeagueHallOfFame_EnterHallOfFame:
     CloseMessage
-    ApplyMovement LOCALID_PLAYER, _012C
-    ApplyMovement 1, _014C
-    ApplyMovement 0, _0164
+    ApplyMovement LOCALID_PLAYER, PokemonLeagueHallOfFame_Movement_PlayerApproachMachine
+    ApplyMovement LOCALID_PROF_ROWAN, PokemonLeagueHallOfFame_Movement_RowanFaceMachine
+    ApplyMovement LOCALID_CYNTHIA, PokemonLeagueHallOfFame_Movement_CynthiaFaceMachine
     WaitMovement
-    Message 6
+    Message PokemonLeagueHallOfFame_Text_TimeToRecordYourNameAndYourPokemon
     CloseMessage
     SetFlag FLAG_UNLOCKED_VS_SEEKER_LVL_4
-    ScrCmd_22D 2, 0x800C
-    CallIfEq 0x800C, 1, _010A
-    CallIfEq 0x40F4, 0, _0102
-    GetPartyCount 0x800C
-    ScrCmd_25A 0x800C
-    FadeScreen 6, 3, 0, 0
+    GetNationalDexEnabled VAR_RESULT
+    CallIfEq VAR_RESULT, TRUE, PokemonLeagueHallOfFame_EnableHiddenLocationSpringPath
+    CallIfEq VAR_UNK_0x40F4, 0, _0102
+    GetPartyCount VAR_RESULT
+    PlayHallOfFameHealingAnimation VAR_RESULT
+    FadeScreenOut FADE_SCREEN_SPEED_MEDIUM
     WaitFadeScreen
-    ScrCmd_260 24
-    Call _0174
-    ScrCmd_0B0
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_HALL_OF_FAME_ENTRY
+    Call PokemonLeagueHallOfFame_SetHallOfFameVictoryFlagsAndVars
+    ClearGame
     ReturnToField
-    FadeScreen 6, 1, 1, 0
+    FadeScreenIn
     WaitFadeScreen
     ReleaseAll
     End
 
 _0102:
-    SetVar 0x40F4, 1
+    SetVar VAR_UNK_0x40F4, 1
     Return
 
-_010A:
+PokemonLeagueHallOfFame_EnableHiddenLocationSpringPath:
     EnableHiddenLocation HIDDEN_LOCATION_SPRING_PATH
     Return
 
-_0111:
-    Message 0
-    Message 2
+PokemonLeagueHallOfFame_FirstVictoryMessages:
+    Message PokemonLeagueHallOfFame_Text_BeenAWhileSinceIEnteredThisRoom
+    Message PokemonLeagueHallOfFame_Text_LastTimeWasLongTimeAgo
     Return
 
-_0119:
-    Message 1
-    Message 3
+PokemonLeagueHallOfFame_RepeatVictoryMessages:
+    Message PokemonLeagueHallOfFame_Text_AlwaysStraighterThanUsual
+    Message PokemonLeagueHallOfFame_Text_ThisRoomIsALegacyToPokemonAndTrainers
     Return
 
     .balign 4, 0
-_0124:
-    MoveAction_012 8
+PokemonLeague_HallOfFame_Movement_WalkUp:
+    WalkNormalNorth 8
     EndMovement
 
     .balign 4, 0
-_012C:
-    MoveAction_012 2
+PokemonLeagueHallOfFame_Movement_PlayerApproachMachine:
+    WalkNormalNorth 2
     EndMovement
 
     .balign 4, 0
-_0134:
-    MoveAction_032
-    MoveAction_063 2
-    MoveAction_035
+PokemonLeague_HallOfFame_Movement_TurnAroundInPlace:
+    WalkOnSpotNormalNorth
+    Delay8 2
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
-_0144:
-    MoveAction_033
+PokemonLeagueHallOfFame_Movement_RowanFacePlayer:
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
-_014C:
-    MoveAction_063
-    MoveAction_035
-    MoveAction_032
+PokemonLeagueHallOfFame_Movement_RowanFaceMachine:
+    Delay8
+    WalkOnSpotNormalEast
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_015C:
-    MoveAction_033
+PokemonLeagueHallOfFame_Movement_CynthiaFacePlayer:
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
-_0164:
-    MoveAction_063
-    MoveAction_034
-    MoveAction_032
+PokemonLeagueHallOfFame_Movement_CynthiaFaceMachine:
+    Delay8
+    WalkOnSpotNormalWest
+    WalkOnSpotNormalNorth
     EndMovement
 
-_0174:
-    ClearFlag 0x1D1
-    ClearFlag 0x98B
-    CallIfUnset 208, _023C
-    CallIfUnset 209, _0244
-    CallIfUnset 0x120, _024C
-    CallIfUnset 0x11B, _0263
-    CallIfUnset FLAG_AZELF_CAUGHT, PokemonLeagueHallOfFame_ClearFlagAzelfDisappeared
-    CallIfUnset FLAG_UXIE_CAUGHT, PokemonLeagueHallOfFame_ClearFlagUxieDisappeared
-    CallIfUnset 0x121, _0287
-    CallIfEq VAR_ROAMING_MESPRIT_STATE, 2, PokemonLeagueHallOfFame_ClearFlagMespritDisappeared
-    CallIfEq 0x4058, 2, _0299
-    CallIfEq 0x405E, 2, _02A5
-    CallIfEq 0x405F, 2, _02AD
-    CallIfEq 0x4060, 2, _02B5
-    CallIfEq 0x410F, 0, _0234
-    ClearFlag 0x177
-    CallIfUnset 185, _02BD
-    ClearFlag 0x186
-    ClearFlag 0x124
-    SetFlag 0x2A0
+PokemonLeagueHallOfFame_SetHallOfFameVictoryFlagsAndVars:
+    ClearFlag FLAG_HIDE_DAY_CARE_GYM_GUIDE
+    ClearFlag FLAG_ALT_MUSIC_CHAMPION_ROOM
+    CallIfUnset FLAG_CAUGHT_DIALGA, PokemonLeagueHallOfFame_ResetSpearPillarDialgaState
+    CallIfUnset FLAG_CAUGHT_PALKIA, PokemonLeagueHallOfFame_ResetSpearPillarPalkiaState
+    CallIfUnset FLAG_CAUGHT_HEATRAN, PokemonLeagueHallOfFame_TryShowStarkMountainHeatran
+    CallIfUnset FLAG_CAUGHT_REGIGIGAS, PokemonLeagueHallOfFame_TryShowSnowpointTempleRegigigas
+    CallIfUnset FLAG_CAUGHT_AZELF, PokemonLeagueHallOfFame_ClearFlagAzelfDisappeared
+    CallIfUnset FLAG_CAUGHT_UXIE, PokemonLeagueHallOfFame_ClearFlagUxieDisappeared
+    CallIfUnset FLAG_CAUGHT_GIRATINA, PokemonLeagueHallOfFame_ShowTurnbackCaveGiratina
+    CallIfEq VAR_ROAMING_MESPRIT_STATE, ROAMER_STATE_DEFEATED, PokemonLeagueHallOfFame_ResetRoamingMesprit
+    CallIfEq VAR_ROAMING_CRESSELIA_STATE, ROAMER_STATE_DEFEATED, PokemonLeagueHallOfFame_ResetRoamingCresselia
+    CallIfEq VAR_ROAMING_MOLTRES_STATE, ROAMER_STATE_DEFEATED, PokemonLeagueHallOfFame_ResetRoamingMoltres
+    CallIfEq VAR_ROAMING_ZAPDOS_STATE, ROAMER_STATE_DEFEATED, PokemonLeagueHallOfFame_ResetRoamingZapdos
+    CallIfEq VAR_ROAMING_ARTICUNO_STATE, ROAMER_STATE_DEFEATED, PokemonLeagueHallOfFame_ResetRoamingArticuno
+    CallIfEq VAR_PLAYER_HOUSE_POSTGAME_STATE, 0, PokemonLeagueHallOfFame_IncreasePlayerHousePostgameState
+    ClearFlag FLAG_HIDE_SANDGEM_TOWN_COUNTERPART
+    CallIfUnset FLAG_VEILSTONE_STORE_B1F_SPOKEN_TO_PROF_ROWAN, PokemonLeagueHallOfFame_ShowVeilstoneStoreB1FProfRowan
+    ClearFlag FLAG_HIDE_CANALAVE_LIBRARY_1F_LUCIAN
+    ClearFlag FLAG_TALKED_TO_CELESTIC_TOWN_CAVE_CYNTHIA
+    SetFlag FLAG_HIDE_SENDOFF_SPRING_CYNTHIA
     Return
 
-_0234:
-    SetVar 0x410F, 1
+PokemonLeagueHallOfFame_IncreasePlayerHousePostgameState:
+    SetVar VAR_PLAYER_HOUSE_POSTGAME_STATE, 1
     Return
 
-_023C:
-    SetVar 0x40C4, 0
+PokemonLeagueHallOfFame_ResetSpearPillarDialgaState:
+    SetVar VAR_SPEAR_PILLAR_DIALGA_STATE, 0
     Return
 
-_0244:
-    SetVar 0x40C5, 0
+PokemonLeagueHallOfFame_ResetSpearPillarPalkiaState:
+    SetVar VAR_SPEAR_PILLAR_PALKIA_STATE, 0
     Return
 
-_024C:
-    GoToIfUnset 0x125, _0261
-    ClearFlag 0x1DD
-    SetVar 0x409E, 1
-_0261:
+PokemonLeagueHallOfFame_TryShowStarkMountainHeatran:
+    GoToIfUnset FLAG_CAUGHT_MESPRIT, PokemonLeagueHallOfFame_DontShowStarkMountainHeatran
+    ClearFlag FLAG_HIDE_STARK_MOUNTAIN_ROOM_3_HEATRAN
+    SetVar VAR_UNK_0x409E, 1
+PokemonLeagueHallOfFame_DontShowStarkMountainHeatran:
     Return
 
-_0263:
-    ScrCmd_22D 2, 0x800C
-    GoToIfEq 0x800C, 0, _0279
-    ClearFlag 0x243
-_0279:
+PokemonLeagueHallOfFame_TryShowSnowpointTempleRegigigas:
+    GetNationalDexEnabled VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, PokemonLeagueHallOfFame_DontShowSnowpointTempleRegigigas
+    ClearFlag FLAG_HIDE_SNOWPOINT_TEMPLE_B5F_REGIGIGAS
+PokemonLeagueHallOfFame_DontShowSnowpointTempleRegigigas:
     Return
 
 PokemonLeagueHallOfFame_ClearFlagAzelfDisappeared:
@@ -177,34 +177,34 @@ PokemonLeagueHallOfFame_ClearFlagUxieDisappeared:
     ClearFlag FLAG_UXIE_DISAPPEARED
     Return
 
-_0287:
-    ClearFlag 0x250
+PokemonLeagueHallOfFame_ShowTurnbackCaveGiratina:
+    ClearFlag FLAG_HIDE_TURNBACK_CAVE_GIRATINA_ROOM_GIRATINA
     Return
 
-PokemonLeagueHallOfFame_ClearFlagMespritDisappeared:
+PokemonLeagueHallOfFame_ResetRoamingMesprit:
     ClearFlag FLAG_MESPRIT_DISAPPEARED
-    SetVar VAR_ROAMING_MESPRIT_STATE, 3
+    SetVar VAR_ROAMING_MESPRIT_STATE, ROAMER_STATE_RESET
     Return
 
-_0299:
-    ClearFlag 0x24F
-    SetVar 0x4058, 3
+PokemonLeagueHallOfFame_ResetRoamingCresselia:
+    ClearFlag FLAG_HIDE_FULLMOON_ISLAND_FOREST_CRESSELIA
+    SetVar VAR_ROAMING_CRESSELIA_STATE, ROAMER_STATE_RESET
     Return
 
-_02A5:
-    SetVar 0x405E, 3
+PokemonLeagueHallOfFame_ResetRoamingMoltres:
+    SetVar VAR_ROAMING_MOLTRES_STATE, ROAMER_STATE_RESET
     Return
 
-_02AD:
-    SetVar 0x405F, 3
+PokemonLeagueHallOfFame_ResetRoamingZapdos:
+    SetVar VAR_ROAMING_ZAPDOS_STATE, ROAMER_STATE_RESET
     Return
 
-_02B5:
-    SetVar 0x4060, 3
+PokemonLeagueHallOfFame_ResetRoamingArticuno:
+    SetVar VAR_ROAMING_ARTICUNO_STATE, ROAMER_STATE_RESET
     Return
 
-_02BD:
-    ClearFlag 0x185
+PokemonLeagueHallOfFame_ShowVeilstoneStoreB1FProfRowan:
+    ClearFlag FLAG_VEILSTONE_STORE_B1F_HIDE_PROF_ROWAN
     Return
 
-    .byte 0
+    .balign 4, 0

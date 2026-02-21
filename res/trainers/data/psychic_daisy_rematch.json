@@ -14,7 +14,7 @@
             "level": 58,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -23,8 +23,24 @@
             "level": 62,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Right after this, you will hurl a Poké\n",
+                "Ball in an astonishingly cool manner!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Right after this, I have to pay\n",
+                "out your prize money...\n"
+            ]
         }
     ]
 }

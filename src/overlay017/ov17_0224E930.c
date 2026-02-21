@@ -69,9 +69,7 @@ void ov17_0224E990(UnkStruct_ov17_0224DF54 *param0, UnkStruct_ov17_0224E958 *par
     s32 v7;
     int v8;
     u32 v9;
-    int v10;
-
-    v10 = ov17_0223F0BC(param0->unk_A3C.unk_2F, 4);
+    int v10 = ov17_0223F0BC(param0->unk_A3C.unk_2F, 4);
 
     if (param0->unk_A3C.unk_2F == 0) {
         v9 = (param3 / 4 + 10000 / 2) / 10000;
@@ -79,7 +77,7 @@ void ov17_0224E990(UnkStruct_ov17_0224DF54 *param0, UnkStruct_ov17_0224E958 *par
         v9 = (param3 / 6 + 10000 / 2) / 10000;
     }
 
-    switch (param0->unk_00->unk_00.unk_110) {
+    switch (param0->unk_00->unk_00.contestRank) {
     case 0:
     case 1:
         v8 = 0;
@@ -137,7 +135,7 @@ void ov17_0224E990(UnkStruct_ov17_0224DF54 *param0, UnkStruct_ov17_0224E958 *par
         }
     }
 
-    v4 = ov17_0224EBE0(param0->unk_00->unk_00.unk_110, param1->unk_39);
+    v4 = ov17_0224EBE0(param0->unk_00->unk_00.contestRank, param1->unk_39);
 
     for (v0 = 0; v0 < param0->unk_A3C.unk_2E; v0++) {
         s32 v11;
@@ -159,7 +157,7 @@ void ov17_0224E990(UnkStruct_ov17_0224DF54 *param0, UnkStruct_ov17_0224E958 *par
     {
         int v12;
 
-        v12 = Unk_ov17_02254A84[param0->unk_00->unk_00.unk_110];
+        v12 = Unk_ov17_02254A84[param0->unk_00->unk_00.contestRank];
         param1->unk_00_val1.unk_20[0] = 0 + (sub_02094EA0(param1->unk_30, &param1->unk_30) % 4);
 
         for (v0 = 1; v0 < param0->unk_A3C.unk_2E; v0++) {
@@ -330,9 +328,7 @@ void ov17_0224ED8C(int param0, UnkStruct_ov17_0224DF54 *param1, UnkStruct_ov17_0
 static void ov17_0224EDE0(UnkStruct_ov17_0224DF54 *param0, UnkStruct_ov17_0224E958 *param1, u32 param2, u32 param3, u32 param4, const UnkStruct_ov17_02253084 *param5, UnkStruct_ov17_0224D69C *param6)
 {
     UnkStruct_ov17_0224EDE0 v0;
-    u32 v1;
-
-    v1 = param4 / 2;
+    u32 v1 = param4 / 2;
 
     if ((param1->unk_38 != 0) || (param1->unk_36 >= param5->unk_05)) {
         return;
@@ -401,8 +397,8 @@ static void ov17_0224EE90(UnkStruct_ov17_0224DF54 *param0, UnkStruct_ov17_0224E9
             v9 = param0->unk_1AD4[param1->unk_36 - 1].unk_03;
         }
 
-        v6 = ov17_0224EC24(param0->unk_00->unk_00.unk_110, param0->unk_00->unk_00.unk_10F, param1->unk_39, v1->unk_06, v10, param0->unk_A3C.unk_2F, param0->unk_1B26);
-        v7 = ov17_0224ECC4(param0->unk_00->unk_00.unk_110, param0->unk_00->unk_00.unk_10F, param1->unk_39, v1->unk_06, v10, v1->unk_03, v9, param0->unk_1B26);
+        v6 = ov17_0224EC24(param0->unk_00->unk_00.contestRank, param0->unk_00->unk_00.contestType, param1->unk_39, v1->unk_06, v10, param0->unk_A3C.unk_2F, param0->unk_1B26);
+        v7 = ov17_0224ECC4(param0->unk_00->unk_00.contestRank, param0->unk_00->unk_00.contestType, param1->unk_39, v1->unk_06, v10, v1->unk_03, v9, param0->unk_1B26);
         v4 = (v1->unk_06 * v2 + 10000 / 2) / 10000;
         v5 = (sub_02094EA0(param1->unk_30, &param1->unk_30) % (2 + v6)) - (1 + v6 / 2);
 

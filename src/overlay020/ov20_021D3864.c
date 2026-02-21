@@ -16,7 +16,7 @@
 #include "message.h"
 #include "narc.h"
 #include "sprite.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "text.h"
 
 typedef struct UnkStruct_ov20_021D3980_t {
@@ -31,7 +31,7 @@ static void ov20_021D3980(UnkStruct_ov20_021D3980 *param0);
 
 UnkStruct_ov20_021D3980 *ov20_021D3864(UnkStruct_ov20_021D2128 *param0, const UnkStruct_ov20_021D16E8 *param1, const UnkStruct_020998EC *param2)
 {
-    UnkStruct_ov20_021D3980 *v0 = Heap_AllocFromHeap(35, sizeof(UnkStruct_ov20_021D3980));
+    UnkStruct_ov20_021D3980 *v0 = Heap_Alloc(HEAP_ID_35, sizeof(UnkStruct_ov20_021D3980));
 
     v0->unk_00 = param0;
     v0->unk_04 = param1;
@@ -47,7 +47,7 @@ void ov20_021D3880(UnkStruct_ov20_021D3980 *param0)
         Sprite_Delete(param0->unk_0C);
     }
 
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 void ov20_021D3898(UnkStruct_ov20_021D3980 *param0, NARC *param1)
@@ -58,12 +58,10 @@ void ov20_021D3898(UnkStruct_ov20_021D3980 *param0, NARC *param1)
     static const WindowTemplate v1 = {
         3, 19, 6, 10, 2, 13, 84
     };
-    BgConfig *v2;
+    BgConfig *v2 = ov20_021D2E04(param0->unk_00);
 
-    v2 = ov20_021D2E04(param0->unk_00);
-
-    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 4, v2, 3, 0, 0, 1, 35);
-    Graphics_LoadTilesToBgLayerFromOpenNARC(param1, 5, v2, 3, 0, 0, 1, 35);
+    Graphics_LoadTilemapToBgLayerFromOpenNARC(param1, 4, v2, 3, 0, 0, 1, HEAP_ID_35);
+    Graphics_LoadTilesToBgLayerFromOpenNARC(param1, 5, v2, 3, 0, 0, 1, HEAP_ID_35);
 
     ov20_021D390C(v2, &v0, 0);
     ov20_021D390C(v2, &v1, 1);
@@ -75,19 +73,19 @@ void ov20_021D3898(UnkStruct_ov20_021D3980 *param0, NARC *param1)
 static void ov20_021D390C(BgConfig *param0, const WindowTemplate *param1, u32 param2)
 {
     Window v0;
-    Strbuf *v1;
+    String *v1;
     u32 v2;
 
     Window_AddFromTemplate(param0, &v0, param1);
     Window_PutToTilemap(&v0);
     Window_FillTilemap(&v0, 14);
 
-    v1 = MessageBank_GetNewStrbufFromNARC(26, 438, param2, 35);
-    v2 = ((param1->width * 8) - Font_CalcStrbufWidth(FONT_SYSTEM, v1, 0)) / 2;
+    v1 = MessageBank_GetNewStringFromNARC(26, 438, param2, 35);
+    v2 = ((param1->width * 8) - Font_CalcStringWidth(FONT_SYSTEM, v1, 0)) / 2;
 
     Text_AddPrinterWithParamsAndColor(&v0, FONT_SYSTEM, v1, v2, 0, TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(1, 2, 14), NULL);
     Window_LoadTiles(&v0);
-    Strbuf_Free(v1);
+    String_Free(v1);
     Window_Remove(&v0);
 }
 
@@ -99,7 +97,7 @@ static void ov20_021D3980(UnkStruct_ov20_021D3980 *param0)
     param0->unk_0C = ov20_021D2E50(param0->unk_00, &v0, 64, 56, 5, NNS_G2D_VRAM_TYPE_2DMAIN);
 
     Sprite_SetAnim(param0->unk_0C, 2);
-    Sprite_SetDrawFlag(param0->unk_0C, 0);
+    Sprite_SetDrawFlag(param0->unk_0C, FALSE);
 }
 
 void ov20_021D39BC(UnkStruct_ov20_021D3980 *param0)

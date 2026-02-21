@@ -3,8 +3,24 @@ import json
 import pathlib
 import sys
 
-from convert import pad, u16, u32
+from convert import (
+    from_bg_event_dir,
+    from_movement_type,
+    from_object_event_gfx,
+    from_map_header,
+    from_trainer_type,
+    from_var_flag,
+    from_script,
+    pad,
+    u16,
+    u32,
+    vars_flags,
+)
 
+ANSI_BOLD_WHITE = "\033[1;37m"
+ANSI_BOLD_RED = "\033[1;31m"
+ANSI_RED = "\033[31m"
+ANSI_CLEAR = "\033[0m"
 
 def parse_bg_events(bg_events: list[dict]) -> bytes:
     parsed = [
@@ -15,7 +31,7 @@ def parse_bg_events(bg_events: list[dict]) -> bytes:
                 u32(bg["x"]),
                 u32(bg["z"]),
                 u32(bg["y"]),
-                u16(bg["player_facing_dir"]),
+                u16(from_bg_event_dir(bg["player_facing_dir"])),
                 pad(2),
             ]
         )
@@ -29,6 +45,8 @@ def parse_bg_events(bg_events: list[dict]) -> bytes:
         ]
     )
 
+def from_var_flag_or_map_header(v: str) -> int:
+    return from_var_flag(v) if v == "0" or v in vars_flags.VarFlag.__members__ else from_map_header(v)
 
 # separate function to enable throwing value errors in a list comprehension
 def parse_object_event(obj: dict, i: int) -> bytes:
@@ -38,12 +56,12 @@ def parse_object_event(obj: dict, i: int) -> bytes:
 
     return b"".join(
         [
-            u16(obj.get("local_id", i)),
-            u16(obj["graphics_id"]),
-            u16(obj["movement_type"]),
-            u16(obj["trainer_type"]),
-            u16(obj["flag"]),
-            u16(obj["script"]),
+            u16(obj.get("clone_id", i)),
+            u16(from_object_event_gfx(obj["graphics_id"])),
+            u16(from_movement_type(obj["movement_type"])),
+            u16(from_trainer_type(obj["trainer_type"])),
+            u16(from_var_flag_or_map_header(obj["hidden_flag"])),
+            u16(from_script(str(obj["script"]), obj.get("double_battle_id", 1))),
             u16(obj["initial_dir"]),
             u16(obj_data[0]),
             u16(obj_data[1]),
@@ -72,7 +90,7 @@ def parse_warp_events(warp_events: list[dict]) -> bytes:
             [
                 u16(warp["x"]),
                 u16(warp["z"]),
-                u16(warp["dest_header_id"]),
+                u16(from_map_header(warp["dest_header_id"])),
                 u16(warp["dest_warp_id"]),
                 pad(4),
             ]
@@ -99,7 +117,7 @@ def parse_coord_events(coord_events: list[dict]) -> bytes:
                 u16(coord["length"]),
                 u16(coord["y"]),
                 u16(coord["value"]),
-                u16(coord["var"]),
+                u16(from_var_flag(coord["var"])),
             ]
         )
         for coord in coord_events
@@ -116,9 +134,22 @@ def parse_coord_events(coord_events: list[dict]) -> bytes:
 input_path = pathlib.Path(sys.argv[1])
 output_path = pathlib.Path(sys.argv[2])
 
-data = {}
-with open(input_path, "r", encoding="utf-8") as input_file:
-    data = json.load(input_file)
+try:
+    data = {}
+    with open(input_path, 'r', encoding='utf-8') as input_file:
+        data = json.load(input_file)
+except json.decoder.JSONDecodeError as e:
+    doc_lines = e.doc.splitlines()
+    start_line = max(e.lineno - 2, 0)
+    end_line = min(e.lineno + 1, len(doc_lines))
+
+    error_lines = [f"{line_num:>4} | {line}" for line_num, line in zip(list(range(start_line + 1, end_line + 1)), doc_lines[start_line : end_line])][ : end_line - start_line]
+    error_line_index = e.lineno - start_line - 1
+    error_lines[error_line_index] = error_lines[error_line_index][ : 5] + f"{ANSI_RED}{error_lines[error_line_index][5 : ]}{ANSI_CLEAR}"
+    error_out = "\n".join(error_lines)
+
+    print(f"{ANSI_BOLD_WHITE}{input_path}:{e.lineno}:{e.colno}: {ANSI_BOLD_RED}error: {ANSI_BOLD_WHITE}{e.msg}{ANSI_CLEAR}\n{error_out}", file=sys.stderr)
+    sys.exit(1)
 
 packable = bytearray([])
 packable.extend(parse_bg_events(data["bg_events"]))

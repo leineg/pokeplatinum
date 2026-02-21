@@ -20,7 +20,7 @@
                 "MOVE_FAINT_ATTACK",
                 "MOVE_DOUBLE_EDGE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -34,8 +34,35 @@
                 "MOVE_RAZOR_LEAF",
                 "MOVE_WATER_PULSE"
             ],
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "What sort of moves have you taught?\n",
+                "That tells me how good you are!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Yowch!\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "I heard that somewhere there’s\n",
+                "someone who teaches Pokémon moves.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Have you taught your team any new\n",
+                "moves since last time?\r"
+            ]
         }
     ]
 }

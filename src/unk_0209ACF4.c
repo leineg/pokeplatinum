@@ -17,12 +17,12 @@
 #include "message.h"
 #include "render_window.h"
 #include "save_player.h"
-#include "strbuf.h"
+#include "screen_fade.h"
+#include "sound_playback.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "system.h"
 #include "text.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
 #include "unk_02014A84.h"
 #include "unk_0202D05C.h"
 #include "unk_0203D1B8.h"
@@ -30,8 +30,8 @@
 
 typedef struct {
     FieldSystem *fieldSystem;
-    Strbuf *unk_04;
-    Strbuf *unk_08;
+    String *unk_04;
+    String *unk_08;
     StringTemplate *unk_0C;
     MessageLoader *unk_10;
     ColoredArrow *unk_14;
@@ -63,15 +63,15 @@ static int sub_0209B288(UnkStruct_0209AD84 *param0);
 void sub_0209ACF4(FieldTask *param0)
 {
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(param0);
-    UnkStruct_0209AD84 *v1 = Heap_AllocFromHeap(HEAP_ID_FIELD_TASK, sizeof(UnkStruct_0209AD84));
+    UnkStruct_0209AD84 *v1 = Heap_Alloc(HEAP_ID_FIELD3, sizeof(UnkStruct_0209AD84));
 
     v1->fieldSystem = fieldSystem;
-    v1->unk_04 = Strbuf_Init(400, 32);
-    v1->unk_08 = Strbuf_Init(400, 32);
-    v1->unk_0C = StringTemplate_Default(32);
-    v1->unk_10 = MessageLoader_Init(1, 26, 420, 32);
-    v1->unk_14 = ColoredArrow_New(32);
-    v1->unk_50 = sub_0209747C(2, 0, v1->fieldSystem->saveData, 32);
+    v1->unk_04 = String_Init(400, HEAP_ID_FIELD3);
+    v1->unk_08 = String_Init(400, HEAP_ID_FIELD3);
+    v1->unk_0C = StringTemplate_Default(HEAP_ID_FIELD3);
+    v1->unk_10 = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_UNK_0420, HEAP_ID_FIELD3);
+    v1->unk_14 = ColoredArrow_New(HEAP_ID_FIELD3);
+    v1->unk_50 = sub_0209747C(2, 0, v1->fieldSystem->saveData, HEAP_ID_FIELD3);
 
     sub_02097520(v1->unk_50);
     Window_Init(&(v1->unk_18));
@@ -87,12 +87,12 @@ static void sub_0209AD84(UnkStruct_0209AD84 *param0)
 {
     sub_020974EC(param0->unk_50);
     ColoredArrow_Free(param0->unk_14);
-    Strbuf_Free(param0->unk_04);
-    Strbuf_Free(param0->unk_08);
+    String_Free(param0->unk_04);
+    String_Free(param0->unk_08);
     StringTemplate_Free(param0->unk_0C);
     MessageLoader_Free(param0->unk_10);
     sub_0209ADBC(param0);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 static void sub_0209ADBC(UnkStruct_0209AD84 *param0)
@@ -163,12 +163,12 @@ static BOOL sub_0209AE14(FieldTask *param0)
         break;
     case 4:
         if (sub_0209B100(v0)) {
-            ov5_021D1744(0);
+            FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_OUT);
             v0->unk_54 = 5;
         }
         break;
     case 5:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             sub_02097500(v0->unk_50, &(v0->unk_48));
             sub_02097514(v0->unk_50);
             sub_0209ADBC(v0);
@@ -184,12 +184,12 @@ static BOOL sub_0209AE14(FieldTask *param0)
         break;
     case 7:
         if (FieldSystem_IsRunningFieldMap(v0->fieldSystem)) {
-            ov5_021D1744(1);
+            FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_IN);
             v0->unk_54 = 8;
         }
         break;
     case 8:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             if (sub_02097528(v0->unk_50)) {
                 v0->unk_54 = 11;
             } else {
@@ -218,7 +218,7 @@ static BOOL sub_0209AE14(FieldTask *param0)
                 break;
             case 1:
             default: {
-                u16 v1 = sub_02014C78(&v0->unk_48, 0);
+                u16 v1 = Sentence_GetWord(&v0->unk_48, 0);
                 sub_0209B27C(v0);
 
                 if (v1 != 0xffff) {
@@ -258,21 +258,21 @@ static void sub_0209B084(UnkStruct_0209AD84 *param0, int param1, BOOL param2)
     Window *v0 = &(param0->unk_18);
 
     if (param2) {
-        MessageLoader_GetStrbuf(param0->unk_10, param1, param0->unk_04);
+        MessageLoader_GetString(param0->unk_10, param1, param0->unk_04);
         StringTemplate_Format(param0->unk_0C, param0->unk_08, param0->unk_04);
     } else {
-        MessageLoader_GetStrbuf(param0->unk_10, param1, param0->unk_08);
+        MessageLoader_GetString(param0->unk_10, param1, param0->unk_08);
     }
 
     if (Window_IsInUse(v0) == 0) {
         FieldMessage_AddWindow(param0->fieldSystem->bgConfig, v0, 3);
-        FieldMessage_DrawWindow(v0, SaveData_Options(param0->fieldSystem->saveData));
+        FieldMessage_DrawWindow(v0, SaveData_GetOptions(param0->fieldSystem->saveData));
     } else {
         FieldMessage_ClearWindow(v0);
         Window_DrawMessageBoxWithScrollCursor(v0, 0, 1024 - (18 + 12), 10);
     }
 
-    param0->unk_58 = FieldMessage_Print(v0, param0->unk_08, SaveData_Options(param0->fieldSystem->saveData), 1);
+    param0->unk_58 = FieldMessage_Print(v0, param0->unk_08, SaveData_GetOptions(param0->fieldSystem->saveData), 1);
 }
 
 static BOOL sub_0209B100(UnkStruct_0209AD84 *param0)
@@ -296,12 +296,12 @@ static void sub_0209B12C(UnkStruct_0209AD84 *param0)
     if (Window_IsInUse(v0) == 0) {
         int v1;
 
-        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 155, 11, 0, 32);
+        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 155, 11, 0, HEAP_ID_FIELD3);
         Window_Add(param0->fieldSystem->bgConfig, v0, 3, 1, 1, 13, 10, 13, 1);
         Window_FillTilemap(v0, 15);
 
         for (v1 = 0; v1 < 5; v1++) {
-            MessageLoader_GetStrbuf(param0->unk_10, 9 + v1, param0->unk_08);
+            MessageLoader_GetString(param0->unk_10, 9 + v1, param0->unk_08);
             Text_AddPrinterWithParams(v0, FONT_SYSTEM, param0->unk_08, 12, v1 * 16, TEXT_SPEED_NO_TRANSFER, NULL);
         }
 
@@ -328,12 +328,12 @@ static void sub_0209B1D8(UnkStruct_0209AD84 *param0)
     if (Window_IsInUse(v0) == 0) {
         int v1;
 
-        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 155, 11, 0, 32);
+        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 155, 11, 0, HEAP_ID_FIELD3);
         Window_Add(param0->fieldSystem->bgConfig, v0, 3, 25, 13, 6, 4, 13, 131);
         Window_FillTilemap(v0, 15);
 
         for (v1 = 0; v1 < 2; v1++) {
-            MessageLoader_GetStrbuf(param0->unk_10, v1 + 14, param0->unk_08);
+            MessageLoader_GetString(param0->unk_10, v1 + 14, param0->unk_08);
             Text_AddPrinterWithParams(v0, FONT_SYSTEM, param0->unk_08, 12, v1 * 16, TEXT_SPEED_NO_TRANSFER, NULL);
         }
 
@@ -383,12 +383,12 @@ static int sub_0209B288(UnkStruct_0209AD84 *param0)
         }
 
         if (gSystem.pressedKeys & PAD_BUTTON_A) {
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
             return param0->unk_5C;
         }
 
         if (gSystem.pressedKeys & PAD_BUTTON_B) {
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
             return param0->unk_60 - 1;
         }
 
@@ -399,7 +399,7 @@ static int sub_0209B288(UnkStruct_0209AD84 *param0)
         Window_FillRectWithColor(param0->unk_68, 15, 0, 0, 12, param0->unk_68->height * 8);
         ColoredArrow_Print(param0->unk_14, param0->unk_68, 0, param0->unk_5C * 16);
         Window_LoadTiles(param0->unk_68);
-        Sound_PlayEffect(1500);
+        Sound_PlayEffect(SEQ_SE_CONFIRM);
     }
 
     return -1;

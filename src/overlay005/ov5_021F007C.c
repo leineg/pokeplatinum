@@ -3,8 +3,6 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "generated/sdat.h"
-
 #include "field/field_system.h"
 #include "field/field_system_sub2_t.h"
 #include "overlay005/ov5_021D1A94.h"
@@ -22,8 +20,8 @@
 #include "palette.h"
 #include "player_avatar.h"
 #include "script_manager.h"
-#include "unk_02005474.h"
-#include "unk_02054D00.h"
+#include "sound_playback.h"
+#include "terrain_collision_manager.h"
 
 typedef struct {
     int unk_00;
@@ -62,12 +60,12 @@ static void ov5_021F007C(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 {
     UnkStruct_ov5_021F007C *v0 = param2;
 
-    v0->unk_00 = Graphics_GetPlttData(65, 55, &v0->unk_04, 4);
+    v0->unk_00 = Graphics_GetPlttData(NARC_INDEX_DATA__WEATHER_SYS, 55, &v0->unk_04, HEAP_ID_FIELD1);
     v0->unk_3C = 0;
 
     ov5_021F02B8(&v0->unk_28, 0, 8, 19);
 
-    Bg_SetPriority(2, 0);
+    Bg_SetPriority(BG_LAYER_MAIN_2, 0);
     GXLayers_EngineAToggleLayers((GX_PLANEMASK_BG2), 1);
     Sound_PlayEffect(SEQ_SE_DP_FW230);
 }
@@ -76,7 +74,7 @@ static void ov5_021F00BC(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 {
     UnkStruct_ov5_021F007C *v0 = param2;
 
-    v0->unk_00 = Graphics_GetPlttData(65, 55, &v0->unk_04, 4);
+    v0->unk_00 = Graphics_GetPlttData(NARC_INDEX_DATA__WEATHER_SYS, 55, &v0->unk_04, HEAP_ID_FIELD1);
     v0->unk_3C = 0;
 
     ov5_021F02B8(&v0->unk_28, 8, 0, 19);
@@ -87,7 +85,7 @@ static void ov5_021F00BC(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 static void ov5_021F00E4(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSystem, void *param2)
 {
     UnkStruct_ov5_021F007C *v0 = param2;
-    Heap_FreeToHeap(v0->unk_00);
+    Heap_Free(v0->unk_00);
 }
 
 static void ov5_021F00F0(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSystem, void *param2)
@@ -120,7 +118,7 @@ static void ov5_021F013C(UnkStruct_ov5_021D1BEC *param0, FieldSystem *fieldSyste
 
     G2_SetBlendAlpha((GX_PLANEMASK_BG2), GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BG3 | GX_BLEND_PLANEMASK_BD, 0, 16 - 0);
 
-    Bg_SetPriority(2, 0);
+    Bg_SetPriority(BG_LAYER_MAIN_2, 0);
     GXLayers_EngineAToggleLayers((GX_PLANEMASK_BG2), 1);
     Sound_PlayEffect(SEQ_SE_DP_FW230);
 }
@@ -175,9 +173,7 @@ UnkStruct_ov5_021D1BEC *ov5_021F01F0(FieldSystem *fieldSystem)
         ov5_021F01C0,
         ov5_021F01EC
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -191,9 +187,7 @@ UnkStruct_ov5_021D1BEC *ov5_021F0204(FieldSystem *fieldSystem)
         ov5_021F01C0,
         ov5_021F01EC
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -218,9 +212,7 @@ UnkStruct_ov5_021D1BEC *ov5_021F022C(FieldSystem *fieldSystem)
         ov5_021F00F0,
         ov5_021F01EC
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -234,9 +226,7 @@ UnkStruct_ov5_021D1BEC *ov5_021F0240(FieldSystem *fieldSystem)
         ov5_021F00F0,
         ov5_021F01EC
     };
-    UnkStruct_ov5_021D1BEC *v1;
-
-    v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
+    UnkStruct_ov5_021D1BEC *v1 = ov5_021D1B6C(fieldSystem->unk_04->unk_04, &v0);
     return v1;
 }
 
@@ -253,11 +243,11 @@ static void ov5_021F0260(BgConfig *param0)
 
     Bg_LoadPalette(2, &v0, sizeof(short), (6 * 32) + 2);
 
-    v1 = Heap_AllocFromHeap(4, sizeof(u8) * 32);
+    v1 = Heap_Alloc(HEAP_ID_FIELD1, sizeof(u8) * 32);
     memset(v1, 0x11, sizeof(u8) * 32);
 
     Bg_LoadTiles(param0, 2, v1, sizeof(u8) * 32, 1);
-    Heap_FreeToHeap(v1);
+    Heap_Free(v1);
     Bg_FillTilemap(param0, 2, (6 << 12) | 1);
 }
 
@@ -272,9 +262,7 @@ static void ov5_021F02B8(UnkStruct_ov5_021F02B8 *param0, int param1, int param2,
 
 static BOOL ov5_021F02C8(UnkStruct_ov5_021F02B8 *param0)
 {
-    int v0;
-
-    v0 = param0->unk_08 * param0->unk_0C;
+    int v0 = param0->unk_08 * param0->unk_0C;
     v0 = v0 / param0->unk_10;
 
     param0->unk_00 = v0 + param0->unk_04;
@@ -290,12 +278,12 @@ static BOOL ov5_021F02C8(UnkStruct_ov5_021F02B8 *param0)
 
 static void ov5_021F02F4(FieldSystem *fieldSystem)
 {
-    Bg_MaskPalette(2, 0);
+    Bg_MaskPalette(BG_LAYER_MAIN_2, 0);
 }
 
 static void ov5_021F0300(FieldSystem *fieldSystem)
 {
-    Bg_MaskPalette(2, 0x7fff);
+    Bg_MaskPalette(BG_LAYER_MAIN_2, 0x7fff);
 }
 
 static void ov5_021F0310(FieldSystem *fieldSystem)
@@ -423,7 +411,7 @@ static void ov5_021F0468(UnkStruct_ov5_021F0468 *param0)
         param0->unk_00 = NULL;
     }
 
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
 }
 
 u32 ov5_021F0484(void)
@@ -461,7 +449,7 @@ BOOL ov5_021F0488(FieldTask *param0)
 
         v1->unk_0C = 2;
 
-        Bg_SetPriority(2, 0);
+        Bg_SetPriority(BG_LAYER_MAIN_2, 0);
         GXLayers_EngineAToggleLayers((GX_PLANEMASK_BG2), 1);
         break;
     case 2:
@@ -487,7 +475,7 @@ BOOL ov5_021F0488(FieldTask *param0)
 
                     v4 = Player_GetXPos(fieldSystem->playerAvatar);
                     v5 = Player_GetZPos(fieldSystem->playerAvatar);
-                    v3 = (u8)FieldSystem_GetTileBehavior(fieldSystem, v4, v5);
+                    v3 = (u8)TerrainCollisionManager_GetTileBehavior(fieldSystem, v4, v5);
 
                     if (WildEncounters_TileHasEncounterRate(fieldSystem, v3)) {
                         v1->unk_0C = 6;
@@ -522,11 +510,11 @@ BOOL ov5_021F0488(FieldTask *param0)
             if (v1->unk_08 == 0) {
                 GXLayers_EngineAToggleLayers((GX_PLANEMASK_BG2), 0);
                 G2_BlendNone();
-                Bg_SetPriority(2, 3);
+                Bg_SetPriority(BG_LAYER_MAIN_2, 3);
 
-                Bg_ClearTilemap(fieldSystem->bgConfig, 2);
+                Bg_ClearTilemap(fieldSystem->bgConfig, BG_LAYER_MAIN_2);
             } else {
-                Bg_SetPriority(2, 1);
+                Bg_SetPriority(BG_LAYER_MAIN_2, 1);
             }
 
             v1->unk_0C = 8;
@@ -548,12 +536,12 @@ BOOL ov5_021F0488(FieldTask *param0)
         v1->unk_0E--;
 
         if (v1->unk_0E < 0) {
-            ScriptManager_Start(param0, 2029, NULL, NULL);
+            ScriptManager_Start(param0, SCRIPT_ID(COMMON_SCRIPTS, 29), NULL, NULL);
             v1->unk_0C = 9;
         }
         break;
     case 8:
-        ScriptManager_Start(param0, 2028, NULL, NULL);
+        ScriptManager_Start(param0, SCRIPT_ID(COMMON_SCRIPTS, 28), NULL, NULL);
         v1->unk_0C = 9;
         break;
     case 9:

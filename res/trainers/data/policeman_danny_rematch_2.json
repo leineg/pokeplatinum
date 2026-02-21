@@ -13,7 +13,7 @@
             "level": 42,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,21 @@
             "level": 44,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Whoa! Hold it right there!\n",
+                "I’ve spotted a sneaky Trainer!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "Beaten by sneakiness again...\n"
         }
     ]
 }

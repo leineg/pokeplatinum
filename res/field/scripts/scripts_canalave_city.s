@@ -1,8 +1,8 @@
 #include "macros/scrcmd.inc"
 #include "generated/distribution_events.h"
 #include "res/text/bank/canalave_city.h"
+#include "res/field/events/events_canalave_city.h"
 
-    .data
 
     ScriptEntry _0066
     ScriptEntry _01F9
@@ -32,81 +32,81 @@
     ScriptEntryEnd
 
 _0066:
-    SetFlag 0x1BD
-    CallIfEq 0x40F8, 2, _00F8
-    CallIfEq 0x40F8, 3, _0100
+    SetFlag FLAG_UNK_0x01BD
+    CallIfEq VAR_UNK_0x40F8, 2, _00F8
+    CallIfEq VAR_UNK_0x40F8, 3, _0100
     Call _0168
-    CallIfEq 0x4000, 0, _01E7
-    CallIfEq 0x4000, 1, _0116
-    CallIfEq 0x4078, 1, _0132
-    CallIfEq 0x4078, 2, _0132
-    CallIfEq 0x4078, 4, _011C
-    CallIfEq 0x4078, 5, _0158
-    GetPlayerGender 0x4000
-    GoToIfEq 0x4000, GENDER_MALE, _0148
-    GoToIfEq 0x4000, GENDER_FEMALE, _0150
+    CallIfEq VAR_MAP_LOCAL_0, 0, _01E7
+    CallIfEq VAR_MAP_LOCAL_0, 1, _0116
+    CallIfEq VAR_CANALAVE_STATE, 1, _0132
+    CallIfEq VAR_CANALAVE_STATE, 2, _0132
+    CallIfEq VAR_CANALAVE_STATE, 4, _011C
+    CallIfEq VAR_CANALAVE_STATE, 5, _0158
+    GetPlayerGender VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_MALE, _0148
+    GoToIfEq VAR_MAP_LOCAL_0, GENDER_FEMALE, _0150
     End
 
 _00F8:
-    SetVar 0x40F8, 0
+    SetVar VAR_UNK_0x40F8, 0
     Return
 
 _0100:
     SetObjectEventPos 16, 55, 0x2CC
-    ScrCmd_189 16, 3
-    ScrCmd_188 16, 17
+    SetObjectEventDir 16, DIR_EAST
+    SetObjectEventMovementType 16, MOVEMENT_TYPE_LOOK_EAST
     Return
 
 _0116:
-    ClearFlag 0x240
+    ClearFlag FLAG_UNK_0x0240
     Return
 
 _011C:
-    SetObjectEventPos 11, 37, 0x2D1
-    ScrCmd_189 11, 1
-    ScrCmd_188 11, 15
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 37, 0x2D1
+    SetObjectEventDir CANALAVE_CITY_RIVAL_BRIDGE, DIR_SOUTH
+    SetObjectEventMovementType CANALAVE_CITY_RIVAL_BRIDGE, MOVEMENT_TYPE_LOOK_SOUTH
     Return
 
 _0132:
-    SetObjectEventPos 11, 39, 0x2DD
-    ScrCmd_189 11, 0
-    ScrCmd_188 11, 14
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 39, 0x2DD
+    SetObjectEventDir CANALAVE_CITY_RIVAL_BRIDGE, DIR_NORTH
+    SetObjectEventMovementType CANALAVE_CITY_RIVAL_BRIDGE, MOVEMENT_TYPE_LOOK_NORTH
     Return
 
 _0148:
-    SetVar 0x4020, 97
+    SetVar VAR_OBJ_GFX_ID_0, 97
     End
 
 _0150:
-    SetVar 0x4020, 0
+    SetVar VAR_OBJ_GFX_ID_0, 0
     End
 
 _0158:
-    SetFlag 0x1B3
-    SetFlag 0x1B5
-    SetVar 0x4078, 6
+    SetFlag FLAG_UNK_0x01B3
+    SetFlag FLAG_UNK_0x01B5
+    SetVar VAR_CANALAVE_STATE, 6
     Return
 
 _0168:
-    GoToIfSet 0x158, _01CA
-    GoToIfUnset 0x964, _01CA
-    ScrCmd_22D 2, 0x4000
-    GoToIfEq 0x4000, 0, _01CA
-    CheckItem ITEM_MEMBER_CARD, 1, 0x4000
-    GoToIfEq 0x4000, FALSE, _01CA
-    CheckDistributionEvent DISTRIBUTION_EVENT_DARKRAI, 0x4000
-    GoToIfEq 0x4000, FALSE, _01CA
-    GoToIfUnset 0x12C, _01CA
-    SetVar 0x4000, 1
+    GoToIfSet FLAG_UNK_0x0158, _01CA
+    GoToIfUnset FLAG_GAME_COMPLETED, _01CA
+    GetNationalDexEnabled VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _01CA
+    CheckItem ITEM_MEMBER_CARD, 1, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, FALSE, _01CA
+    CheckDistributionEvent DISTRIBUTION_EVENT_DARKRAI, VAR_MAP_LOCAL_0
+    GoToIfEq VAR_MAP_LOCAL_0, FALSE, _01CA
+    GoToIfUnset FLAG_UNK_0x012C, _01CA
+    SetVar VAR_MAP_LOCAL_0, 1
     Return
 
 _01CA:
-    SetVar 0x4000, 0
+    SetVar VAR_MAP_LOCAL_0, 0
     Return
 
 _01D2:
     Call _0168
-    CallIfEq 0x4000, 0, _01E7
+    CallIfEq VAR_MAP_LOCAL_0, 0, _01E7
     End
 
 _01E7:
@@ -116,50 +116,50 @@ _01E7:
 
 _01F9:
     LockAll
-    GetPlayerMapPos 0x8004, 0x8005
-    GoToIfEq 0x8005, 0x2D3, _0244
-    GoToIfEq 0x8005, 0x2D4, _0252
-    GoToIfEq 0x8005, 0x2D5, _0260
-    GoToIfEq 0x8005, 0x2D6, _026E
-    GoToIfEq 0x8005, 0x2D7, _027C
+    GetPlayerMapPos VAR_0x8004, VAR_0x8005
+    GoToIfEq VAR_0x8005, 0x2D3, _0244
+    GoToIfEq VAR_0x8005, 0x2D4, _0252
+    GoToIfEq VAR_0x8005, 0x2D5, _0260
+    GoToIfEq VAR_0x8005, 0x2D6, _026E
+    GoToIfEq VAR_0x8005, 0x2D7, _027C
     End
 
 _0244:
-    SetObjectEventPos 11, 38, 0x2D3
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 38, 0x2D3
     GoTo _028A
 
 _0252:
-    SetObjectEventPos 11, 38, 0x2D4
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 38, 0x2D4
     GoTo _028A
 
 _0260:
-    SetObjectEventPos 11, 38, 0x2D5
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 38, 0x2D5
     GoTo _028A
 
 _026E:
-    SetObjectEventPos 11, 38, 0x2D6
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 38, 0x2D6
     GoTo _028A
 
 _027C:
-    SetObjectEventPos 11, 38, 0x2D7
+    SetObjectEventPos CANALAVE_CITY_RIVAL_BRIDGE, 38, 0x2D7
     GoTo _028A
 
 _028A:
-    ScrCmd_188 11, 17
-    ClearFlag 0x1B2
-    AddObject 11
-    ApplyMovement 11, _0340
+    SetObjectEventMovementType CANALAVE_CITY_RIVAL_BRIDGE, MOVEMENT_TYPE_LOOK_EAST
+    ClearFlag FLAG_HIDE_CANALAVE_RIVAL
+    AddObject CANALAVE_CITY_RIVAL_BRIDGE
+    ApplyMovement CANALAVE_CITY_RIVAL_BRIDGE, _0340
     WaitMovement
-    CallCommonScript 0x7FA
-    ApplyMovement 11, _0354
+    Common_SetRivalBGM
+    ApplyMovement CANALAVE_CITY_RIVAL_BRIDGE, _0354
     WaitMovement
     BufferRivalName 0
     BufferPlayerName 1
     Message 0
     CloseMessage
-    GetPlayerStarterSpecies 0x800C
-    GoToIfEq 0x800C, SPECIES_TURTWIG, _02EB
-    GoToIfEq 0x800C, SPECIES_CHIMCHAR, _02F7
+    GetPlayerStarterSpecies VAR_RESULT
+    GoToIfEq VAR_RESULT, SPECIES_TURTWIG, _02EB
+    GoToIfEq VAR_RESULT, SPECIES_CHIMCHAR, _02F7
     GoTo _02DF
 
 _02DF:
@@ -175,40 +175,40 @@ _02F7:
     GoTo _0303
 
 _0303:
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _0334
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _0334
     BufferRivalName 0
     Message 1
     CloseMessage
-    ApplyMovement 11, _035C
+    ApplyMovement CANALAVE_CITY_RIVAL_BRIDGE, _035C
     WaitMovement
-    RemoveObject 11
-    SetVar 0x4078, 1
+    RemoveObject CANALAVE_CITY_RIVAL_BRIDGE
+    SetVar VAR_CANALAVE_STATE, 1
     ReleaseAll
     End
 
 _0334:
-    SetFlag 0x1B2
+    SetFlag FLAG_HIDE_CANALAVE_RIVAL
     BlackOutFromBattle
     ReleaseAll
     End
 
     .balign 4, 0
 _0340:
-    MoveAction_019 4
-    MoveAction_063
-    MoveAction_075
-    MoveAction_063
+    WalkFastEast 4
+    Delay8
+    EmoteExclamationMark
+    Delay8
     EndMovement
 
     .balign 4, 0
 _0354:
-    MoveAction_019 4
+    WalkFastEast 4
     EndMovement
 
     .balign 4, 0
 _035C:
-    MoveAction_018 9
+    WalkFastWest 9
     EndMovement
 
 _0364:
@@ -227,26 +227,26 @@ _0377:
     BufferPlayerName 1
     Message 2
     CloseMessage
-    ApplyMovement 11, _03AC
+    ApplyMovement CANALAVE_CITY_RIVAL_BRIDGE, _03AC
     ApplyMovement LOCALID_PLAYER, _03BC
     WaitMovement
-    RemoveObject 11
-    SetVar 0x4078, 3
-    SetVar 0x40B2, 1
+    RemoveObject CANALAVE_CITY_RIVAL_BRIDGE
+    SetVar VAR_CANALAVE_STATE, 3
+    SetVar VAR_CANALAVE_LIBRARY_STATE, 1
     ReleaseAll
     End
 
     .balign 4, 0
 _03AC:
-    MoveAction_017
-    MoveAction_018 5
-    MoveAction_016 10
+    WalkFastSouth
+    WalkFastWest 5
+    WalkFastNorth 10
     EndMovement
 
     .balign 4, 0
 _03BC:
-    MoveAction_063
-    MoveAction_034
+    Delay8
+    WalkOnSpotNormalWest
     EndMovement
 
 _03C8:
@@ -255,9 +255,9 @@ _03C8:
     WaitMovement
     Message 5
     CloseMessage
-    ClearFlag 0x1B4
+    ClearFlag FLAG_UNK_0x01B4
     AddObject 14
-    ScrCmd_062 14
+    LockObject 14
     ApplyMovement 14, _04AC
     WaitMovement
     Message 6
@@ -265,14 +265,14 @@ _03C8:
     ApplyMovement 14, _04B8
     WaitMovement
     RemoveObject 14
-    ApplyMovement 11, _04C0
+    ApplyMovement CANALAVE_CITY_RIVAL_BRIDGE, _04C0
     WaitMovement
     BufferRivalName 0
     Message 7
     CloseMessage
-    ApplyMovement 11, _04C8
+    ApplyMovement CANALAVE_CITY_RIVAL_BRIDGE, _04C8
     WaitMovement
-    RemoveObject 11
+    RemoveObject CANALAVE_CITY_RIVAL_BRIDGE
     ApplyMovement 13, _04A0
     WaitMovement
     BufferRivalName 0
@@ -281,9 +281,9 @@ _03C8:
     CloseMessage
     ApplyMovement 12, _0490
     WaitMovement
-    WaitTime 15, 0x800C
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _045E
+    WaitTime 15, VAR_RESULT
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, _045E
     GoTo _046A
 
 _045E:
@@ -298,49 +298,49 @@ _046A:
 _0473:
     WaitABXPadPress
     CloseMessage
-    SetVar 0x4078, 5
-    ClearFlag 0x194
-    ClearFlag 0x175
-    ClearFlag 0x293
+    SetVar VAR_CANALAVE_STATE, 5
+    ClearFlag FLAG_HIDE_LAKE_VERITY_LOW_WATER_COUNTERPART
+    ClearFlag FLAG_HIDE_LAKE_VERITY_LOW_WATER_PROF_ROWAN
+    ClearFlag FLAG_UNK_0x0293
     ReleaseAll
     End
 
     .balign 4, 0
 _0490:
-    MoveAction_034
+    WalkOnSpotNormalWest
     EndMovement
 
     .balign 4, 0
 _0498:
-    MoveAction_033
+    WalkOnSpotNormalSouth
     EndMovement
 
     .balign 4, 0
 _04A0:
-    MoveAction_063 2
-    MoveAction_032
+    Delay8 2
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _04AC:
-    MoveAction_018 5
-    MoveAction_016 2
+    WalkFastWest 5
+    WalkFastNorth 2
     EndMovement
 
     .balign 4, 0
 _04B8:
-    MoveAction_017 6
+    WalkFastSouth 6
     EndMovement
 
     .balign 4, 0
 _04C0:
-    MoveAction_032
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
 _04C8:
-    MoveAction_017 3
-    MoveAction_019 9
+    WalkFastSouth 3
+    WalkFastEast 9
     EndMovement
 
 _04D4:
@@ -357,8 +357,8 @@ _04E7:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0506
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, _0506
     GoTo _050F
 
 _0506:
@@ -379,7 +379,7 @@ _0520:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _053C
+    GoToIfSet FLAG_UNK_0x00A8, _053C
     Message 14
     GoTo _0545
 
@@ -397,9 +397,8 @@ _054D:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _0586
-    CheckBadgeAcquired BADGE_ID_MINE, 0x800C
-    GoToIfEq 0x800C, 1, _0591
+    GoToIfSet FLAG_UNK_0x00A8, _0586
+    GoToIfBadgeAcquired BADGE_ID_MINE, _0591
     GoTo _057B
     End
 
@@ -414,7 +413,7 @@ _0586:
     End
 
 _0591:
-    GoToIfGe 0x4078, 5, _057B
+    GoToIfGe VAR_CANALAVE_STATE, 5, _057B
     Message 18
     GoTo _0545
     End
@@ -423,7 +422,7 @@ _05A9:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _05C5
+    GoToIfSet FLAG_UNK_0x00A8, _05C5
     Message 19
     GoTo _0545
 
@@ -435,7 +434,7 @@ _05CE:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _05EA
+    GoToIfSet FLAG_UNK_0x00A8, _05EA
     Message 21
     GoTo _0545
 
@@ -447,7 +446,7 @@ _05F3:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _0615
+    GoToIfSet FLAG_UNK_0x00A8, _0615
     PlayCry SPECIES_PSYDUCK
     Message 23
     GoTo _0545
@@ -461,7 +460,7 @@ _0624:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 168, _0640
+    GoToIfSet FLAG_UNK_0x00A8, _0640
     Message 25
     GoTo _0545
 
@@ -470,61 +469,33 @@ _0640:
     GoTo _0545
 
 _0649:
-    ScrCmd_036 36, 0, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowMapSign 36
     End
 
 _0660:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 37, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 37
     End
 
 _0675:
-    ScrCmd_036 38, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 38
     End
 
 _068C:
-    ScrCmd_036 39, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 39
     End
 
 _06A3:
-    ScrCmd_036 40, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 40
     End
 
 _06BA:
     Call _0168
-    GoToIfEq 0x4000, 0, _06E2
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 42, 0x800C
-    CallCommonScript 0x7D0
+    GoToIfEq VAR_MAP_LOCAL_0, 0, _06E2
+    ShowScrollingSign 42
     End
 
 _06E2:
-    ScrCmd_037 3, 0
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03A 41, 0x800C
-    CallCommonScript 0x7D0
+    ShowScrollingSign 41
     End
 
 _06F7:
@@ -540,55 +511,55 @@ _0708:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerDir 0x8004
+    GetPlayerDir VAR_0x8004
     FacePlayer
-    GoToIfEq 0x4106, 2, _0900
+    GoToIfEq VAR_UNK_0x4106, 2, _0900
     Message 27
-    ScrCmd_040 1, 1, 0, 1, 0x800C
-    ScrCmd_042 213, 0
-    CallIfSet 0x133, _0790
-    CallIfSet 0x13C, _078A
-    ScrCmd_042 218, 4
-    ScrCmd_043
-    GoToIfEq 0x800C, 0, _0796
-    GoToIfEq 0x800C, 1, _07D1
-    GoToIfEq 0x800C, 2, _080C
-    GoToIfEq 0x800C, 3, _0847
+    InitGlobalTextMenu 1, 1, 0, VAR_RESULT
+    AddMenuEntryImm 213, 0
+    CallIfSet FLAG_UNK_0x0133, _0790
+    CallIfSet FLAG_UNK_0x013C, _078A
+    AddMenuEntryImm 218, 4
+    ShowMenu
+    GoToIfEq VAR_RESULT, 0, _0796
+    GoToIfEq VAR_RESULT, 1, _07D1
+    GoToIfEq VAR_RESULT, 2, _080C
+    GoToIfEq VAR_RESULT, 3, _0847
     GoTo _0847
     End
 
 _078A:
-    ScrCmd_042 215, 2
+    AddMenuEntryImm 215, 2
     Return
 
 _0790:
-    ScrCmd_042 214, 1
+    AddMenuEntryImm 214, 1
     Return
 
 _0796:
     Call _0852
-    CallIfEq 0x8004, 1, _0871
-    CallIfEq 0x8004, 3, _088B
-    CallIfEq 0x8004, 0, _08A5
-    ScrCmd_23D 3, 3, 0x120, 100, 0x1F6
+    CallIfEq VAR_0x8004, 1, _0871
+    CallIfEq VAR_0x8004, 3, _088B
+    CallIfEq VAR_0x8004, 0, _08A5
+    TakeShipFromCanalave DIR_EAST, MAP_HEADER_IRON_ISLAND, 100, 502
     ReleaseAll
     End
 
 _07D1:
     Call _0852
-    CallIfEq 0x8004, 1, _0871
-    CallIfEq 0x8004, 3, _088B
-    CallIfEq 0x8004, 0, _08A5
-    ScrCmd_23D 3, 2, 0x104, 39, 0x115
+    CallIfEq VAR_0x8004, 1, _0871
+    CallIfEq VAR_0x8004, 3, _088B
+    CallIfEq VAR_0x8004, 0, _08A5
+    TakeShipFromCanalave DIR_WEST, MAP_HEADER_FULLMOON_ISLAND, 39, 277
     ReleaseAll
     End
 
 _080C:
     Call _0852
-    CallIfEq 0x8004, 1, _0871
-    CallIfEq 0x8004, 3, _088B
-    CallIfEq 0x8004, 0, _08A5
-    ScrCmd_23D 3, 3, 0x140, 152, 0x115
+    CallIfEq VAR_0x8004, 1, _0871
+    CallIfEq VAR_0x8004, 3, _088B
+    CallIfEq VAR_0x8004, 0, _08A5
+    TakeShipFromCanalave DIR_EAST, MAP_HEADER_NEWMOON_ISLAND, 152, 277
     ReleaseAll
     End
 
@@ -635,42 +606,42 @@ _08A5:
 
     .balign 4, 0
 _08C0:
-    MoveAction_003
-    MoveAction_064
+    FaceEast
+    Delay15
     EndMovement
 
     .balign 4, 0
 _08CC:
-    MoveAction_069
+    SetInvisible
     EndMovement
 
     .balign 4, 0
 _08D4:
-    MoveAction_013
-    MoveAction_003
-    MoveAction_064
+    WalkNormalSouth
+    FaceEast
+    Delay15
     EndMovement
 
     .balign 4, 0
 _08E4:
-    MoveAction_015
-    MoveAction_064
+    WalkNormalEast
+    Delay15
     EndMovement
 
     .balign 4, 0
 _08F0:
-    MoveAction_012
-    MoveAction_003
-    MoveAction_064
+    WalkNormalNorth
+    FaceEast
+    Delay15
     EndMovement
 
 _0900:
-    CheckItem ITEM_LUNAR_WING, 1, 0x800C
-    GoToIfEq 0x800C, 1, _094E
+    CheckItem ITEM_LUNAR_WING, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, _094E
     Message 31
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0938
-    GoToIfEq 0x800C, MENU_NO, _0943
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0938
+    GoToIfEq VAR_RESULT, MENU_NO, _0943
     End
 
 _0938:
@@ -702,35 +673,35 @@ _0959:
     WaitMovement
     RemoveObject 16
     SetObjectEventPos 16, 45, 0x2EE
-    ScrCmd_189 16, 2
-    ScrCmd_188 16, 16
+    SetObjectEventDir 16, DIR_WEST
+    SetObjectEventMovementType 16, MOVEMENT_TYPE_LOOK_WEST
     AddObject 16
-    SetVar 0x40F8, 4
+    SetVar VAR_UNK_0x40F8, 4
     ReleaseAll
     End
 
     .balign 4, 0
 _099C:
-    MoveAction_075
-    MoveAction_015 3
-    MoveAction_012
+    EmoteExclamationMark
+    WalkNormalEast 3
+    WalkNormalNorth
     EndMovement
 
     .balign 4, 0
 _09AC:
-    MoveAction_013
-    MoveAction_014 3
-    MoveAction_013 8
+    WalkNormalSouth
+    WalkNormalWest 3
+    WalkNormalSouth 8
     EndMovement
 
 _09BC:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CheckItem ITEM_HM04, 1, 0x800C
-    GoToIfEq 0x800C, 1, _09FA
-    ScrCmd_09A 0x800C, 70
-    GoToIfNe 0x800C, 6, _09FA
+    CheckItem ITEM_HM04, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, 1, CanalaveCity_RIVAL_EnterLibrary
+    FindPartySlotWithMove VAR_RESULT, MOVE_STRENGTH
+    GoToIfNe VAR_RESULT, 6, CanalaveCity_RIVAL_EnterLibrary
     BufferRivalName 0
     Message 3
     WaitABXPadPress
@@ -738,31 +709,31 @@ _09BC:
     ReleaseAll
     End
 
-_09FA:
+CanalaveCity_RIVAL_EnterLibrary:
     BufferRivalName 0
-    Message 4
+    Message CanalaveCity_Text_RivalTooSlowMoveIt
     CloseMessage
-    ApplyMovement 18, _0A38
+    ApplyMovement CANALAVE_CITY_RIVAL_LIBRARY, CanalaveCity_RIVAL_FaceNorth
     WaitMovement
-    ScrCmd_168 1, 22, 5, 14, 77
-    ScrCmd_16B 77
-    ScrCmd_169 77
-    ApplyMovement 18, _0A40
+    LoadDoorAnimation 1, 22, 5, 14, ANIMATION_TAG_DOOR_1
+    PlayDoorOpenAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    ApplyMovement CANALAVE_CITY_RIVAL_LIBRARY, CanalaveCity_RIVAL_EnterDoor
     WaitMovement
-    ScrCmd_16C 77
-    ScrCmd_169 77
-    ScrCmd_16A 77
-    RemoveObject 18
+    PlayDoorCloseAnimation ANIMATION_TAG_DOOR_1
+    WaitForAnimation ANIMATION_TAG_DOOR_1
+    UnloadAnimation ANIMATION_TAG_DOOR_1
+    RemoveObject CANALAVE_CITY_RIVAL_LIBRARY
     ReleaseAll
     End
 
     .balign 4, 0
-_0A38:
-    MoveAction_032
+CanalaveCity_RIVAL_FaceNorth:
+    WalkOnSpotNormalNorth
     EndMovement
 
     .balign 4, 0
-_0A40:
-    MoveAction_012
-    MoveAction_069
+CanalaveCity_RIVAL_EnterDoor:
+    WalkNormalNorth
+    SetInvisible
     EndMovement

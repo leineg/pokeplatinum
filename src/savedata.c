@@ -9,7 +9,7 @@
 
 #include "heap.h"
 #include "inlines.h"
-#include "math.h"
+#include "math_util.h"
 #include "savedata_misc.h"
 #include "system.h"
 #include "unk_0209A74C.h"
@@ -38,7 +38,7 @@ static BOOL sSaveComplete;
 
 SaveData *SaveData_Init(void)
 {
-    SaveData *saveData = Heap_AllocFromHeap(HEAP_ID_SAVE, sizeof(SaveData));
+    SaveData *saveData = Heap_Alloc(HEAP_ID_SAVE, sizeof(SaveData));
     ;
 
     MI_CpuClearFast(saveData, sizeof(SaveData));
@@ -117,7 +117,7 @@ const void *SaveData_SaveTableConst(const SaveData *saveData, int saveTableID)
 
 BOOL SaveData_Erase(SaveData *saveData)
 {
-    u8 *saveBuffer = Heap_AllocFromHeapAtEnd(HEAP_ID_APPLICATION, SAVE_SECTOR_SIZE);
+    u8 *saveBuffer = Heap_AllocAtEnd(HEAP_ID_APPLICATION, SAVE_SECTOR_SIZE);
 
     SleepLock(SLEEP_TYPE_SAVE_DATA);
 
@@ -133,7 +133,7 @@ BOOL SaveData_Erase(SaveData *saveData)
         SaveData_CardSave(SAVE_SECTOR_SIZE * (i + BACKUP_SECTOR_START), saveBuffer, SAVE_SECTOR_SIZE);
     }
 
-    Heap_FreeToHeap(saveBuffer);
+    Heap_Free(saveBuffer);
     SaveData_Clear(saveData);
 
     saveData->dataExists = FALSE;
@@ -440,8 +440,8 @@ static void SaveData_SetBlockCheckInfo(SaveData *saveData, const SaveCheckInfo *
 
 static int SaveData_LoadCheck(SaveData *saveData)
 {
-    u8 *primaryBuffer = Heap_AllocFromHeapAtEnd(HEAP_ID_APPLICATION, SAVE_SECTOR_SIZE * SAVE_PAGE_MAX);
-    u8 *backupBuffer = Heap_AllocFromHeapAtEnd(HEAP_ID_APPLICATION, SAVE_SECTOR_SIZE * SAVE_PAGE_MAX);
+    u8 *primaryBuffer = Heap_AllocAtEnd(HEAP_ID_APPLICATION, SAVE_SECTOR_SIZE * SAVE_PAGE_MAX);
+    u8 *backupBuffer = Heap_AllocAtEnd(HEAP_ID_APPLICATION, SAVE_SECTOR_SIZE * SAVE_PAGE_MAX);
 
     SaveCheckInfo normalInfo[SECTOR_ID_MAX];
     SaveCheckInfo boxInfo[SECTOR_ID_MAX];
@@ -462,8 +462,8 @@ static int SaveData_LoadCheck(SaveData *saveData)
         SaveData_CheckInfoInit(&boxInfo[SECTOR_ID_BACKUP]);
     }
 
-    Heap_FreeToHeap(primaryBuffer);
-    Heap_FreeToHeap(backupBuffer);
+    Heap_Free(primaryBuffer);
+    Heap_Free(backupBuffer);
 
     int currNormalSector, currBoxSector, staleNormalSector, staleBoxSector;
     int normalResult = SaveCheckInfo_CompareSectors(&normalInfo[SECTOR_ID_PRIMARY], &normalInfo[SECTOR_ID_BACKUP], &currNormalSector, &staleNormalSector);
@@ -543,7 +543,7 @@ static void SaveDataExtra_LoadCheck(SaveData *saveData, int *frontierResult, int
     void *saveBuffer;
     if (currKey != EXTRA_SAVE_TABLE_ENTRY_NONE || oldKey != EXTRA_SAVE_TABLE_ENTRY_NONE) {
         saveBuffer = SaveDataExtra_Mirror(saveData, HEAP_ID_APPLICATION, EXTRA_SAVE_TABLE_ENTRY_FRONTIER, &loadResult, &isOld);
-        Heap_FreeToHeap(saveBuffer);
+        Heap_Free(saveBuffer);
 
         if (loadResult == LOAD_RESULT_CORRUPT) {
             *frontierResult = LOAD_RESULT_ERROR;
@@ -557,7 +557,7 @@ static void SaveDataExtra_LoadCheck(SaveData *saveData, int *frontierResult, int
 
         if (currKey != EXTRA_SAVE_TABLE_ENTRY_NONE || oldKey != EXTRA_SAVE_TABLE_ENTRY_NONE) {
             saveBuffer = SaveDataExtra_Mirror(saveData, HEAP_ID_APPLICATION, i, &loadResult, &isOld);
-            Heap_FreeToHeap(saveBuffer);
+            Heap_Free(saveBuffer);
 
             if (loadResult == LOAD_RESULT_CORRUPT) {
                 *videoResult = LOAD_RESULT_ERROR;
@@ -917,7 +917,7 @@ void SaveDataExtra_Init(SaveData *saveData)
         extraTable[i].initFunc(extraData);
 
         SaveDataExtra_Save(saveData, extraTable[i].dataID, extraData);
-        Heap_FreeToHeap(extraData);
+        Heap_Free(extraData);
     }
 
     SaveData_MiscSaveBlock_SetInitFlag(saveData);
@@ -1045,7 +1045,7 @@ int SaveDataExtra_SaveMirror(SaveData *saveData, int extraSaveID, void *data)
     }
 }
 
-void *SaveDataExtra_Get(SaveData *saveData, int heapID, int extraSaveID, int *loadResult)
+void *SaveDataExtra_Get(SaveData *saveData, enum HeapID heapID, int extraSaveID, int *loadResult)
 {
     GF_ASSERT(extraSaveID < gExtraSaveTableSize);
 
@@ -1053,7 +1053,7 @@ void *SaveDataExtra_Get(SaveData *saveData, int heapID, int extraSaveID, int *lo
     GF_ASSERT(saveTable->dataID == extraSaveID);
 
     u32 size = saveTable->sizeFunc() + sizeof(SaveCheckFooter);
-    void *ret = Heap_AllocFromHeap(heapID, size);
+    void *ret = Heap_Alloc(heapID, size);
 
     SaveData_CardLoad((PRIMARY_SECTOR_START + saveTable->blockID) * SAVE_SECTOR_SIZE, ret, size);
 
@@ -1103,7 +1103,7 @@ void *SaveDataExtra_Get(SaveData *saveData, int heapID, int extraSaveID, int *lo
     return ret;
 }
 
-void *SaveDataExtra_Mirror(SaveData *saveData, int heapID, int extraSaveID, int *loadResult, BOOL *isOld)
+void *SaveDataExtra_Mirror(SaveData *saveData, enum HeapID heapID, int extraSaveID, int *loadResult, BOOL *isOld)
 {
     const SaveTableEntry *saveTable;
     void *ret;
@@ -1118,7 +1118,7 @@ void *SaveDataExtra_Mirror(SaveData *saveData, int heapID, int extraSaveID, int 
     GF_ASSERT(saveTable->dataID == extraSaveID);
 
     size = saveTable->sizeFunc() + sizeof(SaveCheckFooter);
-    ret = Heap_AllocFromHeap(heapID, size);
+    ret = Heap_Alloc(heapID, size);
 
     u32 primaryKey, backupKey, currKey, oldKey;
     u8 keyFlag;
@@ -1253,7 +1253,7 @@ BOOL SaveData_CardLoad(u32 address, void *data, u32 size)
     OS_ReleaseLockID(lockID);
 
     if (!result) {
-        Heap_FreeToHeap(sSaveDataPtr);
+        Heap_Free(sSaveDataPtr);
         sub_0209A74C(HEAP_ID_SAVE);
     }
 
@@ -1321,7 +1321,7 @@ static void SaveData_CardSave_Error(s32 lockID, int errorID)
     CARD_UnlockBackup(lockID);
     OS_ReleaseLockID(lockID);
 
-    Heap_FreeToHeap(sSaveDataPtr);
+    Heap_Free(sSaveDataPtr);
     sub_0209AA74(HEAP_ID_SAVE, errorID);
 }
 

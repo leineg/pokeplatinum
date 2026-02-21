@@ -1,15 +1,14 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
 
 _0006:
-    SetFlag 0x9E0
+    SetFlag FLAG_FIRST_ARRIVAL_LAKE_VALOR_UNUSED
     End
 
-    .byte 2
-    .byte 0
-    .byte 0
-    .byte 0
+Unk354_Unused:
+    End
+
+    .balign 4, 0

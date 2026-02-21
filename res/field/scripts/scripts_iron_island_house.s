@@ -1,24 +1,23 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/iron_island_house.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _0035
     ScriptEntryEnd
 
 _000A:
-    GoToIfSet 0x11D, _0029
-    ScrCmd_22D 2, 0x4000
-    CallIfEq 0x4000, 1, _002F
+    GoToIfSet FLAG_UNK_0x011D, _0029
+    GetNationalDexEnabled VAR_MAP_LOCAL_0
+    CallIfEq VAR_MAP_LOCAL_0, 1, _002F
     End
 
 _0029:
-    SetFlag 0x24D
+    SetFlag FLAG_UNK_0x024D
     End
 
 _002F:
-    ClearFlag 0x24D
+    ClearFlag FLAG_UNK_0x024D
     Return
 
 _0035:
@@ -26,23 +25,22 @@ _0035:
     LockAll
     FacePlayer
     Message 0
-    SetVar 0x8004, 233
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _00A8
-    CallCommonScript 0x7FC
-    SetFlag 0x11D
+    SetVar VAR_0x8004, ITEM_METAL_COAT
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _00A8
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x011D
     Message 1
     CloseMessage
-    GetPlayerDir 0x8004
-    GoToIfEq 0x8004, 2, _00B2
-    GoToIfEq 0x8004, 3, _00D0
-    GoToIfEq 0x8004, 0, _00B2
-    GoToIfEq 0x8004, 1, _00D0
+    GetPlayerDir VAR_0x8004
+    GoToIfEq VAR_0x8004, 2, _00B2
+    GoToIfEq VAR_0x8004, 3, _00D0
+    GoToIfEq VAR_0x8004, 0, _00B2
+    GoToIfEq VAR_0x8004, 1, _00D0
     End
 
 _00A8:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
@@ -53,7 +51,7 @@ _00B2:
     PlayFanfare SEQ_SE_DP_KAIDAN2
     RemoveObject 0
     WaitFanfare SEQ_SE_DP_KAIDAN2
-    ScrCmd_04A 0x603
+    StopFanfare SEQ_SE_DP_KAIDAN2
     ReleaseAll
     End
 
@@ -63,19 +61,19 @@ _00D0:
     PlayFanfare SEQ_SE_DP_KAIDAN2
     RemoveObject 0
     WaitFanfare SEQ_SE_DP_KAIDAN2
-    ScrCmd_04A 0x603
+    StopFanfare SEQ_SE_DP_KAIDAN2
     ReleaseAll
     End
 
     .balign 4, 0
 _00F0:
-    MoveAction_014
-    MoveAction_013 3
+    WalkNormalWest
+    WalkNormalSouth 3
     EndMovement
 
     .balign 4, 0
 _00FC:
-    MoveAction_013 2
-    MoveAction_014
-    MoveAction_013
+    WalkNormalSouth 2
+    WalkNormalWest
+    WalkNormalSouth
     EndMovement

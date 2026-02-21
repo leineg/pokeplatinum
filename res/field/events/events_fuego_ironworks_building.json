@@ -6,7 +6,7 @@
             "x": 44,
             "z": 15,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         },
         {
             "script": 8046,
@@ -14,15 +14,16 @@
             "x": 22,
             "z": 3,
             "y": 0,
-            "player_facing_dir": 4
+            "player_facing_dir": "BG_EVENT_DIR_ALL"
         }
     ],
     "object_events": [
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1134,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_0",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x046E",
             "script": 7120,
             "initial_dir": 0,
             "data": [],
@@ -33,10 +34,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1136,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_1",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0470",
             "script": 7122,
             "initial_dir": 0,
             "data": [],
@@ -47,10 +49,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1135,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_2",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x046F",
             "script": 7121,
             "initial_dir": 0,
             "data": [],
@@ -61,10 +64,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1137,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_3",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0471",
             "script": 7123,
             "initial_dir": 0,
             "data": [],
@@ -75,10 +79,11 @@
             "y": 0
         },
         {
-            "graphics_id": 82,
-            "movement_type": 13,
-            "trainer_type": 0,
-            "flag": 0,
+            "id": "FUEGO_IRONWORKS_BUILDING_MIDDLE_AGED_MAN_4",
+            "graphics_id": "OBJ_EVENT_GFX_MIDDLE_AGED_MAN",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_WEST_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "0",
             "script": 2,
             "initial_dir": 3,
             "data": [],
@@ -89,11 +94,12 @@
             "y": 0
         },
         {
-            "graphics_id": 40,
-            "movement_type": 9,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3843,
+            "id": "FUEGO_IRONWORKS_BUILDING_WORKER_DILLAN",
+            "graphics_id": "OBJ_EVENT_GFX_WORKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_SOUTH_AND_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_WORKER_DILLAN",
             "initial_dir": 1,
             "data": [
                 4
@@ -105,11 +111,12 @@
             "y": 0
         },
         {
-            "graphics_id": 40,
-            "movement_type": 45,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3844,
+            "id": "FUEGO_IRONWORKS_BUILDING_WORKER_HOLDEN",
+            "graphics_id": "OBJ_EVENT_GFX_WORKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_NORTH_AND_SOUTH",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_WORKER_HOLDEN",
             "initial_dir": 1,
             "data": [
                 4
@@ -121,11 +128,12 @@
             "y": 0
         },
         {
-            "graphics_id": 40,
-            "movement_type": 17,
-            "trainer_type": 1,
-            "flag": 0,
-            "script": 3845,
+            "id": "FUEGO_IRONWORKS_BUILDING_WORKER_CONRAD",
+            "graphics_id": "OBJ_EVENT_GFX_WORKER",
+            "movement_type": "MOVEMENT_TYPE_LOOK_EAST",
+            "trainer_type": "TRAINER_TYPE_NORMAL",
+            "hidden_flag": "0",
+            "script": "TRAINER_WORKER_CONRAD",
             "initial_dir": 3,
             "data": [
                 3
@@ -137,10 +145,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1295,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_8",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x050F",
             "script": 7280,
             "initial_dir": 0,
             "data": [],
@@ -151,10 +160,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1296,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_9",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0510",
             "script": 7281,
             "initial_dir": 0,
             "data": [],
@@ -165,10 +175,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1297,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_10",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0511",
             "script": 7282,
             "initial_dir": 0,
             "data": [],
@@ -179,10 +190,11 @@
             "y": 0
         },
         {
-            "graphics_id": 87,
-            "movement_type": 0,
-            "trainer_type": 0,
-            "flag": 1298,
+            "id": "FUEGO_IRONWORKS_BUILDING_POKEBALL_11",
+            "graphics_id": "OBJ_EVENT_GFX_POKEBALL",
+            "movement_type": "MOVEMENT_TYPE_NONE",
+            "trainer_type": "TRAINER_TYPE_NONE",
+            "hidden_flag": "FLAG_UNK_0x0512",
             "script": 7283,
             "initial_dir": 0,
             "data": [],
@@ -197,7 +209,7 @@
         {
             "x": 26,
             "z": 26,
-            "dest_header_id": 204,
+            "dest_header_id": "MAP_HEADER_FUEGO_IRONWORKS_OUTSIDE",
             "dest_warp_id": 0
         }
     ],

@@ -20,7 +20,7 @@
                 "MOVE_WAKE_UP_SLAP",
                 "MOVE_SING"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         },
         {
@@ -34,22 +34,23 @@
                 "MOVE_REFLECT",
                 "MOVE_LIGHT_SCREEN"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         },
         {
-            "species": "SPECIES_GROTLE",
+            "species": "SPECIES_MONFERNO",
             "form": 0,
             "level": 27,
             "item": null,
             "moves": [
-                "MOVE_RAZOR_LEAF",
-                "MOVE_MEGA_DRAIN",
-                "MOVE_BITE",
-                "MOVE_CURSE"
+                "MOVE_FLAME_WHEEL",
+                "MOVE_MACH_PUNCH",
+                "MOVE_FURY_SWIPES",
+                "MOVE_TORMENT"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         }
-    ]
+    ],
+    "messages": []
 }

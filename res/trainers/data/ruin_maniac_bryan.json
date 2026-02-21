@@ -15,7 +15,7 @@
             "level": 24,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -24,8 +24,40 @@
             "level": 26,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Ah-ha! I found me a Trainer!\r",
+                "I challenge you to battle with\n",
+                "the Pokémon I’ve found!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "It’s a challenge trying to win with\n",
+                "Pokémon one isn’t familiar with...\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Discovery is the treasure I seek.\n",
+                "Collecting a lot is my life!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "Ah-ha! I found me a Trainer!\r",
+                "I challenge you to battle with\n",
+                "the Pokémon I’ve found!\r"
+            ]
         }
     ]
 }

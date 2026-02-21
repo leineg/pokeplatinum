@@ -10,6 +10,7 @@
 #include "struct_defs/struct_020217F4.h"
 #include "struct_defs/struct_02024184.h"
 
+#include "overlay005/area_light.h"
 #include "overlay005/const_ov5_021FAF40.h"
 #include "overlay005/const_ov5_021FAF48.h"
 #include "overlay005/const_ov5_021FAF50.h"
@@ -17,13 +18,12 @@
 #include "overlay005/const_ov5_021FB5BC.h"
 #include "overlay005/const_ov5_021FC9B4.h"
 #include "overlay005/const_ov5_021FD77C.h"
+#include "overlay005/field_effect_manager.h"
 #include "overlay005/funcptr_ov5_021EE454.h"
-#include "overlay005/ov5_021D521C.h"
-#include "overlay005/ov5_021DF440.h"
 #include "overlay005/ov5_021EB1A0.h"
 #include "overlay005/ov5_021ECC20.h"
-#include "overlay005/ov5_021F067C.h"
 #include "overlay005/ov5_021F17B8.h"
+#include "overlay005/resource_heap.h"
 #include "overlay005/struct_ov5_021DF7F8.h"
 #include "overlay005/struct_ov5_021DF84C.h"
 #include "overlay005/struct_ov5_021ECD10.h"
@@ -37,22 +37,20 @@
 #include "overlay005/struct_ov5_021EDFBC.h"
 #include "overlay005/struct_ov5_021EE134.h"
 #include "overlay005/struct_ov5_021EE294.h"
-#include "overlay005/struct_ov5_021F06D8_decl.h"
-#include "overlay101/struct_ov101_021D5D90_decl.h"
 
+#include "berry_patch_graphics.h"
 #include "enums.h"
 #include "heap.h"
 #include "map_object.h"
 #include "map_object_move.h"
 #include "map_tile_behavior.h"
 #include "narc.h"
+#include "overworld_anim_manager.h"
 #include "resource_collection.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "unk_02020AEC.h"
 #include "unk_0202414C.h"
-#include "unk_020677F4.h"
-#include "unk_020711EC.h"
 
 typedef enum {
     UnkEnum_ov5_021ED334_00 = 0,
@@ -70,7 +68,7 @@ typedef struct {
     UnkStruct_020216E0 *unk_24;
     UnkStruct_ov5_021DF84C unk_28;
     MapObject *unk_50;
-    UnkStruct_ov101_021D5D90 *unk_54;
+    OverworldAnimManager *unk_54;
     void *unk_58;
     UnkFuncPtr_ov5_021EE454 unk_5C;
 } UnkStruct_ov5_021EE698;
@@ -85,7 +83,7 @@ static int ov5_021ED1C8(const MapObjectManager *param0, const MapObject *param1,
 static void ov5_021ED224(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2, int param3, int param4, int param5, int param6);
 static void ov5_021ED2AC(UnkStruct_ov5_021ED0A4 *param0);
 static const UnkStruct_ov5_021ED2D0 *ov5_021ED2D0(int param0, int param1, const UnkStruct_ov5_021ED2D0 *param2);
-static int ov5_021ED2E8(UnkStruct_ov5_021ED0A4 *param0, UnkStruct_ov5_021F06D8 *param1, int param2, int param3, const UnkStruct_ov5_021ED2D0 *param4);
+static int ov5_021ED2E8(UnkStruct_ov5_021ED0A4 *param0, ResourceHeap *param1, int param2, int param3, const UnkStruct_ov5_021ED2D0 *param4);
 static UnkEnum_ov5_021ED334 ov5_021ED334(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2, const UnkStruct_ov5_021ED2D0 *param3);
 static UnkEnum_ov5_021ED334 ov5_021ED390(UnkStruct_ov5_021ED0A4 *param0, int param1);
 static UnkEnum_ov5_021ED334 ov5_021ED3A4(UnkStruct_ov5_021ED0A4 *param0, int param1);
@@ -234,9 +232,7 @@ UnkStruct_020216E0 *ov5_021ECF1C(MapObject *param0, int param1)
     UnkStruct_02020C44 *v1;
     UnkStruct_020216E0 *v2;
     UnkStruct_ov5_021DF84C *v3;
-    UnkStruct_ov5_021ED0A4 *v4;
-
-    v4 = ov5_021EDEA8(param0);
+    UnkStruct_ov5_021ED0A4 *v4 = ov5_021EDEA8(param0);
     v1 = ov5_021EDC8C(v4);
 
     ov5_021EDA0C(v4, param1);
@@ -273,8 +269,8 @@ void ov5_021ECFA4(const MapObject *param0, UnkStruct_020216E0 **param1)
     if ((*param1) != NULL) {
         int v0 = MapObject_GetGraphicsID(param0);
 
-        if (sub_020677F4(v0) == 1) {
-            v0 = sub_02067800(param0);
+        if (BerryPatchGraphics_IsBerryPatch(v0) == 1) {
+            v0 = BerryPatchGraphics_GetCurrentGraphicsResourceID(param0);
         }
 
         ov5_021ECF70(param0, param1, v0);
@@ -340,13 +336,13 @@ static void ov5_021ED0A4(UnkStruct_ov5_021ED0A4 *param0, int param1)
     UnkStruct_ov5_021ED110 *v3;
 
     v0 = sizeof(UnkStruct_ov5_021DF84C) * param1;
-    v2 = Heap_AllocFromHeap(4, v0);
+    v2 = Heap_Alloc(HEAP_ID_FIELD1, v0);
 
     param0->unk_E4 = v2;
     GF_ASSERT(v2 != NULL);
 
     v0 = (sizeof(UnkStruct_ov5_021ED110)) * param1;
-    v3 = Heap_AllocFromHeap(4, v0);
+    v3 = Heap_Alloc(HEAP_ID_FIELD1, v0);
 
     param0->unk_F4 = v3;
     GF_ASSERT(v3 != NULL);
@@ -366,16 +362,14 @@ static void ov5_021ED0F0(UnkStruct_ov5_021ED0A4 *param0)
 {
     ov5_021ED1A4(param0);
 
-    Heap_FreeToHeapExplicit(4, param0->unk_E4);
-    Heap_FreeToHeapExplicit(4, param0->unk_F4);
+    Heap_FreeExplicit(HEAP_ID_FIELD1, param0->unk_E4);
+    Heap_FreeExplicit(HEAP_ID_FIELD1, param0->unk_F4);
 }
 
 static UnkStruct_ov5_021DF84C *ov5_021ED110(UnkStruct_ov5_021ED0A4 *param0, u32 param1)
 {
     int v0;
-    UnkStruct_ov5_021ED110 *v1;
-
-    v1 = param0->unk_F4;
+    UnkStruct_ov5_021ED110 *v1 = param0->unk_F4;
     v0 = param0->unk_04;
 
     do {
@@ -407,11 +401,8 @@ static UnkStruct_ov5_021DF84C *ov5_021ED110(UnkStruct_ov5_021ED0A4 *param0, u32 
 int ov5_021ED150(const MapObjectManager *param0, u32 param1, UnkStruct_ov5_021DF84C *param2)
 {
     int v0;
-    const UnkStruct_ov5_021ED0A4 *v1;
-    UnkStruct_ov5_021ED110 *v2;
-
-    v1 = sub_0206285C(param0);
-    v2 = v1->unk_F4;
+    const UnkStruct_ov5_021ED0A4 *v1 = sub_0206285C(param0);
+    UnkStruct_ov5_021ED110 *v2 = v1->unk_F4;
     v0 = v1->unk_04;
 
     do {
@@ -430,9 +421,7 @@ int ov5_021ED150(const MapObjectManager *param0, u32 param1, UnkStruct_ov5_021DF
 static void ov5_021ED184(UnkStruct_ov5_021ED0A4 *param0, u32 param1)
 {
     int v0;
-    UnkStruct_ov5_021ED110 *v1;
-
-    v1 = param0->unk_F4;
+    UnkStruct_ov5_021ED110 *v1 = param0->unk_F4;
     v0 = param0->unk_04;
 
     do {
@@ -450,9 +439,7 @@ static void ov5_021ED184(UnkStruct_ov5_021ED0A4 *param0, u32 param1)
 static void ov5_021ED1A4(UnkStruct_ov5_021ED0A4 *param0)
 {
     int v0;
-    UnkStruct_ov5_021ED110 *v1;
-
-    v1 = param0->unk_F4;
+    UnkStruct_ov5_021ED110 *v1 = param0->unk_F4;
     v0 = param0->unk_04;
 
     do {
@@ -478,8 +465,8 @@ static int ov5_021ED1C8(const MapObjectManager *param0, const MapObject *param1,
             if (sub_02062CF8(v2) == 1) {
                 v1 = MapObject_GetGraphicsID(v2);
 
-                if (sub_020677F4(v1) == 1) {
-                    v1 = sub_02067800(v2);
+                if (BerryPatchGraphics_IsBerryPatch(v1) == 1) {
+                    v1 = BerryPatchGraphics_GetCurrentGraphicsResourceID(v2);
                 }
 
                 if ((v1 != 0xffff) && (v1 == param2)) {
@@ -498,14 +485,14 @@ static int ov5_021ED1C8(const MapObjectManager *param0, const MapObject *param1,
 static void ov5_021ED224(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2, int param3, int param4, int param5, int param6)
 {
     {
-        param0->unk_F8 = ov5_021F067C(4, 64, 0x1000 * param1, param1);
+        param0->unk_F8 = ResourceHeap_New(HEAP_ID_FIELD1, HEAP_ID_64, 0x1000 * param1, param1);
         ov5_021ED558(param0);
         ov5_021EDCC4(param0, param2);
         ov5_021EDCCC(param0, param1 - param2);
     }
 
     {
-        param0->unk_FC = ov5_021F067C(4, 65, 0x80 * param3, param3);
+        param0->unk_FC = ResourceHeap_New(HEAP_ID_FIELD1, HEAP_ID_65, 0x80 * param3, param3);
         ov5_021ED694(param0);
         ov5_021EDCD4(param0, param4);
         ov5_021EDCDC(param0, param3 - param4);
@@ -514,7 +501,7 @@ static void ov5_021ED224(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2,
     {
         TextureResourceManager *v0;
 
-        v0 = TextureResourceManager_New(param5, 4);
+        v0 = TextureResourceManager_New(param5, HEAP_ID_FIELD1);
 
         ov5_021EDCA8(param0, v0);
         ov5_021ED7D0(param0);
@@ -525,8 +512,8 @@ static void ov5_021ED224(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2,
 
 static void ov5_021ED2AC(UnkStruct_ov5_021ED0A4 *param0)
 {
-    ov5_021F06D8(param0->unk_F8);
-    ov5_021F06D8(param0->unk_FC);
+    ResourceHeap_Free(param0->unk_F8);
+    ResourceHeap_Free(param0->unk_FC);
     TextureResourceManager_Delete(ov5_021EDCB0(param0));
 }
 
@@ -543,11 +530,11 @@ static const UnkStruct_ov5_021ED2D0 *ov5_021ED2D0(int param0, int param1, const 
     return NULL;
 }
 
-static int ov5_021ED2E8(UnkStruct_ov5_021ED0A4 *param0, UnkStruct_ov5_021F06D8 *param1, int param2, int param3, const UnkStruct_ov5_021ED2D0 *param4)
+static int ov5_021ED2E8(UnkStruct_ov5_021ED0A4 *param0, ResourceHeap *param1, int param2, int param3, const UnkStruct_ov5_021ED2D0 *param4)
 {
     const UnkStruct_ov5_021ED2D0 *v0;
 
-    if (ov5_021F0770(param1, param2) == 1) {
+    if (ResourceHeap_HasItem(param1, param2) == 1) {
         return 0;
     }
 
@@ -556,7 +543,7 @@ static int ov5_021ED2E8(UnkStruct_ov5_021ED0A4 *param0, UnkStruct_ov5_021F06D8 *
 
     {
         NARC *v1 = MapObjectMan_GetNARC(param0->unk_104);
-        ov5_021F0784(param1, param2, v1, v0->unk_04, 0);
+        ResourceHeap_LoadMemberFromNARC(param1, param2, v1, v0->unk_04, 0);
     }
 
     return 1;
@@ -603,16 +590,14 @@ static UnkEnum_ov5_021ED334 ov5_021ED3A4(UnkStruct_ov5_021ED0A4 *param0, int par
 static void ov5_021ED3B8(UnkStruct_ov5_021ED0A4 *param0, const int *param1)
 {
     while ((*param1) != 0xffff) {
-        ov5_021ED390(param0, (*param1));
+        ov5_021ED390(param0, *param1);
         param1++;
     }
 }
 
 static void ov5_021ED3DC(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
-    ResourceCollection *v0;
-
-    v0 = ov5_021EDC98(param0);
+    ResourceCollection *v0 = ov5_021EDC98(param0);
 
     ov5_021ED2E8(param0, param0->unk_F8, param1, 0xffff, Unk_ov5_021FB484);
     ov5_021ED56C(param0, param1);
@@ -620,9 +605,7 @@ static void ov5_021ED3DC(UnkStruct_ov5_021ED0A4 *param0, int param1)
 
 static void ov5_021ED40C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
-    ResourceCollection *v0;
-
-    v0 = ov5_021EDC98(param0);
+    ResourceCollection *v0 = ov5_021EDC98(param0);
 
     ov5_021ED2E8(param0, param0->unk_F8, param1, 0xffff, Unk_ov5_021FB484);
     ov5_021ED5B4(param0, param1);
@@ -631,16 +614,14 @@ static void ov5_021ED40C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED43C(UnkStruct_ov5_021ED0A4 *param0, const int *param1)
 {
     while ((*param1) != 0xffff) {
-        ov5_021ED3DC(param0, (*param1));
+        ov5_021ED3DC(param0, *param1);
         param1++;
     }
 }
 
 static void ov5_021ED460(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
-    ResourceCollection *v0;
-
-    v0 = ov5_021EDCA0(param0);
+    ResourceCollection *v0 = ov5_021EDCA0(param0);
 
     ov5_021ED2E8(param0, param0->unk_FC, param1, 0xffff, Unk_ov5_021FB5BC);
     ov5_021ED6A8(param0, param1);
@@ -648,9 +629,7 @@ static void ov5_021ED460(UnkStruct_ov5_021ED0A4 *param0, int param1)
 
 static void ov5_021ED490(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
-    ResourceCollection *v0;
-
-    v0 = ov5_021EDCA0(param0);
+    ResourceCollection *v0 = ov5_021EDCA0(param0);
 
     ov5_021ED2E8(param0, param0->unk_FC, param1, 0xffff, Unk_ov5_021FB5BC);
     ov5_021ED6F0(param0, param1);
@@ -659,7 +638,7 @@ static void ov5_021ED490(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED4C0(UnkStruct_ov5_021ED0A4 *param0, const int *param1)
 {
     while ((*param1) != 0xffff) {
-        ov5_021ED460(param0, (*param1));
+        ov5_021ED460(param0, *param1);
         param1++;
     }
 }
@@ -726,9 +705,7 @@ static int ov5_021ED53C(int *param0, int param1, int param2, int param3)
 
 static void ov5_021ED558(UnkStruct_ov5_021ED0A4 *param0)
 {
-    int *v0;
-
-    v0 = ov5_021EDCBC(param0);
+    int *v0 = ov5_021EDCBC(param0);
     ov5_021ED504(v0, 0xffff, 8);
 }
 
@@ -758,9 +735,7 @@ static int ov5_021ED598(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED5B4(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0, v1;
-    int *v2;
-
-    v2 = ov5_021EDCBC(param0);
+    int *v2 = ov5_021EDCBC(param0);
     v2 = &v2[ov5_021EDCC8(param0)];
     v1 = ov5_021EDCD0(param0);
     v0 = ov5_021ED50C(v2, param1, 0xffff, v1);
@@ -771,9 +746,7 @@ static void ov5_021ED5B4(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static int ov5_021ED5E8(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0;
-    int *v1;
-
-    v1 = ov5_021EDCBC(param0);
+    int *v1 = ov5_021EDCBC(param0);
     v1 = &v1[ov5_021EDCC8(param0)];
     v0 = ov5_021EDCD0(param0);
 
@@ -783,9 +756,7 @@ static int ov5_021ED5E8(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED610(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0;
-    int *v1;
-
-    v1 = ov5_021EDCBC(param0);
+    int *v1 = ov5_021EDCBC(param0);
     v1 = &v1[ov5_021EDCC8(param0)];
     v0 = ov5_021EDCD0(param0);
 
@@ -795,18 +766,15 @@ static void ov5_021ED610(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED63C(MapObjectManager *param0, UnkStruct_ov5_021ED0A4 *param1)
 {
     int v0;
-    int *v1;
-    ResourceCollection *v2;
-
-    v2 = ov5_021EDC98(param1);
-    v1 = ov5_021EDCBC(param1);
+    ResourceCollection *v2 = ov5_021EDC98(param1);
+    int *v1 = ov5_021EDCBC(param1);
     v1 = &v1[ov5_021EDCC8(param1)];
     v0 = ov5_021EDCD0(param1);
 
     do {
         if ((*v1) != 0xffff) {
-            if (ov5_021EDAB4(param0, (*v1), NULL) == 0) {
-                ov5_021F0740(param1->unk_F8, *v1);
+            if (ov5_021EDAB4(param0, *v1, NULL) == 0) {
+                ResourceHeap_FreeItem(param1->unk_F8, *v1);
                 *v1 = 0xffff;
             }
         }
@@ -818,9 +786,7 @@ static void ov5_021ED63C(MapObjectManager *param0, UnkStruct_ov5_021ED0A4 *param
 
 static void ov5_021ED694(UnkStruct_ov5_021ED0A4 *param0)
 {
-    int *v0;
-
-    v0 = ov5_021EDCC0(param0);
+    int *v0 = ov5_021EDCC0(param0);
     ov5_021ED504(v0, 0xffff, 8);
 }
 
@@ -850,9 +816,7 @@ static int ov5_021ED6D4(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED6F0(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0, v1;
-    int *v2;
-
-    v2 = ov5_021EDCC0(param0);
+    int *v2 = ov5_021EDCC0(param0);
     v2 = &v2[ov5_021EDCD8(param0)];
     v1 = ov5_021EDCE0(param0);
     v0 = ov5_021ED50C(v2, param1, 0xffff, v1);
@@ -863,9 +827,7 @@ static void ov5_021ED6F0(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static int ov5_021ED724(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0;
-    int *v1;
-
-    v1 = ov5_021EDCC0(param0);
+    int *v1 = ov5_021EDCC0(param0);
     v1 = &v1[ov5_021EDCD8(param0)];
     v0 = ov5_021EDCE0(param0);
 
@@ -875,9 +837,7 @@ static int ov5_021ED724(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED74C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0;
-    int *v1;
-
-    v1 = ov5_021EDCC0(param0);
+    int *v1 = ov5_021EDCC0(param0);
     v1 = &v1[ov5_021EDCD8(param0)];
     v0 = ov5_021EDCE0(param0);
 
@@ -887,18 +847,15 @@ static void ov5_021ED74C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED778(MapObjectManager *param0, UnkStruct_ov5_021ED0A4 *param1)
 {
     int v0;
-    int *v1;
-    ResourceCollection *v2;
-
-    v2 = ov5_021EDCA0(param1);
-    v1 = ov5_021EDCC0(param1);
+    ResourceCollection *v2 = ov5_021EDCA0(param1);
+    int *v1 = ov5_021EDCC0(param1);
     v1 = &v1[ov5_021EDCD8(param1)];
     v0 = ov5_021EDCE0(param1);
 
     do {
         if ((*v1) != 0xffff) {
-            if (ov5_021EDB3C(param0, (*v1), NULL) == 0) {
-                ov5_021F0740(param1->unk_FC, *v1);
+            if (ov5_021EDB3C(param0, *v1, NULL) == 0) {
+                ResourceHeap_FreeItem(param1->unk_FC, *v1);
                 *v1 = 0xffff;
             }
         }
@@ -910,9 +867,7 @@ static void ov5_021ED778(MapObjectManager *param0, UnkStruct_ov5_021ED0A4 *param
 
 static void ov5_021ED7D0(UnkStruct_ov5_021ED0A4 *param0)
 {
-    int *v0;
-
-    v0 = ov5_021EDCB8(param0);
+    int *v0 = ov5_021EDCB8(param0);
     ov5_021ED504(v0, 0xffff, 32);
 }
 
@@ -953,9 +908,7 @@ static int ov5_021ED82C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED858(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0, v1;
-    int *v2;
-
-    v2 = ov5_021EDCB8(param0);
+    int *v2 = ov5_021EDCB8(param0);
     v2 = &v2[ov5_021EDCE8(param0)];
     v1 = ov5_021EDCF0(param0);
     v0 = ov5_021ED50C(v2, param1, 0xffff, v1);
@@ -966,9 +919,7 @@ static void ov5_021ED858(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED88C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0;
-    int *v1;
-
-    v1 = ov5_021EDCB8(param0);
+    int *v1 = ov5_021EDCB8(param0);
     v1 = &v1[ov5_021EDCE8(param0)];
     v0 = ov5_021EDCF0(param0);
 
@@ -978,11 +929,8 @@ static void ov5_021ED88C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 static void ov5_021ED8B8(MapObjectManager *param0, UnkStruct_ov5_021ED0A4 *param1)
 {
     int v0, v1;
-    int *v2;
-    TextureResourceManager *v3;
-
-    v3 = ov5_021EDCB0(param1);
-    v2 = ov5_021EDCB8(param1);
+    TextureResourceManager *v3 = ov5_021EDCB0(param1);
+    int *v2 = ov5_021EDCB8(param1);
     v2 = &v2[ov5_021EDCE8(param1)];
     v0 = ov5_021EDCF0(param1);
 
@@ -1007,9 +955,7 @@ static void ov5_021ED8B8(MapObjectManager *param0, UnkStruct_ov5_021ED0A4 *param
 static int ov5_021ED924(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
     int v0;
-    int *v1;
-
-    v1 = ov5_021EDCB8(param0);
+    int *v1 = ov5_021EDCB8(param0);
     v1 = &v1[ov5_021EDCE8(param0)];
     v0 = ov5_021EDCF0(param0);
 
@@ -1080,9 +1026,7 @@ static void ov5_021ED9F4(UnkStruct_ov5_021ED0A4 *param0, int param1)
 
 static void ov5_021EDA0C(UnkStruct_ov5_021ED0A4 *param0, int param1)
 {
-    int v0;
-
-    v0 = ov5_021EDD2C(param1);
+    int v0 = ov5_021EDD2C(param1);
     ov5_021ED9DC(param0, v0);
 
     v0 = ov5_021EDD38(param1);
@@ -1102,15 +1046,15 @@ static int ov5_021EDA54(const MapObjectManager *param0, int param1, const MapObj
     int v0 = 0, v1;
     MapObject *v2 = NULL;
 
-    while (sub_020625B0(param0, &v2, &v0, MAP_OBJ_STATUS_0) == 1) {
+    while (MapObjectMan_FindObjectWithStatus(param0, &v2, &v0, MAP_OBJ_STATUS_0) == 1) {
         if ((param2 != NULL) && (param2 == v2)) {
             continue;
         }
 
         v1 = MapObject_GetGraphicsID(v2);
 
-        if (sub_020677F4(v1) == 1) {
-            v1 = sub_02067800(v2);
+        if (BerryPatchGraphics_IsBerryPatch(v1) == 1) {
+            v1 = BerryPatchGraphics_GetCurrentGraphicsResourceID(v2);
         }
 
         if (v1 == param1) {
@@ -1126,7 +1070,7 @@ static int ov5_021EDAB4(const MapObjectManager *param0, int param1, const MapObj
     int v0, v1 = 0;
     MapObject *v2 = NULL;
 
-    while (sub_020625B0(param0, &v2, &v1, MAP_OBJ_STATUS_0) == 1) {
+    while (MapObjectMan_FindObjectWithStatus(param0, &v2, &v1, MAP_OBJ_STATUS_0) == 1) {
         if ((param2 != NULL) && (param2 == v2)) {
             continue;
         }
@@ -1145,8 +1089,8 @@ static int ov5_021EDAB4(const MapObjectManager *param0, int param1, const MapObj
             }
         }
 
-        if (sub_020677F4(v0) == 1) {
-            v0 = sub_02067800(v2);
+        if (BerryPatchGraphics_IsBerryPatch(v0) == 1) {
+            v0 = BerryPatchGraphics_GetCurrentGraphicsResourceID(v2);
         }
 
         if (v0 != 0xffff) {
@@ -1164,7 +1108,7 @@ static int ov5_021EDB3C(const MapObjectManager *param0, int param1, const MapObj
     int v0, v1 = 0;
     MapObject *v2 = NULL;
 
-    while (sub_020625B0(param0, &v2, &v1, MAP_OBJ_STATUS_0) == 1) {
+    while (MapObjectMan_FindObjectWithStatus(param0, &v2, &v1, MAP_OBJ_STATUS_0) == 1) {
         if ((param2 != NULL) && (v2 == param2)) {
             continue;
         }
@@ -1183,8 +1127,8 @@ static int ov5_021EDB3C(const MapObjectManager *param0, int param1, const MapObj
 
         v0 = MapObject_GetGraphicsID(v2);
 
-        if (sub_020677F4(v0) == 1) {
-            v0 = sub_02067800(v2);
+        if (BerryPatchGraphics_IsBerryPatch(v0) == 1) {
+            v0 = BerryPatchGraphics_GetCurrentGraphicsResourceID(v2);
         }
 
         if (v0 != 0xffff) {
@@ -1206,7 +1150,7 @@ void ov5_021EDBC4(const MapObjectManager *param0, int param1, MapObject *param2)
 
     if (ov5_021ED974(v1, v0) == 1) {
         if (ov5_021EDAB4(param0, v0, param2) == 0) {
-            ov5_021F0740(v1->unk_F8, v0);
+            ResourceHeap_FreeItem(v1->unk_F8, v0);
             ov5_021ED610(v1, v0);
         }
     }
@@ -1215,7 +1159,7 @@ void ov5_021EDBC4(const MapObjectManager *param0, int param1, MapObject *param2)
 
     if (ov5_021ED99C(v1, v0) == 1) {
         if (ov5_021EDB3C(param0, v0, param2) == 0) {
-            ov5_021F0740(v1->unk_FC, v0);
+            ResourceHeap_FreeItem(v1->unk_FC, v0);
             ov5_021ED74C(v1, v0);
         }
     }
@@ -1365,25 +1309,19 @@ static const UnkStruct_ov5_021EDD04 *ov5_021EDD04(int param0)
 
 static int ov5_021EDD2C(int param0)
 {
-    const UnkStruct_ov5_021EDD04 *v0;
-
-    v0 = ov5_021EDD04(param0);
+    const UnkStruct_ov5_021EDD04 *v0 = ov5_021EDD04(param0);
     return v0->unk_04;
 }
 
 static int ov5_021EDD38(int param0)
 {
-    const UnkStruct_ov5_021EDD04 *v0;
-
-    v0 = ov5_021EDD04(param0);
+    const UnkStruct_ov5_021EDD04 *v0 = ov5_021EDD04(param0);
     return v0->unk_06;
 }
 
 static const UnkStruct_020217F4 *ov5_021EDD44(int param0)
 {
-    const UnkStruct_ov5_021EDD04 *v0;
-
-    v0 = ov5_021EDD04(param0);
+    const UnkStruct_ov5_021EDD04 *v0 = ov5_021EDD04(param0);
     return v0->unk_08;
 }
 
@@ -1425,7 +1363,7 @@ static void ov5_021EDDAC(UnkStruct_ov5_021ED0A4 *param0, int param1)
     UnkStruct_02020C44 *v1;
 
     v0.unk_00 = param1;
-    v0.unk_04 = 4;
+    v0.heapID = HEAP_ID_FIELD1;
 
     v1 = sub_02020C44(&v0);
     ov5_021EDC84(param0, v1);
@@ -1456,7 +1394,7 @@ static UnkStruct_020216E0 *ov5_021EDDDC(UnkStruct_02020C44 *param0, const UnkStr
         sub_02021344(v2, 0);
         sub_020213A4(v2, 0);
         NNS_G3dMdlSetMdlFogEnableFlagAll(sub_020213F4(v2), param3);
-        ov5_021D53A4(sub_020213F4(v2));
+        AreaLight_UseGlobalModelAttributes(sub_020213F4(v2));
     }
 
     return v2;
@@ -1466,14 +1404,14 @@ static void ov5_021EDE3C(UnkStruct_ov5_021ED0A4 *param0, u32 param1, UnkStruct_o
 {
     {
         int v0 = ov5_021EDD2C(param1);
-        void *v1 = ov5_021F075C(param0->unk_F8, v0);
+        void *v1 = ResourceHeap_GetItemData(param0->unk_F8, v0);
 
         param2->unk_00 = v1;
     }
 
     {
         int v2 = ov5_021EDD38(param1);
-        void *v3 = ov5_021F075C(param0->unk_FC, v2);
+        void *v3 = ResourceHeap_GetItemData(param0->unk_FC, v2);
 
         sub_02024184(v3, &param2->unk_0C);
     }
@@ -1498,9 +1436,7 @@ static void ov5_021EDE3C(UnkStruct_ov5_021ED0A4 *param0, u32 param1, UnkStruct_o
 
 static UnkStruct_ov5_021ED0A4 *ov5_021EDEA8(const MapObject *param0)
 {
-    const MapObjectManager *v0;
-
-    v0 = MapObject_MapObjectManager(param0);
+    const MapObjectManager *v0 = MapObject_MapObjectManager(param0);
     return (UnkStruct_ov5_021ED0A4 *)sub_0206285C(v0);
 }
 
@@ -1680,7 +1616,7 @@ static void ov5_021EE030(SysTask *param0, void *param1)
 
 static void ov5_021EE0E8(UnkStruct_ov5_021ED0A4 *param0, int param1, void *param2, int param3)
 {
-    TextureResource *v0 = TextureResourceManager_AddTextureAndAllocVRam(param0->unk_F0, param2, param1, 1, 4);
+    TextureResource *v0 = TextureResourceManager_AddTextureAndAllocVRam(param0->unk_F0, param2, param1, 1, HEAP_ID_FIELD1);
 
     GF_ASSERT(v0 != NULL);
     ov5_021EE134(param0, param1);
@@ -1880,7 +1816,7 @@ static void ov5_021EE320(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2)
     v3 = (sizeof(UnkStruct_ov5_021EDFBC)) * param1;
     v2 = (sizeof(UnkStruct_ov5_021EE134)) * param1;
     v1 = (sizeof(UnkStruct_ov5_021EDF3C)) + v2 + v3 + v4;
-    v5 = Heap_AllocFromHeap(4, v1);
+    v5 = Heap_Alloc(HEAP_ID_FIELD1, v1);
 
     GF_ASSERT(v5 != NULL);
     memset(v5, 0, v1);
@@ -1899,7 +1835,7 @@ static void ov5_021EE320(UnkStruct_ov5_021ED0A4 *param0, int param1, int param2)
 
     param0->unk_100 = v5;
 
-    v0 = sub_02062858(param0->unk_104);
+    v0 = MapObjectMan_GetTaskBasePriority(param0->unk_104);
     v5->unk_18 = SysTask_Start(ov5_021EE030, param0, v0 + 1);
     v5->unk_1C = SysTask_Start(ov5_021EE2C4, param0, v0 + 2);
     v5->unk_20 = SysTask_ExecuteOnVBlank(ov5_021EE1AC, param0, 0xff);
@@ -1916,7 +1852,7 @@ static void ov5_021EE3C4(UnkStruct_ov5_021ED0A4 *param0)
     SysTask_Done(v0->unk_1C);
     SysTask_Done(v0->unk_20);
     SysTask_Done(v0->unk_24);
-    Heap_FreeToHeap(v0);
+    Heap_Free(v0);
 
     param0->unk_100 = NULL;
 }
@@ -1946,7 +1882,7 @@ static UnkStruct_020216E0 *ov5_021EE454(MapObject *param0, int param1, UnkFuncPt
     UnkStruct_ov5_021ED0A4 *v8 = ov5_021EDEA8(param0);
     UnkStruct_02020C44 *v9 = ov5_021EDC8C(v8);
     UnkStruct_020216E0 *v10 = ov5_021EB1A0(param0);
-    UnkStruct_ov5_021EE698 *v11 = Heap_AllocFromHeapAtEnd(4, sizeof(UnkStruct_ov5_021EE698));
+    UnkStruct_ov5_021EE698 *v11 = Heap_AllocAtEnd(HEAP_ID_FIELD1, sizeof(UnkStruct_ov5_021EE698));
 
     memset(v11, 0, sizeof(UnkStruct_ov5_021EE698));
 
@@ -2033,7 +1969,7 @@ static UnkStruct_020216E0 *ov5_021EE454(MapObject *param0, int param1, UnkFuncPt
         if (sub_02062F64(param0) == 1) {
             VecFx32 v12;
             int v13;
-            int v14 = sub_02062758(param0, 2);
+            int v14 = MapObject_CalculateTaskPriority(param0, 2);
             u8 v15 = MapObject_GetTileBehaviorFromDir(param0, 1);
 
             if (TileBehavior_IsReflective(v15) == 1) {
@@ -2045,7 +1981,7 @@ static UnkStruct_020216E0 *ov5_021EE454(MapObject *param0, int param1, UnkFuncPt
             }
 
             MapObject_GetPosPtr(param0, &v12);
-            v11->unk_54 = ov5_021F1BA4(ov5_021DF578(param0), &v11->unk_28, v11->unk_24, &v12, v13, v14);
+            v11->unk_54 = ov5_021F1BA4(MapObject_GetFieldEffectManager(param0), &v11->unk_28, v11->unk_24, &v12, v13, v14);
         }
     }
 
@@ -2054,7 +1990,7 @@ static UnkStruct_020216E0 *ov5_021EE454(MapObject *param0, int param1, UnkFuncPt
     sub_02061AB4(param0, param1);
 
     {
-        int v16 = sub_02062858(v8->unk_104);
+        int v16 = MapObjectMan_GetTaskBasePriority(v8->unk_104);
         SysTask *v17 = SysTask_ExecuteAfterVBlank(ov5_021EE698, v11, 0xff);
 
         GF_ASSERT(v17 != NULL);
@@ -2085,14 +2021,14 @@ static void ov5_021EE698(SysTask *param0, void *param1)
             }
 
             if (v0->unk_54 != NULL) {
-                sub_0207136C(v0->unk_54);
+                OverworldAnimManager_Finish(v0->unk_54);
             }
 
             sub_020211FC(v0->unk_24);
-            Heap_FreeToHeap(v0->unk_08);
-            Heap_FreeToHeap(v0->unk_0C);
-            Heap_FreeToHeap(v0->unk_10);
-            Heap_FreeToHeap(v0);
+            Heap_Free(v0->unk_08);
+            Heap_Free(v0->unk_0C);
+            Heap_Free(v0->unk_10);
+            Heap_Free(v0);
             SysTask_Done(param0);
             return;
         }
@@ -2109,14 +2045,14 @@ static void ov5_021EE698(SysTask *param0, void *param1)
             }
 
             if (v0->unk_54 != NULL) {
-                sub_0207136C(v0->unk_54);
+                OverworldAnimManager_Finish(v0->unk_54);
             }
 
             sub_020211FC(v0->unk_24);
-            Heap_FreeToHeap(v0->unk_08);
-            Heap_FreeToHeap(v0->unk_0C);
-            Heap_FreeToHeap(v0->unk_10);
-            Heap_FreeToHeap(v0);
+            Heap_Free(v0->unk_08);
+            Heap_Free(v0->unk_0C);
+            Heap_Free(v0->unk_10);
+            Heap_Free(v0);
             SysTask_Done(param0);
         }
     }

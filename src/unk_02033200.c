@@ -3,19 +3,19 @@
 #include <string.h>
 
 #include "constants/heap.h"
+#include "constants/net.h"
 
 #include "struct_defs/sentence.h"
-#include "struct_defs/struct_0202610C.h"
 #include "struct_defs/struct_0203330C.h"
 #include "struct_defs/struct_02034168.h"
 
+#include "battle_regulation.h"
 #include "communication_information.h"
 #include "communication_system.h"
 #include "heap.h"
 #include "system.h"
 #include "trainer_info.h"
 #include "unk_02014A84.h"
-#include "unk_0202602C.h"
 #include "unk_02030EE0.h"
 #include "unk_0203266C.h"
 #include "unk_020366A0.h"
@@ -60,12 +60,12 @@ static void sub_02033AA8(void);
 static BOOL sub_02034014(u8 *param0);
 static u16 sub_02033F0C(u16 param0);
 static void sub_0203330C(WMBssDesc *param0);
-static void sub_0203344C(void *param0, WVRResult param1);
+static void WirelessDriver_InitCallback(void *param0, WVRResult param1);
 static int sub_02033DDC(void);
 
 static CommServerClient *sCommServerClient = NULL;
 static u16 Unk_021C07B8 = 0;
-static volatile int Unk_021C07BC;
+static volatile int sWirelessDriverStatus;
 
 void CommServerClient_Init(TrainerInfo *trainerInfo, BOOL param1)
 {
@@ -75,16 +75,16 @@ void CommServerClient_Init(TrainerInfo *trainerInfo, BOOL param1)
         return;
     }
 
-    sCommServerClient = (CommServerClient *)Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sizeof(CommServerClient));
+    sCommServerClient = (CommServerClient *)Heap_Alloc(HEAP_ID_COMMUNICATION, sizeof(CommServerClient));
     MI_CpuClear8(sCommServerClient, sizeof(CommServerClient));
 
-    sCommServerClient->unk_14E8 = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sub_02031C50());
+    sCommServerClient->unk_14E8 = Heap_Alloc(HEAP_ID_COMMUNICATION, sub_02031C50());
     MI_CpuClear8(sCommServerClient->unk_14E8, sub_02031C50());
 
-    sCommServerClient->unk_1500 = Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, sub_0202602C());
-    MI_CpuClear8(sCommServerClient->unk_1500, sub_0202602C());
+    sCommServerClient->unk_1500 = Heap_Alloc(HEAP_ID_COMMUNICATION, BattleRegulation_Size());
+    MI_CpuClear8(sCommServerClient->unk_1500, BattleRegulation_Size());
 
-    sCommServerClient->unk_1508 = (u32)Heap_AllocFromHeap(HEAP_ID_COMMUNICATION, WM_SIZE_USER_GAMEINFO + 32);
+    sCommServerClient->unk_1508 = (u32)Heap_Alloc(HEAP_ID_COMMUNICATION, WM_SIZE_USER_GAMEINFO + 32);
     sCommServerClient->unk_150C = (u16 *)(32 - (sCommServerClient->unk_1508 % 32) + sCommServerClient->unk_1508);
 
     sCommServerClient->unk_1504 = 0x333;
@@ -186,7 +186,7 @@ static void sub_02033380(void)
     sCommServerClient->unk_14F8 = 1;
 }
 
-static void sub_0203344C(void *param0, WVRResult param1)
+static void WirelessDriver_InitCallback(void *param0, WVRResult param1)
 {
     if (param1 != WVR_RESULT_SUCCESS) {
         OS_Terminate();
@@ -194,41 +194,41 @@ static void sub_0203344C(void *param0, WVRResult param1)
         (void)0;
     }
 
-    Unk_021C07BC = 2;
+    sWirelessDriverStatus = WIRELESS_DRIVER_STATUS_CONNECTED;
 }
 
-static void sub_02033464(void *param0, WVRResult param1)
+static void WirelessDriver_ShutdownCallback(void *param0, WVRResult param1)
 {
-    Unk_021C07BC = 0;
+    sWirelessDriverStatus = WIRELESS_DRIVER_STATUS_DISCONNECTED;
     SleepUnlock(4);
 }
 
-void sub_02033478(void)
+void WirelessDriver_Init(void)
 {
     SleepLock(4);
 
-    Unk_021C07BC = 1;
+    sWirelessDriverStatus = WIRELESS_DRIVER_STATUS_CONNECTING;
 
-    if (WVR_RESULT_OPERATING != WVR_StartUpAsync(GX_VRAM_ARM7_128_D, sub_0203344C, NULL)) {
+    if (WVR_RESULT_OPERATING != WVR_StartUpAsync(GX_VRAM_ARM7_128_D, WirelessDriver_InitCallback, NULL)) {
         OS_Terminate();
     } else {
         (void)0;
     }
 }
 
-BOOL sub_020334A4(void)
+BOOL WirelessDriver_IsReady(void)
 {
-    return Unk_021C07BC == 2;
+    return sWirelessDriverStatus == WIRELESS_DRIVER_STATUS_CONNECTED;
 }
 
-BOOL sub_020334B8(void)
+BOOL WirelessDriver_Initialized(void)
 {
-    return Unk_021C07BC != 0;
+    return sWirelessDriverStatus != WIRELESS_DRIVER_STATUS_DISCONNECTED;
 }
 
-void sub_020334CC(void)
+void WirelessDriver_Shutdown(void)
 {
-    WVR_TerminateAsync(sub_02033464, NULL);
+    WVR_TerminateAsync(WirelessDriver_ShutdownCallback, NULL);
 }
 
 static void sub_020334DC(BOOL param0)
@@ -371,13 +371,13 @@ BOOL sub_02033768(void)
     return 0;
 }
 
-void sub_02033794(BOOL param0)
+void CommServerClient_SetSecretBaseClosedState(BOOL isClosed)
 {
     if (!sCommServerClient) {
         return;
     }
 
-    if (param0) {
+    if (isClosed) {
         sCommServerClient->unk_1516 = 2;
     } else {
         sCommServerClient->unk_1516 = 0;
@@ -387,10 +387,10 @@ void sub_02033794(BOOL param0)
 
 static void sub_020337C0(void)
 {
-    Heap_FreeToHeap(sCommServerClient->unk_1500);
-    Heap_FreeToHeap(sCommServerClient->unk_14E8);
-    Heap_FreeToHeap((void *)sCommServerClient->unk_1508);
-    Heap_FreeToHeap(sCommServerClient);
+    Heap_Free(sCommServerClient->unk_1500);
+    Heap_Free(sCommServerClient->unk_14E8);
+    Heap_Free((void *)sCommServerClient->unk_1508);
+    Heap_Free(sCommServerClient);
 
     sCommServerClient = NULL;
 }
@@ -416,9 +416,7 @@ int sub_02033808(void)
 
 int sub_0203383C(int param0)
 {
-    int v0, v1;
-
-    v1 = 0;
+    int v0, v1 = 0;
 
     for (v0 = 0; v0 < 16; v0++) {
         if (sCommServerClient->unk_14C8[v0] != 0) {
@@ -611,12 +609,12 @@ static void sub_02033AA8(void)
     if (v4 != 15) {
         v2 = (UnkStruct_0203330C *)sCommServerClient->unk_150C;
 
-        GF_ASSERT(32 >= sub_0202602C());
+        GF_ASSERT(32 >= BattleRegulation_Size());
         GF_ASSERT(32 == TrainerInfo_Size());
         GF_ASSERT(WM_SIZE_USER_GAMEINFO >= MATH_MAX(sizeof(UnkStruct_02034168), sizeof(UnkStruct_0203330C)));
 
         MI_CpuCopy8(v1, v2->unk_10, TrainerInfo_Size());
-        MI_CpuCopy8(sCommServerClient->unk_1500, v2->unk_30, sub_0202602C());
+        MI_CpuCopy8(sCommServerClient->unk_1500, v2->unk_30, BattleRegulation_Size());
 
         v2->unk_00 = TrainerInfo_ID(v1);
         v2->unk_04 = sub_0203895C();
@@ -780,13 +778,13 @@ static int sub_02033DDC(void)
     return v0;
 }
 
-BOOL sub_02033DFC(void)
+BOOL CommServerClient_IsInClosedSecretBase(void)
 {
     if (sCommServerClient && (sCommServerClient->unk_1516 == 3)) {
-        return 1;
+        return TRUE;
     }
 
-    return 0;
+    return FALSE;
 }
 
 BOOL CommServerClient_IsInitialized(void)
@@ -946,7 +944,7 @@ void sub_020340A8(Sentence *param0)
 
 void sub_020340C4(void *param0)
 {
-    MI_CpuCopy8(param0, sCommServerClient->unk_1500, sub_0202602C());
+    MI_CpuCopy8(param0, sCommServerClient->unk_1500, BattleRegulation_Size());
 }
 
 void *sub_020340E8(void)

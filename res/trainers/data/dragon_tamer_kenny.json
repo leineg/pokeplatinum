@@ -15,7 +15,7 @@
             "level": 57,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -24,7 +24,7 @@
             "level": 57,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -33,8 +33,29 @@
             "level": 57,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Are you seeking the mythical\n",
+                "Pokémon, too? Let’s battle, then!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "There’s nothing left...\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "The mythical Pokémon that sleeps\n",
+                "deep in a volcano...\r",
+                "Could it be a dragon Pokémon?\n"
+            ]
         }
     ]
 }

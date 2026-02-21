@@ -1,483 +1,467 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/veilstone_store_b1f.h"
 
-    .data
+#define LOCALID_SPICINESS  VAR_0x8007
+#define LOCALID_DRYNESS    VAR_0x8000
+#define LOCALID_SWEETNESS  VAR_0x8001
+#define LOCALID_BITTERNESS VAR_0x8002
+#define LOCALID_SOURNESS   VAR_0x8003
+// All purchasable poffins have the same smoothness
+#define LOCALID_SMOOTHNESS 20
 
-    ScriptEntry _0032
-    ScriptEntry _0045
-    ScriptEntry _0058
-    ScriptEntry _006B
-    ScriptEntry _007E
-    ScriptEntry _0091
-    ScriptEntry _00A4
-    ScriptEntry _00FE
-    ScriptEntry _022A
-    ScriptEntry _06FE
-    ScriptEntry _00E8
-    ScriptEntry _0708
+    ScriptEntry VeilstoneStoreB1F_Gentleman
+    ScriptEntry VeilstoneStoreB1F_Socialite1
+    ScriptEntry VeilstoneStoreB1F_Socialite2
+    ScriptEntry VeilstoneStoreB1F_Attendant1
+    ScriptEntry VeilstoneStoreB1F_Attendant2
+    ScriptEntry VeilstoneStoreB1F_RageCandyBarVendor
+    ScriptEntry VeilstoneStoreB1F_ProfRowan
+    ScriptEntry VeilstoneStoreB1F_LavaCookieVendor
+    ScriptEntry VeilstoneStoreB1F_PoffinVendor
+    ScriptEntry VeilstoneStoreB1F_Dummy
+    ScriptEntry VeilstoneStoreB1F_BerryVendor
+    ScriptEntry VeilstoneStoreB1F_Directory
     ScriptEntryEnd
 
-_0032:
+VeilstoneStoreB1F_Gentleman:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 2
+    Message VeilstoneStoreB1F_Text_IBoughtAllTheRageCandyBars
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0045:
+VeilstoneStoreB1F_Socialite1:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 3
+    Message VeilstoneStoreB1F_Text_HopelessAtCookingPoffins
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0058:
+VeilstoneStoreB1F_Socialite2:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 4
+    Message VeilstoneStoreB1F_Text_FlavorsOfPoffinsAffectConditionOfPokemon
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_006B:
+VeilstoneStoreB1F_Attendant1:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 5
+    Message VeilstoneStoreB1F_Text_Welcome
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_007E:
+VeilstoneStoreB1F_Attendant2:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 6
+    Message VeilstoneStoreB1F_Text_WeHaveBerriesOnSale
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_0091:
+VeilstoneStoreB1F_RageCandyBarVendor:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    Message 7
+    Message VeilstoneStoreB1F_Text_AllSoldOut
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00A4:
+VeilstoneStoreB1F_ProfRowan:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    GoToIfSet 185, _00D0
-    SetFlag 185
-    SetFlag 0x185
-    Message 0
+    GoToIfSet FLAG_VEILSTONE_STORE_B1F_SPOKEN_TO_PROF_ROWAN, VeilstoneStoreB1F_ProfRowanAfterSpokenTo
+    SetFlag FLAG_VEILSTONE_STORE_B1F_SPOKEN_TO_PROF_ROWAN
+    SetFlag FLAG_VEILSTONE_STORE_B1F_HIDE_PROF_ROWAN
+    Message VeilstoneStoreB1F_Text_RageCandyBarsAreTooPopular
     FacePlayer
     BufferPlayerName 0
-    Message 1
-    GoTo _00E0
+    Message VeilstoneStoreB1F_Text_DoesLifeContinueToThrillYou
+    GoTo VeilstoneStoreB1F_ProfRowanClose
     End
 
-_00D0:
+VeilstoneStoreB1F_ProfRowanAfterSpokenTo:
     FacePlayer
     BufferPlayerName 0
-    Message 1
-    GoTo _00E0
+    Message VeilstoneStoreB1F_Text_DoesLifeContinueToThrillYou
+    GoTo VeilstoneStoreB1F_ProfRowanClose
     End
 
-_00E0:
+VeilstoneStoreB1F_ProfRowanClose:
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-_00E8:
+VeilstoneStoreB1F_BerryVendor:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_148 19
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartSpecialties MART_SPECIALTIES_ID_VEILSTONE_B1F
     ReleaseAll
     End
 
-_00FE:
+VeilstoneStoreB1F_LavaCookieVendor:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_072 20, 2
-    Message 8
-    ScrCmd_041 31, 11, 0, 1, 0x800C
-    ScrCmd_33A 1
-    ScrCmd_042 14, 0
-    ScrCmd_042 15, 1
-    ScrCmd_042 16, 2
-    ScrCmd_043
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _0150
-    GoToIfEq 0x8008, 1, _018F
-    GoTo _0215
+    ShowMoney 20, 2
+    Message VeilstoneStoreB1F_Text_WouldYouLikeSomeLavaCookies
+    InitLocalTextMenu 31, 11, 0, VAR_RESULT
+    SetMenuXOriginToRight
+    AddMenuEntryImm VeilstoneStoreB1F_Text_MenuEntry_One, 0
+    AddMenuEntryImm VeilstoneStoreB1F_Text_MenuEntry_Ten, 1
+    AddMenuEntryImm VeilstoneStoreB1F_Text_MenuEntry_LavaCookiesNoThanks, 2
+    ShowMenu
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, VeilstoneStoreB1F_LavaCookieVendorBuyOne
+    GoToIfEq VAR_0x8008, 1, VeilstoneStoreB1F_LavaCookieVendorBuyTen
+    GoTo VeilstoneStoreB1F_LavaCookieVendorComeAgain
     End
 
-_0150:
-    SetVar 0x8004, 1
-    SetVar 0x8005, 200
-    ScrCmd_07D 42, 0x8004, 0x800C
-    GoToIfEq 0x800C, 0, _01FF
-    ScrCmd_1AB 0x800C, 200
-    GoToIfEq 0x800C, 0, _020A
-    Message 9
-    GoTo _01CE
+VeilstoneStoreB1F_LavaCookieVendorBuyOne:
+    SetVar VAR_0x8004, 1
+    SetVar VAR_0x8005, 200
+    GoToIfCannotFitItem ITEM_LAVA_COOKIE, VAR_0x8004, VAR_RESULT, VeilstoneStoreB1F_LavaCookieVendorBagIsFull
+    CheckMoney2 VAR_RESULT, 200
+    GoToIfEq VAR_RESULT, 0, VeilstoneStoreB1F_LavaCookieVendorNotEnoughMoney
+    Message VeilstoneStoreB1F_Text_OneLavaCookie
+    GoTo VeilstoneStoreB1F_LavaCookieVendorReceiveCookies
     End
 
-_018F:
-    SetVar 0x8004, 10
-    SetVar 0x8005, 0x7D0
-    ScrCmd_07D 42, 0x8004, 0x800C
-    GoToIfEq 0x800C, 0, _01FF
-    ScrCmd_1AB 0x800C, 0x7D0
-    GoToIfEq 0x800C, 0, _020A
-    Message 10
-    GoTo _01CE
+VeilstoneStoreB1F_LavaCookieVendorBuyTen:
+    SetVar VAR_0x8004, 10
+    SetVar VAR_0x8005, 2000
+    GoToIfCannotFitItem ITEM_LAVA_COOKIE, VAR_0x8004, VAR_RESULT, VeilstoneStoreB1F_LavaCookieVendorBagIsFull
+    CheckMoney2 VAR_RESULT, 2000
+    GoToIfEq VAR_RESULT, 0, VeilstoneStoreB1F_LavaCookieVendorNotEnoughMoney
+    Message VeilstoneStoreB1F_Text_TenLavaCookies
+    GoTo VeilstoneStoreB1F_LavaCookieVendorReceiveCookies
     End
 
-_01CE:
-    AddItem ITEM_LAVA_COOKIE, 0x8004, 0x800C
+VeilstoneStoreB1F_LavaCookieVendorReceiveCookies:
+    AddItem ITEM_LAVA_COOKIE, VAR_0x8004, VAR_RESULT
     PlayFanfare SEQ_SE_DP_REGI
-    ScrCmd_334 35, 0x8005
-    ScrCmd_1A3 0x8005
-    ScrCmd_074
+    AddToGameRecord RECORD_MONEY_SPENT, VAR_0x8005
+    RemoveMoney2 VAR_0x8005
+    UpdateMoneyDisplay
     WaitFanfare SEQ_SE_DP_REGI
-    CallIfLt 0x4042, 0x2710, _0700
-    GoTo _0220
+    CallIfLt VAR_DEPARTMENT_STORE_REGULAR_COUNTER, 10000, VeilstoneStoreB1F_IncrementDepartmentStoreRegularCounter
+    GoTo VeilstoneStoreB1F_LavaCookieVendorClose
     End
 
-_01FF:
-    Message 11
-    GoTo _0220
+VeilstoneStoreB1F_LavaCookieVendorBagIsFull:
+    Message VeilstoneStoreB1F_Text_NoMoreRoom
+    GoTo VeilstoneStoreB1F_LavaCookieVendorClose
     End
 
-_020A:
-    Message 12
-    GoTo _0220
+VeilstoneStoreB1F_LavaCookieVendorNotEnoughMoney:
+    Message VeilstoneStoreB1F_Text_LavaCookiesNotEnoughMoney
+    GoTo VeilstoneStoreB1F_LavaCookieVendorClose
     End
 
-_0215:
-    Message 13
-    GoTo _0220
+VeilstoneStoreB1F_LavaCookieVendorComeAgain:
+    Message VeilstoneStoreB1F_Text_LavaCookiesPleaseComeAgain
+    GoTo VeilstoneStoreB1F_LavaCookieVendorClose
     End
 
-_0220:
+VeilstoneStoreB1F_LavaCookieVendorClose:
     WaitABXPadPress
     CloseMessage
-    ScrCmd_073
+    HideMoney
     ReleaseAll
     End
 
-_022A:
+VeilstoneStoreB1F_PoffinVendor:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    ScrCmd_072 20, 2
-    Message 17
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _025B
-    GoToIfEq 0x800C, MENU_NO, _0306
+    ShowMoney 20, 2
+    Message VeilstoneStoreB1F_Text_ISellPoffins
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, VeilstoneStoreB1F_PoffinVendorBuyPoffins
+    GoToIfEq VAR_RESULT, MENU_NO, VeilstoneStoreB1F_PoffinVendorPleaseComeAgain
     End
 
-_025B:
-    CheckItem ITEM_POFFIN_CASE, 1, 0x800C
-    GoToIfEq 0x800C, 0, _0537
-    Call _0697
-    SetVar 0x8008, 0x800C
-    GoToIfEq 0x8008, 0, _031B
-    GoToIfEq 0x8008, 1, _0344
-    GoToIfEq 0x8008, 2, _036D
-    GoToIfEq 0x8008, 3, _0396
-    GoToIfEq 0x8008, 4, _03BF
-    GoToIfEq 0x8008, 5, _03E8
-    GoToIfEq 0x8008, 6, _0411
-    GoToIfEq 0x8008, 7, _043A
-    GoToIfEq 0x8008, 8, _0463
-    GoToIfEq 0x8008, 9, _048C
-    GoTo _0306
+VeilstoneStoreB1F_PoffinVendorBuyPoffins:
+    CheckItem ITEM_POFFIN_CASE, 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, VeilstoneStoreB1F_PoffinVendorNoPoffinCase
+    Call VeilstoneStoreB1F_PoffinVendorMenu
+    SetVar VAR_0x8008, VAR_RESULT
+    GoToIfEq VAR_0x8008, 0, VeilstoneStoreB1F_PoffinVendorChooseSpicyDry
+    GoToIfEq VAR_0x8008, 1, VeilstoneStoreB1F_PoffinVendorChooseSpicySweet
+    GoToIfEq VAR_0x8008, 2, VeilstoneStoreB1F_PoffinVendorChooseSpicyBitter
+    GoToIfEq VAR_0x8008, 3, VeilstoneStoreB1F_PoffinVendorChooseSpicySour
+    GoToIfEq VAR_0x8008, 4, VeilstoneStoreB1F_PoffinVendorChooseDrySweet
+    GoToIfEq VAR_0x8008, 5, VeilstoneStoreB1F_PoffinVendorChooseDryBitter
+    GoToIfEq VAR_0x8008, 6, VeilstoneStoreB1F_PoffinVendorChooseDrySour
+    GoToIfEq VAR_0x8008, 7, VeilstoneStoreB1F_PoffinVendorChooseSweetBitter
+    GoToIfEq VAR_0x8008, 8, VeilstoneStoreB1F_PoffinVendorChooseSweetSour
+    GoToIfEq VAR_0x8008, 9, VeilstoneStoreB1F_PoffinVendorChooseBitterSour
+    GoTo VeilstoneStoreB1F_PoffinVendorPleaseComeAgain
     End
 
-_0306:
-    Message 23
-    GoTo _0311
+VeilstoneStoreB1F_PoffinVendorPleaseComeAgain:
+    Message VeilstoneStoreB1F_Text_PoffinsPleaseComeAgain
+    GoTo VeilstoneStoreB1F_PoffinVendorClose
     End
 
-_0311:
+VeilstoneStoreB1F_PoffinVendorClose:
     WaitABXPadPress
     CloseMessage
-    ScrCmd_073
+    HideMoney
     ReleaseAll
     End
 
-_031B:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0557
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseSpicyDry:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateSpicyDry
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_0344:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0577
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseSpicySweet:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateSpicySweet
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_036D:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0597
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseSpicyBitter:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateSpicyBitter
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_0396:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _05B7
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseSpicySour:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateSpicySour
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_03BF:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _05D7
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseDrySweet:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateDrySweet
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_03E8:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _05F7
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseDryBitter:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateDryBitter
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_0411:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0617
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseDrySour:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateDrySour
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_043A:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0637
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseSweetBitter:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateSweetBitter
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_0463:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0657
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseSweetSour:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateSweetSour
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_048C:
-    ScrCmd_071 0x800C, 0x1900
-    GoToIfEq 0x800C, 0, _052C
-    SetVar 0x8005, 1
-    Call _0677
-    GoTo _04B5
+VeilstoneStoreB1F_PoffinVendorChooseBitterSour:
+    GoToIfNotEnoughMoney 6400, VeilstoneStoreB1F_PoffinVendorNotEnoughMoney
+    SetVar VAR_0x8005, 1
+    Call VeilstoneStoreB1F_PoffinVendorCreateBitterSour
+    GoTo VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull
     End
 
-_04B5:
-    ScrCmd_307 0x800C
-    GoToIfLt 0x800C, 0x8005, _0521
-    GoTo _04CE
+VeilstoneStoreB1F_PoffinVendorCheckCaseIsFull:
+    GetEmptyPoffinCaseSlotCount VAR_RESULT
+    GoToIfLt VAR_RESULT, VAR_0x8005, VeilstoneStoreB1F_PoffinVendorCaseIsFull
+    GoTo VeilstoneStoreB1F_PoffinVendorGivePoffin
     End
 
-_04CE:
-    GoToIfEq 0x8005, 0, _0503
-    ScrCmd_289 0x800C, 0x8007, 0x8000, 0x8001, 0x8002, 0x8003, 20
-    ScrCmd_334 35, 0x1900
-    ScrCmd_1A3 0x1900
-    SubVar 0x8005, 1
-    GoTo _04CE
+VeilstoneStoreB1F_PoffinVendorGivePoffin:
+    GoToIfEq VAR_0x8005, 0, VeilstoneStoreB1F_PoffinVendorThankYou
+    GivePoffin VAR_RESULT, LOCALID_SPICINESS, LOCALID_DRYNESS, LOCALID_SWEETNESS, LOCALID_BITTERNESS, LOCALID_SOURNESS, LOCALID_SMOOTHNESS
+    AddToGameRecord RECORD_MONEY_SPENT, 6400
+    RemoveMoney2 6400
+    SubVar VAR_0x8005, 1
+    GoTo VeilstoneStoreB1F_PoffinVendorGivePoffin
     End
 
-_0503:
+VeilstoneStoreB1F_PoffinVendorThankYou:
     PlayFanfare SEQ_SE_DP_REGI
-    ScrCmd_074
-    CallIfLt 0x4042, 0x2710, _0700
-    Message 20
-    GoTo _054D
+    UpdateMoneyDisplay
+    CallIfLt VAR_DEPARTMENT_STORE_REGULAR_COUNTER, 10000, VeilstoneStoreB1F_IncrementDepartmentStoreRegularCounter
+    Message VeilstoneStoreB1F_Text_ThankYouVeryMuch
+    GoTo VeilstoneStoreB1F_PoffinVendorClose2
     End
 
-_0521:
-    Message 22
-    GoTo _054D
+VeilstoneStoreB1F_PoffinVendorCaseIsFull:
+    Message VeilstoneStoreB1F_Text_PoffinCaseIsFull
+    GoTo VeilstoneStoreB1F_PoffinVendorClose2
     End
 
-_052C:
-    Message 21
-    GoTo _054D
+VeilstoneStoreB1F_PoffinVendorNotEnoughMoney:
+    Message VeilstoneStoreB1F_Text_PoffinsNotEnoughMoney
+    GoTo VeilstoneStoreB1F_PoffinVendorClose2
     End
 
-_0537:
-    Message 24
-    GoTo _054D
+VeilstoneStoreB1F_PoffinVendorNoPoffinCase:
+    Message VeilstoneStoreB1F_Text_YouNeedAPoffinCase
+    GoTo VeilstoneStoreB1F_PoffinVendorClose2
+    End
 
-    .byte 2
-    .byte 0
-    .byte 44
-    .byte 0
-    .byte 23
-    .byte 22
-    .byte 0
-    .byte 2
-    .byte 0
-    .byte 0
-    .byte 0
-    .byte 2
-    .byte 0
+VeilstoneStoreB1F_Unused:
+    Message VeilstoneStoreB1F_Text_PoffinsPleaseComeAgain
+    GoTo VeilstoneStoreB1F_PoffinVendorClose2
+    End
 
-_054D:
+VeilstoneStoreB1F_PoffinVendorClose2:
     WaitABXPadPress
     CloseMessage
-    ScrCmd_073
+    HideMoney
     ReleaseAll
     End
 
-_0557:
-    SetVar 0x8007, 32
-    SetVar 0x8000, 32
-    SetVar 0x8001, 0
-    SetVar 0x8002, 0
-    SetVar 0x8003, 0
+VeilstoneStoreB1F_PoffinVendorCreateSpicyDry:
+    SetVar LOCALID_SPICINESS, 32
+    SetVar LOCALID_DRYNESS, 32
+    SetVar LOCALID_SWEETNESS, 0
+    SetVar LOCALID_BITTERNESS, 0
+    SetVar LOCALID_SOURNESS, 0
     Return
 
-_0577:
-    SetVar 0x8007, 32
-    SetVar 0x8000, 0
-    SetVar 0x8001, 32
-    SetVar 0x8002, 0
-    SetVar 0x8003, 0
+VeilstoneStoreB1F_PoffinVendorCreateSpicySweet:
+    SetVar LOCALID_SPICINESS, 32
+    SetVar LOCALID_DRYNESS, 0
+    SetVar LOCALID_SWEETNESS, 32
+    SetVar LOCALID_BITTERNESS, 0
+    SetVar LOCALID_SOURNESS, 0
     Return
 
-_0597:
-    SetVar 0x8007, 32
-    SetVar 0x8000, 0
-    SetVar 0x8001, 0
-    SetVar 0x8002, 32
-    SetVar 0x8003, 0
+VeilstoneStoreB1F_PoffinVendorCreateSpicyBitter:
+    SetVar LOCALID_SPICINESS, 32
+    SetVar LOCALID_DRYNESS, 0
+    SetVar LOCALID_SWEETNESS, 0
+    SetVar LOCALID_BITTERNESS, 32
+    SetVar LOCALID_SOURNESS, 0
     Return
 
-_05B7:
-    SetVar 0x8007, 32
-    SetVar 0x8000, 0
-    SetVar 0x8001, 0
-    SetVar 0x8002, 0
-    SetVar 0x8003, 32
+VeilstoneStoreB1F_PoffinVendorCreateSpicySour:
+    SetVar LOCALID_SPICINESS, 32
+    SetVar LOCALID_DRYNESS, 0
+    SetVar LOCALID_SWEETNESS, 0
+    SetVar LOCALID_BITTERNESS, 0
+    SetVar LOCALID_SOURNESS, 32
     Return
 
-_05D7:
-    SetVar 0x8007, 0
-    SetVar 0x8000, 32
-    SetVar 0x8001, 32
-    SetVar 0x8002, 0
-    SetVar 0x8003, 0
+VeilstoneStoreB1F_PoffinVendorCreateDrySweet:
+    SetVar LOCALID_SPICINESS, 0
+    SetVar LOCALID_DRYNESS, 32
+    SetVar LOCALID_SWEETNESS, 32
+    SetVar LOCALID_BITTERNESS, 0
+    SetVar LOCALID_SOURNESS, 0
     Return
 
-_05F7:
-    SetVar 0x8007, 0
-    SetVar 0x8000, 32
-    SetVar 0x8001, 0
-    SetVar 0x8002, 32
-    SetVar 0x8003, 0
+VeilstoneStoreB1F_PoffinVendorCreateDryBitter:
+    SetVar LOCALID_SPICINESS, 0
+    SetVar LOCALID_DRYNESS, 32
+    SetVar LOCALID_SWEETNESS, 0
+    SetVar LOCALID_BITTERNESS, 32
+    SetVar LOCALID_SOURNESS, 0
     Return
 
-_0617:
-    SetVar 0x8007, 0
-    SetVar 0x8000, 32
-    SetVar 0x8001, 0
-    SetVar 0x8002, 0
-    SetVar 0x8003, 32
+VeilstoneStoreB1F_PoffinVendorCreateDrySour:
+    SetVar LOCALID_SPICINESS, 0
+    SetVar LOCALID_DRYNESS, 32
+    SetVar LOCALID_SWEETNESS, 0
+    SetVar LOCALID_BITTERNESS, 0
+    SetVar LOCALID_SOURNESS, 32
     Return
 
-_0637:
-    SetVar 0x8007, 0
-    SetVar 0x8000, 0
-    SetVar 0x8001, 32
-    SetVar 0x8002, 32
-    SetVar 0x8003, 0
+VeilstoneStoreB1F_PoffinVendorCreateSweetBitter:
+    SetVar LOCALID_SPICINESS, 0
+    SetVar LOCALID_DRYNESS, 0
+    SetVar LOCALID_SWEETNESS, 32
+    SetVar LOCALID_BITTERNESS, 32
+    SetVar LOCALID_SOURNESS, 0
     Return
 
-_0657:
-    SetVar 0x8007, 0
-    SetVar 0x8000, 0
-    SetVar 0x8001, 32
-    SetVar 0x8002, 0
-    SetVar 0x8003, 32
+VeilstoneStoreB1F_PoffinVendorCreateSweetSour:
+    SetVar LOCALID_SPICINESS, 0
+    SetVar LOCALID_DRYNESS, 0
+    SetVar LOCALID_SWEETNESS, 32
+    SetVar LOCALID_BITTERNESS, 0
+    SetVar LOCALID_SOURNESS, 32
     Return
 
-_0677:
-    SetVar 0x8007, 0
-    SetVar 0x8000, 0
-    SetVar 0x8001, 0
-    SetVar 0x8002, 32
-    SetVar 0x8003, 32
+VeilstoneStoreB1F_PoffinVendorCreateBitterSour:
+    SetVar LOCALID_SPICINESS, 0
+    SetVar LOCALID_DRYNESS, 0
+    SetVar LOCALID_SWEETNESS, 0
+    SetVar LOCALID_BITTERNESS, 32
+    SetVar LOCALID_SOURNESS, 32
     Return
 
-_0697:
-    Message 18
-    ScrCmd_045 1, 1, 0, 1, 0x800C
-    ScrCmd_046 25, 0xFF, 0
-    ScrCmd_046 26, 0xFF, 1
-    ScrCmd_046 27, 0xFF, 2
-    ScrCmd_046 28, 0xFF, 3
-    ScrCmd_046 29, 0xFF, 4
-    ScrCmd_046 30, 0xFF, 5
-    ScrCmd_046 31, 0xFF, 6
-    ScrCmd_046 32, 0xFF, 7
-    ScrCmd_046 33, 0xFF, 8
-    ScrCmd_046 34, 0xFF, 9
-    ScrCmd_046 35, 0xFF, 10
-    ScrCmd_047
+VeilstoneStoreB1F_PoffinVendorMenu:
+    Message VeilstoneStoreB1F_Text_WhichPoffinWouldYouLike
+    InitLocalTextListMenu 1, 1, 0, VAR_RESULT
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_SpicyDry, 0
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_SpicySweet, 1
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_SpicyBitter, 2
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_SpicySour, 3
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_DrySweet, 4
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_DryBitter, 5
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_DrySour, 6
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_SweetBitter, 7
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_SweetSour, 8
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_BitterSour, 9
+    AddListMenuEntry VeilstoneStoreB1F_Text_MenuEntry_PoffinsNoThanks, 10
+    ShowListMenu
     Return
 
-_06FE:
+VeilstoneStoreB1F_Dummy:
     End
 
-_0700:
-    AddVar 0x4042, 1
+VeilstoneStoreB1F_IncrementDepartmentStoreRegularCounter:
+    AddVar VAR_DEPARTMENT_STORE_REGULAR_COUNTER, 1
     Return
 
-_0708:
+VeilstoneStoreB1F_Directory:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    Message 37
+    Message VeilstoneStoreB1F_Text_Directory
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
-    .byte 0
+    .balign 4, 0

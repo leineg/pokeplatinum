@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/great_marsh_6.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _00D1
@@ -11,42 +10,41 @@ _000A:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GoToIfSet 0xAB4, _00BC
+    GoToIfSet FLAG_UNK_0x0AB4, _00BC
     Message 0
-    ScrCmd_1B7 0x8004, 4
-    SetVar 0x8008, 0x8004
-    GoToIfEq 0x8008, 0, _005B
-    GoToIfEq 0x8008, 1, _0069
-    GoToIfEq 0x8008, 2, _0077
+    GetRandom VAR_0x8004, 4
+    SetVar VAR_0x8008, VAR_0x8004
+    GoToIfEq VAR_0x8008, 0, _005B
+    GoToIfEq VAR_0x8008, 1, _0069
+    GoToIfEq VAR_0x8008, 2, _0077
     GoTo _0085
     End
 
 _005B:
-    SetVar 0x8004, 72
+    SetVar VAR_0x8004, ITEM_RED_SHARD
     GoTo _0093
     End
 
 _0069:
-    SetVar 0x8004, 73
+    SetVar VAR_0x8004, ITEM_BLUE_SHARD
     GoTo _0093
     End
 
 _0077:
-    SetVar 0x8004, 74
+    SetVar VAR_0x8004, ITEM_YELLOW_SHARD
     GoTo _0093
     End
 
 _0085:
-    SetVar 0x8004, 75
+    SetVar VAR_0x8004, ITEM_GREEN_SHARD
     GoTo _0093
     End
 
 _0093:
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _00C7
-    SetFlag 0xAB4
-    CallCommonScript 0x7E0
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _00C7
+    SetFlag FLAG_UNK_0x0AB4
+    Common_GiveItemQuantityNoLineFeed
     CloseMessage
     ReleaseAll
     End
@@ -59,15 +57,11 @@ _00BC:
     End
 
 _00C7:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
 _00D1:
-    ScrCmd_036 2, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 2
     End

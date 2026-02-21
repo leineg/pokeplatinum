@@ -1,15 +1,14 @@
 #include "macros/scrcmd.inc"
 
-    .data
 
     ScriptEntry _0006
     ScriptEntryEnd
 
 _0006:
-    SetFlag 0x9DB
+    SetFlag FLAG_FIRST_ARRIVAL_IRON_ISLAND_INTERIOR
     End
 
-    .byte 2
-    .byte 0
-    .byte 0
-    .byte 0
+IronIsland1F_Unused:
+    End
+
+    .balign 4, 0

@@ -15,7 +15,7 @@
             "level": 28,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
         },
         {
@@ -24,8 +24,35 @@
             "level": 30,
             "item": null,
             "moves": null,
-            "power": 50,
+            "iv_scale": 50,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Hi, Trainer!\n",
+                "Can you keep up with me?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "You’ve got energy to burn!\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Even if a battle gets heated, don’t\n",
+                "break branches off trees or anything.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "You’re that energetic Trainer!\n",
+                "I bet you can’t keep up this time!\r"
+            ]
         }
     ]
 }

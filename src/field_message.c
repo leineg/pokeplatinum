@@ -4,23 +4,24 @@
 #include <string.h>
 
 #include "constants/field/window.h"
+#include "generated/signpost_types.h"
 
 #include "bg_window.h"
 #include "font.h"
 #include "game_options.h"
 #include "render_text.h"
 #include "render_window.h"
-#include "strbuf.h"
+#include "string_gf.h"
 #include "text.h"
 
-void FieldMessage_LoadTextPalettes(u32 palLocation, u32 resetPrinters)
+void FieldMessage_LoadTextPalettes(enum PaletteLoadLocation palLocation, u32 resetPrinters)
 {
     if (resetPrinters == TRUE) {
         Text_ResetAllPrinters();
     }
 
-    Font_LoadTextPalette(palLocation, PLTT_OFFSET(FIELD_MESSAGE_PALETTE_INDEX), HEAP_ID_FIELD);
-    Font_LoadScreenIndicatorsPalette(palLocation, PLTT_OFFSET(12), HEAP_ID_FIELD);
+    Font_LoadTextPalette(palLocation, PLTT_OFFSET(FIELD_MESSAGE_PALETTE_INDEX), HEAP_ID_FIELD1);
+    Font_LoadScreenIndicatorsPalette(palLocation, PLTT_OFFSET(12), HEAP_ID_FIELD1);
 }
 
 void FieldMessage_AddWindow(BgConfig *bgConfig, Window *window, u32 bgLayer)
@@ -34,7 +35,7 @@ void FieldMessage_AddWindow(BgConfig *bgConfig, Window *window, u32 bgLayer)
 
 void FieldMessage_DrawWindow(Window *window, const Options *options)
 {
-    LoadMessageBoxGraphics(window->bgConfig, Window_GetBgLayer(window), 1024 - (18 + 12), 10, Options_Frame(options), 4);
+    LoadMessageBoxGraphics(window->bgConfig, Window_GetBgLayer(window), 1024 - (18 + 12), 10, Options_Frame(options), HEAP_ID_FIELD1);
     FieldMessage_ClearWindow(window);
     Window_DrawMessageBoxWithScrollCursor(window, FALSE, 1024 - (18 + 12), 10);
 }
@@ -44,23 +45,23 @@ void FieldMessage_ClearWindow(Window *window)
     Window_FillTilemap(window, 15);
 }
 
-u8 FieldMessage_Print(Window *window, Strbuf *strBuf, const Options *options, u8 canSkipDelay)
+u8 FieldMessage_Print(Window *window, String *string, const Options *options, u8 canSkipDelay)
 {
     RenderControlFlags_SetCanABSpeedUpPrint(canSkipDelay);
-    RenderControlFlags_SetAutoScrollFlags(FALSE);
+    RenderControlFlags_SetAutoScrollFlags(AUTO_SCROLL_DISABLED);
     RenderControlFlags_SetSpeedUpOnTouch(FALSE);
 
-    return Text_AddPrinterWithParams(window, FONT_MESSAGE, strBuf, 0, 0, Options_TextFrameDelay(options), NULL);
+    return Text_AddPrinterWithParams(window, FONT_MESSAGE, string, 0, 0, Options_TextFrameDelay(options), NULL);
 }
 
 // used only in one instance
-u8 FieldMessage_PrintWithParams(Window *window, Strbuf *strBuf, int fontID, int renderDelay, u8 canSkipDelay, BOOL autoScroll)
+u8 FieldMessage_PrintWithParams(Window *window, String *string, int fontID, int renderDelay, u8 canSkipDelay, BOOL autoScroll)
 {
     RenderControlFlags_SetCanABSpeedUpPrint(canSkipDelay);
     RenderControlFlags_SetAutoScrollFlags(autoScroll);
     RenderControlFlags_SetSpeedUpOnTouch(FALSE);
 
-    return Text_AddPrinterWithParams(window, fontID, strBuf, 0, 0, renderDelay, NULL);
+    return Text_AddPrinterWithParams(window, fontID, string, 0, 0, renderDelay, NULL);
 }
 
 u8 FieldMessage_FinishedPrinting(u8 printerID)
@@ -77,7 +78,7 @@ void FieldMessage_AddSignpostWindow(BgConfig *bgConfig, Window *window, u16 sign
 {
     u16 tilemapLeft, width;
 
-    if (signpostType == SIGNPOST_CITY_MAP || signpostType == SIGNPOST_ROUTE_MAP) {
+    if (signpostType == SIGNPOST_TYPE_MAP || signpostType == SIGNPOST_TYPE_ARROW) {
         tilemapLeft = 9;
         width = 20;
     } else {
@@ -95,7 +96,7 @@ void FieldMessage_AddSignpostWindow(BgConfig *bgConfig, Window *window, u16 sign
 // used only in one instance, together with FieldMessage_AddSignpostWindow
 void FieldMessage_LoadAndDrawSignpost(Window *window, u16 signpostType, u16 signpostNARCMemberIdx)
 {
-    LoadSignpostContentGraphics(window->bgConfig, Window_GetBgLayer(window), ((1024 - (18 + 12) - 9 - (32 * 8)) - (18 + 12 + 24)), 9, signpostType, signpostNARCMemberIdx, HEAP_ID_FIELD);
+    LoadSignpostContentGraphics(window->bgConfig, Window_GetBgLayer(window), ((1024 - (18 + 12) - 9 - (32 * 8)) - (18 + 12 + 24)), 9, signpostType, signpostNARCMemberIdx, HEAP_ID_FIELD1);
     Window_FillTilemap(window, 15);
     Window_DrawSignpost(window, FALSE, ((1024 - (18 + 12) - 9 - (32 * 8)) - (18 + 12 + 24)), 9, signpostType);
 }

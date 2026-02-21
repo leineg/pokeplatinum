@@ -3,28 +3,25 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_defs/struct_02099F80.h"
-
 #include "overlay095/ov95_02246C20.h"
 #include "overlay095/ov95_022476F0.h"
 #include "overlay095/struct_ov95_02247568.h"
-#include "overlay095/struct_ov95_02247628_decl.h"
 #include "overlay095/struct_ov95_0224773C_decl.h"
 #include "overlay095/struct_ov95_02247958_decl.h"
-#include "overlay115/camera_angle.h"
 
 #include "bg_window.h"
+#include "camera.h"
 #include "enums.h"
 #include "graphics.h"
 #include "gx_layers.h"
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
+#include "screen_fade.h"
+#include "sound_playback.h"
 #include "sprite.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "system.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
 #include "unk_0202419C.h"
 #include "unk_020393C8.h"
 
@@ -79,7 +76,7 @@ typedef struct {
 } UnkStruct_ov95_0224A848;
 
 typedef struct {
-    UnkStruct_ov95_02247628 *unk_00;
+    TradeSequenceData *unk_00;
     int unk_04;
     int unk_08;
     BOOL unk_0C;
@@ -112,9 +109,9 @@ static void ov95_0224AB50(void *param0);
 
 static BOOL Unk_ov95_0224C2C0 = 1;
 
-void *ov95_0224A390(UnkStruct_ov95_02247628 *param0)
+void *ov95_0224A390(TradeSequenceData *param0)
 {
-    UnkStruct_ov95_0224A42C *v0 = Heap_AllocFromHeap(58, sizeof(UnkStruct_ov95_0224A42C));
+    UnkStruct_ov95_0224A42C *v0 = Heap_Alloc(HEAP_ID_58, sizeof(UnkStruct_ov95_0224A42C));
 
     if (v0) {
         int v1;
@@ -146,7 +143,7 @@ void ov95_0224A3CC(void *param0)
         ov95_0224A830(v0);
         ov95_0224A850(&(v0->unk_34));
 
-        Heap_FreeToHeap(v0);
+        Heap_Free(v0);
     }
 }
 
@@ -177,7 +174,7 @@ static int ov95_0224A42C(UnkStruct_ov95_0224A42C *param0, int *param1)
     ov95_0224A690(param0);
     ov95_0224A7B0(param0);
 
-    StartScreenTransition(0, 1, 1, 0x7fff, 8, 1, 58);
+    StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_WHITE, 8, 1, HEAP_ID_58);
 
     return 1;
 }
@@ -186,15 +183,15 @@ static int ov95_0224A464(UnkStruct_ov95_0224A42C *param0, int *param1)
 {
     switch (*param1) {
     case 0:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             Sprite_SetAnim(param0->unk_20[0], 3);
-            Sprite_SetDrawFlag(param0->unk_20[0], 1);
+            Sprite_SetDrawFlag(param0->unk_20[0], TRUE);
             (*param1)++;
         }
         break;
     case 1:
         if (Sprite_IsAnimated(param0->unk_20[0]) == 0) {
-            Sound_PlayEffect(1707);
+            Sound_PlayEffect(SEQ_SE_DP_KOUKAN05);
             ov95_0224A864(param0, &(param0->unk_34));
             ov95_022479A8(param0->unk_2C, 1);
             (*param1)++;
@@ -202,12 +199,12 @@ static int ov95_0224A464(UnkStruct_ov95_0224A42C *param0, int *param1)
         break;
     case 2:
         if (ov95_0224A924(&(param0->unk_34))) {
-            StartScreenTransition(0, 0, 0, 0x7fff, 16, 1, 58);
+            StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_WHITE, 16, 1, HEAP_ID_58);
             (*param1)++;
         }
         break;
     case 3:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             return 1;
         }
         break;
@@ -218,7 +215,7 @@ static int ov95_0224A464(UnkStruct_ov95_0224A42C *param0, int *param1)
 
 static void ov95_0224A518(UnkStruct_ov95_0224A42C *param0)
 {
-    static const UnkStruct_02099F80 v0 = {
+    static const GXBanks v0 = {
         GX_VRAM_BG_128_B,
         GX_VRAM_BGEXTPLTT_23_G,
         GX_VRAM_SUB_BG_128_C,
@@ -237,19 +234,18 @@ static void ov95_0224A518(UnkStruct_ov95_0224A42C *param0)
         GX_BG0_AS_3D
     };
     static const BgTemplate v2 = {
-        0,
-        0,
-        0x0,
-        0,
-        2,
-        GX_BG_COLORMODE_16,
-        GX_BG_SCRBASE_0xf000,
-        GX_BG_CHARBASE_0x00000,
-        GX_BG_EXTPLTT_01,
-        3,
-        1,
-        0,
-        0
+        .x = 0,
+        .y = 0,
+        .bufferSize = 0x0,
+        .baseTile = 0,
+        .screenSize = BG_SCREEN_SIZE_256x512,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0xf000,
+        .charBase = GX_BG_CHARBASE_0x00000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 3,
+        .areaOver = 1,
+        .mosaic = FALSE,
     };
     u32 v3, v4, v5, v6;
 
@@ -257,30 +253,30 @@ static void ov95_0224A518(UnkStruct_ov95_0224A42C *param0)
     GX_SetDispSelect(GX_DISP_SELECT_MAIN_SUB);
     SetAllGraphicsModes(&v1);
 
-    Bg_InitFromTemplate(param0->unk_24, 3, &v2, 0);
-    Bg_InitFromTemplate(param0->unk_24, 7, &v2, 0);
+    Bg_InitFromTemplate(param0->unk_24, BG_LAYER_MAIN_3, &v2, 0);
+    Bg_InitFromTemplate(param0->unk_24, BG_LAYER_SUB_3, &v2, 0);
 
-    switch (ov95_02247644(param0->unk_00)) {
-    case 0:
+    switch (TradeSequence_GetBackground(param0->unk_00)) {
+    case TRADE_BACKGROUND_DAY:
     default:
         v3 = 15;
         v4 = 16;
         v5 = 17;
         v6 = 0x0;
         break;
-    case 1:
+    case TRADE_BACKGROUND_EVENING:
         v3 = 15;
         v4 = 16;
         v5 = 17;
         v6 = 0x20;
         break;
-    case 2:
+    case TRADE_BACKGROUND_NIGHT:
         v3 = 15;
         v4 = 16;
         v5 = 17;
         v6 = 0x40;
         break;
-    case 3:
+    case TRADE_BACKGROUND_WIFI:
         v3 = 24;
         v4 = 25;
         v5 = 26;
@@ -288,29 +284,29 @@ static void ov95_0224A518(UnkStruct_ov95_0224A42C *param0)
         break;
     }
 
-    Graphics_LoadTilesToBgLayer(93, v4, param0->unk_24, 3, 0, 0, 1, 58);
-    Graphics_LoadTilesToBgLayer(93, v4, param0->unk_24, 7, 0, 0, 1, 58);
+    Graphics_LoadTilesToBgLayer(NARC_INDEX_GRAPHIC__DEMO_TRADE, v4, param0->unk_24, 3, 0, 0, 1, HEAP_ID_58);
+    Graphics_LoadTilesToBgLayer(NARC_INDEX_GRAPHIC__DEMO_TRADE, v4, param0->unk_24, 7, 0, 0, 1, HEAP_ID_58);
 
-    Graphics_LoadTilemapToBgLayer(93, v3, param0->unk_24, 3, 0, 0, 1, 58);
-    Graphics_LoadTilemapToBgLayer(93, v3, param0->unk_24, 7, 0, 0, 1, 58);
+    Graphics_LoadTilemapToBgLayer(NARC_INDEX_GRAPHIC__DEMO_TRADE, v3, param0->unk_24, 3, 0, 0, 1, HEAP_ID_58);
+    Graphics_LoadTilemapToBgLayer(NARC_INDEX_GRAPHIC__DEMO_TRADE, v3, param0->unk_24, 7, 0, 0, 1, HEAP_ID_58);
 
-    Graphics_LoadPaletteWithSrcOffset(93, v5, 0, v6, 0, 0x20, 58);
-    Graphics_LoadPaletteWithSrcOffset(93, v5, 4, v6, 0, 0x20, 58);
+    Graphics_LoadPaletteWithSrcOffset(93, v5, 0, v6, 0, 0x20, HEAP_ID_58);
+    Graphics_LoadPaletteWithSrcOffset(93, v5, 4, v6, 0, 0x20, HEAP_ID_58);
 
-    Bg_SetOffset(param0->unk_24, 3, 3, 0);
-    Bg_SetOffset(param0->unk_24, 7, 3, 256);
+    Bg_SetOffset(param0->unk_24, BG_LAYER_MAIN_3, 3, 0);
+    Bg_SetOffset(param0->unk_24, BG_LAYER_SUB_3, 3, 256);
 
     GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
     GXLayers_EngineBToggleLayers(GX_PLANEMASK_OBJ, 1);
 
     sub_02039734();
-    sub_020397C8(1, 57);
+    sub_020397C8(1, HEAP_ID_57);
 }
 
 static void ov95_0224A678(UnkStruct_ov95_0224A42C *param0)
 {
-    Bg_FreeTilemapBuffer(param0->unk_24, 3);
-    Bg_FreeTilemapBuffer(param0->unk_24, 7);
+    Bg_FreeTilemapBuffer(param0->unk_24, BG_LAYER_MAIN_3);
+    Bg_FreeTilemapBuffer(param0->unk_24, BG_LAYER_SUB_3);
 }
 
 static void ov95_0224A690(UnkStruct_ov95_0224A42C *param0)
@@ -347,7 +343,7 @@ static void ov95_0224A690(UnkStruct_ov95_0224A42C *param0)
     G2_SetBG0Priority(0);
 
     param0->unk_28 = ov95_022476F0(1, 0, 0, 0);
-    param0->unk_2C = ov95_022478B4(param0->unk_28, 0, 93, 27, 0, 0, 0, 0);
+    param0->unk_2C = ov95_022478B4(param0->unk_28, 0, NARC_INDEX_GRAPHIC__DEMO_TRADE, 27, 0, 0, 0, 0);
 
     {
         CameraAngle v2;
@@ -393,7 +389,7 @@ static void ov95_0224A7B0(UnkStruct_ov95_0224A42C *param0)
 
     ov95_022475C4(&v2, &param0->unk_10, &v1, &v0, 1);
     param0->unk_20[0] = ov95_022475E4(param0->unk_00, &v2, 128, 96, 0, NNS_G2D_VRAM_TYPE_2DMAIN);
-    Sprite_SetDrawFlag(param0->unk_20[0], 0);
+    Sprite_SetDrawFlag(param0->unk_20[0], FALSE);
 }
 
 static void ov95_0224A830(UnkStruct_ov95_0224A42C *param0)
@@ -592,8 +588,8 @@ static void ov95_0224AB50(void *param0)
         v1.y = 0;
         v1.z = 0;
 
-        Bg_SetOffset(v0->unk_24, 3, 3, 256);
-        Bg_SetOffset(v0->unk_24, 7, 3, 0);
+        Bg_SetOffset(v0->unk_24, BG_LAYER_MAIN_3, 3, 256);
+        Bg_SetOffset(v0->unk_24, BG_LAYER_SUB_3, 3, 0);
 
         ov95_02247AC0(v0->unk_28, &v1);
         GX_SetDispSelect(GX_DISP_SELECT_SUB_MAIN);

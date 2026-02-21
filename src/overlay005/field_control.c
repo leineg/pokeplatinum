@@ -3,22 +3,22 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/field/dynamic_map_features.h"
 #include "constants/field_poison.h"
 #include "constants/player_avatar.h"
 #include "generated/game_records.h"
-#include "generated/sdat.h"
 #include "generated/trainer_score_events.h"
 
-#include "struct_decls/struct_02026310_decl.h"
 #include "struct_decls/struct_0203A790_decl.h"
 #include "struct_decls/struct_02061AB4_decl.h"
+#include "struct_defs/daycare.h"
 
 #include "field/field_system.h"
 #include "field/field_system_sub2_t.h"
+#include "overlay005/daycare.h"
 #include "overlay005/honey_tree.h"
 #include "overlay005/ov5_021DFB54.h"
 #include "overlay005/ov5_021E1154.h"
-#include "overlay005/ov5_021E622C.h"
 #include "overlay005/ov5_021EA714.h"
 #include "overlay005/ov5_021EF4BC.h"
 #include "overlay005/ov5_021F8370.h"
@@ -27,48 +27,48 @@
 #include "overlay006/wild_encounters.h"
 #include "overlay008/ov8_02249960.h"
 #include "overlay009/ov9_02249960.h"
-#include "overlay023/ov23_02241F74.h"
+#include "overlay023/underground_manager.h"
 
 #include "catching_show.h"
 #include "comm_player_manager.h"
 #include "communication_information.h"
 #include "communication_system.h"
+#include "daycare_save.h"
 #include "encounter.h"
 #include "field_comm_manager.h"
 #include "field_map_change.h"
 #include "field_overworld_state.h"
 #include "game_records.h"
 #include "inlines.h"
+#include "item_use_functions.h"
 #include "location.h"
 #include "map_header.h"
 #include "map_header_data.h"
 #include "map_object.h"
 #include "map_tile_behavior.h"
 #include "party.h"
+#include "persisted_map_features_init.h"
 #include "player_avatar.h"
 #include "pokemon.h"
 #include "pokeradar.h"
 #include "save_player.h"
 #include "script_manager.h"
+#include "sound_playback.h"
 #include "start_menu.h"
 #include "system.h"
 #include "system_flags.h"
 #include "system_vars.h"
+#include "terrain_collision_manager.h"
 #include "trainer_info.h"
-#include "unk_02005474.h"
-#include "unk_020261E4.h"
 #include "unk_02030EE0.h"
 #include "unk_020366A0.h"
 #include "unk_0203C954.h"
 #include "unk_02054884.h"
-#include "unk_02054D00.h"
 #include "unk_02056B30.h"
 #include "unk_0205A0D8.h"
 #include "unk_0205B33C.h"
 #include "unk_0205F180.h"
 #include "unk_02067A84.h"
-#include "unk_020683F4.h"
-#include "unk_02071B10.h"
 #include "vars_flags.h"
 
 static BOOL Field_CheckMapTransition(FieldSystem *fieldSystem, const FieldInput *input);
@@ -169,25 +169,25 @@ void FieldInput_Update(FieldInput *input, FieldSystem *fieldSystem, u16 pressedK
         input->transitionDir = DIR_NONE;
     }
 
-    input->playerDir = sub_02061308(fieldSystem->playerAvatar, pressedKeys, heldKeys);
+    input->playerDir = PlayerAvatar_CalcFaceDirection(fieldSystem->playerAvatar, pressedKeys, heldKeys);
 }
 
 BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
 {
-    if (input->dummy5 == FALSE && sub_0203F5C0(fieldSystem, 1) == TRUE) {
+    if (input->dummy5 == FALSE && FieldSystem_RunInitScript(fieldSystem, INIT_SCRIPT_ON_FRAME_TABLE) == TRUE) {
         return TRUE;
     }
 
     // dummy5 will always be false, so this branch will always be taken, but it doesn't match without the condition
     if (input->dummy5 == FALSE) {
-        BOOL hasTwoAliveMons = Party_HasTwoAliveMons(Party_GetFromSavedata(fieldSystem->saveData));
+        BOOL hasTwoAliveMons = Party_HasTwoAliveMons(SaveData_GetParty(fieldSystem->saveData));
 
         if (SystemFlag_CheckHasPartner(SaveData_GetVarsFlags(fieldSystem->saveData)) == TRUE) {
             hasTwoAliveMons = TRUE;
         }
 
         if (sub_02067A84(fieldSystem, hasTwoAliveMons) == TRUE
-            || (sub_02071CB4(fieldSystem, 2) == TRUE
+            || (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_HEARTHOME_GYM) == TRUE
                 && ov8_0224C51C(fieldSystem) == TRUE)) {
 
             sub_0205F56C(fieldSystem->playerAvatar);
@@ -206,17 +206,17 @@ BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
 
     if (input->dummy5 == FALSE) {
         int playerEvent = PLAYER_EVENT_NONE;
-        int direction = sub_02061308(fieldSystem->playerAvatar, input->pressedKeys, input->heldKeys);
+        enum FaceDirection direction = PlayerAvatar_CalcFaceDirection(fieldSystem->playerAvatar, input->pressedKeys, input->heldKeys);
 
         if (SystemFlag_HandleStrengthActive(SaveData_GetVarsFlags(fieldSystem->saveData), HANDLE_FLAG_CHECK)) {
             playerEvent |= PLAYER_EVENT_USED_STRENGTH;
         }
 
-        if (Party_HasMonWithMove(Party_GetFromSavedata(fieldSystem->saveData), MOVE_WATERFALL) != PARTY_SLOT_NONE) {
+        if (Party_HasMonWithMove(SaveData_GetParty(fieldSystem->saveData), MOVE_WATERFALL) != PARTY_SLOT_NONE) {
             playerEvent |= PLAYER_EVENT_USED_WATERFALL;
         }
 
-        if (sub_02071CB4(fieldSystem, 9) == TRUE && ov9_02250F74(fieldSystem) == TRUE) {
+        if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) == TRUE && ov9_02250F74(fieldSystem) == TRUE) {
             playerEvent |= PLAYER_EVENT_DISTORTION_WORLD;
         }
 
@@ -234,7 +234,7 @@ BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
             return TRUE;
         }
 
-        if (sub_02071CB4(fieldSystem, 9) == TRUE) {
+        if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) == TRUE) {
             int direction = (s8)input->playerDir;
 
             if (direction == DIR_NONE) {
@@ -257,7 +257,7 @@ BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
         int validInteraction;
         MapObject *object;
 
-        if (sub_02071CB4(fieldSystem, 9) == TRUE) {
+        if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) == TRUE) {
             validInteraction = Field_DistortionInteract(fieldSystem, &object);
         } else {
             validInteraction = sub_0203CA40(fieldSystem, &object);
@@ -280,7 +280,7 @@ BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
         enum AvatarDistortionState distortionState = PlayerAvatar_MapDistortionState(fieldSystem->playerAvatar);
 
         if (distortionState == AVATAR_DISTORTION_STATE_NONE || distortionState == AVATAR_DISTORTION_STATE_ACTIVE) {
-            int event = sub_0203CA6C(fieldSystem, MapHeaderData_GetBgEvents(fieldSystem), MapHeaderData_GetNumBgEvents(fieldSystem));
+            int event = FieldEvent_GetInteractedBgEventScript(fieldSystem, MapHeaderData_GetBgEvents(fieldSystem), MapHeaderData_GetNumBgEvents(fieldSystem));
 
             if (event != 0xffff) {
                 ScriptManager_Set(fieldSystem, event, NULL);
@@ -297,8 +297,8 @@ BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
             }
         }
 
-        int distortionDir = sub_0205EAA0(fieldSystem->playerAvatar);
-        u32 distortionBehavior = sub_020616F0(fieldSystem->playerAvatar, distortionDir);
+        int distortionDir = PlayerAvatar_GetDistortionDir(fieldSystem->playerAvatar);
+        u32 distortionBehavior = PlayerAvatar_GetDistortionTileBehaviour(fieldSystem->playerAvatar, distortionDir);
         int distortionScript = Field_TileBehaviorToScript(fieldSystem, distortionBehavior);
 
         if (distortionScript != 0xffff) {
@@ -317,7 +317,7 @@ BOOL FieldInput_Process(const FieldInput *input, FieldSystem *fieldSystem)
     }
 
     if (input->mapTransition) {
-        if (sub_02071CB4(fieldSystem, 9) == TRUE) {
+        if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) == TRUE) {
             ov9_0224A800(fieldSystem, input->transitionDir);
         } else if (Field_CheckMapTransition(fieldSystem, input) == TRUE) {
             Field_TrySetMapConnection(fieldSystem);
@@ -347,7 +347,7 @@ static BOOL Field_CheckSign(FieldSystem *fieldSystem)
         return TRUE;
     }
 
-    int event = sub_0203CB80(fieldSystem, MapHeaderData_GetBgEvents(fieldSystem), MapHeaderData_GetNumBgEvents(fieldSystem));
+    int event = FieldEvent_GetInteractedWallSignScript(fieldSystem, MapHeaderData_GetBgEvents(fieldSystem), MapHeaderData_GetNumBgEvents(fieldSystem));
 
     if (event != 0xffff) {
         ScriptManager_Set(fieldSystem, event, NULL);
@@ -359,7 +359,7 @@ static BOOL Field_CheckSign(FieldSystem *fieldSystem)
 
 BOOL FieldInput_Process_Underground(FieldInput *input, FieldSystem *fieldSystem)
 {
-    if (input->dummy5 == FALSE && sub_0203F5C0(fieldSystem, 1) == TRUE) {
+    if (input->dummy5 == FALSE && FieldSystem_RunInitScript(fieldSystem, INIT_SCRIPT_ON_FRAME_TABLE) == TRUE) {
         return TRUE;
     }
 
@@ -367,19 +367,19 @@ BOOL FieldInput_Process_Underground(FieldInput *input, FieldSystem *fieldSystem)
         return FALSE;
     }
 
-    ov23_02242814();
+    UndergroundMan_ProgressInteractCooldown();
 
     if (input->interact) {
-        ov23_02242830(FALSE);
+        UndergroundMan_ProcessInteract(0);
         return FALSE;
     }
 
     if (input->menu) {
-        ov23_022427F8();
+        UndergroundMan_OpenMenu();
         return FALSE;
     }
 
-    if (ov23_02242458()) {
+    if (UndergroundMan_CheckForTouchInput()) {
         return FALSE;
     }
 
@@ -392,7 +392,7 @@ BOOL FieldInput_Process_Colosseum(FieldInput *input, FieldSystem *fieldSystem)
         && input->transitionDir == DIR_SOUTH
         && TileBehavior_IsWarpEntranceSouth(Field_CurrentTileBehavior(fieldSystem))) {
 
-        ScriptManager_Set(fieldSystem, 9101, NULL);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(COMMUNICATION_CLUB, 1), NULL);
         return TRUE;
     }
 
@@ -488,7 +488,7 @@ BOOL FieldInput_Process_UnionRoom(const FieldInput *input, FieldSystem *fieldSys
 
 int FieldInput_Process_BattleTower(const FieldInput *input, FieldSystem *fieldSystem)
 {
-    if (input->dummy5 == FALSE && sub_0203F5C0(fieldSystem, 1) == TRUE) {
+    if (input->dummy5 == FALSE && FieldSystem_RunInitScript(fieldSystem, INIT_SCRIPT_ON_FRAME_TABLE) == TRUE) {
         return TRUE;
     }
 
@@ -509,7 +509,7 @@ int FieldInput_Process_BattleTower(const FieldInput *input, FieldSystem *fieldSy
             return TRUE;
         }
 
-        int v2 = sub_0203CA6C(fieldSystem, MapHeaderData_GetBgEvents(fieldSystem), MapHeaderData_GetNumBgEvents(fieldSystem));
+        int v2 = FieldEvent_GetInteractedBgEventScript(fieldSystem, MapHeaderData_GetBgEvents(fieldSystem), MapHeaderData_GetNumBgEvents(fieldSystem));
 
         if (v2 != 0xffff) {
             ScriptManager_Set(fieldSystem, v2, NULL);
@@ -549,7 +549,7 @@ static BOOL Field_CheckWildEncounter(FieldSystem *fieldSystem)
 
     if (SystemFlag_CheckInPalPark(SaveData_GetVarsFlags(fieldSystem->saveData)) == TRUE) {
         if (CatchingShow_CheckWildEncounter(fieldSystem, playerX, playerZ) == TRUE) {
-            Encounter_NewVsPalParkTransfer(fieldSystem, CatchingShow_GetBattleDTO(fieldSystem));
+            Encounter_NewVsPalParkTransfer(fieldSystem, CatchingShow_GetBattleDataTransfer(fieldSystem));
             return TRUE;
         } else {
             return FALSE;
@@ -565,14 +565,14 @@ static BOOL Field_CheckMapTransition(FieldSystem *fieldSystem, const FieldInput 
         return FALSE;
     }
 
-    if (sub_02071CB4(fieldSystem, 4) == TRUE && ov8_0224BF4C(fieldSystem) == TRUE) {
+    if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_VEILSTONE_GYM) == TRUE && ov8_0224BF4C(fieldSystem) == TRUE) {
         return TRUE;
     }
 
     int playerX, playerZ;
     Field_Step(fieldSystem, &playerX, &playerZ);
 
-    if (FieldSystem_CheckCollision(fieldSystem, playerX, playerZ) == FALSE) {
+    if (TerrainCollisionManager_CheckCollision(fieldSystem, playerX, playerZ) == FALSE) {
         return FALSE;
     }
 
@@ -580,12 +580,12 @@ static BOOL Field_CheckMapTransition(FieldSystem *fieldSystem, const FieldInput 
     Location nextMap;
 
     if (Field_MapConnection(fieldSystem, playerX, playerZ, &nextMap) && input->transitionDir != DIR_NONE) {
-        tileBehavior = FieldSystem_GetTileBehavior(fieldSystem, playerX, playerZ);
+        tileBehavior = TerrainCollisionManager_GetTileBehavior(fieldSystem, playerX, playerZ);
 
         if (TileBehavior_IsDoor(tileBehavior)) {
             int v6 = input->transitionDir;
 
-            if (sub_02071CB4(fieldSystem, 2) == TRUE) {
+            if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_HEARTHOME_GYM) == TRUE) {
                 ov8_0224C62C(fieldSystem, playerX, playerZ, &v6);
             }
 
@@ -597,7 +597,7 @@ static BOOL Field_CheckMapTransition(FieldSystem *fieldSystem, const FieldInput 
 
     Field_GetPlayerPos(fieldSystem, &playerX, &playerZ);
 
-    tileBehavior = FieldSystem_GetTileBehavior(fieldSystem, playerX, playerZ);
+    tileBehavior = TerrainCollisionManager_GetTileBehavior(fieldSystem, playerX, playerZ);
 
     if (TileBehavior_IsWarpEntranceEast(tileBehavior) || TileBehavior_IsWarpEast(tileBehavior)) {
         if (input->transitionDir != DIR_EAST) {
@@ -653,44 +653,44 @@ u16 Field_TileBehaviorToScript(FieldSystem *fieldSystem, u8 behavior)
     int playerDir = PlayerAvatar_GetDir(fieldSystem->playerAvatar);
 
     if (TileBehavior_IsPC(behavior) && playerDir == DIR_NORTH) {
-        return 2018;
+        return SCRIPT_ID(COMMON_SCRIPTS, 18);
     } else if (TileBehavior_IsSmallBookshelf1(behavior)) {
-        return 2500;
+        return SCRIPT_ID(BG_EVENTS, 0);
     } else if (TileBehavior_IsSmallBookshelf2(behavior)) {
-        return 2501;
+        return SCRIPT_ID(BG_EVENTS, 1);
     } else if (TileBehavior_IsBookshelf1(behavior)) {
-        return 2502;
+        return SCRIPT_ID(BG_EVENTS, 2);
     } else if (TileBehavior_IsBookshelf2(behavior)) {
-        return 2503;
+        return SCRIPT_ID(BG_EVENTS, 3);
     } else if (TileBehavior_IsTrashCan(behavior)) {
-        return 2504;
+        return SCRIPT_ID(BG_EVENTS, 4);
     } else if (TileBehavior_IsMartShelf1(behavior)) {
-        return 2505;
+        return SCRIPT_ID(BG_EVENTS, 5);
     } else if (TileBehavior_IsMartShelf2(behavior)) {
-        return 2506;
+        return SCRIPT_ID(BG_EVENTS, 6);
     } else if (TileBehavior_IsMartShelf3(behavior)) {
-        return 2507;
+        return SCRIPT_ID(BG_EVENTS, 7);
     } else if (TileBehavior_IsWaterfall(behavior)) {
-        return 10006;
+        return SCRIPT_ID(FIELD_MOVES, 6);
     } else if (TileBehavior_IsTownMap(behavior)) {
-        return 2508;
+        return SCRIPT_ID(BG_EVENTS, 8);
     } else if (TileBehavior_IsBikeParking(behavior)) {
-        return 2030;
+        return SCRIPT_ID(COMMON_SCRIPTS, 30);
     } else if (TileBehavior_IsTV(behavior) && playerDir == DIR_NORTH) {
-        return 10100;
+        return SCRIPT_ID(TV_BROADCAST, 0);
     }
 
-    if (ov5_021E0760(behavior, playerDir)) {
-        return 10003;
+    if (PlayerAvatar_CanUseRockClimb(behavior, playerDir)) {
+        return SCRIPT_ID(FIELD_MOVES, 3);
     }
 
     if (PlayerAvatar_GetPlayerState(fieldSystem->playerAvatar) != PLAYER_STATE_SURFING) {
         TrainerInfo *info = SaveData_GetTrainerInfo(fieldSystem->saveData);
-        u32 distortionBehavior = sub_02061760(fieldSystem->playerAvatar);
+        u32 distortionBehavior = PlayerAvatar_GetDistortionCurrTileBehaviour(fieldSystem->playerAvatar);
 
-        if (ov5_021E0118(fieldSystem->playerAvatar, distortionBehavior, behavior) && TrainerInfo_HasBadge(info, 3)) {
-            if (Party_HasMonWithMove(Party_GetFromSavedata(fieldSystem->saveData), MOVE_SURF) != PARTY_SLOT_NONE) {
-                return 10004;
+        if (PlayerAvatar_CanUseSurf(fieldSystem->playerAvatar, distortionBehavior, behavior) && TrainerInfo_HasBadge(info, 3)) {
+            if (Party_HasMonWithMove(SaveData_GetParty(fieldSystem->saveData), MOVE_SURF) != PARTY_SLOT_NONE) {
+                return SCRIPT_ID(FIELD_MOVES, 4);
             }
         }
     }
@@ -700,11 +700,11 @@ u16 Field_TileBehaviorToScript(FieldSystem *fieldSystem, u8 behavior)
 
 static BOOL Field_ProcessStep(FieldSystem *fieldSystem)
 {
-    if (sub_02071CB4(fieldSystem, 3) == TRUE && ov8_0224AAA8(fieldSystem)) {
+    if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_CANALAVE_GYM) == TRUE && ov8_0224AAA8(fieldSystem)) {
         return TRUE;
     }
 
-    if (sub_02071CB4(fieldSystem, 9) == TRUE && ov9_0224A71C(fieldSystem) == TRUE) {
+    if (PersistedMapFeatures_IsCurrentDynamicMap(fieldSystem, DYNAMIC_MAP_FEATURES_DISTORTION_WORLD) == TRUE && ov9_0224A71C(fieldSystem) == TRUE) {
         return TRUE;
     }
 
@@ -716,7 +716,7 @@ static BOOL Field_ProcessStep(FieldSystem *fieldSystem)
 
     int playerX = Player_GetXPos(fieldSystem->playerAvatar);
     int playerZ = Player_GetZPos(fieldSystem->playerAvatar);
-    u8 tileBehavior = FieldSystem_GetTileBehavior(fieldSystem, playerX, playerZ);
+    u8 tileBehavior = TerrainCollisionManager_GetTileBehavior(fieldSystem, playerX, playerZ);
 
     if (Field_CheckCoordEvent(fieldSystem) == TRUE) {
         return TRUE;
@@ -731,7 +731,7 @@ static BOOL Field_ProcessStep(FieldSystem *fieldSystem)
         return FALSE;
     }
 
-    ov5_021EA714(fieldSystem, 5, 1);
+    FieldSystem_SendPoketchEvent(fieldSystem, POKETCH_EVENT_PEDOMETER, 1);
 
     if (Field_UpdatePoison(fieldSystem) == TRUE) {
         return TRUE;
@@ -826,15 +826,15 @@ static BOOL Field_CheckTransition(FieldSystem *fieldSystem, const int playerX, c
 
 static BOOL Field_UpdateDaycare(FieldSystem *fieldSystem)
 {
-    Party *party = Party_GetFromSavedata(fieldSystem->saveData);
-    UnkStruct_02026310 *v1 = sub_02026310(fieldSystem->saveData);
+    Party *party = SaveData_GetParty(fieldSystem->saveData);
+    Daycare *daycare = SaveData_GetDaycare(fieldSystem->saveData);
 
-    if (ov5_021E7154(v1, party, fieldSystem) == TRUE) {
-        GameRecords *v2 = SaveData_GetGameRecordsPtr(fieldSystem->saveData);
+    if (Daycare_Update(daycare, party, fieldSystem) == TRUE) {
+        GameRecords *records = SaveData_GetGameRecords(fieldSystem->saveData);
 
-        GameRecords_IncrementRecordValue(v2, RECORD_UNK_011);
-        GameRecords_IncrementTrainerScore(v2, TRAINER_SCORE_EVENT_UNK_15);
-        ScriptManager_Set(fieldSystem, 2031, NULL);
+        GameRecords_IncrementRecordValue(records, RECORD_EGGS_HATCHED);
+        GameRecords_IncrementTrainerScore(records, TRAINER_SCORE_EVENT_UNK_15);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(COMMON_SCRIPTS, 31), NULL);
 
         return TRUE;
     }
@@ -883,20 +883,20 @@ static void Field_CalculateFriendship(FieldSystem *fieldSystem)
 {
     // C99-style declarations don't match
     int i, partyCount;
-    Party *party = Party_GetFromSavedata(fieldSystem->saveData);
+    Party *party = SaveData_GetParty(fieldSystem->saveData);
     u16 mapID = MapHeader_GetMapLabelTextID(fieldSystem->location->mapId);
 
     partyCount = Party_GetCurrentCount(party);
 
     for (i = 0; i < partyCount; i++) {
         Pokemon *mon = Party_GetPokemonBySlotIndex(party, i);
-        Pokemon_UpdateFriendship(mon, 5, mapID);
+        Pokemon_UpdateFriendship(mon, FRIENDSHIP_EVENT_WALK_CYCLE, mapID);
     }
 }
 
 static BOOL Field_UpdatePoison(FieldSystem *fieldSystem)
 {
-    Party *party = Party_GetFromSavedata(fieldSystem->saveData);
+    Party *party = SaveData_GetParty(fieldSystem->saveData);
     u16 *poisonSteps = FieldOverworldState_GetPoisonStepCount(SaveData_GetFieldOverworldState(fieldSystem->saveData));
 
     (*poisonSteps)++;
@@ -914,7 +914,7 @@ static BOOL Field_UpdatePoison(FieldSystem *fieldSystem)
         return FALSE;
     case FLDPSN_FAINTED:
         Field_DoPoisonEffect(fieldSystem->unk_04->unk_20);
-        ScriptManager_Set(fieldSystem, 2003, NULL);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(COMMON_SCRIPTS, 3), NULL);
         return TRUE;
     }
 
@@ -930,7 +930,7 @@ static BOOL Field_UpdateSafari(FieldSystem *fieldSystem)
     u16 *balls = FieldOverworldState_GetSafariBallCount(SaveData_GetFieldOverworldState(fieldSystem->saveData));
 
     if (*balls == 0) {
-        ScriptManager_Set(fieldSystem, 8802, NULL);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(SAFARI_GAME, 2), NULL);
         return TRUE;
     }
 
@@ -938,7 +938,7 @@ static BOOL Field_UpdateSafari(FieldSystem *fieldSystem)
     (*steps)++;
 
     if (*steps >= 500) {
-        ScriptManager_Set(fieldSystem, 8801, NULL);
+        ScriptManager_Set(fieldSystem, SCRIPT_ID(SAFARI_GAME, 1), NULL);
         return TRUE;
     }
 
@@ -983,22 +983,20 @@ static u8 Field_CurrentTileBehavior(const FieldSystem *fieldSystem)
 {
     int playerX, playerZ;
     Field_GetPlayerPos(fieldSystem, &playerX, &playerZ);
-    return FieldSystem_GetTileBehavior(fieldSystem, playerX, playerZ);
+    return TerrainCollisionManager_GetTileBehavior(fieldSystem, playerX, playerZ);
 }
 
 static u8 Field_NextTileBehavior(const FieldSystem *fieldSystem)
 {
     int playerX, playerZ;
     Field_Step(fieldSystem, &playerX, &playerZ);
-    return FieldSystem_GetTileBehavior(fieldSystem, playerX, playerZ);
+    return TerrainCollisionManager_GetTileBehavior(fieldSystem, playerX, playerZ);
 }
 
 static BOOL Field_MapConnection(const FieldSystem *fieldSystem, int playerX, int playerZ, Location *nextMap)
 {
     const WarpEvent *v0;
-    int v1;
-
-    v1 = MapHeaderData_GetIndexOfWarpEventAtPos(fieldSystem, playerX, playerZ);
+    int v1 = MapHeaderData_GetIndexOfWarpEventAtPos(fieldSystem, playerX, playerZ);
 
     if (v1 == -1) {
         return FALSE;
@@ -1071,7 +1069,7 @@ static BOOL Field_DistortionInteract(FieldSystem *fieldSystem, MapObject **objec
 
     sub_020617BC(fieldSystem->playerAvatar, &playerX, &playerY, &playerZ);
 
-    while (sub_020625B0(fieldSystem->mapObjMan, object, &objectIndex, (1 << 0))) {
+    while (MapObjectMan_FindObjectWithStatus(fieldSystem->mapObjMan, object, &objectIndex, 1 << 0)) {
         objectX = MapObject_GetX(*object);
         objectY = MapObject_GetY(*object) / 2;
         objectZ = MapObject_GetZ(*object);

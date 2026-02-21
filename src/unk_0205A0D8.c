@@ -3,20 +3,21 @@
 #include <nitro.h>
 #include <string.h>
 
-#include "struct_defs/struct_02072014.h"
-#include "struct_defs/struct_02098C44.h"
-
+#include "applications/party_menu/defs.h"
+#include "applications/party_menu/main.h"
 #include "applications/pokemon_summary_screen/main.h"
 #include "field/field_system.h"
 #include "functypes/funcptr_0205AB10.h"
 #include "overlay005/fieldmap.h"
 
 #include "bag.h"
+#include "battle_regulation.h"
 #include "bg_window.h"
 #include "colored_arrow.h"
 #include "comm_player_manager.h"
 #include "communication_information.h"
 #include "communication_system.h"
+#include "dexmode_checker.h"
 #include "field_comm_manager.h"
 #include "field_message.h"
 #include "field_system.h"
@@ -30,30 +31,28 @@
 #include "render_window.h"
 #include "save_player.h"
 #include "savedata.h"
-#include "strbuf.h"
+#include "screen_fade.h"
+#include "sound_playback.h"
+#include "string_gf.h"
 #include "string_template.h"
 #include "system.h"
 #include "text.h"
+#include "trainer_card.h"
 #include "trainer_info.h"
-#include "unk_02005474.h"
-#include "unk_0200F174.h"
-#include "unk_0202602C.h"
 #include "unk_0202D778.h"
 #include "unk_020363E8.h"
 #include "unk_020366A0.h"
 #include "unk_0203D1B8.h"
 #include "unk_020655F4.h"
-#include "unk_0207A274.h"
 
-#include "constdata/const_020F1E88.h"
 #include "constdata/const_020F410C.h"
 
 typedef struct {
     PokemonSummary *unk_00;
-    PartyManagementData *unk_04;
+    PartyMenu *unk_04;
     UnkFuncPtr_0205AB10 *unk_08;
-    Strbuf *unk_0C;
-    Strbuf *unk_10;
+    String *unk_0C;
+    String *unk_10;
     Window unk_14;
     FieldSystem *fieldSystem;
     StringTemplate *unk_28;
@@ -89,8 +88,8 @@ typedef struct {
 } UnkStruct_0205AD20;
 
 typedef struct {
-    Strbuf *unk_00;
-    Strbuf *unk_04;
+    String *unk_00;
+    String *unk_04;
     Window unk_08;
     StringTemplate *unk_18;
     MessageLoader *unk_1C;
@@ -110,35 +109,35 @@ static BOOL sub_0205AD34(UnkStruct_0205A0D8 *param0);
 static BOOL sub_0205AD70(UnkStruct_0205A0D8 *param0);
 static void sub_0205ADAC(UnkStruct_0205A0D8 *param0);
 static void sub_0205AD80(UnkStruct_0205A0D8 *param0);
-static int sub_0205AA50(UnkStruct_0205A0D8 *param0, const Strbuf *param1);
+static int sub_0205AA50(UnkStruct_0205A0D8 *param0, const String *param1);
 static void sub_0205AAA0(UnkStruct_0205A0D8 *param0, BOOL param1);
 static void sub_0205AF18(UnkStruct_0205A0D8 *param0, int param1);
 static BOOL sub_0205AD20(UnkStruct_0205A0D8 *param0);
 
-static void sub_0205A0D8(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem, Party *param2, int param3, int param4, int param5)
+static void sub_0205A0D8(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem, Party *param2, int param3, int param4, enum HeapID heapID)
 {
     PokemonSummary *v0;
-    SaveData *v1;
+    SaveData *saveData;
     static const u8 v2[] = {
         0, 1, 2, 4, 3, 5, 6, 7, 8
     };
 
-    v1 = fieldSystem->saveData;
-    v0 = Heap_AllocFromHeapAtEnd(param5, sizeof(PokemonSummary));
+    saveData = fieldSystem->saveData;
+    v0 = Heap_AllocAtEnd(heapID, sizeof(PokemonSummary));
 
     MI_CpuClear8(v0, sizeof(PokemonSummary));
     PokemonSummaryScreen_SetPlayerProfile(v0, SaveData_GetTrainerInfo(fieldSystem->saveData));
 
-    v0->dexMode = sub_0207A274(v1);
-    v0->showContest = PokemonSummaryScreen_ShowContestData(v1);
-    v0->options = SaveData_Options(v1);
+    v0->dexMode = SaveData_GetDexMode(saveData);
+    v0->showContest = PokemonSummaryScreen_ShowContestData(saveData);
+    v0->options = SaveData_GetOptions(saveData);
     v0->monData = param2;
     v0->dataType = SUMMARY_DATA_PARTY_MON;
     v0->monIndex = param3;
     v0->monMax = Party_GetCurrentCount(v0->monData);
     v0->move = 0;
     v0->mode = param4;
-    v0->specialRibbons = sub_0202D79C(v1);
+    v0->specialRibbons = SaveData_GetRibbons(saveData);
 
     PokemonSummaryScreen_FlagVisiblePages(v0, v2);
     FieldSystem_StartChildProcess(fieldSystem, &gPokemonSummaryScreenApp, v0);
@@ -146,37 +145,37 @@ static void sub_0205A0D8(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem, P
     param0->unk_00 = v0;
 }
 
-static void sub_0205A164(UnkStruct_0205A0D8 *param0, int param1)
+static void sub_0205A164(UnkStruct_0205A0D8 *param0, enum HeapID heapID)
 {
     int v0;
-    PartyManagementData *v1 = Heap_AllocFromHeap(param1, sizeof(PartyManagementData));
+    PartyMenu *partyMenu = Heap_Alloc(heapID, sizeof(PartyMenu));
 
-    MI_CpuClear8(v1, sizeof(PartyManagementData));
+    MI_CpuClear8(partyMenu, sizeof(PartyMenu));
 
-    v1->unk_0C = SaveData_Options(param0->fieldSystem->saveData);
-    v1->unk_14 = (void *)param0->fieldSystem->unk_B0;
-    v1->unk_00 = Party_GetFromSavedata(param0->fieldSystem->saveData);
-    v1->unk_04 = SaveData_GetBag(param0->fieldSystem->saveData);
-    v1->unk_21 = 0;
-    v1->unk_20 = 2;
+    partyMenu->options = SaveData_GetOptions(param0->fieldSystem->saveData);
+    partyMenu->battleRegulation = (void *)param0->fieldSystem->unk_B0;
+    partyMenu->party = SaveData_GetParty(param0->fieldSystem->saveData);
+    partyMenu->bag = SaveData_GetBag(param0->fieldSystem->saveData);
+    partyMenu->type = PARTY_MENU_TYPE_BASIC;
+    partyMenu->mode = PARTY_MENU_MODE_SELECT_CONFIRM;
 
     if (param0->fieldSystem->unk_B0) {
-        v1->unk_32_0 = sub_02026074(param0->fieldSystem->unk_B0, 1);
-        v1->unk_32_4 = v1->unk_32_0;
+        partyMenu->minSelectionSlots = BattleRegulation_GetRuleValue(param0->fieldSystem->unk_B0, BATTLE_REGULATION_RULE_TEAM_SIZE);
+        partyMenu->maxSelectionSlots = partyMenu->minSelectionSlots;
     } else {
-        v1->unk_32_0 = 3;
-        v1->unk_32_4 = 3;
+        partyMenu->minSelectionSlots = 3;
+        partyMenu->maxSelectionSlots = 3;
     }
 
-    v1->unk_33 = 100;
-    v1->unk_22 = param0->unk_3C;
+    partyMenu->reqLevel = 100;
+    partyMenu->selectedMonSlot = param0->unk_3C;
 
     for (v0 = 0; v0 < 6; v0++) {
-        v1->unk_2C[v0] = param0->unk_3D[v0];
+        partyMenu->selectionOrder[v0] = param0->unk_3D[v0];
     }
 
-    FieldSystem_StartChildProcess(param0->fieldSystem, &Unk_020F1E88, v1);
-    param0->unk_04 = v1;
+    FieldSystem_StartChildProcess(param0->fieldSystem, &gPokemonPartyAppTemplate, partyMenu);
+    param0->unk_04 = partyMenu;
 }
 
 static BOOL sub_0205A258(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem)
@@ -187,9 +186,9 @@ static BOOL sub_0205A258(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem)
         return 0;
     }
 
-    MI_CpuCopy8(param0->unk_04->unk_2C, param0->unk_3D, 6);
+    MI_CpuCopy8(param0->unk_04->selectionOrder, param0->unk_3D, 6);
 
-    switch (param0->unk_04->unk_22) {
+    switch (param0->unk_04->selectedMonSlot) {
     case 7:
         param0->unk_38 = 0;
         break;
@@ -201,8 +200,8 @@ static BOOL sub_0205A258(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem)
         break;
     }
 
-    param0->unk_3C = param0->unk_04->unk_22;
-    Heap_FreeToHeap(param0->unk_04);
+    param0->unk_3C = param0->unk_04->selectedMonSlot;
+    Heap_Free(param0->unk_04);
     param0->unk_04 = NULL;
 
     return 1;
@@ -217,7 +216,7 @@ static BOOL sub_0205A2B0(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem)
     }
 
     param0->unk_3C = param0->unk_00->monIndex;
-    Heap_FreeToHeap(param0->unk_00);
+    Heap_Free(param0->unk_00);
     param0->unk_00 = NULL;
 
     return 1;
@@ -226,7 +225,7 @@ static BOOL sub_0205A2B0(UnkStruct_0205A0D8 *param0, FieldSystem *fieldSystem)
 static BOOL sub_0205A2DC(UnkStruct_0205A0D8 *param0)
 {
     if (FieldSystem_IsRunningFieldMap(param0->fieldSystem)) {
-        ov5_021D1744(1);
+        FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_IN);
         CommPlayerMan_Restart();
         return 1;
     }
@@ -264,7 +263,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         }
         break;
     case 1:
-        MessageLoader_GetStrbuf(v0->unk_2C, 1, v0->unk_0C);
+        MessageLoader_GetString(v0->unk_2C, 1, v0->unk_0C);
         v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
         v0->unk_34 = 2;
         break;
@@ -300,12 +299,12 @@ static BOOL sub_0205A324(FieldTask *param0)
         break;
     case 7:
         sub_0205AC28(v0);
-        Heap_FreeToHeap(v0);
+        Heap_Free(v0);
         return 1;
     case 5:
         sub_0205AC28(v0);
-        Heap_FreeToHeap(v0);
-        sub_02059514();
+        Heap_Free(v0);
+        CommPlayerMan_ResumeFieldSystem();
         return 1;
     case 8:
         if (CommTiming_IsSyncState(93)) {
@@ -331,7 +330,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         break;
     case 11:
         CommPlayer_SetBattleDir();
-        MessageLoader_GetStrbuf(v0->unk_2C, 13, v0->unk_0C);
+        MessageLoader_GetString(v0->unk_2C, 13, v0->unk_0C);
 
         v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
         v0->unk_34 = 12;
@@ -342,7 +341,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         }
         break;
     case 13:
-        ov5_021D1744(0);
+        FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_OUT);
         v0->unk_34 = 14;
         break;
     case 14:
@@ -355,7 +354,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         break;
     case 15:
         sub_0205AAA0(v0, 0);
-        sub_0205A164(v0, 11);
+        sub_0205A164(v0, HEAP_ID_FIELD2);
         v0->unk_34 = 16;
         break;
     case 16:
@@ -374,7 +373,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         }
         break;
     case 17:
-        sub_0205A0D8(v0, v0->fieldSystem, Party_GetFromSavedata(v0->fieldSystem->saveData), v0->unk_3C, 0, 11);
+        sub_0205A0D8(v0, v0->fieldSystem, SaveData_GetParty(v0->fieldSystem->saveData), v0->unk_3C, 0, HEAP_ID_FIELD2);
         v0->unk_34 = 18;
         break;
     case 18:
@@ -423,7 +422,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         break;
     case 24:
         CommPlayer_SetBattleDir();
-        MessageLoader_GetStrbuf(v0->unk_2C, 19, v0->unk_0C);
+        MessageLoader_GetString(v0->unk_2C, 19, v0->unk_0C);
         v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
         v0->unk_34 = 25;
         break;
@@ -441,7 +440,7 @@ static BOOL sub_0205A324(FieldTask *param0)
                 sub_0205AC80(v0, v0->unk_82);
                 CommTiming_StartSync(0);
                 StringTemplate_SetPlayerName(v0->unk_28, 0, v0->unk_74);
-                MessageLoader_GetStrbuf(v0->unk_2C, 14, v0->unk_0C);
+                MessageLoader_GetString(v0->unk_2C, 14, v0->unk_0C);
                 StringTemplate_Format(v0->unk_28, v0->unk_10, v0->unk_0C);
                 v0->unk_30 = sub_0205AA50(v0, v0->unk_10);
                 v0->unk_34 = 27;
@@ -469,7 +468,7 @@ static BOOL sub_0205A324(FieldTask *param0)
             v0->unk_83 = sub_0205AD20(v0);
 
             if (v0->unk_82 && v0->unk_83) {
-                MessageLoader_GetStrbuf(v0->unk_2C, 20, v0->unk_0C);
+                MessageLoader_GetString(v0->unk_2C, 20, v0->unk_0C);
                 v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
                 v0->unk_34 = 30;
             } else {
@@ -480,7 +479,7 @@ static BOOL sub_0205A324(FieldTask *param0)
     case 30:
         if (FieldMessage_FinishedPrinting(v0->unk_30)) {
             v0->unk_89 = 0;
-            MessageLoader_GetStrbuf(v0->unk_2C, 17, v0->unk_0C);
+            MessageLoader_GetString(v0->unk_2C, 17, v0->unk_0C);
             v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
             v0->unk_84 = 0;
             v0->unk_34 = 31;
@@ -503,7 +502,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         case 2:
             sub_0205B0B4(v0);
             v0->unk_84 = 255;
-            MessageLoader_GetStrbuf(v0->unk_2C, 15, v0->unk_0C);
+            MessageLoader_GetString(v0->unk_2C, 15, v0->unk_0C);
             v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
             CommTiming_StartSync(2);
             v0->unk_34 = 39;
@@ -512,7 +511,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         break;
     case 36:
         StringTemplate_SetSpeciesName(v0->unk_28, 1, Pokemon_GetBoxPokemon(Party_GetPokemonBySlotIndex(v0->unk_50, v0->unk_84)));
-        MessageLoader_GetStrbuf(v0->unk_2C, 18, v0->unk_0C);
+        MessageLoader_GetString(v0->unk_2C, 18, v0->unk_0C);
         StringTemplate_Format(v0->unk_28, v0->unk_10, v0->unk_0C);
         v0->unk_30 = sub_0205AA50(v0, v0->unk_10);
         v0->unk_34 = 37;
@@ -527,29 +526,29 @@ static BOOL sub_0205A324(FieldTask *param0)
         switch (sub_0205AFE4(v0)) {
         case 2:
             sub_0205B0B4(v0);
-            MessageLoader_GetStrbuf(v0->unk_2C, 17, v0->unk_0C);
+            MessageLoader_GetString(v0->unk_2C, 17, v0->unk_0C);
             v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
             v0->unk_34 = 31;
             break;
         case 1:
             if (v0->unk_81 == 1) {
                 sub_0205B0B4(v0);
-                MessageLoader_GetStrbuf(v0->unk_2C, 14, v0->unk_0C);
+                MessageLoader_GetString(v0->unk_2C, 14, v0->unk_0C);
                 StringTemplate_Format(v0->unk_28, v0->unk_10, v0->unk_0C);
                 v0->unk_30 = sub_0205AA50(v0, v0->unk_10);
                 CommTiming_StartSync(2);
                 v0->unk_34 = 39;
             } else {
-                ov5_021D1744(0);
+                FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_OUT);
                 v0->unk_34 = 33;
             }
             break;
         }
         break;
     case 33:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             sub_0205AAA0(v0, 0);
-            sub_0205A0D8(v0, v0->fieldSystem, v0->unk_50, v0->unk_84, 1, 11);
+            sub_0205A0D8(v0, v0->fieldSystem, v0->unk_50, v0->unk_84, 1, HEAP_ID_FIELD2);
             v0->unk_34 = 34;
         }
         break;
@@ -587,7 +586,7 @@ static BOOL sub_0205A324(FieldTask *param0)
         }
         break;
     case 42:
-        MessageLoader_GetStrbuf(v0->unk_2C, 15, v0->unk_0C);
+        MessageLoader_GetString(v0->unk_2C, 15, v0->unk_0C);
         v0->unk_30 = sub_0205AA50(v0, v0->unk_0C);
         v0->unk_43 = 0;
         v0->unk_34 = 43;
@@ -612,18 +611,18 @@ static BOOL sub_0205A324(FieldTask *param0)
     return 0;
 }
 
-static int sub_0205AA50(UnkStruct_0205A0D8 *param0, const Strbuf *param1)
+static int sub_0205AA50(UnkStruct_0205A0D8 *param0, const String *param1)
 {
     Window *v0 = &(param0->unk_14);
 
     if (Window_IsInUse(v0) == 0) {
         FieldMessage_AddWindow(param0->fieldSystem->bgConfig, v0, 3);
-        FieldMessage_DrawWindow(v0, SaveData_Options(param0->fieldSystem->saveData));
+        FieldMessage_DrawWindow(v0, SaveData_GetOptions(param0->fieldSystem->saveData));
     } else {
         FieldMessage_ClearWindow(v0);
     }
 
-    return FieldMessage_Print(v0, (Strbuf *)param1, SaveData_Options(param0->fieldSystem->saveData), 1);
+    return FieldMessage_Print(v0, (String *)param1, SaveData_GetOptions(param0->fieldSystem->saveData), 1);
 }
 
 static void sub_0205AAA0(UnkStruct_0205A0D8 *param0, BOOL param1)
@@ -658,22 +657,22 @@ void sub_0205AB10(FieldSystem *fieldSystem, UnkFuncPtr_0205AB10 *param1)
         return;
     }
 
-    v0 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_0205A0D8));
+    v0 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_0205A0D8));
     MI_CpuClear8(v0, sizeof(UnkStruct_0205A0D8));
 
     v0->unk_43 = 5;
     v0->fieldSystem = fieldSystem;
     v0->unk_08 = param1;
-    v0->unk_28 = StringTemplate_Default(11);
-    v0->unk_2C = MessageLoader_Init(0, 26, 11, 11);
-    v0->unk_0C = Strbuf_Init((100 * 2), 11);
-    v0->unk_10 = Strbuf_Init((100 * 2), 11);
+    v0->unk_28 = StringTemplate_Default(HEAP_ID_FIELD2);
+    v0->unk_2C = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_COMMUNICATION_CLUB, HEAP_ID_FIELD2);
+    v0->unk_0C = String_Init(100 * 2, HEAP_ID_FIELD2);
+    v0->unk_10 = String_Init(100 * 2, HEAP_ID_FIELD2);
 
     Window_Init(&v0->unk_14);
     Window_Init(&v0->unk_54);
     Window_Init(&v0->unk_64);
 
-    v0->unk_78 = ColoredArrow_New(11);
+    v0->unk_78 = ColoredArrow_New(HEAP_ID_FIELD2);
     v0->unk_88 = sub_0203895C();
     v0->unk_4C = NULL;
     v0->unk_48 = NULL;
@@ -686,9 +685,9 @@ void sub_0205AB10(FieldSystem *fieldSystem, UnkFuncPtr_0205AB10 *param1)
     case 3: {
         u32 v2 = sub_0205B0E4();
 
-        v0->unk_4C = Heap_AllocFromHeapAtEnd(11, v2);
-        v0->unk_48 = Heap_AllocFromHeapAtEnd(11, v2);
-        v0->unk_50 = Party_New(11);
+        v0->unk_4C = Heap_AllocAtEnd(HEAP_ID_FIELD2, v2);
+        v0->unk_48 = Heap_AllocAtEnd(HEAP_ID_FIELD2, v2);
+        v0->unk_50 = Party_New(HEAP_ID_FIELD2);
 
         Party_InitWithCapacity(v0->unk_50, 3);
 
@@ -713,21 +712,21 @@ void sub_0205AB10(FieldSystem *fieldSystem, UnkFuncPtr_0205AB10 *param1)
 static void sub_0205AC28(UnkStruct_0205A0D8 *param0)
 {
     if (param0->unk_50) {
-        Heap_FreeToHeap(param0->unk_50);
+        Heap_Free(param0->unk_50);
     }
 
     if (param0->unk_4C) {
-        Heap_FreeToHeap(param0->unk_4C);
+        Heap_Free(param0->unk_4C);
     }
 
     if (param0->unk_48) {
-        Heap_FreeToHeap(param0->unk_48);
+        Heap_Free(param0->unk_48);
     }
 
     MessageLoader_Free(param0->unk_2C);
     StringTemplate_Free(param0->unk_28);
-    Strbuf_Free(param0->unk_0C);
-    Strbuf_Free(param0->unk_10);
+    String_Free(param0->unk_0C);
+    String_Free(param0->unk_10);
     ColoredArrow_Free(param0->unk_78);
 
     sub_0205AAA0(param0, 1);
@@ -745,7 +744,7 @@ static void sub_0205AC80(UnkStruct_0205A0D8 *param0, BOOL param1)
     u8 *v2;
     int v3, v4;
 
-    v0 = Party_GetFromSavedata(param0->fieldSystem->saveData);
+    v0 = SaveData_GetParty(param0->fieldSystem->saveData);
     v2 = param0->unk_4C;
     v4 = Pokemon_GetStructSize();
     v1 = (UnkStruct_0205AD20 *)(v2 + v4 * 3);
@@ -772,7 +771,7 @@ static BOOL sub_0205ACC8(UnkStruct_0205A0D8 *param0)
         v2 = sub_0205B0E4();
 
         if (param0->unk_86 == 0) {
-            v0 = sub_02035A3C(106, v1, v2);
+            v0 = CommSys_SendDataHugeServer(106, v1, v2);
         } else {
             v0 = CommSys_SendDataHuge(106, v1, v2);
         }
@@ -796,9 +795,7 @@ static BOOL sub_0205AD10(UnkStruct_0205A0D8 *param0)
 
 static BOOL sub_0205AD20(UnkStruct_0205A0D8 *param0)
 {
-    UnkStruct_0205AD20 *v0;
-
-    v0 = (UnkStruct_0205AD20 *)((u8 *)(param0->unk_48) + (Pokemon_GetStructSize() * 3));
+    UnkStruct_0205AD20 *v0 = (UnkStruct_0205AD20 *)((u8 *)(param0->unk_48) + (Pokemon_GetStructSize() * 3));
     return v0->unk_00;
 }
 
@@ -868,21 +865,21 @@ static void sub_0205ADF8(UnkStruct_0205A0D8 *param0, int param1)
         int v1, v2, v3;
         MessageLoader *v4;
 
-        v4 = MessageLoader_Init(1, 26, 412, 4);
+        v4 = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_SPECIES_NAME, HEAP_ID_FIELD1);
         v3 = Pokemon_GetStructSize();
 
         Window_Add(param0->fieldSystem->bgConfig, v0, 3, 21, 9, 10, 8, 13, 10);
-        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 1, 11, 0, 4);
+        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 1, 11, 0, HEAP_ID_FIELD1);
         Window_FillTilemap(v0, 15);
 
         for (v1 = 0; v1 < 3; v1++) {
             v2 = Pokemon_GetValue((Pokemon *)(&param0->unk_48[v1 * v3]), MON_DATA_SPECIES, NULL);
 
-            MessageLoader_GetStrbuf(v4, v2, param0->unk_0C);
+            MessageLoader_GetString(v4, v2, param0->unk_0C);
             Text_AddPrinterWithParams(v0, FONT_SYSTEM, param0->unk_0C, 16, v1 * 16, TEXT_SPEED_NO_TRANSFER, NULL);
         }
 
-        MessageLoader_GetStrbuf(param0->unk_2C, 21, param0->unk_0C);
+        MessageLoader_GetString(param0->unk_2C, 21, param0->unk_0C);
         Text_AddPrinterWithParams(v0, FONT_SYSTEM, param0->unk_0C, 16, v1 * 16, TEXT_SPEED_NO_TRANSFER, NULL);
         MessageLoader_Free(v4);
     }
@@ -904,11 +901,11 @@ static void sub_0205AF18(UnkStruct_0205A0D8 *param0, int param1)
         int v1;
 
         Window_Add(param0->fieldSystem->bgConfig, v0, 3, 20, 11, 11, 6, 13, 90);
-        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 1, 11, 0, 4);
+        LoadStandardWindowGraphics(param0->fieldSystem->bgConfig, 3, 1, 11, 0, HEAP_ID_FIELD1);
         Window_FillTilemap(v0, 15);
 
         for (v1 = 0; v1 < 3; v1++) {
-            MessageLoader_GetStrbuf(param0->unk_2C, 22 + v1, param0->unk_0C);
+            MessageLoader_GetString(param0->unk_2C, 22 + v1, param0->unk_0C);
             Text_AddPrinterWithParams(v0, FONT_SYSTEM, param0->unk_0C, 16, v1 * 16, TEXT_SPEED_NO_TRANSFER, NULL);
         }
     }
@@ -936,7 +933,7 @@ static int sub_0205AFE4(UnkStruct_0205A0D8 *param0)
         }
 
         if (gSystem.pressedKeys & PAD_BUTTON_A) {
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
 
             if (param0->unk_81 < (param0->unk_80 - 1)) {
                 return 1;
@@ -946,14 +943,14 @@ static int sub_0205AFE4(UnkStruct_0205A0D8 *param0)
         }
 
         if (gSystem.pressedKeys & PAD_BUTTON_B) {
-            Sound_PlayEffect(1500);
+            Sound_PlayEffect(SEQ_SE_CONFIRM);
             return 2;
         }
 
         return 0;
     } while (0);
 
-    Sound_PlayEffect(1500);
+    Sound_PlayEffect(SEQ_SE_CONFIRM);
     Window_FillRectWithColor(param0->unk_7C, 15, 0, 0, 16, param0->unk_7C->height * 8);
     ColoredArrow_Print(param0->unk_78, param0->unk_7C, 0, param0->unk_81 * 16);
     Window_LoadTiles(param0->unk_7C);
@@ -1009,18 +1006,18 @@ static BOOL sub_0205B140(FieldTask *param0)
 
     switch (v1->unk_28) {
     case 0:
-        v1->unk_18 = StringTemplate_Default(4);
-        v1->unk_1C = MessageLoader_Init(0, 26, 11, 4);
-        v1->unk_00 = Strbuf_Init((100 * 2), 4);
-        v1->unk_04 = Strbuf_Init((100 * 2), 4);
+        v1->unk_18 = StringTemplate_Default(HEAP_ID_FIELD1);
+        v1->unk_1C = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_COMMUNICATION_CLUB, HEAP_ID_FIELD1);
+        v1->unk_00 = String_Init(100 * 2, HEAP_ID_FIELD1);
+        v1->unk_04 = String_Init(100 * 2, HEAP_ID_FIELD1);
 
-        MessageLoader_GetStrbuf(v1->unk_1C, 2 + v2->unk_03, v1->unk_00);
+        MessageLoader_GetString(v1->unk_1C, 2 + v2->level, v1->unk_00);
         StringTemplate_SetPlayerName(v1->unk_18, 0, CommInfo_TrainerInfo(v1->unk_24));
         StringTemplate_Format(v1->unk_18, v1->unk_04, v1->unk_00);
         FieldMessage_AddWindow(fieldSystem->bgConfig, &v1->unk_08, 3);
-        FieldMessage_DrawWindow(&v1->unk_08, SaveData_Options(fieldSystem->saveData));
+        FieldMessage_DrawWindow(&v1->unk_08, SaveData_GetOptions(fieldSystem->saveData));
 
-        v1->unk_20 = FieldMessage_Print(&v1->unk_08, v1->unk_04, SaveData_Options(fieldSystem->saveData), 1);
+        v1->unk_20 = FieldMessage_Print(&v1->unk_08, v1->unk_04, SaveData_GetOptions(fieldSystem->saveData), 1);
         v1->unk_28++;
         break;
     case 1:
@@ -1028,22 +1025,22 @@ static BOOL sub_0205B140(FieldTask *param0)
             if (gSystem.pressedKeys & PAD_BUTTON_A) {
                 MessageLoader_Free(v1->unk_1C);
                 StringTemplate_Free(v1->unk_18);
-                Strbuf_Free(v1->unk_00);
-                Strbuf_Free(v1->unk_04);
+                String_Free(v1->unk_00);
+                String_Free(v1->unk_04);
                 Window_EraseMessageBox(&v1->unk_08, 0);
                 Window_Remove(&v1->unk_08);
-                ov5_021D1744(0);
+                FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_OUT);
                 v1->unk_28++;
             }
         }
         break;
     case 2:
-        if (IsScreenTransitionDone()) {
+        if (IsScreenFadeDone()) {
             v1->unk_28++;
         }
         break;
     case 3:
-        sub_0203E09C(fieldSystem, v2);
+        FieldSystem_OpenTrainerCardScreen(fieldSystem, v2);
         v1->unk_28++;
         break;
     case 4:
@@ -1057,14 +1054,14 @@ static BOOL sub_0205B140(FieldTask *param0)
         break;
     case 6:
         if (!FieldSystem_IsRunningFieldMap(fieldSystem)) {
-            ov5_021D1744(1);
+            FieldMap_FadeScreen(FADE_TYPE_BRIGHTNESS_IN);
             CommPlayerMan_Restart();
             v1->unk_28++;
         }
         break;
     case 7:
-        sub_02059514();
-        Heap_FreeToHeap(v1);
+        CommPlayerMan_ResumeFieldSystem();
+        Heap_Free(v1);
         return 1;
     default:
         return 1;
@@ -1077,16 +1074,16 @@ void sub_0205B2D4(FieldSystem *fieldSystem)
 {
     int v0;
     int v1 = CommSys_CurNetId();
-    int v2 = sub_02058D88(v1);
-    int v3 = sub_02058DC0(v1);
+    int v2 = CommPlayer_GetXInFrontOfPlayer(v1);
+    int v3 = CommPlayer_GetZInFrontOfPlayer(v1);
 
     for (v0 = 0; v0 < CommSys_ConnectedCount(); v0++) {
         if (v0 == v1) {
             continue;
         }
 
-        if ((v2 == CommPlayer_XPos(v0)) && (v3 == CommPlayer_ZPos(v0))) {
-            UnkStruct_0205B2D4 *v4 = Heap_AllocFromHeapAtEnd(11, sizeof(UnkStruct_0205B2D4));
+        if ((v2 == CommPlayer_GetXIfActive(v0)) && (v3 == CommPlayer_GetZIfActive(v0))) {
+            UnkStruct_0205B2D4 *v4 = Heap_AllocAtEnd(HEAP_ID_FIELD2, sizeof(UnkStruct_0205B2D4));
 
             v4->unk_24 = v0;
             v4->unk_28 = 0;

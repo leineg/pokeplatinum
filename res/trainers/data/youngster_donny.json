@@ -18,7 +18,7 @@
                 "MOVE_CONFUSE_RAY",
                 "MOVE_CURSE"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
         },
         {
@@ -31,8 +31,33 @@
                 "MOVE_SWALLOW",
                 "MOVE_STOCKPILE"
             ],
-            "power": 10,
+            "iv_scale": 10,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "Hey, now!\n",
+                "You’re not even close to the door yet.\r",
+                "You have to beat me before you can\n",
+                "go, you know?\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Argh! I should’ve dazzled you by\n",
+                "shining my light in your eyes!\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Just walk around and look for the blue\n",
+                "marks on the tiles.\n"
+            ]
         }
     ]
 }

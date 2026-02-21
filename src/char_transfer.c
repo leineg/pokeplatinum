@@ -79,7 +79,7 @@ static void CalcByteAndBitIndices(int val, u32 *top, u8 *bottom);
 static void FixOffsetAndSize(u32 base, u32 offset, u32 size, int *outOffset, int *outSize);
 static u32 GetNumBlocks(u8 *buf);
 
-static void InitTransferBuffers(u32 numBlocksMain, u32 numBlocksSub, enum HeapId heapID);
+static void InitTransferBuffers(u32 numBlocksMain, u32 numBlocksSub, enum HeapID heapID);
 static void FreeBlockTransferBuffer(u8 *buf);
 static void ReserveTransferRange(u32 start, u32 count, u8 *buf);
 static void ReserveVramSpace(u32 size, NNS_G2D_VRAM_TYPE vramType);
@@ -99,11 +99,11 @@ void CharTransfer_Init(const CharTransferTemplate *template)
 void CharTransfer_InitWithVramModes(const CharTransferTemplate *template, GXOBJVRamModeChar modeMain, GXOBJVRamModeChar modeSub)
 {
     if (sTaskManager == NULL) {
-        sTaskManager = Heap_AllocFromHeap(template->heapID, sizeof(CharTransferTaskManager));
+        sTaskManager = Heap_Alloc(template->heapID, sizeof(CharTransferTaskManager));
         MI_CpuClear32(sTaskManager, sizeof(CharTransferTaskManager));
 
         sTaskManager->capacity = template->maxTasks;
-        sTaskManager->tasks = Heap_AllocFromHeap(template->heapID, sizeof(CharTransferTask) * sTaskManager->capacity);
+        sTaskManager->tasks = Heap_Alloc(template->heapID, sizeof(CharTransferTask) * sTaskManager->capacity);
         for (int i = 0; i < template->maxTasks; i++) {
             InitTransferTask(sTaskManager->tasks + i);
         }
@@ -129,8 +129,8 @@ void CharTransfer_Free(void)
 
         CharTransfer_ResetAllTasks();
 
-        Heap_FreeToHeap(sTaskManager->tasks);
-        Heap_FreeToHeap(sTaskManager);
+        Heap_Free(sTaskManager->tasks);
+        Heap_Free(sTaskManager);
         sTaskManager = NULL;
     }
 }
@@ -779,25 +779,25 @@ static void ClearBothTransferBuffers(void)
     ClearTransferBuffer(sTaskManager->bufSub);
 }
 
-static void InitTransferBuffers(u32 numBlocksMain, u32 numBlocksSub, enum HeapId heapID)
+static void InitTransferBuffers(u32 numBlocksMain, u32 numBlocksSub, enum HeapID heapID)
 {
     sTaskManager->numBlocksMain = numBlocksMain;
     sTaskManager->numBlocksSub = numBlocksSub;
 
     if (sTaskManager->bufMain != NULL) {
-        Heap_FreeToHeap(sTaskManager->bufMain);
+        Heap_Free(sTaskManager->bufMain);
     }
 
     if (sTaskManager->bufSub != NULL) {
-        Heap_FreeToHeap(sTaskManager->bufSub);
+        Heap_Free(sTaskManager->bufSub);
     }
 
     if (sTaskManager->numBlocksMain != 0) {
-        sTaskManager->bufMain = Heap_AllocFromHeap(heapID, numBlocksMain / 8);
+        sTaskManager->bufMain = Heap_Alloc(heapID, numBlocksMain / 8);
     }
 
     if (sTaskManager->numBlocksSub != 0) {
-        sTaskManager->bufSub = Heap_AllocFromHeap(heapID, numBlocksSub / 8);
+        sTaskManager->bufSub = Heap_Alloc(heapID, numBlocksSub / 8);
     }
 
     ClearBothTransferBuffers();
@@ -808,10 +808,10 @@ static void FreeBlockTransferBuffer(u8 *buf)
     if (buf != NULL) {
         if (buf == sTaskManager->bufMain) {
             sTaskManager->numBlocksMain = 0;
-            Heap_FreeToHeap(buf);
+            Heap_Free(buf);
         } else {
             sTaskManager->numBlocksSub = 0;
-            Heap_FreeToHeap(buf);
+            Heap_Free(buf);
         }
         buf = NULL;
     }

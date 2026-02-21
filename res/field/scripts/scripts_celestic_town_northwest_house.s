@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/celestic_town_northwest_house.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _002B
@@ -14,9 +13,9 @@ _0012:
     LockAll
     FacePlayer
     Message 0
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_147 1
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartCommon
     ReleaseAll
     End
 
@@ -24,9 +23,9 @@ _002B:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_147 1
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartCommon
     ReleaseAll
     End
 
@@ -34,9 +33,9 @@ _0041:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    CallCommonScript 0x7E3
-    ScrCmd_035
-    ScrCmd_148 14
+    Common_VendorGreeting
+    CloseMessageWithoutErasing
+    PokeMartSpecialties MART_SPECIALTIES_ID_CELESTIC
     ReleaseAll
     End
 
@@ -45,45 +44,42 @@ _0057:
     LockAll
     FacePlayer
     Message 1
-    ScrCmd_268 0x800C
-    GoToIfLt 0x800C, 4, _0113
-    GoToIfLt 0x800C, 10, _0093
-    GoToIfLt 0x800C, 20, _00D3
+    GetHour VAR_RESULT
+    GoToIfLt VAR_RESULT, 4, _0113
+    GoToIfLt VAR_RESULT, 10, _0093
+    GoToIfLt VAR_RESULT, 20, _00D3
     GoTo _0113
 
 _0093:
-    GoToIfSet 0x134, _0153
+    GoToIfSet FLAG_UNK_0x0134, _0153
     Message 2
-    SetVar 0x8004, 0x129
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0174
-    CallCommonScript 0x7FC
-    SetFlag 0x134
+    SetVar VAR_0x8004, ITEM_CHOICE_SPECS
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0174
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x0134
     Message 3
     GoTo _0153
 
 _00D3:
-    GoToIfSet 0x135, _015E
+    GoToIfSet FLAG_UNK_0x0135, _015E
     Message 2
-    SetVar 0x8004, 240
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0174
-    CallCommonScript 0x7FC
-    SetFlag 0x135
+    SetVar VAR_0x8004, ITEM_BLACKGLASSES
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0174
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x0135
     Message 4
     GoTo _015E
 
 _0113:
-    GoToIfSet 0x136, _0169
+    GoToIfSet FLAG_UNK_0x0136, _0169
     Message 2
-    SetVar 0x8004, 0x10B
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0174
-    CallCommonScript 0x7FC
-    SetFlag 0x136
+    SetVar VAR_0x8004, ITEM_WISE_GLASSES
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0174
+    Common_GiveItemQuantity
+    SetFlag FLAG_UNK_0x0136
     Message 5
     GoTo _0169
 
@@ -115,4 +111,4 @@ _0174:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/hearthome_city_pokecenter_1f.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _001E
@@ -10,8 +9,7 @@
     ScriptEntryEnd
 
 _0012:
-    SetVar 0x8007, 0
-    CallCommonScript 0x7D2
+    Common_CallPokecenterNurse 0
     End
 
 _001E:
@@ -44,4 +42,4 @@ _0044:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

@@ -23,7 +23,7 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_SCREECH"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -37,7 +37,7 @@
                 "MOVE_BITE",
                 "MOVE_SUPERSONIC"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
         },
         {
@@ -51,8 +51,28 @@
                 "MOVE_ASTONISH",
                 "MOVE_FAINT_ATTACK"
             ],
-            "power": 250,
+            "iv_scale": 250,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_LAST_BATTLER",
+            "en_US": "My last Pokémon.\n"
+        },
+        {
+            "type": "TRMSG_LAST_BATTLER_HALF_HP",
+            "en_US": [
+                "I see... I may lose if this pace\n",
+                "continues...\n"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "Interesting.\n",
+                "And quite curious.\n"
+            ]
         }
     ]
 }

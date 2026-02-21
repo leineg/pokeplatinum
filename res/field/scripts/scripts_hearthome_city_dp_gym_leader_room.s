@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/hearthome_city_dp_gym_leader_room.h"
 
-    .data
 
     ScriptEntry _0014
     ScriptEntry _012B
@@ -13,11 +12,11 @@ _0014:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     FacePlayer
-    GetPlayerDir 0x800C
-    GoToIfEq 0x800C, 0, _0056
-    GoToIfEq 0x800C, 1, _0066
-    GoToIfEq 0x800C, 2, _0076
-    GoToIfEq 0x800C, 3, _0086
+    GetPlayerDir VAR_RESULT
+    GoToIfEq VAR_RESULT, 0, _0056
+    GoToIfEq VAR_RESULT, 1, _0066
+    GoToIfEq VAR_RESULT, 2, _0076
+    GoToIfEq VAR_RESULT, 3, _0086
     End
 
 _0056:
@@ -41,21 +40,20 @@ _0086:
     GoTo _0096
 
 _0096:
-    CheckBadgeAcquired BADGE_ID_RELIC, 0x800C
-    GoToIfEq 0x800C, 1, _0173
+    GoToIfBadgeAcquired BADGE_ID_RELIC, _0173
     CreateJournalEvent LOCATION_EVENT_GYM_WAS_TOO_TOUGH, 100, 0, 0, 0
     Message 0
     CloseMessage
     StartTrainerBattle TRAINER_LEADER_FANTINA
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, _01DC
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, _01DC
     Message 1
     BufferPlayerName 0
     Message 2
     PlaySound SEQ_BADGE
     WaitSound
     GiveBadge BADGE_ID_RELIC
-    ScrCmd_260 23
+    IncrementTrainerScore2 TRAINER_SCORE_EVENT_BADGE_EARNED
     SetTrainerFlag TRAINER_CAMPER_DREW
     SetTrainerFlag TRAINER_ACE_TRAINER_ALLEN
     SetTrainerFlag TRAINER_ACE_TRAINER_CATHERINE
@@ -65,21 +63,20 @@ _0096:
     SetTrainerFlag TRAINER_SCHOOL_KID_MACKENZIE
     SetTrainerFlag TRAINER_YOUNGSTER_DONNY
     CreateJournalEvent LOCATION_EVENT_BEAT_GYM_LEADER, 100, TRAINER_LEADER_FANTINA, 0, 0
-    SetVar 0x407B, 1
-    SetFlag 0x206
-    ClearFlag 0x207
+    SetVar VAR_HEARTHOME_STATE, 1
+    SetFlag FLAG_HIDE_HEARTHOME_ROUTE_209_ROADBLOCK
+    ClearFlag FLAG_HIDE_HEARTHOME_ROUTE_209_GATE_RIVAL
     Message 3
     GoTo _012B
 
 _012B:
-    SetVar 0x8004, 0x188
-    SetVar 0x8005, 1
-    ScrCmd_07D 0x8004, 0x8005, 0x800C
-    GoToIfEq 0x800C, 0, _0169
-    CallCommonScript 0x7FC
-    SetFlag 125
-    BufferItemName 0, 0x8004
-    BufferTMHMMoveName 1, 0x8004
+    SetVar VAR_0x8004, ITEM_TM65
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, _0169
+    Common_GiveItemQuantity
+    SetFlag FLAG_OBTAINED_FANTINA_TM65
+    BufferItemName 0, VAR_0x8004
+    BufferTMHMMoveName 1, VAR_0x8004
     Message 4
     WaitABXPadPress
     CloseMessage
@@ -87,13 +84,13 @@ _012B:
     End
 
 _0169:
-    CallCommonScript 0x7E1
+    Common_MessageBagIsFull
     CloseMessage
     ReleaseAll
     End
 
 _0173:
-    GoToIfUnset 125, _012B
+    GoToIfUnset FLAG_OBTAINED_FANTINA_TM65, _012B
     Message 5
     WaitABXPadPress
     CloseMessage
@@ -102,34 +99,34 @@ _0173:
 
     .balign 4, 0
 _018C:
-    MoveAction_002 4
-    MoveAction_000 4
-    MoveAction_003 4
-    MoveAction_001 4
+    FaceWest 4
+    FaceNorth 4
+    FaceEast 4
+    FaceSouth 4
     EndMovement
 
     .balign 4, 0
 _01A0:
-    MoveAction_003 4
-    MoveAction_001 4
-    MoveAction_002 4
-    MoveAction_000 4
+    FaceEast 4
+    FaceSouth 4
+    FaceWest 4
+    FaceNorth 4
     EndMovement
 
     .balign 4, 0
 _01B4:
-    MoveAction_000 4
-    MoveAction_002 4
-    MoveAction_001 4
-    MoveAction_003 4
+    FaceNorth 4
+    FaceWest 4
+    FaceSouth 4
+    FaceEast 4
     EndMovement
 
     .balign 4, 0
 _01C8:
-    MoveAction_000 4
-    MoveAction_003 4
-    MoveAction_001 4
-    MoveAction_002 4
+    FaceNorth 4
+    FaceEast 4
+    FaceSouth 4
+    FaceWest 4
     EndMovement
 
 _01DC:
@@ -137,5 +134,4 @@ _01DC:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

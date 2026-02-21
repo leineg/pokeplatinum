@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/lake_valor_drained.h"
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0025
@@ -46,11 +45,10 @@ _004B:
     WaitFanfare SEQ_SE_CONFIRM
     PlayCry SPECIES_MAGIKARP, 11
     Message 3
-    ScrCmd_04D
+    WaitCry
     WaitABXPadPress
     CloseMessage
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

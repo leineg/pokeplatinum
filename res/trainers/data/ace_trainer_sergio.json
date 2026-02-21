@@ -20,7 +20,7 @@
                 "MOVE_ICY_WIND",
                 "MOVE_WOOD_HAMMER"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
         },
         {
@@ -34,8 +34,32 @@
                 "MOVE_FAINT_ATTACK",
                 "MOVE_QUICK_ATTACK"
             ],
-            "power": 60,
+            "iv_scale": 60,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "...It’s t-too cold.\n",
+                "I can’t even feel my t-tongue.\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": [
+                "This result...\n",
+                "...It’s cold. Bitter cold.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "The higher up you slide from, the\n",
+                "more speed you’ll have to smash\f",
+                "those big snowballs.\n"
+            ]
         }
     ]
 }

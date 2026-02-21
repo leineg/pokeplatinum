@@ -4,7 +4,6 @@
 #define LOCALID_AZELF  0
 #define LOCALID_SATURN 1
 
-    .data
 
     ScriptEntry _0012
     ScriptEntry _0042
@@ -13,7 +12,7 @@
     ScriptEntryEnd
 
 _0012:
-    SetFlag 0x9E1
+    SetFlag FLAG_FIRST_ARRIVAL_VALOR_CAVERN
     GoToIfUnset FLAG_GALACTIC_LEFT_LAKE_VALOR, ValorCavern_SetWarpEventPosLakeWithGalactic
     GoToIfSet FLAG_GALACTIC_LEFT_LAKE_VALOR, ValorCavern_SetWarpEventPosLakeWithWater
     End
@@ -27,8 +26,8 @@ ValorCavern_SetWarpEventPosLakeWithWater:
     End
 
 _0042:
-    SetFlag 0x9E1
-    CallIfSet 142, ValorCavern_RemoveAzelf
+    SetFlag FLAG_FIRST_ARRIVAL_VALOR_CAVERN
+    CallIfSet FLAG_MAP_LOCAL, ValorCavern_RemoveAzelf
     GoToIfUnset FLAG_GALACTIC_LEFT_LAKE_VALOR, ValorCavern_SetWarpEventPosLakeWithGalactic
     GoToIfSet FLAG_GALACTIC_LEFT_LAKE_VALOR, ValorCavern_SetWarpEventPosLakeWithWater
     End
@@ -36,7 +35,7 @@ _0042:
 ValorCavern_RemoveAzelf:
     SetFlag FLAG_AZELF_DISAPPEARED
     RemoveObject LOCALID_AZELF
-    ClearFlag 142
+    ClearFlag FLAG_MAP_LOCAL
     Return
 
 ValorCavern_Azelf:
@@ -44,21 +43,21 @@ ValorCavern_Azelf:
     LockAll
     FacePlayer
     PlayCry SPECIES_AZELF
-    Message valor_cavern_azelf_battle_intro
+    Message ValorCavern_Text_AzelfCry
     CloseMessage
-    SetFlag 142
+    SetFlag FLAG_MAP_LOCAL
     StartLegendaryBattle SPECIES_AZELF, 50
-    ClearFlag 142
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, ValorCavern_LostBattleAzelf
-    CheckDidNotCapture 0x800C
-    GoToIfEq 0x800C, TRUE, ValorCavern_AzelfDisappeared
-    SetFlag FLAG_AZELF_CAUGHT
+    ClearFlag FLAG_MAP_LOCAL
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, ValorCavern_LostBattleAzelf
+    CheckDidNotCapture VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, ValorCavern_AzelfDisappeared
+    SetFlag FLAG_CAUGHT_AZELF
     ReleaseAll
     End
 
 ValorCavern_AzelfDisappeared:
-    Message valor_cavern_azelf_disappeared
+    Message ValorCavern_Text_AzelfDisappeared
     WaitABXPadPress
     CloseMessage
     ReleaseAll
@@ -72,32 +71,32 @@ ValorCavern_LostBattleAzelf:
 ValorCavern_CommanderSaturn:
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
-    Message valor_cavern_saturn_mission_is_proceeding
+    Message ValorCavern_Text_SaturnMissionIsProceeding
     CloseMessage
     FacePlayer
     ApplyMovement LOCALID_SATURN, _013C
     WaitMovement
-    WaitTime 30, 0x800C
-    Message valor_cavern_saturn_battle_intro
+    WaitTime 30, VAR_RESULT
+    Message ValorCavern_Text_SaturnBattleIntro
     CloseMessage
     StartTrainerBattle TRAINER_COMMANDER_SATURN_VALOR_CAVERN
-    CheckWonBattle 0x800C
-    GoToIfEq 0x800C, FALSE, ValorCavern_LostBattleCommanderSaturn
-    Message valor_cavern_saturn_post_battle
+    CheckWonBattle VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, ValorCavern_LostBattleCommanderSaturn
+    Message ValorCavern_Text_SaturnPostBattle
     CloseMessage
-    FadeScreen 6, 1, 0, 0
+    FadeScreenOut
     WaitFadeScreen
     RemoveObject LOCALID_SATURN
     SetFlag FLAG_DEFEATED_COMMANDER_SATURN_VALOR_CAVERN
-    SetFlag 0x984
-    FadeScreen 6, 1, 1, 0
+    SetFlag FLAG_ALT_MUSIC_LAKE_VALOR
+    FadeScreenIn
     WaitFadeScreen
     ReleaseAll
     End
 
     .balign 4, 0
 _013C:
-    MoveAction_075
+    EmoteExclamationMark
     EndMovement
 
 ValorCavern_LostBattleCommanderSaturn:
@@ -105,5 +104,4 @@ ValorCavern_LostBattleCommanderSaturn:
     ReleaseAll
     End
 
-    .byte 0
-    .byte 0
+    .balign 4, 0

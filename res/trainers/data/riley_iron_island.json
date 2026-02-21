@@ -20,8 +20,9 @@
                 "MOVE_QUICK_ATTACK",
                 "MOVE_BONE_RUSH"
             ],
-            "power": 30,
+            "iv_scale": 30,
             "ball_seal": 0
         }
-    ]
+    ],
+    "messages": []
 }

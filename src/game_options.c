@@ -9,9 +9,9 @@
 #include "system.h"
 #include "text.h"
 
-Options *Options_New(u32 heapID)
+Options *Options_New(enum HeapID heapID)
 {
-    Options *options = Heap_AllocFromHeap(heapID, sizeof(Options));
+    Options *options = Heap_Alloc(heapID, sizeof(Options));
     Options_Init(options);
 
     return options;
@@ -37,7 +37,7 @@ void Options_Init(Options *options)
 void Options_SetSystemButtonMode(SaveData *saveData, enum OptionsButtonMode mode)
 {
     if (saveData != NULL) {
-        mode = Options_ButtonMode(SaveData_Options(saveData));
+        mode = Options_ButtonMode(SaveData_GetOptions(saveData));
     }
 
     switch (mode) {

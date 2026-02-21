@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_228_south_house.h"
 
-    .data
 
     ScriptEntry _0016
     ScriptEntry _005F
@@ -15,9 +14,9 @@ _0016:
     LockAll
     FacePlayer
     Message 0
-    ShowYesNoMenu 0x800C
-    GoToIfEq 0x800C, MENU_YES, _0041
-    GoToIfEq 0x800C, MENU_NO, _004C
+    ShowYesNoMenu VAR_RESULT
+    GoToIfEq VAR_RESULT, MENU_YES, _0041
+    GoToIfEq VAR_RESULT, MENU_NO, _004C
     End
 
 _0041:
@@ -72,4 +71,4 @@ _0092:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

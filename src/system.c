@@ -3,12 +3,12 @@
 #include "nitro/pad/common/pad.h"
 #include <string.h>
 
+#include "constants/graphics.h"
 #include "constants/heap.h"
-#include "constants/screen.h"
 
 #include "boot.h"
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
 #include "sys_task_manager.h"
 
 #define MAIN_TASK_MAX        160
@@ -191,7 +191,7 @@ void InitVRAM(void)
     MI_CpuClearFast((void *)HW_DB_PLTT, HW_DB_PLTT_SIZE);
 }
 
-void *ReadFileToHeap(int heapID, const char *filename)
+void *ReadFileToHeap(enum HeapID heapID, const char *filename)
 {
     FSFile file;
     FS_InitFile(&file);
@@ -199,10 +199,10 @@ void *ReadFileToHeap(int heapID, const char *filename)
     void *buf;
     if (FS_OpenFile(&file, filename)) {
         u32 length = FS_GetLength(&file);
-        buf = Heap_AllocFromHeap(heapID, length);
+        buf = Heap_Alloc(heapID, length);
         if (buf != NULL) {
             if (FS_ReadFile(&file, buf, length) != length) {
-                Heap_FreeToHeapExplicit(heapID, buf);
+                Heap_FreeExplicit(heapID, buf);
                 buf = NULL;
             }
         }
@@ -238,7 +238,7 @@ void ClearUnusedSystemCache(void)
 {
     for (int i = CACHE_ENTRY_MAX - 1; i > -1; i--) {
         if (sCache[i].data != NULL) {
-            Heap_FreeToHeap(sCache[i].data);
+            Heap_Free(sCache[i].data);
             sCache[i].data = NULL;
             sCache[i].hash = 0;
         }
@@ -436,11 +436,11 @@ void ResetUnlock(u8 mask)
 
 #define HEAP_CANARY 0x2F93A1BC
 
-void InitHeapCanary(enum HeapId heapID)
+void InitHeapCanary(enum HeapID heapID)
 {
     GF_ASSERT(gSystem.heapCanary == NULL);
 
-    gSystem.heapCanary = Heap_AllocFromHeapAtEnd(heapID, sizeof(u32));
+    gSystem.heapCanary = Heap_AllocAtEnd(heapID, sizeof(u32));
     *(gSystem.heapCanary) = HEAP_CANARY;
 }
 
@@ -449,7 +449,7 @@ void FreeHeapCanary(void)
     GF_ASSERT(gSystem.heapCanary != NULL);
 
     *(gSystem.heapCanary) = 0;
-    Heap_FreeToHeap(gSystem.heapCanary);
+    Heap_Free(gSystem.heapCanary);
     gSystem.heapCanary = NULL;
 }
 

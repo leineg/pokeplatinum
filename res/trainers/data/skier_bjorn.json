@@ -13,7 +13,7 @@
             "level": 36,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
         },
         {
@@ -22,8 +22,35 @@
             "level": 38,
             "item": null,
             "moves": null,
-            "power": 0,
+            "iv_scale": 0,
             "ball_seal": 0
+        }
+    ],
+    "messages": [
+        {
+            "type": "TRMSG_PRE_BATTLE",
+            "en_US": [
+                "We Skiers feel Mother Nature through\n",
+                "the soles of our feet!\r"
+            ]
+        },
+        {
+            "type": "TRMSG_DEFEAT",
+            "en_US": "I got a good taste of your power!\n"
+        },
+        {
+            "type": "TRMSG_POST_BATTLE",
+            "en_US": [
+                "Trainers get an appreciation of life\n",
+                "through Pokémon. At least I think so.\n"
+            ]
+        },
+        {
+            "type": "TRMSG_REMATCH",
+            "en_US": [
+                "I knew you were headed here.\n",
+                "I felt it with the soles of my feet!\r"
+            ]
         }
     ]
 }

@@ -1,25 +1,24 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/turnback_cave_entrance.h"
 
-    .data
 
     ScriptEntry _000A
     ScriptEntry _002A
     ScriptEntryEnd
 
 _000A:
-    SetFlag 0x9D4
+    SetFlag FLAG_FIRST_ARRIVAL_TURNBACK_CAVE
     Call _001C
-    ScrCmd_285 0x410B, 0x410C
+    InitTurnbackCave VAR_TURNBACK_CAVE_PILLARS_SEEN, VAR_TURNBACK_CAVE_ROOMS_VISITED
     End
 
 _001C:
-    SetVar 0x410B, 0
-    SetVar 0x410C, 0
+    SetVar VAR_TURNBACK_CAVE_PILLARS_SEEN, 0
+    SetVar VAR_TURNBACK_CAVE_ROOMS_VISITED, 0
     Return
 
 _002A:
-    GoToIfSet 0x121, _0046
+    GoToIfSet FLAG_CAUGHT_GIRATINA, _0046
     PlayFanfare SEQ_SE_CONFIRM
     LockAll
     Message 0
@@ -37,4 +36,4 @@ _0046:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

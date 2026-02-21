@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_218_gate_to_canalave_city.h"
 
-    .data
 
     ScriptEntry _0208
     ScriptEntry _000A
@@ -12,8 +11,8 @@ _000A:
     Call _006A
     BufferPlayerName 0
     BufferCounterpartName 1
-    GetPlayerGender 0x800C
-    GoToIfEq 0x800C, GENDER_MALE, _0031
+    GetPlayerGender VAR_RESULT
+    GoToIfEq VAR_RESULT, GENDER_MALE, _0031
     GoTo _003C
     End
 
@@ -33,18 +32,18 @@ _0047:
     ScrCmd_22C
     Call _00E8
     PlayFanfare SEQ_SE_DP_KAIDAN2
-    SetFlag 0x21C
+    SetFlag FLAG_UNK_0x021C
     RemoveObject 1
-    SetVar 0x4105, 1
+    SetVar VAR_UNK_0x4105, 1
     ReleaseAll
     End
 
 _006A:
-    GetPlayerMapPos 0x8005, 0x8006
-    GoToIfEq 0x8006, 5, _00AC
-    GoToIfEq 0x8006, 6, _00B8
-    GoToIfEq 0x8006, 7, _00C4
-    GoToIfEq 0x8006, 8, _00D0
+    GetPlayerMapPos VAR_0x8005, VAR_0x8006
+    GoToIfEq VAR_0x8006, 5, _00AC
+    GoToIfEq VAR_0x8006, 6, _00B8
+    GoToIfEq VAR_0x8006, 7, _00C4
+    GoToIfEq VAR_0x8006, 8, _00D0
     GoTo _00DC
     End
 
@@ -74,11 +73,11 @@ _00DC:
     Return
 
 _00E8:
-    GetPlayerMapPos 0x8005, 0x8006
-    GoToIfEq 0x8006, 5, _012A
-    GoToIfEq 0x8006, 6, _0136
-    GoToIfEq 0x8006, 7, _0142
-    GoToIfEq 0x8006, 8, _014E
+    GetPlayerMapPos VAR_0x8005, VAR_0x8006
+    GoToIfEq VAR_0x8006, 5, _012A
+    GoToIfEq VAR_0x8006, 6, _0136
+    GoToIfEq VAR_0x8006, 7, _0142
+    GoToIfEq VAR_0x8006, 8, _014E
     GoTo _015A
     End
 
@@ -109,72 +108,72 @@ _015A:
 
     .balign 4, 0
 _0168:
-    MoveAction_075
-    MoveAction_015
-    MoveAction_012 2
-    MoveAction_035
+    EmoteExclamationMark
+    WalkNormalEast
+    WalkNormalNorth 2
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _017C:
-    MoveAction_075
-    MoveAction_015
-    MoveAction_012
-    MoveAction_035
+    EmoteExclamationMark
+    WalkNormalEast
+    WalkNormalNorth
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _0190:
-    MoveAction_075
-    MoveAction_015
+    EmoteExclamationMark
+    WalkNormalEast
     EndMovement
 
     .balign 4, 0
 _019C:
-    MoveAction_075
-    MoveAction_015
-    MoveAction_013
-    MoveAction_035
+    EmoteExclamationMark
+    WalkNormalEast
+    WalkNormalSouth
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _01B0:
-    MoveAction_075
-    MoveAction_015
-    MoveAction_013 2
-    MoveAction_035
+    EmoteExclamationMark
+    WalkNormalEast
+    WalkNormalSouth 2
+    WalkOnSpotNormalEast
     EndMovement
 
     .balign 4, 0
 _01C4:
-    MoveAction_013 2
-    MoveAction_015 4
+    WalkNormalSouth 2
+    WalkNormalEast 4
     EndMovement
 
     .balign 4, 0
 _01D0:
-    MoveAction_013
-    MoveAction_015 4
+    WalkNormalSouth
+    WalkNormalEast 4
     EndMovement
 
     .balign 4, 0
 _01DC:
-    MoveAction_012
-    MoveAction_015 3
-    MoveAction_013
-    MoveAction_015
+    WalkNormalNorth
+    WalkNormalEast 3
+    WalkNormalSouth
+    WalkNormalEast
     EndMovement
 
     .balign 4, 0
 _01F0:
-    MoveAction_012
-    MoveAction_015 4
+    WalkNormalNorth
+    WalkNormalEast 4
     EndMovement
 
     .balign 4, 0
 _01FC:
-    MoveAction_012 2
-    MoveAction_015 4
+    WalkNormalNorth 2
+    WalkNormalEast 4
     EndMovement
 
 _0208:
@@ -187,4 +186,4 @@ _0208:
     ReleaseAll
     End
 
-    .byte 0
+    .balign 4, 0

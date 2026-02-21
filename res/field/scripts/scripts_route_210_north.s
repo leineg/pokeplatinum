@@ -1,7 +1,6 @@
 #include "macros/scrcmd.inc"
 #include "res/text/bank/route_210_north.h"
 
-    .data
 
     ScriptEntry _000E
     ScriptEntry _0021
@@ -19,19 +18,11 @@ _000E:
     End
 
 _0021:
-    ScrCmd_036 1, 1, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowArrowSign 1
     End
 
 _0038:
-    ScrCmd_036 2, 2, 0, 0x800C
-    ScrCmd_038 3
-    ScrCmd_039
-    ScrCmd_03B 0x800C
-    CallCommonScript 0x7D0
+    ShowLandmarkSign 2
     End
 
-    .byte 0
+    .balign 4, 0

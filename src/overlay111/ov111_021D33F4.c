@@ -38,7 +38,7 @@ UnkStruct_ov111_021D33F4 *ov111_021D33F4(UnkStruct_ov111_021D2F80 *param0, u32 p
     UnkStruct_ov111_021D33F4 *v0;
     VecFx32 v1;
 
-    v0 = Heap_AllocFromHeap(115, sizeof(UnkStruct_ov111_021D33F4));
+    v0 = Heap_Alloc(HEAP_ID_115, sizeof(UnkStruct_ov111_021D33F4));
     memset(v0, 0, sizeof(UnkStruct_ov111_021D33F4));
     v0->unk_0C = ov111_021D3280(param0, param1, param2, param6, param7, param5);
     v0->unk_02 = param5;
@@ -51,7 +51,7 @@ UnkStruct_ov111_021D33F4 *ov111_021D33F4(UnkStruct_ov111_021D2F80 *param0, u32 p
 void *ov111_021D3448(UnkStruct_ov111_021D33F4 *param0)
 {
     Sprite_Delete(param0->unk_0C);
-    Heap_FreeToHeap(param0);
+    Heap_Free(param0);
     return NULL;
 }
 
@@ -84,9 +84,7 @@ void ov111_021D3474(UnkStruct_ov111_021D33F4 *param0, int param1, int param2)
 
 void ov111_021D349C(UnkStruct_ov111_021D33F4 *param0, int *param1, int *param2)
 {
-    const VecFx32 *v0;
-
-    v0 = Sprite_GetPosition(param0->unk_0C);
+    const VecFx32 *v0 = Sprite_GetPosition(param0->unk_0C);
 
     *param1 = (v0->x / FX32_ONE);
     *param2 = (v0->y / FX32_ONE);

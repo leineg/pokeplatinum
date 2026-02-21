@@ -2,7 +2,7 @@
 
 #include "constants/battle.h"
 #include "constants/pokemon.h"
-#include "constants/trainer.h"
+#include "generated/trainer_message_types.h"
 
 #include "struct_defs/trainer.h"
 
@@ -11,22 +11,22 @@
 #include "charcode_util.h"
 #include "field_battle_data_transfer.h"
 #include "heap.h"
-#include "math.h"
+#include "math_util.h"
 #include "message.h"
 #include "narc.h"
 #include "party.h"
 #include "pokemon.h"
 #include "savedata.h"
 #include "savedata_misc.h"
-#include "strbuf.h"
+#include "string_gf.h"
 
-static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID);
+static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID heapID);
 
-void Trainer_Encounter(FieldBattleDTO *dto, const SaveData *save, int heapID)
+void Trainer_Encounter(FieldBattleDTO *dto, const SaveData *saveData, enum HeapID heapID)
 {
     Trainer trdata;
-    MessageLoader *msgLoader = MessageLoader_Init(MESSAGE_LOADER_NARC_HANDLE, NARC_INDEX_MSGDATA__PL_MSG, 618, heapID);
-    const charcode_t *rivalName = MiscSaveBlock_RivalName(SaveData_MiscSaveBlockConst(save));
+    MessageLoader *msgLoader = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_NPC_TRAINER_NAMES, heapID);
+    const charcode_t *rivalName = MiscSaveBlock_RivalName(SaveData_MiscSaveBlockConst(saveData));
 
     for (int i = 0; i < MAX_BATTLERS; i++) {
         if (!dto->trainerIDs[i]) {
@@ -39,9 +39,9 @@ void Trainer_Encounter(FieldBattleDTO *dto, const SaveData *save, int heapID)
         if (trdata.header.trainerType == TRAINER_CLASS_RIVAL) {
             CharCode_Copy(dto->trainer[i].name, rivalName);
         } else {
-            Strbuf *trainerName = MessageLoader_GetNewStrbuf(msgLoader, dto->trainerIDs[i]);
-            Strbuf_ToChars(trainerName, dto->trainer[i].name, TRAINER_NAME_LEN + 1);
-            Strbuf_Free(trainerName);
+            String *trainerName = MessageLoader_GetNewString(msgLoader, dto->trainerIDs[i]);
+            String_ToChars(trainerName, dto->trainer[i].name, TRAINER_NAME_LEN + 1);
+            String_Free(trainerName);
         }
 
         TrainerData_BuildParty(dto, i, heapID);
@@ -95,7 +95,7 @@ u32 Trainer_LoadParam(int trainerID, enum TrainerDataParam paramID)
     return result;
 }
 
-BOOL Trainer_HasMessageType(int trainerID, enum TrainerMessageType msgType, int heapID)
+BOOL Trainer_HasMessageType(int trainerID, enum TrainerMessageType msgType, enum HeapID heapID)
 {
     NARC *narc; // must declare up here to match
     u16 offset, data[2];
@@ -124,7 +124,7 @@ BOOL Trainer_HasMessageType(int trainerID, enum TrainerMessageType msgType, int 
     return result;
 }
 
-void Trainer_LoadMessage(int trainerID, enum TrainerMessageType msgType, Strbuf *strbuf, int heapID)
+void Trainer_LoadMessage(int trainerID, enum TrainerMessageType msgType, String *string, enum HeapID heapID)
 {
     NARC *narc; // must declare up here to match
     u16 offset, data[2];
@@ -137,7 +137,7 @@ void Trainer_LoadMessage(int trainerID, enum TrainerMessageType msgType, Strbuf 
         NARC_ReadFromMember(narc, 0, offset, 4, data);
 
         if (data[0] == trainerID && data[1] == msgType) {
-            MessageBank_GetStrbufFromNARC(NARC_INDEX_MSGDATA__PL_MSG, 617, offset / 4, heapID, strbuf);
+            MessageBank_GetStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_NPC_TRAINER_MESSAGES, offset / 4, heapID, string);
             break;
         }
 
@@ -147,7 +147,7 @@ void Trainer_LoadMessage(int trainerID, enum TrainerMessageType msgType, Strbuf 
     NARC_dtor(narc);
 
     if (offset == size) {
-        Strbuf_Clear(strbuf);
+        String_Clear(string);
     }
 }
 
@@ -173,7 +173,7 @@ u8 TrainerClass_Gender(int trclass)
  * @param battler       Which battler's party is to be loaded.
  * @param heapID        Heap on which to perform any allocations.
  */
-static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
+static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID heapID)
 {
     // must make declarations C89-style to match
     void *buf;
@@ -186,7 +186,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
 
     // alloc enough space to support the maximum possible data size
     Party_InitWithCapacity(dto->parties[battler], MAX_PARTY_SIZE);
-    buf = Heap_AllocFromHeap(heapID, sizeof(TrainerMonWithMovesAndItem) * MAX_PARTY_SIZE);
+    buf = Heap_Alloc(heapID, sizeof(TrainerMonWithMovesAndItem) * MAX_PARTY_SIZE);
     mon = Pokemon_New(heapID);
 
     Trainer_LoadParty(dto->trainerIDs[battler], buf);
@@ -203,7 +203,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].dv + trmon[i].level + species + dto->trainerIDs[battler];
+            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
             LCRNG_SetSeed(rnd);
 
             for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
@@ -211,7 +211,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             }
 
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].dv * MAX_IVS_SINGLE_STAT / MAX_DV;
+            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
             Pokemon_SetBallSeal(trmon[i].cbSeal, mon, heapID);
@@ -228,7 +228,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].dv + trmon[i].level + species + dto->trainerIDs[battler];
+            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
             LCRNG_SetSeed(rnd);
 
             for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
@@ -236,7 +236,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             }
 
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].dv * MAX_IVS_SINGLE_STAT / MAX_DV;
+            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
 
@@ -258,7 +258,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].dv + trmon[i].level + species + dto->trainerIDs[battler];
+            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
             LCRNG_SetSeed(rnd);
 
             for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
@@ -266,7 +266,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             }
 
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].dv * MAX_IVS_SINGLE_STAT / MAX_DV;
+            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
             Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &trmon[i].item);
@@ -284,7 +284,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].dv + trmon[i].level + species + dto->trainerIDs[battler];
+            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
             LCRNG_SetSeed(rnd);
 
             for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
@@ -292,7 +292,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
             }
 
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].dv * MAX_IVS_SINGLE_STAT / MAX_DV;
+            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
             Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &trmon[i].item);
@@ -310,7 +310,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, int heapID)
     }
     }
 
-    Heap_FreeToHeap(buf);
-    Heap_FreeToHeap(mon);
+    Heap_Free(buf);
+    Heap_Free(mon);
     LCRNG_SetSeed(oldSeed);
 }

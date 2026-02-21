@@ -12,7 +12,7 @@
 #include "system.h"
 #include "text.h"
 
-static void PrintEntry(ListMenu *menu, void *strbuf, u8 xOffset, u8 yOffset);
+static void PrintEntry(ListMenu *menu, void *string, u8 xOffset, u8 yOffset);
 static void PrintEntries(ListMenu *menu, u16 startIndex, u16 lineOffset, u16 lineCount);
 static void PrintCursor(ListMenu *menu);
 static void EraseCursor(ListMenu *menu, u16 atLine);
@@ -23,7 +23,7 @@ static void InvokeCursorCallback(ListMenu *menu, u8 onInit);
 
 ListMenu *ListMenu_New(const ListMenuTemplate *template, u16 startListPos, u16 startCursorPos, u8 heapID)
 {
-    ListMenu *menu = Heap_AllocFromHeap(heapID, sizeof(ListMenu));
+    ListMenu *menu = Heap_Alloc(heapID, sizeof(ListMenu));
 
     menu->template = *template;
     menu->cursor = ColoredArrow_New(heapID);
@@ -133,7 +133,7 @@ void ListMenu_Free(ListMenu *menu, u16 *outListPos, u16 *outCursorPos)
     }
 
     ColoredArrow_Free(menu->cursor);
-    Heap_FreeToHeapExplicit(menu->heapID, menu);
+    Heap_FreeExplicit(menu->heapID, menu);
 }
 
 void ListMenu_Draw(ListMenu *menu)
@@ -306,16 +306,16 @@ void ListMenu_SetChoices(ListMenu *menu, StringList *choices)
     menu->template.choices = choices;
 }
 
-static void PrintEntry(ListMenu *menu, void *strbuf, u8 xOffset, u8 yOffset)
+static void PrintEntry(ListMenu *menu, void *string, u8 xOffset, u8 yOffset)
 {
-    if (strbuf == NULL) {
+    if (string == NULL) {
         return;
     }
 
     if (menu->altFont.prefer) {
         Text_AddPrinterWithParamsColorAndSpacing(menu->template.window,
             menu->altFont.fontID,
-            strbuf,
+            string,
             xOffset,
             yOffset,
             TEXT_SPEED_NO_TRANSFER,
@@ -326,7 +326,7 @@ static void PrintEntry(ListMenu *menu, void *strbuf, u8 xOffset, u8 yOffset)
     } else {
         Text_AddPrinterWithParamsColorAndSpacing(menu->template.window,
             menu->template.fontID,
-            strbuf,
+            string,
             xOffset,
             yOffset,
             TEXT_SPEED_NO_TRANSFER,
