@@ -3,6 +3,7 @@
 
 #include "field_script_context.h"
 
+BOOL ScrCmd_SetFollowMonInhibitState(ScriptContext *ctx);
 BOOL sub_02041CC8(ScriptContext *ctx);
 BOOL ScriptContext_WaitForApplicationExit(ScriptContext *ctx);
 

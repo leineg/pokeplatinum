@@ -9,4 +9,12 @@ typedef struct LinearInterpolationTaskS32 {
     int numSteps;
 } LinearInterpolationTaskS32;
 
+typedef struct LinearInterpolationTaskS321 {
+	int x;
+	int s_x;
+	int dis_x;
+	int count;
+	int count_max;
+} LinearInterpolationTaskS321;
+
 #endif // POKEPLATINUM_STRUCT_LINEAR_INTERPOLATION_TASK_S32_H

@@ -53,6 +53,8 @@ typedef struct MapObjectSave {
     u8 unk_40[16];
 } MapObjectSave;
 
+
+
 MapObjectManager *MapObjectMan_New(FieldSystem *fieldSystem, int maxObjs, int param2);
 void MapObjectMan_Delete(MapObjectManager *mapObjMan);
 void sub_0206184C(MapObjectManager *mapObjMan, int mapID, int param2, int objEventCount, const ObjectEvent *objectEvent);

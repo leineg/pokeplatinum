@@ -63,7 +63,7 @@ static void MapNamePopUp_LoadPalette(void *src, u16 size, u16 offset)
 
 static void MapNamePopUp_CreateWindow(MapNamePopUp *mapPopUp)
 {
-    Window_Add(mapPopUp->bgConfig, &mapPopUp->window, BG_LAYER_MAIN_3, 0, 0, 32, 5, 7, ((((1024 - (18 + 12) - 9 - (32 * 8)) - (18 + 12 + 24)) - (27 * 4)) - (32 * 5)));
+    Window_Add(mapPopUp->bgConfig, &mapPopUp->window, BG_LAYER_MAIN_3, 0, 0, 32, 5, 11, ((((1024 - (18 + 12) - 9 - (32 * 8)) - (18 + 12 + 24)) - (27 * 4)) - (32 * 5)));
 }
 
 static void MapNamePopUp_LoadAreaGfx(MapNamePopUp *mapPopUp, u8 bgLayer, u16 tileStart, u8 offset, u8 unused)
@@ -85,51 +85,21 @@ static void MapNamePopUp_LoadAreaGfx(MapNamePopUp *mapPopUp, u8 bgLayer, u16 til
 
 static void MapNamePopUp_DrawWindowFrame(MapNamePopUp *mapPopUp, s32 strWidth)
 {
-    int width;
-    int v1;
     int xOffset;
-    int v3;
-    int v4;
-    int v5;
-    u8 v6;
     u8 v7;
 
-    v3 = (strWidth + 8) / 8 * 8;
-    v4 = v3 - strWidth;
-    v5 = v4 / 2;
-
-    if (8 <= (4 + v5)) {
-        v6 = 0;
-    } else {
-        int v8;
-
-        v8 = 8 - (4 + v5);
-        v8 *= 2;
-        v6 = (v8 + (8 - 1)) / 8;
-    }
-
-    width = strWidth;
-
-    if (width <= 0) {
-        v1 = 0;
-        xOffset = 0;
-    } else {
-        v1 = (width + 8) / 8;
-        v1 += v6;
-
-        xOffset = (((v1 * 8) + (4 * 2)) - strWidth) / 2;
-    }
+    xOffset = ( ((8 * 17)-(8 - 4)) - strWidth) / 2;
 
     mapPopUp->xOffset = (8 - 4) + xOffset;
 
     {
         int i;
 
-        MapNamePopUp_LoadAreaGfx(mapPopUp, BG_LAYER_MAIN_3, (1024 - (18 + 12) - 9 - (32 * 8)), 7, 0);
+        MapNamePopUp_LoadAreaGfx(mapPopUp, BG_LAYER_MAIN_3, (1024 - (18 + 12) - 9 - (32 * 8)), 11, 0);
         Window_FillTilemap(&mapPopUp->window, 0);
 
-        for (i = 0; i < 85; i++) {
-            Window_BlitBitmapRect(&mapPopUp->window, mapPopUp->unk_34->pRawData, i * 8, 0, 8, 8, (i % 17) * 8, (i / 17) * 8, 8, 8);
+        for (i = 0; i < (17*4); i++) {
+            Window_BlitBitmapRect(&mapPopUp->window, mapPopUp->unk_34->pRawData, (i+1) * 8, 0, 8, 8, (i % 17) * 8, (i / 17) * 8, 8, 8);
         }
 
         Window_CopyToVRAM(&mapPopUp->window);
@@ -218,8 +188,8 @@ static void SysTask_MapNamePopUpWindow(SysTask *task, void *param)
 
 static void MapNamePopUp_PrintMapName(MapNamePopUp *mapPopUp, const Strbuf *strbuf)
 {
-    TextColor color = TEXT_COLOR(3, 2, 0);
-    Text_AddPrinterWithParamsAndColor(&mapPopUp->window, FONT_SYSTEM, strbuf, mapPopUp->xOffset, (8 * 2), TEXT_SPEED_INSTANT, color, NULL);
+    TextColor color = TEXT_COLOR(1, 2, 0);
+    Text_AddPrinterWithParamsAndColor(&mapPopUp->window, FONT_SYSTEM, strbuf, mapPopUp->xOffset, 8, TEXT_SPEED_INSTANT, color, NULL);
 }
 
 static void MapNamePopUp_StartSlideOut(MapNamePopUp *mapPopUp)

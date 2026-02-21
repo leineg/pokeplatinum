@@ -4,7 +4,7 @@
 #include <string.h>
 
 #include "palette.h"
-
+//Normal Type
 __attribute__((aligned(4))) const u16 Unk_ov11_0221F94C[] = {
     0x75CD,
     0x7fff,
@@ -19,11 +19,11 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221F94C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
-
+//Fighting Type
 __attribute__((aligned(4))) const u16 Unk_ov11_0221FB8C[] = {
     0x75CD,
     0x7fff,
@@ -38,11 +38,11 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FB8C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
-
+//Flying Type
 __attribute__((aligned(4))) const u16 Unk_ov11_0221FB6C[] = {
     0x75CD,
     0x7fff,
@@ -57,8 +57,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FB6C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -76,8 +76,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FB4C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -95,8 +95,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FB2C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -114,8 +114,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FB0C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -133,8 +133,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FAEC[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -152,8 +152,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FACC[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -171,8 +171,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FAAC[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -190,8 +190,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FA8C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -209,8 +209,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FA6C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -228,8 +228,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FA4C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -247,8 +247,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FA2C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -266,8 +266,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221FA0C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -285,8 +285,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221F9EC[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -304,8 +304,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221F9CC[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -323,8 +323,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221F9AC[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -342,8 +342,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221F98C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 
@@ -361,8 +361,8 @@ __attribute__((aligned(4))) const u16 Unk_ov11_0221F96C[] = {
     0x18C6,
     0x0,
     0x318C,
-    0x375C,
-    0x57BE,
+    0x52F9,
+    0x637C,
     0x0
 };
 

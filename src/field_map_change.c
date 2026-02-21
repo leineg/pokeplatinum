@@ -340,7 +340,6 @@ static void FieldMapChange_CreateObjects(FieldSystem *fieldSystem)
     playerData = FieldOverworldState_GetPlayerData(fieldState);
 
     fieldSystem->playerAvatar = PlayerAvatar_Init(fieldSystem->mapObjMan, fieldSystem->location->x, fieldSystem->location->z, fieldSystem->location->faceDirection, playerData->form, gender, 0, playerData);
-
     sub_0203A418(fieldSystem);
     MapObjectMan_StopAllMovement(fieldSystem->mapObjMan);
 }

@@ -22,6 +22,7 @@
 
 typedef struct EncounterEffect {
     int state;
+    int wait;
     BOOL effectComplete;
     int unk_08;
     void *param;
@@ -41,6 +42,7 @@ typedef struct UnkStruct_ov5_021DE6BC {
     u8 unk_2E;
     u8 unk_2F;
 } UnkStruct_ov5_021DE6BC;
+
 
 typedef struct UnkStruct_ov5_021DE79C {
     LinearInterpolationTaskS32 unk_00;

@@ -128,6 +128,7 @@
 #include "rtc.h"
 #include "save_player.h"
 #include "savedata.h"
+#include "scrcmd.h"
 #include "scrcmd_dummy_23F_242.h"
 #include "scrcmd_jubilife_lottery.h"
 #include "scrcmd_system_flags.h"

@@ -2098,8 +2098,8 @@ static void ov16_02269F68(UnkStruct_ov16_02268A14 *param0, int param1, int param
     StringTemplate_Format(v5, v3, v1);
     StringTemplate_Format(v5, v4, v2);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, 0, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, 0, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
@@ -2126,8 +2126,8 @@ static void ov16_0226A04C(UnkStruct_ov16_02268A14 *param0, int param1, int param
     StringTemplate_Format(v5, v3, v1);
     StringTemplate_Format(v5, v4, v2);
 
-    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, FONT_SUBSCREEN, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
-    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[0], v3, 0, TEXT_COLOR(1, 2, 3), 2, 20023, 128, 67, 1, NULL);
+    ov16_0226A98C(param0, &param0->unk_4CC[1], v4, 0, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 139, 1, NULL);
 
     Strbuf_Free(v1);
     Strbuf_Free(v2);
