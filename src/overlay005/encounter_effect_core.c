@@ -658,7 +658,7 @@ static void VTCB_WaterBGCharaLoad(SysTask *task, void *param )
 	}
 }
 
-static void* BG_LoadUnpackhara(NARC *narc, int cgx_idx, NNSG2dCharacterData** outCharData, enum HeapId heapID)
+static void* BG_LoadUnpackhara(NARC *narc, int cgx_idx, NNSG2dCharacterData** outCharData, int heapID)
 {	
 	void* buff;
 	NNSG2dCharacterData* charData;
@@ -781,21 +781,39 @@ static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_mor
 			
 		{
 			static const BgTemplate TextBgCntDat1 = {
-				0, 0, 0x1000, 0, 2, GX_BG_COLORMODE_16,
-				GX_BG_SCRBASE_0x1000, GX_BG_CHARBASE_0x04000, GX_BG_EXTPLTT_01,
-				0, 0, 0, FALSE
-			};
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x1000,
+                .baseTile = 0,
+                .screenSize = 2,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = 0x10,   // era GX_BG_SCRBASE_0x1000
+                .charBase = 0x04,     // era GX_BG_CHARBASE_0x04000
+                .bgExtPltt = 1,       // era GX_BG_EXTPLTT_01
+                .priority = 0,
+                .areaOver = 0,
+                .mosaic = FALSE,
+            };
 			Bg_FreeTilemapBuffer( encEffect->fieldSystem->bgConfig, 1 );
 			Bg_InitFromTemplate( encEffect->fieldSystem->bgConfig, 1, &TextBgCntDat1, 0);
 			Bg_ClearTilemap( encEffect->fieldSystem->bgConfig, 1 );
 
 		}
 		{
-			static const  BgTemplate TextBgCntDat2 = {
-				0, 0, 0x1000, 0, 2, GX_BG_COLORMODE_16,
-				GX_BG_SCRBASE_0x2000, GX_BG_CHARBASE_0x08000, GX_BG_EXTPLTT_23,
-				0, 0, 0, FALSE
-			};
+                static const BgTemplate TextBgCntDat2 = {
+                .x = 0,
+                .y = 0,
+                .bufferSize = 0x1000,
+                .baseTile = 0,
+                .screenSize = 2,
+                .colorMode = GX_BG_COLORMODE_16,
+                .screenBase = 0x20,   // era GX_BG_SCRBASE_0x2000
+                .charBase = 0x08,     // era GX_BG_CHARBASE_0x08000
+                .bgExtPltt = 23,      // era GX_BG_EXTPLTT_23
+                .priority = 0,
+                .areaOver = 0,
+                .mosaic = FALSE,
+            };
 			Bg_FreeTilemapBuffer( encEffect->fieldSystem->bgConfig, 3);
 			Bg_InitFromTemplate( encEffect->fieldSystem->bgConfig, 3, &TextBgCntDat2, 0);
 			Bg_ClearTilemap( encEffect->fieldSystem->bgConfig, 3 );
@@ -4569,270 +4587,20 @@ static const RivalEncounterParam sRivalEncounterParam[1] = {
     },
 };
 
-static Strbuf *EncounterEffect_GetRivalName(u32 trainerClass, u32 heapID)
+
+
+static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, int heapID, const RivalEncounterParam *param)
 {
-    StringTemplate *template;
-    MessageLoader *messageLoader;
-    Strbuf *result;
-    Strbuf *message;
-    const MiscSaveBlock *miscSave;
-    const u16 *rivalName;
-
-    miscSave = SaveData_MiscSaveBlockConst(SaveData_Ptr());
-    rivalName = MiscSaveBlock_RivalName(miscSave);
-
-    messageLoader = MessageLoader_Init(1, 26, 359, heapID);
-    template = StringTemplate_Default(heapID);
-    result = Strbuf_Init(128, heapID);
-    message = Strbuf_Init(128, heapID);
-
-    Strbuf_CopyChars(message, rivalName);
-    StringTemplate_SetTrainerName(template, 0, trainerClass);
-    StringTemplate_Format(template, result, message);
-
-    MessageLoader_Free(messageLoader);
-    StringTemplate_Free(template);
-    Strbuf_Free(message);
-    return result;
-}
-
-static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId heapID, const RivalEncounterParam *param)
-{
-    UnkStruct_ov5_021E52A8 *v0 = encEffect->param;
-    BOOL v1;
-    const VecFx32 *v2;
-    VecFx32 v3;
-    VecFx32 v4;
-    int v5;
-    int v6;
-    Strbuf *v7;
-
-    switch (encEffect->state) {
-    case 0:
-        encEffect->param = Heap_AllocFromHeap(heapID, sizeof(UnkStruct_ov5_021E52A8));
-        memset(encEffect->param, 0, sizeof(UnkStruct_ov5_021E52A8));
-        v0 = encEffect->param;
-
-        Graphics_LoadPaletteFromOpenNARC(encEffect->narc, 11, 0, 2 * 0x20, 0x20, heapID);
-
-        GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG2, 1);
-        Window_Add(encEffect->fieldSystem->bgConfig, &v0->unk_2E0, 2, 0, 10, 16, 2, 2, 1);
-        Window_FillTilemap(&v0->unk_2E0, 0);
-        v7 = EncounterEffect_GetRivalName(param->trainerID, heapID);
-        Text_AddPrinterWithParamsAndColor(&v0->unk_2E0, FONT_SYSTEM, v7, 0, 0, TEXT_SPEED_INSTANT, TEXT_COLOR(1, 2, 0), NULL);
-        Strbuf_Free(v7);
-
-        ov5_021DE47C(&v0->unk_44, 8, 3);
-
-        ov5_021DE4CC(
-            encEffect->narc, &v0->unk_44, &v0->unk_1E4[0], 155, 1, 156, 157, 158, 600000);
-
-        ov5_021DE4CC(
-            encEffect->narc, &v0->unk_44, &v0->unk_1E4[1], 51, 1, 52, 53, 54, 600000 + 1);
-
-        v0->unk_24C = ov5_021DE62C(
-            &v0->unk_44, &v0->unk_1E4[0], (272 * FX32_ONE), (66 * FX32_ONE), 0, 0);
-        Sprite_SetDrawFlag(v0->unk_24C, 0);
-        ov5_021E5128(&v0->unk_250, &v0->unk_44, &v0->unk_1E4[1], (FX32_CONST(72)), (FX32_CONST(74)), heapID);
-
-        ov5_021DE5D0(v0->unk_24C, heapID, param->trainerClass, 14, (GX_RGB(0, 0, 0)));
-
-        v0->unk_40 = ov5_021DECEC();
-
-        encEffect->state++;
-        break;
-
-    case 1:
-
-        EncounterEffect_Flash(1, 16, 16, &encEffect->effectComplete, 1);
-        encEffect->state++;
-        break;
-
-    case 2:
-        if (encEffect->effectComplete) {
-            encEffect->state++;
-        }
-
-        break;
-
-    case 3:
-
-        ov5_021DE3D0(
-            encEffect->narc, param->bannerTilemapIdx, param->bannerTileIdx, param->bannerPlttIdx, 0, 1, encEffect->fieldSystem->bgConfig, 3);
-        v0->unk_2F0 = 1;
-
-        ov5_021DED20(encEffect, v0->unk_40, 6, 8, 16, (GX_WND_PLANEMASK_BG0 | GX_WND_PLANEMASK_BG1 | GX_WND_PLANEMASK_BG2 | GX_WND_PLANEMASK_BG3 | GX_WND_PLANEMASK_OBJ), (GX_WND_PLANEMASK_BG0 | GX_WND_PLANEMASK_BG1 | GX_WND_PLANEMASK_BG2 | GX_WND_PLANEMASK_OBJ));
-
-        GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG3, 1);
-
-        encEffect->state++;
-        break;
-
-    case 4:
-
-        if (EncounterEffect_GetHBlankFlag(encEffect)) {
-            encEffect->state++;
-
-            ov5_021DED04(v0->unk_40);
-
-            v0->unk_2F8 = 10;
-        }
-
-        break;
-
-    case 5:
-
-        v0->unk_2F8--;
-
-        if (v0->unk_2F8 >= 0) {
-            break;
-        }
-
-        GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
-
-        v1 = ov5_021E51B4(&v0->unk_250);
-
-        if (v1 == 1) {
-            encEffect->state++;
-        }
-
-        break;
-
-    case 6:
-
-        QuadraticInterpolationTaskFX32_Init(&v0->unk_00, (272 * FX32_ONE), param->endX, (-64 * FX32_ONE), 4);
-        Sprite_SetDrawFlag(v0->unk_24C, 1);
-        Sprite_SetExplicitPriority(v0->unk_24C, 0);
-
-        v3 = VecFx32_FromXYZ(
-            v0->unk_00.currentValue, (66 * FX32_ONE), 0);
-        Sprite_SetPosition(v0->unk_24C, &v3);
-
-        encEffect->state++;
-        break;
-
-    case 7:
-
-        v1 = QuadraticInterpolationTaskFX32_Update(&v0->unk_00);
-        v3 = VecFx32_FromXYZ(
-            v0->unk_00.currentValue, (66 * FX32_ONE), 0);
-        Sprite_SetPosition(v0->unk_24C, &v3);
-
-        if (v1 == 1) {
-            encEffect->state++;
-        }
-
-        break;
-
-    case 8:
-        LinearInterpolationTaskS32_Init(&v0->unk_18, 0, 16, 3);
-        v0->unk_2F8 = 10;
-        encEffect->state++;
-        break;
-
-    case 9:
-        v0->unk_2F8--;
-
-        if (v0->unk_2F8 >= 0) {
-            break;
-        }
-
-        v1 = LinearInterpolationTaskS32_Update(&v0->unk_18);
-        ov5_021DEF8C(&v0->unk_18.currentValue);
-
-        if (v1 == 1) {
-            ov5_021DE5D0(v0->unk_24C, heapID, param->trainerClass, 0, (GX_RGB(0, 0, 0)));
-
-            BrightnessController_SetScreenBrightness(-14, GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BD, BRIGHTNESS_MAIN_SCREEN);
-
-            Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 2, 0, -((v0->unk_00.currentValue >> FX32_SHIFT) + -92));
-            GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG2, 1);
-            Bg_SetPriority(2, 0);
-            encEffect->state++;
-        }
-
-        break;
-
-    case 10:
-        LinearInterpolationTaskS32_Init(&v0->unk_18, 16, 0, 3);
-        encEffect->state++;
-        break;
-
-    case 11:
-        v1 = LinearInterpolationTaskS32_Update(&v0->unk_18);
-        ov5_021DEF8C(&v0->unk_18.currentValue);
-
-        if (v1 == 1) {
-            encEffect->state++;
-            v0->unk_2F8 = 26;
-        }
-
-        break;
-
-    case 12:
-        v0->unk_2F8--;
-
-        if (v0->unk_2F8 < 0) {
-            encEffect->state++;
-        }
-
-        break;
-
-    case 13:
-
-        StartScreenTransition(3, 0, 0, 0x7fff, 15, 1, 4);
-        encEffect->state++;
-        break;
-
-    case 14:
-
-        if (IsScreenTransitionDone()) {
-            encEffect->state++;
-        }
-
-        break;
-
-    case 15:
-        sub_0200F344(1, 0x7fff);
-
-        if (encEffect->done != NULL) {
-            *(encEffect->done) = 1;
-        }
-
-        Sprite_Delete(v0->unk_24C);
-        ov5_021E519C(&v0->unk_250);
-        ov5_021DE5A4(&v0->unk_44, &v0->unk_1E4[0]);
-        ov5_021DE5A4(&v0->unk_44, &v0->unk_1E4[1]);
-        ov5_021DE4AC(&v0->unk_44);
-
-        Window_Remove(&v0->unk_2E0);
-
-        GX_SetVisibleWnd(GX_WNDMASK_NONE);
-
-        BrightnessController_SetScreenBrightness(0, GX_BLEND_PLANEMASK_NONE, BRIGHTNESS_MAIN_SCREEN);
-
-        Bg_SetOffset(encEffect->fieldSystem->bgConfig, 2, 0, 0);
-
-        return 1;
-    }
-
-    if (v0->unk_2F0 == 1) {
-        Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 3, 0, v0->unk_2F4);
-
-        v0->unk_2F4 = (v0->unk_2F4 + 30) % 512;
-    }
-
-    if (encEffect->state != 15) {
-        SpriteList_Update(v0->unk_44.unk_00);
-    }
-
-    return 0;
+    (void)encEffect;
+    (void)heapID;
+    (void)param;
+    return TRUE;
 }
 
 void EncounterEffect_Rival(SysTask *task, void *param)
 {
     EncounterEffect *encEffect = param;
-    BOOL done = EncounterEffect_RivalBool(encEffect, HEAP_ID_FIELD, &sRivalEncounterParam[0]);
+    BOOL done = TRUE;
 
     if (done == TRUE) {
         EncounterEffect_Finish(encEffect, task);
