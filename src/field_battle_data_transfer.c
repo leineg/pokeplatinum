@@ -244,8 +244,17 @@ void FieldBattleDTO_InitFromGameState(FieldBattleDTO *dto, const FieldSystem *fi
     FieldOverworldState *fieldOverworldState = SaveData_GetFieldOverworldState(saveData);
 
     if (fieldSystem != NULL) {
+        BOOL time_night_hold = FALSE;
+        int background = MapHeader_GetBattleBG(fieldSystem->location->mapId);
+        if ( (background == 9) || (background == 10) || (background == 11) ){
+			time_night_hold = TRUE;
+		}
         SetBackgroundAndTerrain(dto, fieldSystem);
         dto->timeOfDay = FieldSystem_GetTimeOfDay(fieldSystem);
+
+        if (time_night_hold){
+		    dto->timeOfDay = 3;
+		}
     } else {
         dto->background = MapHeader_GetBattleBG(mapHeaderID);
         dto->terrain = TERRAIN_BUILDING;

@@ -40,6 +40,7 @@
 #include "trainer_info.h"
 #include "unk_0202419C.h"
 
+
 // EncounterEffect_Grass_HigherLevel
 #define GRASS_HIGHER_LEVEL_PIXELS_PER_SLICE     2
 #define GRASS_HIGHER_LEVEL_INTERPOLATION_FRAMES 6
@@ -78,6 +79,63 @@
 #define CAVE_HIGHER_LEVEL_CAMERA_OFFSET        (FX32_ONE * -800)
 #define CAVE_HIGHER_LEVEL_CAMERA_SPEED         (FX32_ONE * -5)
 
+#define ENCOUNT_BRUSH_ANGLE_VELOCITY	(0x04)				//	折り返し後角加速度
+#define ENCOUNT_BRUSH_SPEED_VELOCITY	(FX32_CONST(0.1))		//	折り返し後スピード加速度
+#define ENCOUNT_BRUSH_SPEED_MAXIMUM		(FX32_CONST(30))	//	スピード上限
+
+#define ENCOUNT_BRUSH_FADE_DIV	(FX32_CONST(0.8))			//	定義を外すと行わない
+
+
+
+ 
+ typedef struct _ENC_BMP_FILL_SPREAD {
+	LinearInterpolationTaskS32 move_w;
+	LinearInterpolationTaskS32 move_h;
+	Window* window;
+	s16 currentValue;
+	s16 y;
+	u8 move_flg;
+	u8 col;
+};
+
+#define ENCOUNT_PATAPATA_FILL_WIDTH		( 32 )	
+#define ENCOUNT_PATAPATA_FILL_HEIGHT	( 32 )	
+#define ENCOUNT_PATAPATA_FILL_X_NUM		( 8 )	
+#define ENCOUNT_PATAPATA_FILL_Y_NUM		( 6 )
+#define ENCOUNT_PATAPATA_FILL_OBJNUM	( ENCOUNT_PATAPATA_FILL_X_NUM * ENCOUNT_PATAPATA_FILL_Y_NUM )
+
+static const u8 ENCOUNT_PATAPATA_FILL_MoveParam[ ENCOUNT_PATAPATA_FILL_OBJNUM/2] = {
+    0,  1,  2,  3,  4,  5,  6,  7,	
+	15, 14, 13, 12, 11, 10,  9,  8,
+	16, 17, 18, 19, 20, 21, 22, 23,
+};
+
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Order(x)	(ENCOUNT_PATAPATA_FILL_MoveParam[ x ])
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Reverse(x) (ENCOUNT_PATAPATA_FILL_OBJNUM - 1 - ENCOUNT_PATAPATA_FILL_MoveParam[ x ])
+
+
+static const u8 ENCOUNT_PATAPATA_FILL_MoveParam2[ ENCOUNT_PATAPATA_FILL_OBJNUM/2] = {	
+	 7,  6,  5,  4,  3,  2,  1,  0,
+	 8,  9, 10, 11, 12, 13, 14, 15,
+	23, 22, 21, 20, 19, 18, 17, 16,
+};
+
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Order_N(x)	(ENCOUNT_PATAPATA_FILL_MoveParam2[ x ])
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Reverse_N(x) (ENCOUNT_PATAPATA_FILL_OBJNUM - 1 - ENCOUNT_PATAPATA_FILL_MoveParam2[ x ])
+
+struct _ENC_BMP_PATAPATA_FILL {
+	Window	    *window;
+	ENC_BMP_FILL_SPREAD	*p_fill[ENCOUNT_PATAPATA_FILL_OBJNUM];
+	u8	block_count;
+	u8	block_end_count;
+	u8	one_start_sync;
+	u8	one_fill_sync;
+	s8	wait;
+	u8	col;
+	u8	init_flg;
+	u8	b_morning : 1;
+	u8	dummy : 7;
+};
 typedef struct GrassEncounterEffect {
     Camera *camera;
     QuadraticInterpolationTaskFX32 camDistanceTask;
@@ -100,12 +158,858 @@ typedef struct CaveEncounterEffect {
     QuadraticInterpolationTaskFX32 camInterpolation;
 } CaveEncounterEffect;
 
+typedef struct{
+	Window			*window;			
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+	ENC_BMP_SYNCBGM_PATAFILL	*p_pata;	
+#else
+	ENC_BMP_PATAPATA_FILL	*p_pata;		
+#endif	//ENCOUNT_PATAPATA_BGMSYNC	
+	
+} ENCOUNT_TEST_PATAPATA;
+
+#define ENCOUNT_PATAPATA_START_SYNC	(0)		
+#define ENCOUNT_PATAPATA_FILL_SYNC	(4)		
+
+//-----------------------------------------------------------------------------
+
+#define ENCOUNT_PATAPATA_BLOCK_FILLCOLOR ( 15 )
+
+typedef struct {
+	EncounterEffect *encEffect;
+	void* charBuff1;
+	void* charBuff2;
+	NNSG2dCharacterData* charData1;
+	NNSG2dCharacterData* charData2;
+	SysTask *task;
+	SysTask *taskVIntr;	
+	u16 seq;
+	u16 vseq;
+} WATER_LOAD_WORK;
+
+typedef struct{
+	ScreenShakeEffect screenShakeEfx;
+	QuadraticInterpolationTaskFX32		move_y1;
+	QuadraticInterpolationTaskFX32		move_y2;
+	ENC_SHAKEMOVE_WORK		shake_x;
+	u32						wait;		
+	u8						bg1_start;	
+	u8						bg2_start;		
+	u8						bg1_end;		
+	u8						bg2_end;						
+	WATER_LOAD_WORK			wkLoad;
+} ENCOUNT_TEST_WATER;
+#define ENCOUNT_TESTWATER_LASTER_SYNC		(10)
+#define ENCOUNT_TESTWATER_LASTER_SIN_ADDR	((0xffff/192)*10)	
+#define ENCOUNT_TESTWATER_LASTER_SIN_R		(FX32_CONST(3))			// 半径
+#define ENCOUNT_TESTWATER_LASTER_SPD		(400)					// ラスタースピード
+#define ENCOUNT_TESTWATER_LASTER_TASK_PRI	(5 - 1)		// タスク優先度
+
+#define ENCOUNT_TESTWATER_BG_START_ADD1		(FX32_CONST(0))			//初速1
+#define ENCOUNT_TESTWATER_BG_START_ADD2		(FX32_CONST(8))			//初速2
+#define ENCOUNT_TESTWATER_BG_START_Y		(FX32_CONST(0))			//開始座標Y
+#define ENCOUNT_TESTWATER_BG_END_Y			(FX32_CONST(320))		//終了座標X
+#define ENCOUNT_TESTWATER_BG1_SYNC			(18)					//BG移動シンク
+#define ENCOUNT_TESTWATER_BG2_SYNC			(30)					//BG移動シンク
+#define ENCOUNT_TESTWATER_BG_X				(0)		
+
+void ENC_SinShakeMoveMain( ENC_SHAKEMOVE_WORK* param );
 static SysTask *ScreenShakeEffect_CreateDMATransferTask(ScreenShakeEffect *screenShake);
 static void ScreenShakeEffect_DMATransfer(SysTask *task, void *param);
 static void ScreenShakeEffect_Init(ScreenShakeEffect *screenShake, enum HeapID heapID);
 static void ScreenShakeEffect_Finish(ScreenShakeEffect *screenShake);
 static void ScreenShakeEffect_Start(ScreenShakeEffect *screenShake, u8 startX, u8 endX, u16 angleIncrement, fx32 amplitude, s16 shakeSpeed, u32 bg, u32 defaultValue, u32 priority);
 static void ScreenShakeEffect_InvertBuffer(ScreenShakeEffect *screenShake, u32 interval);
+void ENC_BMP_FillSpreadStart( ENC_BMP_FILL_SPREAD* param, int x, int y, int sync, Window* window, int s_w, int s_h, int e_w, int e_h, u8 col );
+void ENC_BMP_PatapataFillStart( ENC_BMP_PATAPATA_FILL* param, u8 one_start_sync, u8 one_fill_sync, Window* window, u8 col, BOOL );
+void ENC_BMP_PatapataFillStart( ENC_BMP_PATAPATA_FILL* param, u8 one_start_sync, u8 one_fill_sync, Window* window, u8 col, BOOL b_morning )
+{
+	GF_ASSERT( window != NULL );
+
+	param->window			= window;
+	param->col				= col;
+	param->one_start_sync	= one_start_sync;
+	param->one_fill_sync	= one_fill_sync;
+	param->block_count		= 0;
+	param->block_end_count	= 0;
+	param->wait			= one_start_sync;
+	param->init_flg		= 1;
+	param->b_morning		= b_morning;
+
+}
+
+ENC_BMP_FILL_SPREAD* ENC_BMP_FillSpreadAlloc( u32 heapID )
+{
+	ENC_BMP_FILL_SPREAD* param;
+
+	param = Heap_AllocFromHeap( 4, sizeof(ENC_BMP_FILL_SPREAD) );
+	memset( param, 0, sizeof(ENC_BMP_FILL_SPREAD) );
+	return param;
+}
+
+void ENC_BMP_PatapataFillDelete( ENC_BMP_PATAPATA_FILL *param )
+{
+	int i;
+	GF_ASSERT(param != NULL );
+
+	for( i = 0; i <ENCOUNT_PATAPATA_FILL_OBJNUM; i++ ) {
+		ENC_BMP_FillSpreadDelete( param->p_fill[i] );
+	}
+	Heap_FreeToHeap( param );
+}
+
+void ENC_SinShakeMoveMain( ENC_SHAKEMOVE_WORK* param )
+{
+	param->x	= param->s_x + ((FX_SinIdx( param->count ) * param->dist) >> FX32_SHIFT);
+	param->count	+= ((param->add)*(0xffff) / 360 );
+}
+
+ENC_BMP_PATAPATA_FILL* ENC_BMP_PatapataFillAlloc( u32 heapID )
+{
+	int i;
+	ENC_BMP_PATAPATA_FILL	*param;
+	param = Heap_AllocFromHeap(4, sizeof(ENC_BMP_PATAPATA_FILL) );
+	memset( param, 0, sizeof(ENC_BMP_PATAPATA_FILL) );
+	
+	for( i = 0; i <ENCOUNT_PATAPATA_FILL_OBJNUM; i++ ) {
+		param->p_fill[i]	= ENC_BMP_FillSpreadAlloc( heapID );
+	}
+
+	return param;
+}
+
+void ENC_BMP_FillSpreadStart( ENC_BMP_FILL_SPREAD* param, int x, int y, int sync, Window* window, int s_w, int s_h, int e_w, int e_h, u8 col  )
+{
+	GF_ASSERT( param->move_flg == FALSE );
+
+	// 動さパラメータ
+	LinearInterpolationTaskS32_Init( &param->move_w, s_w, e_w, sync );
+	LinearInterpolationTaskS32_Init( &param->move_h, s_h, e_h, sync );
+
+	// その他パラメータ
+	param->window	= window;	// 塗りつぶすビットマップ
+	param->currentValue = x;		// 塗りつぶし中心座標
+	param->y		= y;		// 塗りつぶし中心座標
+	param->col		= col;		// 塗りつぶしカラー番号
+
+	param->move_flg = TRUE;
+}
+
+BOOL ENC_BMP_FillSpreadMain( ENC_BMP_FILL_SPREAD* param )
+{
+	BOOL done;
+	s16 top, bottom, left, right;
+	if( param->move_flg == FALSE ){
+		return TRUE;
+	}
+	
+	done = LinearInterpolationTaskS32_Update( &param->move_w );
+	done |= LinearInterpolationTaskS32_Update( &param->move_h );
+
+	left = param->currentValue - (param->move_w.currentValue/2);
+	top = param->y - (param->move_h.currentValue/2);
+	right = param->currentValue + (param->move_w.currentValue/2);
+	bottom = param->y + (param->move_h.currentValue/2);
+
+	// ビットマップ塗りつぶし
+	ov5_021DE89C( param->window, top, bottom, left, right, param->col );
+
+	return done;
+}
+
+
+
+void ENC_BMP_FillSpreadDelete( ENC_BMP_FILL_SPREAD* param )
+{
+	Heap_FreeToHeap( param );
+}
+
+BOOL ENC_BMP_PatapataFillMain( ENC_BMP_PATAPATA_FILL *param )
+{
+	int x, y;
+	int index;
+	int i;
+	BOOL done;
+
+	GF_ASSERT( param != NULL );
+	
+
+	if( param->init_flg == 0 ){
+		return TRUE;
+	}
+	
+	// 開始部
+	if( param->block_count < ENCOUNT_PATAPATA_FILL_OBJNUM/2 ){
+		param->wait --;
+		if( param->wait <= 0 ){
+			param->wait = param->one_start_sync;
+
+			//	1つ目発射
+			if( param->b_morning ) {
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Order( param->block_count );
+			}else{
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Order_N( param->block_count );
+			}
+
+			x		= (index % ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_WIDTH + ENCOUNT_PATAPATA_FILL_WIDTH/2;	//	中心座標なので+WIDTH/2
+			y		= (index / ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_HEIGHT + ENCOUNT_PATAPATA_FILL_HEIGHT/2;
+			
+			ENC_BMP_FillSpreadStart(
+					param->p_fill[ index ],
+					x, y,
+					param->one_fill_sync, param->window,
+					0, ENCOUNT_PATAPATA_FILL_HEIGHT,
+					ENCOUNT_PATAPATA_FILL_WIDTH, ENCOUNT_PATAPATA_FILL_HEIGHT,
+					param->col );
+
+			if( param->b_morning ) {
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse( param->block_count );
+			}else{
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse_N( param->block_count );
+			}
+
+			x		= (index % ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_WIDTH + ENCOUNT_PATAPATA_FILL_WIDTH/2;
+			y		= (index / ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_HEIGHT + ENCOUNT_PATAPATA_FILL_HEIGHT/2;
+
+			ENC_BMP_FillSpreadStart(
+					param->p_fill[ index ],
+					x, y,
+					param->one_fill_sync, param->window,
+					0, ENCOUNT_PATAPATA_FILL_HEIGHT, 
+					ENCOUNT_PATAPATA_FILL_WIDTH, ENCOUNT_PATAPATA_FILL_HEIGHT,
+					param->col );
+
+			param->block_count ++;
+		}
+	}
+	
+
+	for( i=param->block_end_count; i<param->block_count; i++ ){
+		int order_idx;
+		int reverse_idx;
+		if( param->b_morning ) {
+			order_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Order( i );
+			reverse_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse( i );
+		}else{
+			order_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Order_N( i );
+			reverse_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse_N( i );
+		}
+		done = ENC_BMP_FillSpreadMain( param->p_fill[order_idx] );
+		done |= ENC_BMP_FillSpreadMain( param->p_fill[reverse_idx] );
+		if( done == TRUE ){
+			param->block_end_count++;
+		}
+	}
+
+	if( (param->block_end_count >= ENCOUNT_PATAPATA_FILL_OBJNUM/2) &&
+		(done == TRUE) ){
+		param->init_flg = FALSE;
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+BOOL ENC_BMP_PatapataFillMain3( ENC_BMP_PATAPATA_FILL *param )
+{
+	int x, y;
+	int index;
+	int i;
+	BOOL done;
+
+	static const u8 ENCOUNT_PATAPATA_FILL_MoveParam3[ ENCOUNT_PATAPATA_FILL_OBJNUM/2] = {	
+	   	0,   2,  9, 16,  4, 11, 18, 25,
+		32,  6, 13, 20, 27, 34, 41, 15,
+		22, 29, 36, 43, 31, 38, 45, 47,
+	};
+
+	static const u8 ENCOUNT_PATAPATA_FILL_MoveParam3_r[ ENCOUNT_PATAPATA_FILL_OBJNUM/2] = {	
+	   	1,   8,  3, 10, 17, 24,  5, 12,
+		19, 26, 33, 40,  7, 14, 21, 28,
+		35, 42, 23, 30, 37, 44, 39, 46,
+	};
+
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Order3(x)	(ENCOUNT_PATAPATA_FILL_MoveParam3[ x ])
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Reverse3(x) (ENCOUNT_PATAPATA_FILL_MoveParam3_r[ x ])
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Order3_N(x)	(ENCOUNT_PATAPATA_FILL_OBJNUM - 1 - ENCOUNT_PATAPATA_FILL_MoveParam3[ x ])
+#define ENCOUNT_PATAPATA_FILL_MoveParam_Reverse3_N(x) (ENCOUNT_PATAPATA_FILL_OBJNUM - 1 - ENCOUNT_PATAPATA_FILL_MoveParam3_r[ x ])
+
+	GF_ASSERT( param != NULL );
+	
+
+	if( param->init_flg == 0 ){
+		return TRUE;
+	}
+	
+	// 開始部
+	if( param->block_count < ENCOUNT_PATAPATA_FILL_OBJNUM/2 ){
+		param->wait --;
+		if( param->wait <= 0 ){
+			param->wait = param->one_start_sync;
+
+			//	1つ目発射
+			if( param->b_morning ) {
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Order3( param->block_count );
+			}else{
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Order3_N( param->block_count );
+			}
+
+			x		= (index % ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_WIDTH + ENCOUNT_PATAPATA_FILL_WIDTH/2;	//	中心座標なので+WIDTH/2
+			y		= (index / ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_HEIGHT + ENCOUNT_PATAPATA_FILL_HEIGHT/2;
+			
+			ENC_BMP_FillSpreadStart(
+					param->p_fill[ index ],
+					x, y,
+					param->one_fill_sync, param->window,
+					0, 0,
+					ENCOUNT_PATAPATA_FILL_WIDTH, ENCOUNT_PATAPATA_FILL_HEIGHT,
+					param->col );
+
+			if( param->b_morning ) {
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse3( param->block_count );
+			}else{
+				index	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse3_N( param->block_count );
+			}
+
+			x		= (index % ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_WIDTH + ENCOUNT_PATAPATA_FILL_WIDTH/2;
+			y		= (index / ENCOUNT_PATAPATA_FILL_X_NUM) * ENCOUNT_PATAPATA_FILL_HEIGHT + ENCOUNT_PATAPATA_FILL_HEIGHT/2;
+
+			ENC_BMP_FillSpreadStart(
+					param->p_fill[ index ],
+					x, y,
+					param->one_fill_sync, param->window,
+					0, 0, 
+					ENCOUNT_PATAPATA_FILL_WIDTH, ENCOUNT_PATAPATA_FILL_HEIGHT,
+					param->col );
+
+			param->block_count ++;
+		}
+	}
+	
+
+	for( i=param->block_end_count; i<param->block_count; i++ ){
+		int order_idx;
+		int reverse_idx;
+		if( param->b_morning ) {
+			order_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Order3( i );
+			reverse_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse3( i );
+		}else{
+			order_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Order3_N( i );
+			reverse_idx	= ENCOUNT_PATAPATA_FILL_MoveParam_Reverse3_N( i );
+		}
+		done = ENC_BMP_FillSpreadMain( param->p_fill[order_idx] );
+		done |= ENC_BMP_FillSpreadMain( param->p_fill[reverse_idx] );
+		if( done == TRUE ){
+			param->block_end_count++;
+		}
+	}
+
+	if( (param->block_end_count >= ENCOUNT_PATAPATA_FILL_OBJNUM/2) &&
+		(done == TRUE) ){
+		param->init_flg = FALSE;
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static void EncounterEffect_GrassCore(SysTask *task, void *param, BOOL b_morning );
+
+void EncounterEffect_Field_GrassMorning(SysTask *task, void *param )
+{
+	EncounterEffect_GrassCore( task, param, TRUE );
+}
+
+void EncounterEffect_Field_GrassNight(SysTask *task, void *param )
+{
+	EncounterEffect_GrassCore( task, param, FALSE );
+}
+
+static void EncounterEffect_GrassCore(SysTask *task, void *param, BOOL b_morning )
+{
+	enum _SEQ {
+		SEQ_INIT,
+		SEQ_FLASH_INIT,
+		SEQ_FLASH_MAIN,
+		SEQ_PATAPATA_INIT,
+		SEQ_PATAPATA_MAIN,
+		SEQ_EXIT,
+	};
+
+    EncounterEffect *encEffect = param;
+    ENCOUNT_TEST_PATAPATA *tw	= encEffect->param;
+    BOOL done;
+
+    switch( encEffect->state ){
+	case SEQ_INIT:
+		encEffect->param = Heap_AllocFromHeap(4, sizeof(ENCOUNT_TEST_PATAPATA) );
+		memset(encEffect->param, 0, sizeof(ENCOUNT_TEST_PATAPATA) );
+		tw	= encEffect->param;
+
+		tw->window = Window_New(4, 1);
+		Window_Add(encEffect->fieldSystem->bgConfig, tw->window, 3, 0, 0, 32, 32, 0, 0);
+
+		{
+			GXRgb color = 0;
+			Bg_LoadPalette(3, &color, sizeof(GXRgb), 2 * 15);
+		}
+	
+        Window_FillTilemap( tw->window, 0);
+        Window_ScheduleCopyToVRAM( tw->window);
+
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+		tw->p_pata	= ENC_BMP_SYNCBGM_PataFillAlloc( HEAPID_FIELD );
+#else
+		tw->p_pata	= ENC_BMP_PatapataFillAlloc(4);
+#endif	//ENCOUNT_PATAPATA_BGMSYNC
+
+		encEffect->state	= SEQ_FLASH_INIT;
+		break;
+
+	case SEQ_FLASH_INIT:
+		{
+			int val = ( b_morning ) ? 16 : -16;
+			EncounterEffect_Flash(1, val, val,  &encEffect->wait, 2);
+		}
+		encEffect->state	= SEQ_FLASH_MAIN;	
+		break;
+	
+	case SEQ_FLASH_MAIN:
+		if( encEffect->wait ){
+			encEffect->state	= SEQ_PATAPATA_INIT;
+		}
+		break;
+
+	case SEQ_PATAPATA_INIT:
+#ifdef	ENCOUNT_PATAPATA_BGMSYNC
+		ENC_BMP_SYNCBGM_PataFillStart( tw->p_pata, 8, FX32_CONST(6)/48, tw->p_bmp, ENCOUNT_PATAPATA_BLOCK_FILLCOLOR );
+#else
+		ENC_BMP_PatapataFillStart( tw->p_pata, ENCOUNT_PATAPATA_START_SYNC, ENCOUNT_PATAPATA_FILL_SYNC, tw->window, ENCOUNT_PATAPATA_BLOCK_FILLCOLOR, b_morning );
+#endif	//	ENCOUNT_PATAPATA_FILL_SYNC
+		encEffect->state	= SEQ_PATAPATA_MAIN;
+		break;
+
+	case SEQ_PATAPATA_MAIN:
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+		result	= ENC_BMP_SYNCBGM_PataFillMain( tw->p_pata );
+#else
+		done	= ENC_BMP_PatapataFillMain( tw->p_pata );
+#endif	//	ENCOUNT_PATAPATA_BGMSYNC
+		Window_ScheduleCopyToVRAM( tw->window );
+		if( done ){
+			encEffect->state	= SEQ_EXIT;
+		}
+		break;   
+	case SEQ_EXIT:
+		sub_0200F370(0x0);
+
+        if (encEffect->done != NULL) {
+            *(encEffect->done) = TRUE;
+        }
+
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+		ENC_BMP_SYNCBGM_PataFillDelete( tw->p_pata );
+#else
+		ENC_BMP_PatapataFillDelete( tw->p_pata );
+#endif	//	ENCOUNT_PATAPATA_BGMSYNC
+        Window_ClearAndCopyToVRAM(tw->window);
+        Window_Remove(tw->window);
+        Windows_Delete(tw->window, 1);
+
+        EncounterEffect_Finish(encEffect, task);
+		return ;
+	}                     
+}
+
+static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_morning );
+
+void EncountEffect_Field_WaterMorning(SysTask *task, void *param )
+{
+	EncountEffect_Field_WaterCore(task, param, TRUE);
+}
+
+void EncountEffect_Field_WaterNight(SysTask *task, void *param )
+{
+	EncountEffect_Field_WaterCore(task, param, FALSE);
+}
+
+static void VTCB_WaterBGCharaLoad(SysTask *task, void *param )
+{	
+	WATER_LOAD_WORK* wk = param;
+	EncounterEffect *encEffect = wk->encEffect;
+
+	switch( wk->vseq )
+	{	
+		case 0 :
+			Bg_LoadTiles(encEffect->fieldSystem->bgConfig, 1,
+				wk->charData1->pRawData, wk->charData1->szByte, 0 );
+			wk->vseq++;
+			break;
+		case 1 :
+			Bg_LoadTiles(encEffect->fieldSystem->bgConfig, 3,
+					wk->charData2->pRawData, wk->charData2->szByte, 0 );
+			wk->vseq++;
+			break;
+		case 2 :
+			wk->taskVIntr = NULL;
+			SysTask_Done( task );
+			break;
+		default : GF_ASSERT(0);
+	}
+}
+
+static void* BG_LoadUnpackhara(NARC *narc, int cgx_idx, NNSG2dCharacterData** outCharData, enum HeapId heapID)
+{	
+	void* buff;
+	NNSG2dCharacterData* charData;
+
+	buff = LoadMemberFromOpenNARC( narc, cgx_idx, FALSE, 4, 0 );
+	NNS_G2dGetUnpackedBGCharacterData( buff, outCharData );
+	return buff;
+}
+
+static void BG_LoadTransScreenVreq(BgConfig* p_bgl, NARC *narc, int scrn_idx, int frame )
+{	
+	void* buff;
+	NNSG2dScreenData* p_scrn;
+	
+	buff = Graphics_GetScrnDataFromOpenNARC( narc, scrn_idx, FALSE, &p_scrn, 4 );
+	
+	Bg_LoadToTilemapRect( p_bgl, frame,
+			p_scrn->rawData, 0, 0,
+			p_scrn->screenWidth / 8, p_scrn->screenHeight / 8 );
+
+	Bg_ChangeTilemapRectPalette( p_bgl, frame, 0, 0, p_scrn->screenWidth / 8, p_scrn->screenHeight / 8,	0 );
+
+	Heap_FreeToHeap( buff );
+
+	Bg_ScheduleTilemapTransfer( p_bgl, frame );
+}
+
+static void TCB_WaterLoadTask( SysTask *task, void *param )
+{	
+	enum { WATER_LOAD_PAL_SIZE = 0x20 };
+	WATER_LOAD_WORK* wk = param;
+	EncounterEffect *encEffect = wk->encEffect;
+
+	GF_ASSERT( encEffect->narc);
+	switch( wk->seq )
+	{	
+		case 0 : 
+			Graphics_LoadPaletteFromOpenNARC(encEffect->narc, 162, 0, 0, WATER_LOAD_PAL_SIZE, 4);
+
+			wk->charBuff1 =	BG_LoadUnpackhara( encEffect->narc, 163, 
+												&wk->charData1, 4);
+			
+			wk->charBuff2 =	BG_LoadUnpackhara( encEffect->narc, 166, 
+												&wk->charData2, 4 );
+
+			wk->vseq = 0;
+			wk->taskVIntr = SysTask_ExecuteOnVBlank( VTCB_WaterBGCharaLoad, wk, 0 );
+				
+			wk->seq++;
+			break;
+		case 1 : 
+			if( wk->taskVIntr == NULL )
+			{	
+				BG_LoadTransScreenVreq(encEffect->fieldSystem->bgConfig, encEffect->narc,
+						164, 1 );
+				BG_LoadTransScreenVreq(encEffect->fieldSystem->bgConfig, encEffect->narc, 
+						167, 3 );
+				wk->seq++;
+			}
+			break;
+		case 2 :
+			Heap_FreeToHeap( wk->charBuff1 );
+			Heap_FreeToHeap( wk->charBuff2 );
+
+			wk->task = NULL;
+			SysTask_Done( task );
+			break;
+		default : GF_ASSERT(0);
+	}
+}
+static void WaterLoadTask_Start( WATER_LOAD_WORK* wk, EncounterEffect *encEffect )
+{	
+	wk->encEffect = encEffect;
+	wk->seq = 0;
+	wk->task = SysTask_Start( TCB_WaterLoadTask, wk, 1 );
+}
+
+static BOOL WaterLoadTask_CheckEnd( WATER_LOAD_WORK* wk )
+{	
+	GF_ASSERT( wk );
+	return ( wk->task == NULL );
+}
+
+void ENC_SinShakeMoveReq( ENC_SHAKEMOVE_WORK* param, s16 s_x, s16 e_x, s16 add )
+{
+	param->x	= s_x;
+	param->s_x	= s_x;
+	param->dist= e_x - s_x;
+	param->add	= add;
+	param->count  = 0;
+}
+
+static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_morning )
+{
+	enum _SEQ {
+		SEQ_INIT,
+		SEQ_FLASH_INIT,
+		SEQ_FLASH_MAIN,
+		SEQ_LASTER_INIT,
+		SEQ_LASTER_MAIN,
+		SEQ_BG_INIT,
+		SEQ_BG_MAIN,
+		SEQ_EXIT,
+	};
+
+	EncounterEffect *encEffect = param;
+	ENCOUNT_TEST_WATER		*tw		= encEffect->param;
+	BOOL					done;
+	int						i;
+
+	switch( encEffect->state ){
+	case SEQ_INIT:
+		encEffect->param = Heap_AllocFromHeap(4, sizeof(ENCOUNT_TEST_WATER) );
+		memset(encEffect->param, 0, sizeof(ENCOUNT_TEST_WATER) );
+		tw	= encEffect->param;
+		
+		GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG1, 1);
+		GXLayers_EngineAToggleLayers( GX_PLANEMASK_BG3, 1);
+		GX_SetVisiblePlane( GX_PLANEMASK_BG0 | GX_PLANEMASK_BG2 | GX_PLANEMASK_OBJ );
+			
+		{
+			static const BgTemplate TextBgCntDat1 = {
+				0, 0, 0x1000, 0, 2, GX_BG_COLORMODE_16,
+				GX_BG_SCRBASE_0x1000, GX_BG_CHARBASE_0x04000, GX_BG_EXTPLTT_01,
+				0, 0, 0, FALSE
+			};
+			Bg_FreeTilemapBuffer( encEffect->fieldSystem->bgConfig, 1 );
+			Bg_InitFromTemplate( encEffect->fieldSystem->bgConfig, 1, &TextBgCntDat1, 0);
+			Bg_ClearTilemap( encEffect->fieldSystem->bgConfig, 1 );
+
+		}
+		{
+			static const  BgTemplate TextBgCntDat2 = {
+				0, 0, 0x1000, 0, 2, GX_BG_COLORMODE_16,
+				GX_BG_SCRBASE_0x2000, GX_BG_CHARBASE_0x08000, GX_BG_EXTPLTT_23,
+				0, 0, 0, FALSE
+			};
+			Bg_FreeTilemapBuffer( encEffect->fieldSystem->bgConfig, 3);
+			Bg_InitFromTemplate( encEffect->fieldSystem->bgConfig, 3, &TextBgCntDat2, 0);
+			Bg_ClearTilemap( encEffect->fieldSystem->bgConfig, 3 );
+		}
+		Bg_SetPriority( GX_PLANEMASK_BG1, 0 );
+		Bg_SetPriority( GX_PLANEMASK_BG3, 0 );
+
+		GXLayers_EngineASetLayers( GX_PLANEMASK_BG0 | GX_PLANEMASK_BG2 | GX_PLANEMASK_OBJ );
+		
+		WaterLoadTask_Start( &tw->wkLoad, encEffect );
+		encEffect->state	= SEQ_FLASH_INIT;
+		break;
+
+	case SEQ_FLASH_INIT:
+
+		if( WaterLoadTask_CheckEnd( &tw->wkLoad ) == FALSE )
+		{	
+			break;
+		}
+		
+		Bg_MaskPalette( 1, 0 );
+
+		QuadraticInterpolationTaskFX32_Init( &tw->move_y1, ENCOUNT_TESTWATER_BG_START_Y, ENCOUNT_TESTWATER_BG_END_Y, ENCOUNT_TESTWATER_BG_START_ADD1, ENCOUNT_TESTWATER_BG1_SYNC );
+		QuadraticInterpolationTaskFX32_Init( &tw->move_y2, ENCOUNT_TESTWATER_BG_START_Y, ENCOUNT_TESTWATER_BG_END_Y, ENCOUNT_TESTWATER_BG_START_ADD2, ENCOUNT_TESTWATER_BG2_SYNC );
+		
+		ENC_SinShakeMoveReq( &tw->shake_x, 0, 16, 15 );
+
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 3, 3, tw->move_y1.currentValue>>FX32_SHIFT );
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 3, 0, ENCOUNT_TESTWATER_BG_X );
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 1, 3, tw->move_y2.currentValue>>FX32_SHIFT );
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 1, 0, ENCOUNT_TESTWATER_BG_X );
+	
+		{
+			int val = ( b_morning ) ? 16 : -16;
+			EncounterEffect_Flash(1, val, val,  &encEffect->wait, 2);
+		}
+
+		encEffect->state	= SEQ_FLASH_MAIN;	
+		break;
+
+	case SEQ_FLASH_MAIN:
+		if( encEffect->wait ){
+			 ScreenShakeEffect_Init( &tw->screenShakeEfx, 4 );
+
+			encEffect->state	= SEQ_LASTER_INIT;
+		}
+		break;
+
+	case SEQ_LASTER_INIT:
+		tw->wait = ENCOUNT_TESTWATER_LASTER_SYNC;
+		ScreenShakeEffect_Start( &tw->screenShakeEfx,
+				0, 191, ENCOUNT_TESTWATER_LASTER_SIN_ADDR, 
+				ENCOUNT_TESTWATER_LASTER_SIN_R, ENCOUNT_TESTWATER_LASTER_SPD,
+				REG_BG0HOFS_ADDR, 0, ENCOUNT_TESTWATER_LASTER_TASK_PRI );	
+
+		tw->bg2_start	= 1;
+		GXLayers_EngineAToggleLayers( GX_PLANEMASK_BG3, 1 );
+		encEffect->state	= SEQ_LASTER_MAIN;
+
+	case SEQ_LASTER_MAIN:
+		if( tw->wait-- == 0 ){
+			encEffect->state	= SEQ_BG_INIT;
+		}
+		break;
+
+	case SEQ_BG_INIT:
+
+				
+		tw->bg1_start	= 1;
+		GXLayers_EngineAToggleLayers( GX_PLANEMASK_BG1, 1 );
+		encEffect->state	= SEQ_BG_MAIN;
+		break;
+
+	case SEQ_BG_MAIN:
+		if( tw->bg1_end ){
+			encEffect->state	= SEQ_EXIT;
+		}
+		break;
+		
+	
+	case SEQ_EXIT:
+		sub_0200F370(0x0);
+
+        if (encEffect->done != NULL) {
+            *(encEffect->done) = TRUE;
+        }
+
+		ScreenShakeEffect_Finish( &tw->screenShakeEfx );
+
+        EncounterEffect_Finish(encEffect, task);
+		return ;
+	}
+
+
+	if( tw->bg1_start ) {
+		tw->bg1_end	= QuadraticInterpolationTaskFX32_Update( &tw->move_y1 );
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 1, 3, tw->move_y1.currentValue>>FX32_SHIFT );
+	}
+	if( tw->bg2_start ) {
+		tw->bg2_end	= QuadraticInterpolationTaskFX32_Update( &tw->move_y2 );
+		ENC_SinShakeMoveMain( &tw->shake_x );
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 3, 3, tw->move_y2.currentValue>>FX32_SHIFT );
+		Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 3, 0, tw->shake_x.x );
+	}
+}
+
+static void EncountEffect_Field_DanCore(SysTask *task, void *param, BOOL b_morning );
+
+void EncountEffect_Field_DanMorning(SysTask *task, void *param )
+{
+	EncountEffect_Field_DanCore(task, param, TRUE );
+}
+
+void EncountEffect_Field_DanNight(SysTask *task, void *param )
+{
+	EncountEffect_Field_DanCore(task, param, FALSE );
+}
+
+static void EncountEffect_Field_DanCore(SysTask *task, void *param, BOOL b_morning )
+{
+	enum _SEQ {
+		SEQ_INIT,
+		SEQ_FLASH_INIT,
+		SEQ_FLASH_MAIN,
+		SEQ_PATAPATA_INIT,
+		SEQ_PATAPATA_MAIN,
+		SEQ_EXIT,
+	};
+
+	EncounterEffect *encEffect = param;
+    ENCOUNT_TEST_PATAPATA *tw	= encEffect->param;
+    BOOL done;
+
+    switch( encEffect->state ){
+	case SEQ_INIT:
+		encEffect->param = Heap_AllocFromHeap(4, sizeof(ENCOUNT_TEST_PATAPATA) );
+		memset(encEffect->param, 0, sizeof(ENCOUNT_TEST_PATAPATA) );
+		tw	= encEffect->param;
+
+		tw->window = Window_New(4, 1);
+		Window_Add(encEffect->fieldSystem->bgConfig, tw->window, 3, 0, 0, 32, 32, 0, 0);
+		{
+			GXRgb color = 0;
+			Bg_LoadPalette(3, &color, sizeof(GXRgb), 2 * 15);
+		}
+	
+        Window_FillTilemap( tw->window, 0);
+        Window_ScheduleCopyToVRAM( tw->window);
+
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+		tw->p_pata	= ENC_BMP_SYNCBGM_PataFillAlloc( HEAPID_FIELD );
+#else
+		tw->p_pata	= ENC_BMP_PatapataFillAlloc(4);
+#endif	//ENCOUNT_PATAPATA_BGMSYNC
+
+		encEffect->state	= SEQ_FLASH_INIT;
+		break;
+
+	case SEQ_FLASH_INIT:
+		{
+			int val = ( b_morning ) ? 16 : -16;
+			EncounterEffect_Flash(1, val, val,  &encEffect->wait, 2);
+		}
+		encEffect->state	= SEQ_FLASH_MAIN;	
+		break;
+	
+	case SEQ_FLASH_MAIN:
+		if( encEffect->wait ){
+			encEffect->state	= SEQ_PATAPATA_INIT;
+		}
+		break;
+
+	case SEQ_PATAPATA_INIT:
+#ifdef	ENCOUNT_PATAPATA_BGMSYNC
+		ENC_BMP_SYNCBGM_PataFillStart( tw->p_pata, 8, FX32_CONST(6)/48, tw->p_bmp, ENCOUNT_PATAPATA_BLOCK_FILLCOLOR );
+#else
+		ENC_BMP_PatapataFillStart( tw->p_pata, ENCOUNT_PATAPATA_START_SYNC, ENCOUNT_PATAPATA_FILL_SYNC, tw->window, ENCOUNT_PATAPATA_BLOCK_FILLCOLOR, b_morning );
+#endif	//	ENCOUNT_PATAPATA_FILL_SYNC
+		encEffect->state	= SEQ_PATAPATA_MAIN;
+		break;
+
+	//	パタパタ処理
+	case SEQ_PATAPATA_MAIN:
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+		result	= ENC_BMP_SYNCBGM_PataFillMain3( tw->p_pata );
+#else
+		done	= ENC_BMP_PatapataFillMain3( tw->p_pata );
+#endif	//	ENCOUNT_PATAPATA_BGMSYNC
+		Window_ScheduleCopyToVRAM( tw->window );
+		if( done ){
+			encEffect->state	= SEQ_EXIT;
+		}
+		break;   
+	case SEQ_EXIT:
+		sub_0200F370(0x0);
+
+        if (encEffect->done != NULL) {
+            *(encEffect->done) = TRUE;
+        }
+
+#ifdef ENCOUNT_PATAPATA_BGMSYNC
+		ENC_BMP_SYNCBGM_PataFillDelete( tw->p_pata );
+#else
+		ENC_BMP_PatapataFillDelete( tw->p_pata );
+#endif	//	ENCOUNT_PATAPATA_BGMSYNC
+        Window_ClearAndCopyToVRAM(tw->window);
+        Window_Remove(tw->window);
+        Windows_Delete(tw->window, 1);
+
+        EncounterEffect_Finish(encEffect, task);
+		return ;
+	}                     
+}
+
 
 void EncounterEffect_Grass_HigherLevel(SysTask *task, void *param)
 {
@@ -3630,20 +4534,19 @@ void EncounterEffect_ChampionCynthia(SysTask *task, void *param)
         EncounterEffect_Finish(encEffect, task);
     }
 }
-
 typedef struct RivalEncounterParam {
     fx32 endX;
     u32 trainerID;
     u16 trainerClass;
     u16 unk_0A;
     // The rest are NARC indices
-    u8 unk_0C;
-    u8 unk_0D;
-    u8 unk_0E;
-    u8 unk_0F;
-    u8 unk_10;
-    u8 unk_11;
-    u8 unk_12;
+    u8 mugshotPlttIdx;
+    u8 mugshotTileIdx;
+    u8 mugshotCellIdx;
+    u8 mugshotAnimIdx;
+    u8 bannerPlttIdx;
+    u8 bannerTileIdx;
+    u8 bannerTilemapIdx;
     u8 padding;
 } RivalEncounterParam;
 
@@ -3655,13 +4558,13 @@ static const RivalEncounterParam sRivalEncounterParam[1] = {
         .trainerID = 851,
         .trainerClass = TRAINER_CLASS_RIVAL,
         .unk_0A = 1,
-        .unk_0C = 155,
-        .unk_0D = 156,
-        .unk_0E = 157,
-        .unk_0F = 158,
-        .unk_10 = 159,
-        .unk_11 = 160,
-        .unk_12 = 161,
+        .mugshotPlttIdx = 155,
+        .mugshotTileIdx = 156,
+        .mugshotCellIdx = 157,
+        .mugshotAnimIdx = 158,
+        .bannerPlttIdx = 159,
+        .bannerTileIdx = 160,
+        .bannerTilemapIdx = 161,
         .padding = 0,
     },
 };
@@ -3729,7 +4632,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
 
         v0->unk_24C = ov5_021DE62C(
             &v0->unk_44, &v0->unk_1E4[0], (272 * FX32_ONE), (66 * FX32_ONE), 0, 0);
-        CellActor_SetDrawFlag(v0->unk_24C, 0);
+        Sprite_SetDrawFlag(v0->unk_24C, 0);
         ov5_021E5128(&v0->unk_250, &v0->unk_44, &v0->unk_1E4[1], (FX32_CONST(72)), (FX32_CONST(74)), heapID);
 
         ov5_021DE5D0(v0->unk_24C, heapID, param->trainerClass, 14, (GX_RGB(0, 0, 0)));
@@ -3755,7 +4658,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
     case 3:
 
         ov5_021DE3D0(
-            encEffect->narc, param->unk_12, param->unk_11, param->unk_10, 0, 1, encEffect->fieldSystem->bgConfig, 3);
+            encEffect->narc, param->bannerTilemapIdx, param->bannerTileIdx, param->bannerPlttIdx, 0, 1, encEffect->fieldSystem->bgConfig, 3);
         v0->unk_2F0 = 1;
 
         ov5_021DED20(encEffect, v0->unk_40, 6, 8, 16, (GX_WND_PLANEMASK_BG0 | GX_WND_PLANEMASK_BG1 | GX_WND_PLANEMASK_BG2 | GX_WND_PLANEMASK_BG3 | GX_WND_PLANEMASK_OBJ), (GX_WND_PLANEMASK_BG0 | GX_WND_PLANEMASK_BG1 | GX_WND_PLANEMASK_BG2 | GX_WND_PLANEMASK_OBJ));
@@ -3798,12 +4701,12 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
     case 6:
 
         QuadraticInterpolationTaskFX32_Init(&v0->unk_00, (272 * FX32_ONE), param->endX, (-64 * FX32_ONE), 4);
-        CellActor_SetDrawFlag(v0->unk_24C, 1);
-        CellActor_SetExplicitPriority(v0->unk_24C, 0);
+        Sprite_SetDrawFlag(v0->unk_24C, 1);
+        Sprite_SetExplicitPriority(v0->unk_24C, 0);
 
         v3 = VecFx32_FromXYZ(
             v0->unk_00.currentValue, (66 * FX32_ONE), 0);
-        CellActor_SetPosition(v0->unk_24C, &v3);
+        Sprite_SetPosition(v0->unk_24C, &v3);
 
         encEffect->state++;
         break;
@@ -3813,7 +4716,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
         v1 = QuadraticInterpolationTaskFX32_Update(&v0->unk_00);
         v3 = VecFx32_FromXYZ(
             v0->unk_00.currentValue, (66 * FX32_ONE), 0);
-        CellActor_SetPosition(v0->unk_24C, &v3);
+        Sprite_SetPosition(v0->unk_24C, &v3);
 
         if (v1 == 1) {
             encEffect->state++;
@@ -3840,7 +4743,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
         if (v1 == 1) {
             ov5_021DE5D0(v0->unk_24C, heapID, param->trainerClass, 0, (GX_RGB(0, 0, 0)));
 
-            sub_0200AB4C(-14, GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BD, 1);
+            BrightnessController_SetScreenBrightness(-14, GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BD, BRIGHTNESS_MAIN_SCREEN);
 
             Bg_ScheduleScroll(encEffect->fieldSystem->bgConfig, 2, 0, -((v0->unk_00.currentValue >> FX32_SHIFT) + -92));
             GXLayers_EngineAToggleLayers(GX_PLANEMASK_BG2, 1);
@@ -3896,7 +4799,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
             *(encEffect->done) = 1;
         }
 
-        CellActor_Delete(v0->unk_24C);
+        Sprite_Delete(v0->unk_24C);
         ov5_021E519C(&v0->unk_250);
         ov5_021DE5A4(&v0->unk_44, &v0->unk_1E4[0]);
         ov5_021DE5A4(&v0->unk_44, &v0->unk_1E4[1]);
@@ -3906,7 +4809,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
 
         GX_SetVisibleWnd(GX_WNDMASK_NONE);
 
-        sub_0200AB4C(0, GX_BLEND_PLANEMASK_NONE, 1);
+        BrightnessController_SetScreenBrightness(0, GX_BLEND_PLANEMASK_NONE, BRIGHTNESS_MAIN_SCREEN);
 
         Bg_SetOffset(encEffect->fieldSystem->bgConfig, 2, 0, 0);
 
@@ -3920,7 +4823,7 @@ static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, enum HeapId he
     }
 
     if (encEffect->state != 15) {
-        CellActorCollection_Update(v0->unk_44.unk_00);
+        SpriteList_Update(v0->unk_44.unk_00);
     }
 
     return 0;
