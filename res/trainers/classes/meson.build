@@ -356,34 +356,6 @@ trainer_encounter_NCLR = nclr_gen.process(trainer_encounter_pal,
 trainer_encounter_paste = copy_gen.process(trainer_encounter_copy,
     preserve_path_from: trainer_classes_root,)
 
-field_encounteffect_order = files('field_encounteffect.order')
-field_encounteffect_narc = custom_target('field_encounteffect.narc',
-    output: [
-        'field_encounteffect.narc',
-        'field_encounteffect.naix.h',
-    ],
-    input: [
-        trainer_encounter_mugshot_NCGR,
-        trainer_encounter_banner_NCGR,
-        trainer_encounter_frontier_NCGR,
-        trainer_encounter_dummy_NCGR,
-        trainer_encounter_NCER,
-        trainer_encounter_NANR,
-        trainer_encounter_NCLR,
-        trainer_encounter_paste,
-        frontier_vs_NCGR,
-        frontier_vs_anim_NANR,
-    ],
-    command: [
-        narc_exe, 'create',
-        '--naix',
-        '--order', field_encounteffect_order,
-        '--output', '@OUTPUT0@',
-        '@PRIVATE_DIR@',
-    ],
-)
-naix_headers += field_encounteffect_narc[1]
-
-nitrofs_files += trfgra_narc
-nitrofs_files += trbgra_narc
+# Use prebuilt field encounter effect NARC (HGSS port)
+field_encounteffect_narc = fs.copyfile('../../prebuilt/graphic/field_encounteffect.narc')
 nitrofs_files += field_encounteffect_narc
