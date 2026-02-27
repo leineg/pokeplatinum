@@ -117,6 +117,7 @@ enum Screen {
     SCREEN_BOTTOM,
 };
 
+void EncounterEffect_FillWindowRect(Window *window, s32 top, s32 bottom, s32 left, s32 right, u8 fillValue);
 void EncounterEffect_Start(enum EncEffectCutIn effect, FieldSystem *fieldSystem, BOOL *param2);
 void EncounterEffect_Finish(EncounterEffect *encEffect, SysTask *effectTask);
 void EncounterEffect_Flash(enum Screen screen, u32 screenFlashColor, u32 otherScreenFlashColor, BOOL *done, u32 numFlashes);

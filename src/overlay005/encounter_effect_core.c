@@ -242,7 +242,7 @@ ENC_BMP_FILL_SPREAD* ENC_BMP_FillSpreadAlloc( u32 heapID )
 {
 	ENC_BMP_FILL_SPREAD* param;
 
-	param = Heap_AllocFromHeap( 4, sizeof(ENC_BMP_FILL_SPREAD) );
+	param = Heap_Alloc( HEAP_ID_FIELD1, sizeof(ENC_BMP_FILL_SPREAD) );
 	memset( param, 0, sizeof(ENC_BMP_FILL_SPREAD) );
 	return param;
 }
@@ -255,7 +255,7 @@ void ENC_BMP_PatapataFillDelete( ENC_BMP_PATAPATA_FILL *param )
 	for( i = 0; i <ENCOUNT_PATAPATA_FILL_OBJNUM; i++ ) {
 		ENC_BMP_FillSpreadDelete( param->p_fill[i] );
 	}
-	Heap_FreeToHeap( param );
+	Heap_Free( param );
 }
 
 void ENC_SinShakeMoveMain( ENC_SHAKEMOVE_WORK* param )
@@ -268,7 +268,7 @@ ENC_BMP_PATAPATA_FILL* ENC_BMP_PatapataFillAlloc( u32 heapID )
 {
 	int i;
 	ENC_BMP_PATAPATA_FILL	*param;
-	param = Heap_AllocFromHeap(4, sizeof(ENC_BMP_PATAPATA_FILL) );
+	param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(ENC_BMP_PATAPATA_FILL) );
 	memset( param, 0, sizeof(ENC_BMP_PATAPATA_FILL) );
 	
 	for( i = 0; i <ENCOUNT_PATAPATA_FILL_OBJNUM; i++ ) {
@@ -312,7 +312,7 @@ BOOL ENC_BMP_FillSpreadMain( ENC_BMP_FILL_SPREAD* param )
 	bottom = param->y + (param->move_h.currentValue/2);
 
 	// ビットマップ塗りつぶし
-	ov5_021DE89C( param->window, top, bottom, left, right, param->col );
+	EncounterEffect_FillWindowRect(param->window, top, bottom, left, right, param->col);
 
 	return done;
 }
@@ -321,7 +321,7 @@ BOOL ENC_BMP_FillSpreadMain( ENC_BMP_FILL_SPREAD* param )
 
 void ENC_BMP_FillSpreadDelete( ENC_BMP_FILL_SPREAD* param )
 {
-	Heap_FreeToHeap( param );
+	Heap_Free( param );
 }
 
 BOOL ENC_BMP_PatapataFillMain( ENC_BMP_PATAPATA_FILL *param )
@@ -542,11 +542,11 @@ static void EncounterEffect_GrassCore(SysTask *task, void *param, BOOL b_morning
 
     switch( encEffect->state ){
 	case SEQ_INIT:
-		encEffect->param = Heap_AllocFromHeap(4, sizeof(ENCOUNT_TEST_PATAPATA) );
+		encEffect->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(ENCOUNT_TEST_PATAPATA) );
 		memset(encEffect->param, 0, sizeof(ENCOUNT_TEST_PATAPATA) );
 		tw	= encEffect->param;
 
-		tw->window = Window_New(4, 1);
+		tw->window = Window_New(HEAP_ID_FIELD1, 1);
 		Window_Add(encEffect->fieldSystem->bgConfig, tw->window, 3, 0, 0, 32, 32, 0, 0);
 
 		{
@@ -560,7 +560,7 @@ static void EncounterEffect_GrassCore(SysTask *task, void *param, BOOL b_morning
 #ifdef ENCOUNT_PATAPATA_BGMSYNC
 		tw->p_pata	= ENC_BMP_SYNCBGM_PataFillAlloc( HEAPID_FIELD );
 #else
-		tw->p_pata	= ENC_BMP_PatapataFillAlloc(4);
+		tw->p_pata	= ENC_BMP_PatapataFillAlloc(HEAP_ID_FIELD1);
 #endif	//ENCOUNT_PATAPATA_BGMSYNC
 
 		encEffect->state	= SEQ_FLASH_INIT;
@@ -601,7 +601,7 @@ static void EncounterEffect_GrassCore(SysTask *task, void *param, BOOL b_morning
 		}
 		break;   
 	case SEQ_EXIT:
-		sub_0200F370(0x0);
+		SetColorBrightness(COLOR_BLACK);
 
         if (encEffect->done != NULL) {
             *(encEffect->done) = TRUE;
@@ -663,7 +663,7 @@ static void* BG_LoadUnpackhara(NARC *narc, int cgx_idx, NNSG2dCharacterData** ou
 	void* buff;
 	NNSG2dCharacterData* charData;
 
-	buff = LoadMemberFromOpenNARC( narc, cgx_idx, FALSE, 4, 0 );
+	buff = LoadMemberFromOpenNARC( narc, cgx_idx, FALSE, HEAP_ID_FIELD1, 0 );
 	NNS_G2dGetUnpackedBGCharacterData( buff, outCharData );
 	return buff;
 }
@@ -673,7 +673,7 @@ static void BG_LoadTransScreenVreq(BgConfig* p_bgl, NARC *narc, int scrn_idx, in
 	void* buff;
 	NNSG2dScreenData* p_scrn;
 	
-	buff = Graphics_GetScrnDataFromOpenNARC( narc, scrn_idx, FALSE, &p_scrn, 4 );
+	buff = Graphics_GetScrnDataFromOpenNARC( narc, scrn_idx, FALSE, &p_scrn, HEAP_ID_FIELD1 );
 	
 	Bg_LoadToTilemapRect( p_bgl, frame,
 			p_scrn->rawData, 0, 0,
@@ -681,7 +681,7 @@ static void BG_LoadTransScreenVreq(BgConfig* p_bgl, NARC *narc, int scrn_idx, in
 
 	Bg_ChangeTilemapRectPalette( p_bgl, frame, 0, 0, p_scrn->screenWidth / 8, p_scrn->screenHeight / 8,	0 );
 
-	Heap_FreeToHeap( buff );
+	Heap_Free( buff );
 
 	Bg_ScheduleTilemapTransfer( p_bgl, frame );
 }
@@ -702,7 +702,7 @@ static void TCB_WaterLoadTask( SysTask *task, void *param )
 												&wk->charData1, 4);
 			
 			wk->charBuff2 =	BG_LoadUnpackhara( encEffect->narc, 166, 
-												&wk->charData2, 4 );
+												&wk->charData2, 4);
 
 			wk->vseq = 0;
 			wk->taskVIntr = SysTask_ExecuteOnVBlank( VTCB_WaterBGCharaLoad, wk, 0 );
@@ -720,8 +720,8 @@ static void TCB_WaterLoadTask( SysTask *task, void *param )
 			}
 			break;
 		case 2 :
-			Heap_FreeToHeap( wk->charBuff1 );
-			Heap_FreeToHeap( wk->charBuff2 );
+			Heap_Free( wk->charBuff1 );
+			Heap_Free( wk->charBuff2 );
 
 			wk->task = NULL;
 			SysTask_Done( task );
@@ -771,7 +771,7 @@ static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_mor
 
 	switch( encEffect->state ){
 	case SEQ_INIT:
-		encEffect->param = Heap_AllocFromHeap(4, sizeof(ENCOUNT_TEST_WATER) );
+		encEffect->param = Heap_Alloc(4, sizeof(ENCOUNT_TEST_WATER) );
 		memset(encEffect->param, 0, sizeof(ENCOUNT_TEST_WATER) );
 		tw	= encEffect->param;
 		
@@ -779,48 +779,49 @@ static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_mor
 		GXLayers_EngineAToggleLayers( GX_PLANEMASK_BG3, 1);
 		GX_SetVisiblePlane( GX_PLANEMASK_BG0 | GX_PLANEMASK_BG2 | GX_PLANEMASK_OBJ );
 			
-		{
-			static const BgTemplate TextBgCntDat1 = {
-                .x = 0,
-                .y = 0,
-                .bufferSize = 0x1000,
-                .baseTile = 0,
-                .screenSize = 2,
-                .colorMode = GX_BG_COLORMODE_16,
-                .screenBase = 0x10,   // era GX_BG_SCRBASE_0x1000
-                .charBase = 0x04,     // era GX_BG_CHARBASE_0x04000
-                .bgExtPltt = 1,       // era GX_BG_EXTPLTT_01
-                .priority = 0,
-                .areaOver = 0,
-                .mosaic = FALSE,
-            };
-			Bg_FreeTilemapBuffer( encEffect->fieldSystem->bgConfig, 1 );
-			Bg_InitFromTemplate( encEffect->fieldSystem->bgConfig, 1, &TextBgCntDat1, 0);
-			Bg_ClearTilemap( encEffect->fieldSystem->bgConfig, 1 );
+{
+    static const BgTemplate TextBgCntDat1 = {
+        .x = 0,
+        .y = 0,
+        .bufferSize = 0x1000,
+        .baseTile = 0,
+        .screenSize = 2,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0x1000,
+        .charBase = GX_BG_CHARBASE_0x04000,
+        .bgExtPltt = GX_BG_EXTPLTT_01,
+        .priority = 0,
+        .areaOver = 0,
+        .mosaic = FALSE,
+    };
 
-		}
-		{
-                static const BgTemplate TextBgCntDat2 = {
-                .x = 0,
-                .y = 0,
-                .bufferSize = 0x1000,
-                .baseTile = 0,
-                .screenSize = 2,
-                .colorMode = GX_BG_COLORMODE_16,
-                .screenBase = 0x20,   // era GX_BG_SCRBASE_0x2000
-                .charBase = 0x08,     // era GX_BG_CHARBASE_0x08000
-                .bgExtPltt = 23,      // era GX_BG_EXTPLTT_23
-                .priority = 0,
-                .areaOver = 0,
-                .mosaic = FALSE,
-            };
-			Bg_FreeTilemapBuffer( encEffect->fieldSystem->bgConfig, 3);
-			Bg_InitFromTemplate( encEffect->fieldSystem->bgConfig, 3, &TextBgCntDat2, 0);
-			Bg_ClearTilemap( encEffect->fieldSystem->bgConfig, 3 );
-		}
-		Bg_SetPriority( GX_PLANEMASK_BG1, 0 );
-		Bg_SetPriority( GX_PLANEMASK_BG3, 0 );
+    Bg_FreeTilemapBuffer(encEffect->fieldSystem->bgConfig, BG_LAYER_MAIN_1);
+    Bg_InitFromTemplate(encEffect->fieldSystem->bgConfig, BG_LAYER_MAIN_1, &TextBgCntDat1, 0);
+    Bg_ClearTilemap(encEffect->fieldSystem->bgConfig, BG_LAYER_MAIN_1);
+}
 
+{
+    static const BgTemplate TextBgCntDat2 = {
+        .x = 0,
+        .y = 0,
+        .bufferSize = 0x1000,
+        .baseTile = 0,
+        .screenSize = 2,
+        .colorMode = GX_BG_COLORMODE_16,
+        .screenBase = GX_BG_SCRBASE_0x2000,
+        .charBase = GX_BG_CHARBASE_0x08000,
+        .bgExtPltt = GX_BG_EXTPLTT_23,
+        .priority = 0,
+        .areaOver = 0,
+        .mosaic = FALSE,
+    };
+
+    Bg_FreeTilemapBuffer(encEffect->fieldSystem->bgConfig, BG_LAYER_MAIN_3);
+    Bg_InitFromTemplate(encEffect->fieldSystem->bgConfig, BG_LAYER_MAIN_3, &TextBgCntDat2, 0);
+    Bg_ClearTilemap(encEffect->fieldSystem->bgConfig, BG_LAYER_MAIN_3);
+}
+		Bg_SetPriority(GX_PLANEMASK_BG1, 0);
+		Bg_SetPriority(GX_PLANEMASK_BG3, 0);
 		GXLayers_EngineASetLayers( GX_PLANEMASK_BG0 | GX_PLANEMASK_BG2 | GX_PLANEMASK_OBJ );
 		
 		WaterLoadTask_Start( &tw->wkLoad, encEffect );
@@ -833,6 +834,11 @@ static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_mor
 		{	
 			break;
 		}
+
+        /* (opcional mas recomendado) garante que tilemap vai mesmo para VRAM */
+
+        /* agora sim liga os planes */
+
 		
 		Bg_MaskPalette( 1, 0 );
 
@@ -895,7 +901,7 @@ static void EncountEffect_Field_WaterCore(SysTask *task, void *param, BOOL b_mor
 		
 	
 	case SEQ_EXIT:
-		sub_0200F370(0x0);
+		SetColorBrightness(COLOR_BLACK);
 
         if (encEffect->done != NULL) {
             *(encEffect->done) = TRUE;
@@ -949,11 +955,11 @@ static void EncountEffect_Field_DanCore(SysTask *task, void *param, BOOL b_morni
 
     switch( encEffect->state ){
 	case SEQ_INIT:
-		encEffect->param = Heap_AllocFromHeap(4, sizeof(ENCOUNT_TEST_PATAPATA) );
+		encEffect->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(ENCOUNT_TEST_PATAPATA) );
 		memset(encEffect->param, 0, sizeof(ENCOUNT_TEST_PATAPATA) );
 		tw	= encEffect->param;
 
-		tw->window = Window_New(4, 1);
+		tw->window = Window_New(HEAP_ID_FIELD1, 1);
 		Window_Add(encEffect->fieldSystem->bgConfig, tw->window, 3, 0, 0, 32, 32, 0, 0);
 		{
 			GXRgb color = 0;
@@ -966,7 +972,7 @@ static void EncountEffect_Field_DanCore(SysTask *task, void *param, BOOL b_morni
 #ifdef ENCOUNT_PATAPATA_BGMSYNC
 		tw->p_pata	= ENC_BMP_SYNCBGM_PataFillAlloc( HEAPID_FIELD );
 #else
-		tw->p_pata	= ENC_BMP_PatapataFillAlloc(4);
+		tw->p_pata	= ENC_BMP_PatapataFillAlloc(HEAP_ID_FIELD1);
 #endif	//ENCOUNT_PATAPATA_BGMSYNC
 
 		encEffect->state	= SEQ_FLASH_INIT;
@@ -1008,7 +1014,7 @@ static void EncountEffect_Field_DanCore(SysTask *task, void *param, BOOL b_morni
 		}
 		break;   
 	case SEQ_EXIT:
-		sub_0200F370(0x0);
+		SetColorBrightness(COLOR_BLACK);
 
         if (encEffect->done != NULL) {
             *(encEffect->done) = TRUE;
@@ -1031,188 +1037,14 @@ static void EncountEffect_Field_DanCore(SysTask *task, void *param, BOOL b_morni
 
 void EncounterEffect_Grass_HigherLevel(SysTask *task, void *param)
 {
-    EncounterEffect *encEffect = param;
-    GrassEncounterEffect *grassEffect = encEffect->param;
-    fx32 distance;
-    BOOL done;
-
-    switch (encEffect->state) {
-    case 0:
-        encEffect->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(GrassEncounterEffect));
-        memset(encEffect->param, 0, sizeof(GrassEncounterEffect));
-        grassEffect = encEffect->param;
-        grassEffect->screenSliceEfx = ScreenSliceEffect_New();
-        encEffect->state++;
-        break;
-    case 1:
-        EncounterEffect_Flash(1, 16, -16, &encEffect->effectComplete, 2);
-        encEffect->state++;
-        break;
-    case 2:
-        if (encEffect->effectComplete) {
-            encEffect->effectComplete = 0;
-            encEffect->state++;
-            EncounterEffect_ScreenSlice(
-                encEffect,
-                grassEffect->screenSliceEfx,
-                GRASS_HIGHER_LEVEL_PIXELS_PER_SLICE,
-                GRASS_HIGHER_LEVEL_INTERPOLATION_FRAMES + 1,
-                GRASS_HIGHER_LEVEL_SLICE_START_X_1,
-                GRASS_HIGHER_LEVEL_SLICE_END_X_1,
-                GRASS_HIGHER_LEVEL_SLICE_START_SPEED_1);
-            grassEffect->camera = encEffect->fieldSystem->camera;
-            distance = Camera_GetDistance(grassEffect->camera);
-            QuadraticInterpolationTaskFX32_Init(
-                &grassEffect->camDistanceTask,
-                distance,
-                distance + GRASS_HIGHER_LEVEL_CAMERA_OFFSET_1,
-                GRASS_HIGHER_LEVEL_CAMERA_SPEED_1,
-                GRASS_HIGHER_LEVEL_INTERPOLATION_FRAMES);
-        }
-        break;
-    case 3:
-        done = QuadraticInterpolationTaskFX32_Update(&grassEffect->camDistanceTask);
-        Camera_SetDistance(grassEffect->camDistanceTask.currentValue, grassEffect->camera);
-
-        if (done == TRUE) {
-            encEffect->state++;
-            ScreenSliceEffect_Modify(
-                encEffect,
-                grassEffect->screenSliceEfx,
-                GRASS_HIGHER_LEVEL_PIXELS_PER_SLICE,
-                GRASS_HIGHER_LEVEL_INTERPOLATION_FRAMES,
-                GRASS_HIGHER_LEVEL_SLICE_START_X_2,
-                GRASS_HIGHER_LEVEL_SLICE_END_X_2,
-                GRASS_HIGHER_LEVEL_SLICE_START_SPEED_2);
-            grassEffect->camera = encEffect->fieldSystem->camera;
-            distance = Camera_GetDistance(grassEffect->camera);
-            QuadraticInterpolationTaskFX32_Init(
-                &grassEffect->camDistanceTask,
-                distance,
-                distance + GRASS_HIGHER_LEVEL_CAMERA_OFFSET_2,
-                GRASS_HIGHER_LEVEL_CAMERA_SPEED_2,
-                GRASS_HIGHER_LEVEL_INTERPOLATION_FRAMES);
-        }
-        break;
-    case 4:
-        done = QuadraticInterpolationTaskFX32_Update(&grassEffect->camDistanceTask);
-        Camera_SetDistance(grassEffect->camDistanceTask.currentValue, grassEffect->camera);
-
-        if (done == TRUE && EncounterEffect_GetHBlankFlag(encEffect) == TRUE) {
-            encEffect->state++;
-        }
-        break;
-    case 5:
-        SetColorBrightness(COLOR_BLACK);
-
-        G2_SetBG0Offset(0, 0);
-        G2_SetBG1Offset(0, 0);
-        G2_SetBG2Offset(0, 0);
-        G2_SetBG3Offset(0, 0);
-
-        if (encEffect->done != NULL) {
-            *(encEffect->done) = 1;
-        }
-
-        ScreenSliceEffect_Delete(grassEffect->screenSliceEfx);
-        EncounterEffect_Finish(encEffect, task);
-        break;
-    default:
-        break;
-    }
+    // Visual alternativo (night)
+    EncounterEffect_Field_GrassNight(task, param);
 }
 
 void EncounterEffect_Grass_LowerLevel(SysTask *task, void *param)
 {
-    EncounterEffect *encEffect = param;
-    GrassEncounterEffect *grassEffect = encEffect->param;
-    fx32 distance;
-    BOOL done;
-
-    switch (encEffect->state) {
-    case 0:
-        encEffect->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(GrassEncounterEffect));
-        memset(encEffect->param, 0, sizeof(GrassEncounterEffect));
-        grassEffect = encEffect->param;
-        grassEffect->screenSliceEfx = ScreenSliceEffect_New();
-        encEffect->state++;
-        break;
-    case 1:
-        EncounterEffect_Flash(1, -16, -16, &encEffect->effectComplete, 2);
-        encEffect->state++;
-        break;
-    case 2:
-        if (encEffect->effectComplete) {
-            encEffect->effectComplete = FALSE;
-            encEffect->state++;
-            EncounterEffect_ScreenSlice(
-                encEffect,
-                grassEffect->screenSliceEfx,
-                GRASS_LOWER_LEVEL_PIXELS_PER_SLICE,
-                GRASS_LOWER_LEVEL_INTERPOLATION_FRAMES + 1,
-                GRASS_LOWER_LEVEL_SLICE_START_X_1,
-                GRASS_LOWER_LEVEL_SLICE_END_X_1,
-                GRASS_LOWER_LEVEL_SLICE_START_SPEED_1);
-            grassEffect->camera = encEffect->fieldSystem->camera;
-            distance = Camera_GetDistance(grassEffect->camera);
-            QuadraticInterpolationTaskFX32_Init(
-                &grassEffect->camDistanceTask,
-                distance,
-                distance + GRASS_LOWER_LEVEL_CAMERA_OFFSET_1,
-                GRASS_LOWER_LEVEL_CAMERA_SPEED_1,
-                GRASS_LOWER_LEVEL_INTERPOLATION_FRAMES);
-        }
-        break;
-    case 3:
-        done = QuadraticInterpolationTaskFX32_Update(&grassEffect->camDistanceTask);
-        Camera_SetDistance(grassEffect->camDistanceTask.currentValue, grassEffect->camera);
-
-        if (done == TRUE) {
-            encEffect->state++;
-            ScreenSliceEffect_Modify(
-                encEffect,
-                grassEffect->screenSliceEfx,
-                GRASS_LOWER_LEVEL_PIXELS_PER_SLICE,
-                GRASS_LOWER_LEVEL_INTERPOLATION_FRAMES,
-                GRASS_LOWER_LEVEL_SLICE_START_X_2,
-                GRASS_LOWER_LEVEL_SLICE_END_X_2,
-                GRASS_LOWER_LEVEL_SLICE_START_SPEED_2);
-            grassEffect->camera = encEffect->fieldSystem->camera;
-            distance = Camera_GetDistance(grassEffect->camera);
-            QuadraticInterpolationTaskFX32_Init(
-                &grassEffect->camDistanceTask,
-                distance,
-                distance + GRASS_LOWER_LEVEL_CAMERA_OFFSET_2,
-                GRASS_LOWER_LEVEL_CAMERA_SPEED_2,
-                GRASS_LOWER_LEVEL_INTERPOLATION_FRAMES);
-        }
-        break;
-    case 4:
-        done = QuadraticInterpolationTaskFX32_Update(&grassEffect->camDistanceTask);
-        Camera_SetDistance(grassEffect->camDistanceTask.currentValue, grassEffect->camera);
-
-        if (done == TRUE && EncounterEffect_GetHBlankFlag(encEffect) == TRUE) {
-            encEffect->state++;
-        }
-        break;
-    case 5:
-        SetColorBrightness(COLOR_BLACK);
-
-        G2_SetBG0Offset(0, 0);
-        G2_SetBG1Offset(0, 0);
-        G2_SetBG2Offset(0, 0);
-        G2_SetBG3Offset(0, 0);
-
-        if (encEffect->done != NULL) {
-            *(encEffect->done) = TRUE;
-        }
-
-        ScreenSliceEffect_Delete(grassEffect->screenSliceEfx);
-        EncounterEffect_Finish(encEffect, task);
-        break;
-    default:
-        break;
-    }
+    // Escolhe o visual que queres para “lower”
+    EncounterEffect_Field_GrassMorning(task, param);
 }
 
 void EncounterEffect_Water_LowerLevel(SysTask *task, void *param)
@@ -4552,57 +4384,18 @@ void EncounterEffect_ChampionCynthia(SysTask *task, void *param)
         EncounterEffect_Finish(encEffect, task);
     }
 }
-typedef struct RivalEncounterParam {
-    fx32 endX;
-    u32 trainerID;
-    u16 trainerClass;
-    u16 unk_0A;
-    // The rest are NARC indices
-    u8 mugshotPlttIdx;
-    u8 mugshotTileIdx;
-    u8 mugshotCellIdx;
-    u8 mugshotAnimIdx;
-    u8 bannerPlttIdx;
-    u8 bannerTileIdx;
-    u8 bannerTilemapIdx;
-    u8 padding;
-} RivalEncounterParam;
+
 
 #define RIVAL(NAME) (TRAINER_CLASS_RIVAL - TRAINER_CLASS_RIVAL)
 
-static const RivalEncounterParam sRivalEncounterParam[1] = {
-    {
-        .endX = 214 * FX32_ONE,
-        .trainerID = 851,
-        .trainerClass = TRAINER_CLASS_RIVAL,
-        .unk_0A = 1,
-        .mugshotPlttIdx = 155,
-        .mugshotTileIdx = 156,
-        .mugshotCellIdx = 157,
-        .mugshotAnimIdx = 158,
-        .bannerPlttIdx = 159,
-        .bannerTileIdx = 160,
-        .bannerTilemapIdx = 161,
-        .padding = 0,
-    },
-};
 
 
 
-static BOOL EncounterEffect_RivalBool(EncounterEffect *encEffect, int heapID, const RivalEncounterParam *param)
-{
-    (void)encEffect;
-    (void)heapID;
-    (void)param;
-    return TRUE;
-}
+
+
 
 void EncounterEffect_Rival(SysTask *task, void *param)
 {
     EncounterEffect *encEffect = param;
-    BOOL done = TRUE;
-
-    if (done == TRUE) {
-        EncounterEffect_Finish(encEffect, task);
-    }
+    EncounterEffect_Finish(encEffect, task);
 }

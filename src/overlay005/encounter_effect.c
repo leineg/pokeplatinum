@@ -32,6 +32,7 @@
 #include "palette.h"
 #include "particle_system.h"
 #include "pokemon.h"
+#include "rtc.h"
 #include "sprite.h"
 #include "sprite_resource.h"
 #include "sprite_transfer.h"
@@ -112,19 +113,19 @@ void EncounterEffect_Unused(void);
 // "LowerLevel" means the level of the encountered Pokemon is lower
 // than the player's first Pokemon, and vice versa
 static const SysTaskFunc sEncounterEffectTaskFuncs[] = {
-    EncounterEffect_Grass_LowerLevel,
-    EncounterEffect_Grass_HigherLevel,
-    EncounterEffect_Water_LowerLevel,
-    EncounterEffect_Water_HigherLevel,
-    EncounterEffect_Cave_LowerLevel,
-    EncounterEffect_Cave_HigherLevel,
+    EncounterEffect_Field_GrassMorning,
+    EncounterEffect_Field_GrassNight,
+    EncountEffect_Field_WaterMorning,
+    EncountEffect_Field_WaterNight,
+    EncountEffect_Field_DanMorning,
+    EncountEffect_Field_DanNight,
 
-    EncounterEffect_Trainer_Grass_LowerLevel,
     EncounterEffect_Trainer_Grass_HigherLevel,
-    EncounterEffect_Trainer_Water_LowerLevel,
+    EncounterEffect_Trainer_Grass_LowerLevel,
     EncounterEffect_Trainer_Water_HigherLevel,
-    EncounterEffect_Trainer_Cave_LowerLevel,
+    EncounterEffect_Trainer_Water_LowerLevel,
     EncounterEffect_Trainer_Cave_HigherLevel,
+    EncounterEffect_Trainer_Cave_LowerLevel,
 
     EncounterEffect_LeaderRoark,
     EncounterEffect_LeaderGardenia,
@@ -948,6 +949,11 @@ static void ov5_021DE89C(Window *param0, s32 param1, s32 param2, s32 param3, s32
     Window_FillRectWithColor(param0, param5, param3, param1, param4 - param3, param2 - param1);
 }
 
+void EncounterEffect_FillWindowRect(Window *window, s32 top, s32 bottom, s32 left, s32 right, u8 fillValue)
+{
+    ov5_021DE89C(window, top, bottom, left, right, fillValue);
+}
+
 UnkStruct_ov5_021DE928 *ov5_021DE8F8(u32 heapID)
 {
     UnkStruct_ov5_021DE928 *v0;
@@ -1283,12 +1289,8 @@ static void ov5_021DEE84(UnkStruct_ov5_021DED04 *param0)
 
 u32 CutInEffects_ForBattle(const FieldBattleDTO *param0)
 {
-    int v0;
     int v1;
     int v2;
-    Pokemon *v3;
-    Pokemon *v4;
-    int v5, v6;
 
     if (param0->battleType & BATTLE_TYPE_TRAINER) {
         v2 = 1;
@@ -1300,12 +1302,6 @@ u32 CutInEffects_ForBattle(const FieldBattleDTO *param0)
         GF_ASSERT(0);
         v2 = 0;
     }
-
-    v3 = Party_FindFirstEligibleBattler(param0->parties[0]);
-    v4 = Party_FindFirstEligibleBattler(param0->parties[1]);
-    v5 = Pokemon_GetValue(v3, MON_DATA_LEVEL, NULL);
-    v6 = Pokemon_GetValue(v4, MON_DATA_LEVEL, NULL);
-    v0 = v6 - v5;
 
     switch (param0->terrain) {
     case TERRAIN_PLAIN:
@@ -1329,9 +1325,14 @@ u32 CutInEffects_ForBattle(const FieldBattleDTO *param0)
         break;
     }
 
-    if (v0 > 0) {
-        v1++;
-    }
+    {
+		int timeOfDay = param0->timeOfDay;
+
+		if( timeOfDay == TIMEOFDAY_NIGHT || timeOfDay == TIMEOFDAY_LATE_NIGHT ) {
+			v1++;
+		}
+	}
+
 
     return (v2 * 6) + v1;
 }
