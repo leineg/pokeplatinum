@@ -216,7 +216,7 @@ castle_valet_NCGR = ncgr_gen.process(castle_valet_png,
 trfgra_narc = custom_target('trfgra.narc',
     output: [
         'trfgra.narc',
-        'trfgra.naix.h',
+        'trfgra.naix',
     ],
     input: [
         trainer_front_NCGR,
@@ -227,10 +227,11 @@ trfgra_narc = custom_target('trfgra.narc',
         castle_valet_NCGR,
     ],
     command: [
-        narc_exe, 'create',
-        '--naix',
-        '--order', trfgra_order,
-        '--output', '@OUTPUT0@',
+        nitroarc_exe,
+        '--create',
+        '--index',
+        '--files-from', trfgra_order,
+        '--file', '@OUTPUT0@',
         '@PRIVATE_DIR@',
     ],
 )
@@ -268,7 +269,7 @@ trainer_back_scan_NCGR = ncgr_gen.process(trainer_back_scan_png,
 trbgra_narc = custom_target('trbgra.narc',
     output: [
         'trbgra.narc',
-        'trbgra.naix.h',
+        'trbgra.naix',
     ],
     input: [
         trainer_back_NCGR,
@@ -278,10 +279,11 @@ trbgra_narc = custom_target('trbgra.narc',
         trainer_back_scan_NCGR,
     ],
     command: [
-        narc_exe, 'create',
-        '--naix',
-        '--order', trbgra_order,
-        '--output', '@OUTPUT0@',
+        nitroarc_exe,
+        '--create',
+        '--index',
+        '--files-from', trbgra_order,
+        '--file', '@OUTPUT0@',
         '@PRIVATE_DIR@',
     ],
 )
@@ -358,4 +360,8 @@ trainer_encounter_paste = copy_gen.process(trainer_encounter_copy,
 
 # Use prebuilt field encounter effect NARC (HGSS port)
 field_encounteffect_narc = fs.copyfile('../../prebuilt/graphic/field_encounteffect.narc')
+ 
+
+nitrofs_files += trfgra_narc
+nitrofs_files += trbgra_narc
 nitrofs_files += field_encounteffect_narc

@@ -117,7 +117,7 @@ Static main
 	Object main.nef.p/src_persisted_map_features.c.o
 	Object main.nef.p/src_pal_pad.c.o
 	Object main.nef.p/src_mail.c.o
-	Object main.nef.p/src_unk_0202854C.c.o
+	Object main.nef.p/src_underground.c.o
 	Object main.nef.p/src_unk_020298BC.c.o
 	Object main.nef.p/src_poffin.c.o
 	Object main.nef.p/src_unk_0202ACE0.c.o
@@ -798,7 +798,7 @@ Overlay pokedex
 	Object main.nef.p/src_applications_pokedex_ov21_021DDD2C.c.o
 	Object main.nef.p/src_applications_pokedex_ov21_021DE668.c.o
 	Object main.nef.p/src_applications_pokedex_formmain.c.o
-	Object main.nef.p/src_applications_pokedex_ov21_021E0C68.c.o
+	Object main.nef.p/src_applications_pokedex_infomain_foreign.c.o
 	Object main.nef.p/src_applications_pokedex_ov21_021E1924.c.o
 	Object main.nef.p/src_applications_pokedex_ov21_021E29DC.c.o
 	Object main.nef.p/src_applications_pokedex_ov21_021E3FFC.c.o
@@ -1540,7 +1540,7 @@ Overlay overlay104
 	Object main.nef.p/src_overlay104_frontier_script_context.c.o
 	Object main.nef.p/src_overlay104_ov104_0222EA90.c.o
 	Object main.nef.p/src_overlay104_ov104_0222ECE8.c.o
-	Object main.nef.p/src_overlay104_ov104_0222FBE4.c.o
+	Object main.nef.p/src_overlay104_frscrcmd.c.o
 	Object main.nef.p/src_overlay104_ov104_02231F74.c.o
 	Object main.nef.p/src_overlay104_ov104_022332B4.c.o
 	Object main.nef.p/src_overlay104_ov104_022339B4.c.o
@@ -1591,15 +1591,15 @@ Overlay battle_hall_app
 	Object main.nef.p/src_applications_frontier_battle_hall_windows.c.o
 }
 
-Overlay overlay107
+Overlay battle_castle_app
 {
 	After overlay104
-	Object main.nef.p/src_overlay107_battle_castle_self_app.c.o
-	Object main.nef.p/src_overlay107_battle_castle_opponent_app.c.o
-	Object main.nef.p/src_overlay107_battle_castle_app_sprite_manager.c.o
-	Object main.nef.p/src_overlay107_battle_castle_app_sprite.c.o
-	Object main.nef.p/src_overlay107_ov107_02249C98.c.o
-	Object main.nef.p/src_overlay107_battle_castle_app_windows.c.o
+	Object main.nef.p/src_applications_frontier_battle_castle_self_app.c.o
+	Object main.nef.p/src_applications_frontier_battle_castle_opponent_app.c.o
+	Object main.nef.p/src_applications_frontier_battle_castle_sprite_manager.c.o
+	Object main.nef.p/src_applications_frontier_battle_castle_sprites.c.o
+	Object main.nef.p/src_applications_frontier_battle_castle_helpers.c.o
+	Object main.nef.p/src_applications_frontier_battle_castle_windows.c.o
 }
 
 Overlay overlay108
